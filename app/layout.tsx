@@ -58,7 +58,9 @@ export default async function RootLayout({
             {children}
           </MainLayout>
           <Footer />
-          <MobileMenu currentUser={currentUser} />
+          <Suspense fallback={<div></div>}>
+            <MobileMenu currentUser={currentUser} />
+          </Suspense>
         </AuthProvider>
       </body>
     </html>
