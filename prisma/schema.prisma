@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserMode {
+  LANDLORD
+  TENANT
+}
+
+enum LeaseType {
+  LONG_TERM
+  SHORT_TERM
+  STUDENT
+  COLOCATION
+}
+
+enum GuarantorType {
+  FAMILY
+  THIRD_PARTY
+  VISALE
+  LEGAL_ENTITY
+  CAUTIONNER
+  GARANTME
+}
+
+enum GuarantorStatus {
+  CDI
+  CDD
+  RETIRED
+  STUDENT
+  UNEMPLOYED
+  OTHER
+}
+
+enum IncomeType {
+  RENTAL
+  ALIMONY
+  SCHOLARSHIP
+  SOCIAL_AID
+  OTHER
+}
+
+model User {
+  id              String @id @default(uuid())
+  name            String?
+  email           String? @unique
+  emailVerified   DateTime?
+  image           String?
+  hashedPassword  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  favoriteIds     String[]
+  
+  // Coridor Fields
+  userMode        UserMode @default(TENANT)
+  phoneNumber     String?
+  birthDate       DateTime?
+  address         String?
+  measurementSystem String? @default("metric") // "metric" or "imperial"
+
+  accounts        Account[]
+  listings        Listing[]
+  reservations    Reservation[]
+  wishlists       Wishlist[]
+  
+  tenantProfile   TenantProfile?
+
+  conversations Conversation[]
+  seenMessages Message[] @relation("Seen")
+  
+  messages Message[]
+}
+
+model TenantProfile {
+  id                String @id @default(uuid())
+  userId            String @unique
+  jobType           String?
+  jobTitle          String?
+  netSalary         Int?
+  
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guarantors        Guarantor[]
+  additionalIncomes Income[]
+}
+
+model Guarantor {
+  id                String @id @default(uuid())
+  tenantProfileId   String
+  type              GuarantorType
+  status            GuarantorStatus
+  netIncome         Int
+  
+  tenantProfile     TenantProfile @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
+  additionalIncomes Income[]
+}
+
+model Income {
+  id                String @id @default(uuid())
+  type              IncomeType
+  amount            Int
+  
+  tenantProfileId   String?
+  tenantProfile     TenantProfile? @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
+  
+  guarantorId       String?
+  guarantor         Guarantor? @relation(fields: [guarantorId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Listing {
+  id            String @id @default(uuid())
+  title         String
+  description   String
+  createdAt     DateTime @default(now())
+  category      String
+  roomCount     Int
+  bathroomCount Int
+  guestCount    Int
+  locationValue String
+  userId        String
+  price         Int
+  
+  // Coridor Fields
+  leaseType     LeaseType?
+  dpe           String?
+  charges       Json? // Stores tax, insurance, etc.
+  
+  // New Category Fields
+  isFurnished   Boolean @default(false)
+  surface       Float?
+  surfaceUnit   String? @default("metric") // "metric" (m²) or "imperial" (sq ft)
+  kitchenType   String? // "separate", "open"
+  floor         Int?
+  totalFloors   Int?
+  buildYear     Int?
+  
+  // Amenities (Booleans)
+  isTraversant          Boolean @default(false)
+  hasGarden             Boolean @default(false)
+  isRefurbished         Boolean @default(false)
+  petsAllowed           Boolean @default(false)
+  isKitchenEquipped     Boolean @default(false)
+  isSouthFacing         Boolean @default(false)
+  hasStorage            Boolean @default(false)
+  hasFiber              Boolean @default(false)
+  hasBikeRoom           Boolean @default(false)
+  hasLaundry            Boolean @default(false)
+  isNearTransport       Boolean @default(false)
+  hasDigicode           Boolean @default(false)
+  hasIntercom           Boolean @default(false)
+  hasCaretaker          Boolean @default(false)
+  hasArmoredDoor        Boolean @default(false)
+  isQuietArea           Boolean @default(false)
+  isNearGreenSpace      Boolean @default(false)
+  isNearSchools         Boolean @default(false)
+  isNearShops           Boolean @default(false)
+  isNearHospital        Boolean @default(false)
+  
+  // New Amenities from User Request
+  hasElevator           Boolean @default(false)
+  isAccessible          Boolean @default(false)
+  hasAutomaticDoors     Boolean @default(false)
+  isLastFloor           Boolean @default(false)
+  isBright              Boolean @default(false)
+  hasNoOpposite         Boolean @default(false)
+  hasView               Boolean @default(false)
+  isQuiet               Boolean @default(false)
+  hasPool               Boolean @default(false)
+  hasBathtub            Boolean @default(false)
+  hasAirConditioning    Boolean @default(false)
+  isStudentFriendly     Boolean @default(false)
+  hasConcierge          Boolean @default(false)
+
+  // Relations
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reservations  Reservation[]
+  wishlists     Wishlist[]
+  
+  // New Photo Structure
+  rooms         Room[]
+  images        PropertyImage[]
+}
+
+model Room {
+  id        String @id @default(uuid())
+  name      String
+  listingId String
+  
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  images    PropertyImage[]
+}
+
+model PropertyImage {
+  id        String @id @default(uuid())
+  url       String
+  listingId String
+  roomId    String?
+  
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  room      Room? @relation(fields: [roomId], references: [id])
+}
+
+model Reservation {
+  id          String @id @default(uuid())
+  userId      String
+  listingId   String
+  startDate   DateTime
+  endDate     DateTime
+  totalPrice  Int
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model Wishlist {
+  id String @id @default(uuid())
+  userId String
+  name String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings Listing[]
+}
+
+model Conversation {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+  name String?
+  isGroup Boolean?
+  
+  messagesIds String[]
+  messages Message[]
+
+  users User[]
+}
+
+model Message {
+  id String @id @default(uuid())
+  body String?
+  image String?
+  createdAt DateTime @default(now())
+
+  seenIds String[]
+  seen User[] @relation("Seen")
+
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  senderId String
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
