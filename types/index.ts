@@ -14,6 +14,8 @@ export type SafeListing = Omit<
     floor: number | null;
     totalFloors: number | null;
     buildYear: number | null;
+    city: string | null;
+    country: string | null;
     // New Amenities
     hasElevator: boolean;
     isAccessible: boolean;

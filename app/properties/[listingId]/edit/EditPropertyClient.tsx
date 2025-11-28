@@ -9,6 +9,7 @@ import TitleSection from "./components/TitleSection";
 import LocationSection from "./components/LocationSection";
 import CategorySection from "./components/CategorySection";
 import AmenitiesSection from "./components/AmenitiesSection";
+import PriceSection from "./components/PriceSection";
 import { sidebarLinks } from "./constants";
 
 interface EditPropertyClientProps {
@@ -98,7 +99,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
             case 'lease':
                 return <div>Lease Form Placeholder</div>;
             case 'price':
-                return <div>Price Form Placeholder</div>;
+                return <PriceSection listing={listing} />;
             case 'tenant':
                 return <div>Tenant Profile Form Placeholder</div>;
             case 'application':

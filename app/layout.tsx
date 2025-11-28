@@ -53,7 +53,9 @@ export default async function RootLayout({
           <LoginModal />
           <WishlistModal />
           <LeaseModal currentUser={currentUser} />
-          <Navbar currentUser={currentUser} />
+          <Suspense fallback={<div></div>}>
+            <Navbar currentUser={currentUser} />
+          </Suspense>
           <MainLayout>
             {children}
           </MainLayout>

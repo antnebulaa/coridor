@@ -172,7 +172,7 @@ const AmenitiesSection: React.FC<AmenitiesSectionProps> = ({ listing }) => {
             {AMENITIES_GROUPS.map((group) => (
                 <div key={group.title} className="flex flex-col gap-4">
                     <h3 className="text-lg font-semibold">{group.title}</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {group.items.map((item) => (
                             <CategoryInput
                                 key={item.id}

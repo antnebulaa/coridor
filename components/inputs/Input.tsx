@@ -40,7 +40,14 @@ const Input: React.FC<InputProps> = ({
                 id={id}
                 disabled={disabled}
                 {...(register ? register(id, { required }) : {})}
-                onChange={onChange}
+                onChange={(e) => {
+                    if (register) {
+                        register(id, { required }).onChange(e);
+                    }
+                    if (onChange) {
+                        onChange(e);
+                    }
+                }}
                 value={value}
                 placeholder=" "
                 type={type}

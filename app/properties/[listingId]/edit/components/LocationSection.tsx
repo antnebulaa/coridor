@@ -50,11 +50,18 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                         const countryComponent = results[0].address_components.find(c => c.types.includes('country'));
                         const region = countryComponent ? countryComponent.long_name : 'Unknown';
 
+                        const cityComponent = results[0].address_components.find(
+                            (c) => c.types.includes('locality') || c.types.includes('administrative_area_level_1')
+                        );
+                        const city = cityComponent ? cityComponent.long_name : '';
+
                         setLocation({
                             label: address,
                             value: listing.locationValue,
                             latlng: [lat, lng],
-                            region: region
+                            region: region,
+                            city: city,
+                            country: region // region is country name in this context
                         });
                     }
                 })
@@ -86,13 +93,16 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
         // So we send { location: location }
 
         axios.put(`/api/listings/${listing.id}`, {
-            location: location
+            location: location,
+            city: location.city,
+            country: location.country
         })
             .then(() => {
                 toast.success('Location updated!');
                 router.refresh();
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error("Update error:", error.response?.data);
                 toast.error('Something went wrong.');
             })
             .finally(() => {

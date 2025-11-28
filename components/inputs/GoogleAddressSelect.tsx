@@ -12,6 +12,8 @@ export type AddressSelectValue = {
     latlng: number[];
     value: string;
     region: string;
+    city?: string;
+    country?: string;
 }
 
 interface GoogleAddressSelectProps {
@@ -89,11 +91,18 @@ const PlacesAutocomplete = ({ value, onChange }: GoogleAddressSelectProps) => {
             const countryComponent = results[0].address_components.find(c => c.types.includes('country'));
             const region = countryComponent ? countryComponent.long_name : 'Unknown';
 
+            const cityComponent = results[0].address_components.find(
+                (c) => c.types.includes('locality') || c.types.includes('administrative_area_level_1')
+            );
+            const city = cityComponent ? cityComponent.long_name : '';
+
             onChange({
                 label: address,
                 value: results[0].place_id,
                 latlng: [lat, lng],
-                region: region
+                region: region,
+                city: city,
+                country: region
             });
         } catch (error) {
             console.log("Error: ", error);

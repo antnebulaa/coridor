@@ -75,6 +75,14 @@ const ListingCard: React.FC<ListingCardProps> = ({
         return `${format(start, 'PP')} - ${format(end, 'PP')}`;
     }, [reservation]);
 
+    const isNew = useMemo(() => {
+        const created = new Date(data.createdAt);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - created.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 7;
+    }, [data.createdAt]);
+
     return (
         <div
             onClick={() => router.push(`/listings/${data.id}`)}
@@ -83,7 +91,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             <div className="flex flex-col gap-2 w-full">
                 <div
                     className="
-            aspect-square
+            aspect-[4/3]
             w-full
             relative
             overflow-hidden
@@ -102,6 +110,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
               transition
             "
                     />
+                    {isNew && (
+                        <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm z-10">
+                            Nouvelle annonce
+                        </div>
+                    )}
                     {showHeart && (
                         <div className="absolute top-3 right-3">
                             <HeartButton
@@ -111,20 +124,25 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         </div>
                     )}
                 </div>
-                <div className="font-medium text-lg">
-                    {location?.region}, {location?.label}
-                </div>
-                <div className="font-light text-neutral-500">
-                    {reservationDate || data.category}
-                </div>
-                <div className="flex flex-row items-center gap-1">
-                    <div className="font-medium">
-                        $ {price}
+
+                <div className="flex flex-col gap-1 mt-2">
+                    <div className="font-semibold text-xl">
+                        {price}€ <span className="text-neutral-500 font-normal text-base">par mois CC</span>
                     </div>
-                    {!reservation && (
-                        <div className="font-light">night</div>
-                    )}
+
+                    <div className="font-medium text-neutral-800">
+                        {data.category} à {data.city || location?.label}
+                    </div>
+
+                    <div className="flex flex-row items-center gap-1 text-neutral-500 text-sm">
+                        {data.roomCount} pièces • {data.roomCount - 1} chambres • {data.surface} m²
+                    </div>
+
+                    <div className="font-medium text-neutral-800 text-sm mt-1">
+                        Disponible maintenant
+                    </div>
                 </div>
+
                 {onAction && actionLabel && (
                     <Button
                         disabled={disabled}

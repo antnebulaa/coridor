@@ -142,6 +142,8 @@ model Listing {
   locationValue String
   userId        String
   price         Int
+  city          String?
+  country       String?
   
   // Coridor Fields
   leaseType     LeaseType?

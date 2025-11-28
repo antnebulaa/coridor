@@ -36,7 +36,8 @@ export async function POST(
         kitchenType,
         floor,
         totalFloors,
-        buildYear
+        buildYear,
+        imageSrcs
     } = body;
 
     Object.keys(body).forEach((value: any) => {
@@ -58,6 +59,8 @@ export async function POST(
             userId: currentUser.id,
             leaseType,
             dpe,
+            city: location.city,
+            country: location.country,
             charges: { amount: parseInt(charges, 10) },
             // New fields
             isFurnished,
@@ -76,6 +79,17 @@ export async function POST(
     });
 
     // Handle Rooms and Images separately to ensure correct linking
+    // Handle top-level images (new flow)
+    if (imageSrcs && imageSrcs.length > 0) {
+        await prisma.propertyImage.createMany({
+            data: imageSrcs.map((url: string) => ({
+                url,
+                listingId: listing.id
+            }))
+        });
+    }
+
+    // Handle Rooms and Images separately (legacy/edit flow)
     if (rooms && rooms.length > 0) {
         for (const room of rooms) {
             const createdRoom = await prisma.room.create({

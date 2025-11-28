@@ -50,6 +50,8 @@ export async function PUT(
     }
 
     const body = await request.json();
+    console.log("PUT BODY:", body);
+    console.log("Listing ID:", listingId);
     const {
         title,
         description,
@@ -71,7 +73,10 @@ export async function PUT(
         kitchenType,
         floor,
         totalFloors,
-        buildYear
+        buildYear,
+        city,
+        country,
+        imageSrcs
     } = body;
 
     try {
@@ -86,18 +91,20 @@ export async function PUT(
                 bathroomCount,
                 guestCount,
                 locationValue: location?.value,
-                price: price ? parseInt(price, 10) : undefined,
+                price: price ? parseInt(String(price), 10) : undefined,
                 leaseType,
                 dpe,
-                charges: charges ? { amount: parseInt(charges, 10) } : undefined,
+                charges: charges ? { amount: parseInt(String(charges), 10) } : undefined,
                 // New fields
                 isFurnished,
-                surface: surface ? parseFloat(surface) : undefined,
+                surface: surface ? parseFloat(String(surface)) : undefined,
                 surfaceUnit,
                 kitchenType,
-                floor: (floor !== undefined && floor !== null) ? parseInt(floor, 10) : undefined,
-                totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(totalFloors, 10) : undefined,
-                buildYear: buildYear ? parseInt(buildYear, 10) : undefined,
+                floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
+                totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
+                buildYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
+                city: city || location?.city,
+                country: country || location?.country,
             };
 
             // Handle amenities only if provided
@@ -147,9 +154,9 @@ export async function PUT(
                 data: updateData
             });
 
-            // 2. Manage rooms only if provided
-            if (rooms) {
-                // Delete existing rooms (cascades to images)
+            // 2. Manage images (both flows)
+            if (rooms || imageSrcs) {
+                // Delete existing rooms and images
                 await tx.room.deleteMany({
                     where: {
                         listingId: listingId
@@ -162,8 +169,18 @@ export async function PUT(
                     }
                 });
 
-                // Re-create rooms and images
-                if (rooms.length > 0) {
+                // Handle top-level images (new flow)
+                if (imageSrcs && imageSrcs.length > 0) {
+                    await tx.propertyImage.createMany({
+                        data: imageSrcs.map((url: string) => ({
+                            url,
+                            listingId: listingId
+                        }))
+                    });
+                }
+
+                // Handle Rooms and Images (legacy/edit flow)
+                if (rooms && rooms.length > 0) {
                     for (const room of rooms) {
                         const createdRoom = await tx.room.create({
                             data: {

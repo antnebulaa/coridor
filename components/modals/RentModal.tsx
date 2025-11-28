@@ -10,6 +10,7 @@ import CategoryInput from "../inputs/CategoryInput";
 import GoogleAddressSelect from "../inputs/GoogleAddressSelect";
 import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
+import MultiImageUpload from "../inputs/MultiImageUpload";
 import ImageUpload from "../inputs/ImageUpload";
 import Input from "../inputs/Input";
 import { useRouter } from "next/navigation";
@@ -59,6 +60,7 @@ const RentModal = () => {
             roomCount: 1,
             bathroomCount: 1,
             imageSrc: '',
+            imageSrcs: [],
             price: 1,
             title: '',
             description: '',
@@ -76,10 +78,11 @@ const RentModal = () => {
             reset({
                 category: listing.category,
                 location: listing.locationValue ? { value: listing.locationValue, label: listing.locationValue, flag: '', latlng: [0, 0], region: '' } : null, // Simplification, ideally we need full location object or fetch it
-                guestCount: listing.guestCount,
-                roomCount: listing.roomCount,
-                bathroomCount: listing.bathroomCount,
+                guestCount: listing.guestCount || 1,
+                roomCount: listing.roomCount || 1,
+                bathroomCount: listing.bathroomCount || 1,
                 imageSrc: '',
+                imageSrcs: listing.images?.map((img: any) => img.url) || [],
                 price: listing.price,
                 title: listing.title,
                 description: listing.description,
@@ -101,6 +104,7 @@ const RentModal = () => {
                 roomCount: 1,
                 bathroomCount: 1,
                 imageSrc: '',
+                imageSrcs: [],
                 price: 1,
                 title: '',
                 description: '',
@@ -120,6 +124,8 @@ const RentModal = () => {
     const roomCount = watch('roomCount');
     const bathroomCount = watch('bathroomCount');
     const imageSrc = watch('imageSrc');
+
+    const imageSrcs = watch('imageSrcs');
 
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
@@ -364,89 +370,17 @@ const RentModal = () => {
         )
     }
 
-    const rooms = watch('rooms');
-
-    const onAddRoom = () => {
-        if (!newRoomName) return;
-        const newRooms = [...(rooms || []), { name: newRoomName, images: [] }];
-        setCustomValue('rooms', newRooms);
-        setNewRoomName('');
-    };
-
-    const onAddImageToRoom = (roomIndex: number, url: string) => {
-        const newRooms = [...(rooms || [])];
-        newRooms[roomIndex].images.push(url);
-        setCustomValue('rooms', newRooms);
-    };
-
-    const onRemoveImageFromRoom = (roomIndex: number, imageIndex: number) => {
-        const newRooms = [...(rooms || [])];
-        newRooms[roomIndex].images.splice(imageIndex, 1);
-        setCustomValue('rooms', newRooms);
-    };
-
     if (step === STEPS.IMAGES) {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
                     title="Add photos of your place"
-                    subtitle="Organize them by room!"
+                    subtitle="Show guests what your place looks like!"
                 />
-
-                <div className="flex flex-row gap-4">
-                    <Input
-                        id="newRoomName"
-                        label="Room Name (e.g. Living Room)"
-                        disabled={isLoading}
-                        register={register}
-                        errors={errors}
-                        required={false}
-                        onChange={(e) => setNewRoomName(e.target.value)}
-                        value={newRoomName}
-                    />
-                    <div className="w-1/3">
-                        <Button
-                            label="Add Room"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                onAddRoom();
-                            }}
-                            disabled={!newRoomName}
-                        />
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-6 max-h-[50vh] overflow-y-auto">
-                    {rooms?.map((room: any, index: number) => (
-                        <div key={index} className="flex flex-col gap-4 p-4 border rounded-xl">
-                            <div className="font-medium text-lg">{room.name}</div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {room.images.map((img: string, imgIndex: number) => (
-                                    <div key={imgIndex} className="relative aspect-video rounded-xl overflow-hidden">
-                                        <Image
-                                            fill
-                                            alt="Room"
-                                            src={img}
-                                            className="object-cover"
-                                        />
-                                        <button
-                                            onClick={() => onRemoveImageFromRoom(index, imgIndex)}
-                                            className="absolute top-2 right-2 bg-rose-500 text-white p-1 rounded-full hover:opacity-80"
-                                        >
-                                            X
-                                        </button>
-                                    </div>
-                                ))}
-                                <div className="h-[200px]">
-                                    <ImageUpload
-                                        value=""
-                                        onChange={(value) => onAddImageToRoom(index, value)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <MultiImageUpload
+                    value={imageSrcs}
+                    onChange={(value) => setCustomValue('imageSrcs', value)}
+                />
             </div>
         )
     }
