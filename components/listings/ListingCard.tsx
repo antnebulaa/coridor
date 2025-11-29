@@ -5,9 +5,9 @@ import { SafeListing, SafeReservation, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
-import Image from "next/image";
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
+import ListingCardCarousel from "./ListingCardCarousel";
 
 interface ListingCardProps {
     data: SafeListing;
@@ -98,18 +98,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
             rounded-xl
           "
                 >
-                    <Image
-                        fill
-                        alt="Listing"
-                        src={data.images?.[0]?.url || '/images/placeholder.svg'}
-                        className="
-              object-cover
-              h-full
-              w-full
-              group-hover:scale-110
-              transition
-            "
-                    />
+
+                    <ListingCardCarousel images={data.images} />
                     {isNew && (
                         <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm z-10">
                             Nouvelle annonce

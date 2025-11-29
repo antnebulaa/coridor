@@ -8,8 +8,9 @@ import { SafeUser } from "@/types";
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: any }) {
-  const listings = await getListings(searchParams);
+export default async function Home({ searchParams }: { searchParams: Promise<any> }) {
+  const resolvedParams = await searchParams;
+  const listings = await getListings(resolvedParams);
   const currentUser = await getCurrentUser();
 
   if (listings.length === 0) {
@@ -21,13 +22,9 @@ export default async function Home({ searchParams }: { searchParams: any }) {
   return (
     <Container>
       <div className="
-        grid 
-        grid-cols-1 
-        sm:grid-cols-2 
-        md:grid-cols-3 
-        lg:grid-cols-4
-        xl:grid-cols-5
-        2xl:grid-cols-6
+        grid
+        grid-cols-1
+        sm:grid-cols-2
         gap-8
       ">
         {listings.map((listing: any) => (
@@ -38,6 +35,6 @@ export default async function Home({ searchParams }: { searchParams: any }) {
           />
         ))}
       </div>
-    </Container>
+    </Container >
   );
 }

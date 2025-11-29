@@ -10,6 +10,7 @@ import LocationSection from "./components/LocationSection";
 import CategorySection from "./components/CategorySection";
 import AmenitiesSection from "./components/AmenitiesSection";
 import PriceSection from "./components/PriceSection";
+import PhotosSection from "./components/PhotosSection";
 import { sidebarLinks } from "./constants";
 
 interface EditPropertyClientProps {
@@ -35,6 +36,8 @@ export type SectionType =
     | 'delete';
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { Plus } from "lucide-react";
 
 // ... imports
 
@@ -48,6 +51,11 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     const [activeTab, setActiveTab] = useState<TabType>('logement');
     const [activeSection, setActiveSection] = useState<SectionType>('title');
     const [showContent, setShowContent] = useState(false);
+
+    // Photo Tour State (Lifted)
+    const [isAllPhotosOpen, setIsAllPhotosOpen] = useState(false);
+    const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
+    const [photoViewMode, setPhotoViewMode] = useState<'global' | 'room'>('room');
 
     const handleTabChange = (tab: TabType) => {
         setActiveTab(tab);
@@ -95,7 +103,15 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
             case 'availability':
                 return <div>Availability Form Placeholder</div>;
             case 'photos':
-                return <div>Photos Form Placeholder</div>;
+                return <PhotosSection
+                    listing={listing}
+                    isAllPhotosOpen={isAllPhotosOpen}
+                    setIsAllPhotosOpen={setIsAllPhotosOpen}
+                    isAddRoomModalOpen={isAddRoomModalOpen}
+                    setIsAddRoomModalOpen={setIsAddRoomModalOpen}
+                    photoViewMode={photoViewMode}
+                    setPhotoViewMode={setPhotoViewMode}
+                />;
             case 'lease':
                 return <div>Lease Form Placeholder</div>;
             case 'price':
@@ -138,32 +154,61 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                             bg-white 
                             pt-4
                             pb-2
+                            flex
+                            items-center
+                            justify-between
                         ">
                             <button
                                 onClick={handleBack}
                                 className="
-                                    p-2
-                                    border-[1px]
-                                    border-neutral-300
-                                    rounded-full
-                                    hover:shadow-md
-                                    transition
-                                    w-fit
-                                    bg-white
+                                    w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition
                                 "
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                                 </svg>
                             </button>
+
+                            {activeSection === 'photos' && (
+                                <div className="flex gap-2 items-center">
+                                    <button
+                                        onClick={() => {
+                                            setPhotoViewMode('global');
+                                            setIsAllPhotosOpen(true);
+                                        }}
+                                        className="
+                                            px-4 
+                                            py-2 
+                                            bg-neutral-100 
+                                            hover:bg-neutral-200 
+                                            rounded-full 
+                                            font-semibold 
+                                            text-xs 
+                                            transition
+                                            cursor-pointer
+                                            whitespace-nowrap
+                                        "
+                                    >
+                                        Toutes les photos
+                                    </button>
+                                    <button
+                                        onClick={() => setIsAddRoomModalOpen(true)}
+                                        className="w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition cursor-pointer"
+                                    >
+                                        <Plus size={18} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Mobile Header: Title (Not Sticky) */}
-                        <div className="md:hidden mb-6">
-                            <h2 className="text-2xl font-bold">
-                                {sectionTitles[activeSection]}
-                            </h2>
-                        </div>
+                        {activeSection !== 'photos' && (
+                            <div className="md:hidden mb-6">
+                                <h2 className="text-2xl font-bold">
+                                    {sectionTitles[activeSection]}
+                                </h2>
+                            </div>
+                        )}
                         {renderContent()}
                     </div>
                 </div>

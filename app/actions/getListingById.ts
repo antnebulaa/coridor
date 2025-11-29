@@ -16,7 +16,20 @@ export default async function getListingById(
             },
             include: {
                 user: true,
-                images: true
+                images: {
+                    orderBy: {
+                        order: 'asc'
+                    }
+                },
+                rooms: {
+                    include: {
+                        images: {
+                            orderBy: {
+                                order: 'asc'
+                            }
+                        }
+                    }
+                }
             }
         });
 

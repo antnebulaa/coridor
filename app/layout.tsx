@@ -5,6 +5,7 @@ import Navbar from "@/components/navbar/Navbar";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import Footer from "@/components/Footer";
 import SearchModal from "@/components/modals/SearchModal";
+import CommuteModal from "@/components/modals/CommuteModal";
 import RegisterModal from "@/components/modals/RegisterModal";
 import LoginModal from "@/components/modals/LoginModal";
 import RentModal from "@/components/modals/RentModal";
@@ -47,6 +48,7 @@ export default async function RootLayout({
           <Toaster />
           <Suspense fallback={<div></div>}>
             <SearchModal />
+            <CommuteModal />
           </Suspense>
           <RentModal />
           <RegisterModal />

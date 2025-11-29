@@ -1,46 +1,26 @@
-import { Listing } from "@prisma/client";
-
+import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 
-export interface IListingsParams {
-    userId?: string;
-    guestCount?: number;
-    roomCount?: number;
-    bathroomCount?: number;
-    startDate?: string;
-    endDate?: string;
-    locationValue?: string;
-    category?: string;
-    city?: string;
-    cities?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    minSurface?: number;
-    maxSurface?: number;
-}
-
-export default async function getListings(
-    params: IListingsParams
-) {
+export async function GET(request: Request) {
     try {
-        const {
-            userId,
-            roomCount,
-            guestCount,
-            bathroomCount,
-            locationValue,
-            startDate,
-            endDate,
-            category,
-            minPrice,
-            maxPrice,
-            minSurface,
-            maxSurface
-        } = params;
+        const { searchParams } = new URL(request.url);
+
+        const userId = searchParams.get('userId');
+        const roomCount = searchParams.get('roomCount');
+        const guestCount = searchParams.get('guestCount');
+        const bathroomCount = searchParams.get('bathroomCount');
+        const locationValue = searchParams.get('locationValue');
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+        const category = searchParams.get('category');
+        const city = searchParams.get('city');
+        const cities = searchParams.get('cities');
+        const minPrice = searchParams.get('minPrice');
+        const maxPrice = searchParams.get('maxPrice');
+        const minSurface = searchParams.get('minSurface');
+        const maxSurface = searchParams.get('maxSurface');
 
         let query: any = {};
-
-        console.log("GET LISTINGS PARAMS:", params);
 
         if (userId) {
             query.userId = userId;
@@ -86,19 +66,19 @@ export default async function getListings(
             }
         }
 
-        if (params.cities) {
-            const cities = params.cities.split(',');
-            if (cities.length > 0) {
-                query.OR = cities.map((city: string) => ({
+        if (cities) {
+            const citiesList = cities.split(',');
+            if (citiesList.length > 0) {
+                query.OR = citiesList.map((c: string) => ({
                     city: {
-                        contains: city,
+                        contains: c,
                         mode: 'insensitive'
                     }
                 }));
             }
-        } else if (params.city) {
+        } else if (city) {
             query.city = {
-                contains: params.city,
+                contains: city,
                 mode: 'insensitive'
             }
         }
@@ -122,29 +102,13 @@ export default async function getListings(
             }
         }
 
-        console.log("FINAL QUERY:", JSON.stringify(query, null, 2));
-
-        const listings = await prisma.listing.findMany({
-            where: query,
-            include: {
-                images: {
-                    orderBy: {
-                        order: 'asc'
-                    }
-                }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
+        const count = await prisma.listing.count({
+            where: query
         });
 
-        const safeListings = listings.map((listing: any) => ({
-            ...listing,
-            createdAt: listing.createdAt.toISOString(),
-        }));
-
-        return safeListings;
-    } catch (error: any) {
-        throw new Error(error);
+        return NextResponse.json({ count });
+    } catch (error) {
+        console.error("COUNT API ERROR:", error);
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

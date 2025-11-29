@@ -15,12 +15,19 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     return (
         <div className="fixed w-full bg-white z-10">
-            <div className="py-4 border-b-[1px] border-[#dfdfdf] hidden md:block">
+            <div className="py-2 md:py-4 border-b-[1px] border-[#dfdfdf]">
                 <Container>
-                    <div className="flex flex-row items-center justify-between gap-3 md:gap-0">
-                        <Logo />
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex flex-row items-center justify-between w-full md:w-auto">
+                            <Logo />
+                            <div className="md:hidden">
+                                <UserMenu currentUser={currentUser} />
+                            </div>
+                        </div>
                         <Search />
-                        <UserMenu currentUser={currentUser} />
+                        <div className="hidden md:block">
+                            <UserMenu currentUser={currentUser} />
+                        </div>
                     </div>
                 </Container>
             </div>

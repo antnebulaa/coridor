@@ -17,7 +17,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             <button
                 ref={ref}
                 className={cn(
-                    "relative disabled:opacity-70 disabled:cursor-not-allowed rounded-lg hover:opacity-80 transition w-full active:scale-95",
+                    "relative disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer rounded-lg hover:opacity-80 transition w-full active:scale-95",
                     small ? 'py-1 text-sm font-light border-[1px]' : 'py-3 text-md font-medium border-2',
                     variant === 'primary' && "bg-rose-500 border-rose-500 text-white",
                     variant === 'outline' && "bg-white border-black text-black",

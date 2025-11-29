@@ -1,7 +1,7 @@
 'use client';
 
 import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
-import { BiDollar } from 'react-icons/bi'; // Need react-icons
+import { BiEuro } from 'react-icons/bi';
 
 interface InputProps {
     id: string;
@@ -11,9 +11,10 @@ interface InputProps {
     formatPrice?: boolean;
     required?: boolean;
     register?: UseFormRegister<FieldValues>;
-    errors: FieldErrors;
+    errors?: FieldErrors;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     value?: string;
+    inputMode?: "text" | "numeric" | "decimal" | "search" | "email" | "tel" | "url" | "none";
 }
 
 const Input: React.FC<InputProps> = ({
@@ -27,11 +28,12 @@ const Input: React.FC<InputProps> = ({
     errors,
     onChange,
     value,
+    inputMode,
 }) => {
     return (
         <div className="w-full relative">
             {formatPrice && (
-                <BiDollar
+                <BiEuro
                     size={24}
                     className="text-neutral-700 absolute top-5 left-2"
                 />
@@ -51,6 +53,7 @@ const Input: React.FC<InputProps> = ({
                 value={value}
                 placeholder=" "
                 type={type}
+                inputMode={inputMode}
                 className={`
           peer
           w-full
@@ -65,8 +68,8 @@ const Input: React.FC<InputProps> = ({
           disabled:opacity-70
           disabled:cursor-not-allowed
           ${formatPrice ? 'pl-9' : 'pl-3'}
-          ${errors[id] ? 'border-rose-500' : 'border-neutral-300'}
-          ${errors[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+          ${errors?.[id] ? 'border-rose-500' : 'border-neutral-300'}
+          ${errors?.[id] ? 'focus:border-rose-500' : 'focus:border-black'}
         `}
             />
             <label
@@ -84,7 +87,7 @@ const Input: React.FC<InputProps> = ({
           peer-placeholder-shown:translate-y-0
           peer-focus:scale-75
           peer-focus:-translate-y-4
-          ${errors[id] ? 'text-rose-500' : 'text-zinc-400'}
+          ${errors?.[id] ? 'text-rose-500' : 'text-zinc-400'}
         `}
             >
                 {label}

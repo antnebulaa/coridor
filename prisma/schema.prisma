@@ -221,6 +221,7 @@ model PropertyImage {
   url       String
   listingId String
   roomId    String?
+  order     Int     @default(0)
   
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   room      Room? @relation(fields: [roomId], references: [id])

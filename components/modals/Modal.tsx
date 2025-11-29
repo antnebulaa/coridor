@@ -84,7 +84,8 @@ const Modal: React.FC<ModalProps> = ({
                     items-center 
                     flex 
                     overflow-x-hidden 
-                    overflow-y-auto 
+                    overflow-hidden 
+                    md:overflow-y-auto 
                     fixed 
                     inset-0 
                     z-[60] 
@@ -97,7 +98,7 @@ const Modal: React.FC<ModalProps> = ({
             >
                 <div
                     onClick={(e) => e.stopPropagation()}
-                    className="relative w-full md:w-4/6 lg:w-3/6 xl:w-2/5 my-6 mx-auto h-full lg:h-auto md:h-auto"
+                    className="relative w-full md:w-4/6 lg:w-3/6 xl:w-2/5 md:my-6 mx-auto h-full lg:h-auto md:h-auto"
                 >
                     {/* CONTENT */}
                     <div
@@ -109,7 +110,7 @@ const Modal: React.FC<ModalProps> = ({
             ${showModal ? 'opacity-100' : 'opacity-0'}
           `}
                     >
-                        <div className="translate h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white outline-none focus:outline-none">
+                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white outline-none focus:outline-none">
                             {/* HEADER */}
                             <div className="flex items-center p-6 rounded-t justify-center relative border-b-[1px] border-[#dfdfdf]">
                                 <button
@@ -121,9 +122,9 @@ const Modal: React.FC<ModalProps> = ({
                                 <div className="text-lg font-medium">{title}</div>
                             </div>
                             {/* BODY */}
-                            <div className="relative p-6 flex-auto">{body}</div>
+                            <div className="relative p-6 flex-auto overflow-y-auto">{body}</div>
                             {/* FOOTER */}
-                            <div className="flex flex-col gap-2 p-6">
+                            <div className="flex flex-col gap-2 p-3 md:p-6">
                                 <div className="flex flex-row items-center gap-4 w-full">
                                     {secondaryAction && secondaryActionLabel && (
                                         <Button
@@ -150,7 +151,7 @@ const Modal: React.FC<ModalProps> = ({
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 };

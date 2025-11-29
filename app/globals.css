@@ -51,6 +51,19 @@ body {
   text-size-adjust: 100%;
 }
 
+button {
+  cursor: pointer;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @layer utilities {
   .container-custom {
     @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;

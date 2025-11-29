@@ -19,13 +19,17 @@ export type AddressSelectValue = {
 interface GoogleAddressSelectProps {
     value?: AddressSelectValue;
     onChange: (value: AddressSelectValue) => void;
+    placeholder?: string;
+    autoFocus?: boolean;
 }
 
 const libraries: ("places")[] = ["places"];
 
 const GoogleAddressSelect: React.FC<GoogleAddressSelectProps> = ({
     value,
-    onChange
+    onChange,
+    placeholder,
+    autoFocus
 }) => {
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
@@ -34,10 +38,10 @@ const GoogleAddressSelect: React.FC<GoogleAddressSelectProps> = ({
 
     if (!isLoaded) return <div>Loading...</div>;
 
-    return <PlacesAutocomplete value={value} onChange={onChange} />;
+    return <PlacesAutocomplete value={value} onChange={onChange} placeholder={placeholder} autoFocus={autoFocus} />;
 };
 
-const PlacesAutocomplete = ({ value, onChange }: GoogleAddressSelectProps) => {
+const PlacesAutocomplete = ({ value, onChange, placeholder, autoFocus }: GoogleAddressSelectProps) => {
     const {
         ready,
         value: inputValue,
@@ -53,6 +57,7 @@ const PlacesAutocomplete = ({ value, onChange }: GoogleAddressSelectProps) => {
 
     const [showSuggestions, setShowSuggestions] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -92,9 +97,23 @@ const PlacesAutocomplete = ({ value, onChange }: GoogleAddressSelectProps) => {
             const region = countryComponent ? countryComponent.long_name : 'Unknown';
 
             const cityComponent = results[0].address_components.find(
-                (c) => c.types.includes('locality') || c.types.includes('administrative_area_level_1')
+                (c) => c.types.includes('locality') ||
+                    c.types.includes('sublocality') ||
+                    c.types.includes('sublocality_level_1') ||
+                    c.types.includes('postal_town') ||
+                    c.types.includes('administrative_area_level_1') ||
+                    c.types.includes('administrative_area_level_2')
             );
-            const city = cityComponent ? cityComponent.long_name : '';
+
+            let city = cityComponent ? cityComponent.long_name : '';
+
+            // Fallback: Try to extract from formatted address if city is still empty
+            if (!city && results[0].formatted_address) {
+                const parts = results[0].formatted_address.split(',');
+                if (parts.length > 0) {
+                    city = parts[0].trim();
+                }
+            }
 
             onChange({
                 label: address,
@@ -112,10 +131,11 @@ const PlacesAutocomplete = ({ value, onChange }: GoogleAddressSelectProps) => {
     return (
         <div ref={ref} className="relative">
             <input
+                ref={inputRef}
+                onFocus={() => setShowSuggestions(true)}
                 value={inputValue}
                 onChange={handleInput}
-                disabled={!ready}
-                placeholder="Type an address..."
+                placeholder={placeholder || "Type an address..."}
                 className="
                     w-full
                     p-4
