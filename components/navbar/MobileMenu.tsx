@@ -111,7 +111,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                 {/* Search Button */}
                 <motion.div
                     whileTap={{ scale: 0.9 }}
-                    onClick={searchModal.onOpen}
+                    onClick={() => searchModal.onOpen()}
                     className={`
                         bg-[#f1f1f1] hover:bg-neutral-200
                         backdrop-blur-md 
