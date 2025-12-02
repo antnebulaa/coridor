@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 import useLoginModal from "@/hooks/useLoginModal";
-import { SafeListing, SafeUser } from "@/types";
+import { SafeListing, SafeReservation, SafeUser } from "@/types";
 
 import Container from "@/components/Container";
 import { categories } from "@/components/navbar/Categories";
@@ -18,11 +18,13 @@ interface ListingClientProps {
     listing: SafeListing & {
         user: SafeUser;
     };
+    reservations?: SafeReservation[];
     currentUser?: SafeUser | null;
 }
 
 const ListingClient: React.FC<ListingClientProps> = ({
     listing,
+    reservations = [],
     currentUser
 }) => {
     const loginModal = useLoginModal();
