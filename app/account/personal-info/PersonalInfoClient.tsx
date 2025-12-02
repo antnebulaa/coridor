@@ -8,7 +8,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 import Heading from "@/components/Heading";
-import Input from "@/components/inputs/Input";
+import SoftInput from "@/components/inputs/SoftInput";
 import { Button } from "@/components/ui/Button";
 
 interface PersonalInfoClientProps {
@@ -86,7 +86,7 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
 
                 {isEditingName && (
                     <div className="w-full md:w-2/3 flex flex-col gap-4">
-                        <Input
+                        <SoftInput
                             id="name"
                             label="Name"
                             register={register}
@@ -125,7 +125,7 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
 
                 {isEditingEmail && (
                     <div className="w-full md:w-2/3 flex flex-col gap-4">
-                        <Input
+                        <SoftInput
                             id="email"
                             label="Email"
                             register={register}

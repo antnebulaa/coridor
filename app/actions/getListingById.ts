@@ -29,7 +29,8 @@ export default async function getListingById(
                             }
                         }
                     }
-                }
+                },
+                visitSlots: true
             }
         });
 
@@ -48,7 +49,11 @@ export default async function getListingById(
                 birthDate: listing.user.birthDate?.toISOString() || null,
                 tenantProfile: null,
                 wishlists: null,
-            }
+            },
+            visitSlots: listing.visitSlots.map((slot: any) => ({
+                ...slot,
+                date: slot.date.toISOString()
+            }))
         };
     } catch (error: any) {
         throw new Error(error);

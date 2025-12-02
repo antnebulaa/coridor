@@ -16,15 +16,16 @@ export async function POST(
         jobType,
         jobTitle,
         netSalary,
+        partnerJobType,
+        partnerJobTitle,
+        partnerNetSalary,
         guarantors,
-        additionalIncomes
+        additionalIncomes,
+        aplAmount,
+        aplDirectPayment
     } = body;
 
     // Upsert Tenant Profile
-    // We use upsert because it might not exist yet.
-    // However, for nested relations (guarantors, incomes), it's easier to handle them if we know the profile ID.
-    // Let's first ensure the profile exists or update it.
-
     const profile = await prisma.tenantProfile.upsert({
         where: {
             userId: currentUser.id
@@ -33,12 +34,22 @@ export async function POST(
             jobType,
             jobTitle,
             netSalary: parseInt(netSalary, 10),
+            partnerJobType,
+            partnerJobTitle,
+            partnerNetSalary: parseInt(partnerNetSalary, 10) || 0,
+            aplAmount: parseInt(aplAmount, 10) || 0,
+            aplDirectPayment
         },
         create: {
             userId: currentUser.id,
             jobType,
             jobTitle,
             netSalary: parseInt(netSalary, 10),
+            partnerJobType,
+            partnerJobTitle,
+            partnerNetSalary: parseInt(partnerNetSalary, 10) || 0,
+            aplAmount: parseInt(aplAmount, 10) || 0,
+            aplDirectPayment
         }
     });
 
@@ -82,9 +93,15 @@ export async function POST(
                     }
                 });
 
-                // Guarantor Incomes? Schema says Guarantor has additionalIncomes.
-                // If the form supports it, we should add it.
-                // For now, let's assume basic guarantor info.
+                if (guarantor.additionalIncomes && guarantor.additionalIncomes.length > 0) {
+                    await tx.income.createMany({
+                        data: guarantor.additionalIncomes.map((inc: any) => ({
+                            type: inc.type,
+                            amount: parseInt(inc.amount, 10),
+                            guarantorId: createdGuarantor.id
+                        }))
+                    });
+                }
             }
         }
     });

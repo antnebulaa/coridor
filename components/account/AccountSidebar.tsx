@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, CreditCard, Globe, Briefcase, Building, Wrench } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, CreditCard, Globe, Briefcase, Building, Wrench, ChevronRight } from "lucide-react";
 
 const AccountSidebar = () => {
     const pathname = usePathname();
@@ -13,6 +13,12 @@ const AccountSidebar = () => {
             icon: User,
             href: '/account/personal-info',
             active: pathname === '/account/personal-info'
+        },
+        {
+            label: 'Dossier Locataire',
+            icon: FileText,
+            href: '/account/tenant-profile',
+            active: pathname === '/account/tenant-profile'
         },
         {
             label: 'Login & security',
@@ -71,7 +77,7 @@ const AccountSidebar = () => {
     ];
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pt-6 md:pt-0 -mx-1 md:mx-0">
             {routes.map((route) => (
                 <Link
                     key={route.label}
@@ -79,18 +85,23 @@ const AccountSidebar = () => {
                     className={`
             flex 
             items-center 
+            justify-between
             gap-4 
-            p-4 
+            p-[9px] 
             hover:bg-neutral-100 
             transition 
             rounded-xl
+            w-full
             ${route.active ? 'bg-neutral-100' : ''}
           `}
                 >
-                    <route.icon size={24} className="text-neutral-500" />
-                    <div className="font-light text-neutral-500">
-                        {route.label}
+                    <div className="flex items-center gap-4">
+                        <route.icon size={24} className="text-[#262626]" />
+                        <div className="font-light text-[#262626]">
+                            {route.label}
+                        </div>
                     </div>
+                    <ChevronRight size={20} className="text-[#262626] md:hidden" />
                 </Link>
             ))}
         </div>

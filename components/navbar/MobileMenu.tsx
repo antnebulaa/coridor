@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, Heart, LayoutDashboard, User, Home } from "lucide-react";
+import { Search, Heart, LayoutDashboard, User, Home, Building2, MessageSquare } from "lucide-react";
 import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
 import useSearchModal from "@/hooks/useSearchModal";
@@ -11,9 +11,10 @@ import useConversation from "@/hooks/useConversation";
 
 interface MobileMenuProps {
     currentUser?: SafeUser | null;
+    unreadCount?: number;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount }) => {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -32,7 +33,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             href: '/',
             active: activePath === '/'
         },
-        {
+        currentUser?.userMode === 'LANDLORD' ? {
+            label: 'Locations',
+            icon: Building2,
+            href: '/properties',
+            active: activePath === '/properties'
+        } : {
             label: 'Favoris',
             icon: Heart,
             href: '/favorites',
@@ -43,6 +49,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             icon: LayoutDashboard,
             href: '/dashboard',
             active: activePath === '/dashboard'
+        },
+        {
+            label: 'Messages',
+            icon: MessageSquare,
+            href: '/inbox',
+            active: activePath === '/inbox'
         },
         {
             label: 'Profil',
@@ -69,7 +81,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
 
     return (
         <div className="fixed bottom-6 w-full z-50 md:hidden px-4 pointer-events-none">
-            <div className="flex flex-row items-center justify-between gap-2 max-w-[400px] mx-auto">
+            <div className="flex flex-row items-center justify-center max-w-[400px] mx-auto">
                 {/* Main Menu Pill */}
                 <div className="flex-1 bg-[#f1f1f1] backdrop-blur-md rounded-full shadow-2xl pointer-events-auto border border-white">
                     <div className="flex flex-row items-center justify-between p-1">
@@ -98,7 +110,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                     duration-200
                                     ${route.active ? 'text-white' : 'text-[#212121] hover:text-black'}
                                 `}>
-                                    <route.icon size={20} />
+                                    <div className="relative">
+                                        <route.icon size={20} />
+                                        {route.label === 'Messages' && !!unreadCount && (
+                                            <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-white">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="text-[0.68rem] font-medium">
                                         {route.label}
                                     </div>
@@ -107,29 +126,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                         ))}
                     </div>
                 </div>
-
-                {/* Search Button */}
-                <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => searchModal.onOpen()}
-                    className={`
-                        bg-[#f1f1f1] hover:bg-neutral-200
-                        backdrop-blur-md 
-                        p-4 
-                        rounded-full 
-                        shadow-2xl 
-                        cursor-pointer 
-                        pointer-events-auto
-                        text-[#212121]
-                        transition
-                        flex
-                        items-center
-                        justify-center
-                        border border-white
-                    `}
-                >
-                    <Search size={24} />
-                </motion.div>
             </div>
         </div>
     );

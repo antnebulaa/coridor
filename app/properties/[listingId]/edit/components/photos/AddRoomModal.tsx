@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
-import Input from "@/components/inputs/Input";
+import SoftInput from "@/components/inputs/SoftInput";
 
 interface AddRoomModalProps {
     isOpen: boolean;
@@ -99,7 +99,7 @@ const AddRoomModal: React.FC<AddRoomModalProps> = ({
 
                     <div className="mt-4 flex gap-2">
                         <div className="w-full">
-                            <Input
+                            <SoftInput
                                 id="customName"
                                 label="Nom de la pièce"
                                 value={customName}

@@ -7,7 +7,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 
 import { SafeListing } from "@/types";
-import Input from "@/components/inputs/Input";
+import SoftInput from "@/components/inputs/SoftInput";
 import { Button } from "@/components/ui/Button";
 
 interface TitleSectionProps {
@@ -48,7 +48,7 @@ const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
 
     return (
         <div className="flex flex-col gap-8">
-            <Input
+            <SoftInput
                 id="title"
                 label="Titre"
                 disabled={isLoading}

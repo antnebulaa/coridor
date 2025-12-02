@@ -12,7 +12,7 @@ import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
 import MultiImageUpload from "../inputs/MultiImageUpload";
 import ImageUpload from "../inputs/ImageUpload";
-import Input from "../inputs/Input";
+import SoftInput from '../inputs/SoftInput';
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -392,7 +392,7 @@ const RentModal = () => {
                     title="How would you describe your place?"
                     subtitle="Short and sweet works best!"
                 />
-                <Input
+                <SoftInput
                     id="title"
                     label="Title"
                     disabled={isLoading}
@@ -401,7 +401,7 @@ const RentModal = () => {
                     required
                 />
                 <hr />
-                <Input
+                <SoftInput
                     id="description"
                     label="Description"
                     disabled={isLoading}
@@ -410,7 +410,7 @@ const RentModal = () => {
                     required
                 />
                 <hr />
-                <Input
+                <SoftInput
                     id="charges"
                     label="Charges (monthly)"
                     type="number"
@@ -431,7 +431,7 @@ const RentModal = () => {
                     title="Now, set your price"
                     subtitle="How much do you charge per night?"
                 />
-                <Input
+                <SoftInput
                     id="price"
                     label="Price"
                     formatPrice

@@ -4,9 +4,9 @@ import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getReservations from "@/app/actions/getReservations";
 
-import TripsClient from "./TripsClient";
+import RentalsClient from "./RentalsClient";
 
-const TripsPage = async () => {
+const RentalsPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
@@ -26,8 +26,10 @@ const TripsPage = async () => {
         return (
             <ClientOnly>
                 <EmptyState
-                    title="No trips found"
-                    subtitle="Looks like you haven't reserved any trips."
+                    title="Aucune location en cours"
+                    subtitle={`Vous n'avez actuellement aucune location en cours.\nLes informations de votre prochaine logement s'afficheront ici.`}
+                    actionLabel="Recherche le logement idéal"
+                    actionUrl="/"
                 />
             </ClientOnly>
         );
@@ -35,7 +37,7 @@ const TripsPage = async () => {
 
     return (
         <ClientOnly>
-            <TripsClient
+            <RentalsClient
                 reservations={reservations}
                 currentUser={currentUser}
             />
@@ -43,4 +45,4 @@ const TripsPage = async () => {
     );
 }
 
-export default TripsPage;
+export default RentalsPage;

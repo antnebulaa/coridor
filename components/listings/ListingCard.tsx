@@ -83,6 +83,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
         return diffDays <= 7;
     }, [data.createdAt]);
 
+    const surfaceDisplay = useMemo(() => {
+        if (!data.surface) return null;
+
+        if (currentUser?.measurementSystem === 'imperial') {
+            return `${Math.round(data.surface * 10.764)} sq ft`;
+        }
+
+        return `${data.surface} m²`;
+    }, [data.surface, currentUser?.measurementSystem]);
+
     return (
         <div
             onClick={() => router.push(`/listings/${data.id}`)}
@@ -121,11 +131,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     </div>
 
                     <div className="font-medium text-neutral-800">
-                        {data.category} à {data.city || location?.label}
+                        {data.category} à {data.city || location?.label}{data.district ? ` ${data.district}` : ''}
                     </div>
 
                     <div className="flex flex-row items-center gap-1 text-neutral-500 text-sm">
-                        {data.roomCount} pièces • {data.roomCount - 1} chambres • {data.surface} m²
+                        {data.roomCount} pièces • {data.roomCount - 1} chambres • {surfaceDisplay}
                     </div>
 
                     <div className="font-medium text-neutral-800 text-sm mt-1">

@@ -10,7 +10,7 @@ import useRegisterModal from '@/hooks/useRegisterModal';
 import useLoginModal from '@/hooks/useLoginModal';
 import Modal from './Modal';
 import Heading from '../Heading';
-import Input from '../inputs/Input';
+import SoftInput from '../inputs/SoftInput';
 import { Button } from '../ui/Button';
 import { signIn } from 'next-auth/react';
 
@@ -64,7 +64,7 @@ const RegisterModal = () => {
                 title="Welcome to Coridor"
                 subtitle="Create an account!"
             />
-            <Input
+            <SoftInput
                 id="email"
                 label="Email"
                 disabled={isLoading}
@@ -72,7 +72,7 @@ const RegisterModal = () => {
                 errors={errors}
                 required
             />
-            <Input
+            <SoftInput
                 id="name"
                 label="Name"
                 disabled={isLoading}
@@ -80,7 +80,7 @@ const RegisterModal = () => {
                 errors={errors}
                 required
             />
-            <Input
+            <SoftInput
                 id="password"
                 label="Password"
                 type="password"
@@ -89,7 +89,7 @@ const RegisterModal = () => {
                 errors={errors}
                 required
             />
-            <Input
+            <SoftInput
                 id="phoneNumber"
                 label="Phone Number"
                 disabled={isLoading}
@@ -97,7 +97,7 @@ const RegisterModal = () => {
                 errors={errors}
                 required
             />
-            <Input
+            <SoftInput
                 id="birthDate"
                 label="Date of Birth"
                 type="date"
@@ -106,7 +106,7 @@ const RegisterModal = () => {
                 errors={errors}
                 required
             />
-            <Input
+            <SoftInput
                 id="address"
                 label="Address"
                 disabled={isLoading}

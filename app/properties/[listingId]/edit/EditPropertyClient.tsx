@@ -11,6 +11,7 @@ import CategorySection from "./components/CategorySection";
 import AmenitiesSection from "./components/AmenitiesSection";
 import PriceSection from "./components/PriceSection";
 import PhotosSection from "./components/PhotosSection";
+import VisitsSection from "./components/VisitsSection";
 import { sidebarLinks } from "./constants";
 
 interface EditPropertyClientProps {
@@ -82,6 +83,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         amenities: 'Atouts',
         availability: 'Disponibilité',
         photos: 'Gestion des photos',
+        visits: 'Visites',
         lease: 'Bail',
         price: 'Loyer',
         tenant: 'Profil locataire',
@@ -112,6 +114,8 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                     photoViewMode={photoViewMode}
                     setPhotoViewMode={setPhotoViewMode}
                 />;
+            case 'visits':
+                return <VisitsSection listing={listing} />;
             case 'lease':
                 return <div>Lease Form Placeholder</div>;
             case 'price':
@@ -152,8 +156,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                             top-0 
                             z-50 
                             bg-white 
-                            pt-4
-                            pb-2
+                            p-4
+                            -mx-4
+                            sm:-mx-2
+                            border-b
                             flex
                             items-center
                             justify-between
@@ -168,6 +174,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                                 </svg>
                             </button>
+
+                            <div className="font-semibold text-sm truncate ml-3 flex-1">
+                                {listing.title}
+                            </div>
 
                             {activeSection === 'photos' && (
                                 <div className="flex gap-2 items-center">
@@ -202,7 +212,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                         </div>
 
                         {/* Mobile Header: Title (Not Sticky) */}
-                        {activeSection !== 'photos' && (
+                        {activeSection !== 'photos' && activeSection !== 'visits' && (
                             <div className="md:hidden mb-6">
                                 <h2 className="text-2xl font-bold">
                                     {sectionTitles[activeSection]}

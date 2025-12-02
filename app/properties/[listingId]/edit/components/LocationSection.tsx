@@ -55,12 +55,18 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                         );
                         const city = cityComponent ? cityComponent.long_name : '';
 
+                        const districtComponent = results[0].address_components.find(
+                            (c) => c.types.includes('sublocality_level_1') || c.types.includes('sublocality')
+                        );
+                        const district = districtComponent ? districtComponent.long_name : '';
+
                         setLocation({
                             label: address,
                             value: listing.locationValue,
                             latlng: [lat, lng],
                             region: region,
                             city: city,
+                            district: district,
                             country: region // region is country name in this context
                         });
                     }
@@ -95,6 +101,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
         axios.put(`/api/listings/${listing.id}`, {
             location: location,
             city: location.city,
+            district: location.district,
             country: location.country
         })
             .then(() => {
@@ -102,8 +109,10 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                 router.refresh();
             })
             .catch((error) => {
-                console.error("Update error:", error.response?.data);
-                toast.error('Something went wrong.');
+                console.error("Update error full:", error);
+                console.error("Update error response:", error.response);
+                console.error("Update error data:", error.response?.data);
+                toast.error(`Something went wrong: ${error.response?.data?.error || error.message}`);
             })
             .finally(() => {
                 setIsLoading(false);

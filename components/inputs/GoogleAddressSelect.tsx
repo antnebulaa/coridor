@@ -13,6 +13,7 @@ export type AddressSelectValue = {
     value: string;
     region: string;
     city?: string;
+    district?: string;
     country?: string;
 }
 
@@ -107,6 +108,34 @@ const PlacesAutocomplete = ({ value, onChange, placeholder, autoFocus }: GoogleA
 
             let city = cityComponent ? cityComponent.long_name : '';
 
+            // Extract district (Arrondissement)
+            const districtComponent = results[0].address_components.find(
+                (c) => c.types.includes('sublocality_level_1') || c.types.includes('sublocality')
+            );
+            let district = districtComponent ? districtComponent.long_name.replace(' Arrondissement', '') : '';
+
+            // Fallback: Infer district from postal code for Paris, Marseille, Lyon
+            if (!district) {
+                const postalCodeComponent = results[0].address_components.find(
+                    (c) => c.types.includes('postal_code')
+                );
+                if (postalCodeComponent) {
+                    const pc = postalCodeComponent.long_name;
+                    const cityLower = city.toLowerCase();
+
+                    if (cityLower === 'paris' && pc.startsWith('750')) {
+                        const arr = parseInt(pc.substring(3), 10);
+                        if (arr >= 1 && arr <= 20) district = `${arr === 1 ? '1er' : arr + 'e'}`;
+                    } else if (cityLower === 'marseille' && pc.startsWith('130')) {
+                        const arr = parseInt(pc.substring(3), 10);
+                        if (arr >= 1 && arr <= 16) district = `${arr === 1 ? '1er' : arr + 'e'}`;
+                    } else if (cityLower === 'lyon' && pc.startsWith('690')) {
+                        const arr = parseInt(pc.substring(3), 10);
+                        if (arr >= 1 && arr <= 9) district = `${arr === 1 ? '1er' : arr + 'e'}`;
+                    }
+                }
+            }
+
             // Fallback: Try to extract from formatted address if city is still empty
             if (!city && results[0].formatted_address) {
                 const parts = results[0].formatted_address.split(',');
@@ -121,6 +150,7 @@ const PlacesAutocomplete = ({ value, onChange, placeholder, autoFocus }: GoogleA
                 latlng: [lat, lng],
                 region: region,
                 city: city,
+                district: district,
                 country: region
             });
         } catch (error) {

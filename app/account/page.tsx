@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
+import AccountIndex from "@/components/account/AccountIndex";
 
 const AccountPage = () => {
-    redirect('/account/personal-info');
+    return <AccountIndex />;
 }
 
 export default AccountPage;

@@ -19,7 +19,7 @@ const Logo = () => {
                 md:block
                 cursor-pointer
                 text-lg
-                text-[#1F1F1F]
+                text-[#170FFF]
                 ${font.className}
             `}
         >

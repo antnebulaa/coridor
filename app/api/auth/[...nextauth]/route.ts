@@ -18,6 +18,27 @@ export const authOptions: AuthOptions = {
             clientId: process.env.GOOGLE_CLIENT_ID as string,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         }),
+        {
+            id: "dossier-facile",
+            name: "DossierFacile",
+            type: "oauth",
+            authorization: {
+                url: "https://sso-preprod.dossierfacile.fr/auth/realms/dossier-facile/protocol/openid-connect/auth",
+                params: { scope: "openid profile email" },
+            },
+            token: "https://sso-preprod.dossierfacile.fr/auth/realms/dossier-facile/protocol/openid-connect/token",
+            userinfo: "https://sso-preprod.dossierfacile.fr/auth/realms/dossier-facile/protocol/openid-connect/userinfo",
+            clientId: process.env.DOSSIER_FACILE_CLIENT_ID,
+            clientSecret: process.env.DOSSIER_FACILE_CLIENT_SECRET,
+            profile(profile) {
+                return {
+                    id: profile.sub,
+                    name: profile.given_name + " " + profile.family_name,
+                    email: profile.email,
+                    image: null,
+                };
+            },
+        },
         CredentialsProvider({
             name: "credentials",
             credentials: {
@@ -52,6 +73,20 @@ export const authOptions: AuthOptions = {
             },
         }),
     ],
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session?.user) {
+                session.user.id = token.id as string;
+            }
+            return session;
+        }
+    },
     pages: {
         signIn: "/",
     },

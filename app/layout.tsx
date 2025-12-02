@@ -13,6 +13,7 @@ import WishlistModal from "@/components/modals/WishlistModal";
 import LeaseModal from "@/components/modals/LeaseModal";
 import { Toaster } from "react-hot-toast";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import getUnreadMessageCount from "@/app/actions/getUnreadMessageCount";
 import AuthProvider from "@/providers/AuthProvider";
 import MainLayout from "@/components/MainLayout";
 
@@ -40,6 +41,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentUser = await getCurrentUser();
+  const unreadCount = await getUnreadMessageCount();
 
   return (
     <html lang="en">
@@ -56,14 +58,14 @@ export default async function RootLayout({
           <WishlistModal />
           <LeaseModal currentUser={currentUser} />
           <Suspense fallback={<div></div>}>
-            <Navbar currentUser={currentUser} />
+            <Navbar currentUser={currentUser} unreadCount={unreadCount} />
           </Suspense>
           <MainLayout>
             {children}
           </MainLayout>
           <Footer />
           <Suspense fallback={<div></div>}>
-            <MobileMenu currentUser={currentUser} />
+            <MobileMenu currentUser={currentUser} unreadCount={unreadCount} />
           </Suspense>
         </AuthProvider>
       </body>

@@ -7,16 +7,16 @@ import { useRouter } from "next/navigation";
 
 import { SafeReservation, SafeUser } from "@/types";
 
-import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
+import Heading from "@/components/Heading";
 import ListingCard from "@/components/listings/ListingCard";
 
-interface TripsClientProps {
+interface RentalsClientProps {
     reservations: SafeReservation[];
     currentUser?: SafeUser | null;
 }
 
-const TripsClient: React.FC<TripsClientProps> = ({
+const RentalsClient: React.FC<RentalsClientProps> = ({
     reservations,
     currentUser
 }) => {
@@ -41,9 +41,9 @@ const TripsClient: React.FC<TripsClientProps> = ({
 
     return (
         <Container>
-            <PageHeader
-                title="Trips"
-                subtitle="Where you've been and where you're going"
+            <Heading
+                title="Mes locations"
+                subtitle="Où vous avez été et où vous allez"
             />
             <div
                 className="
@@ -58,7 +58,7 @@ const TripsClient: React.FC<TripsClientProps> = ({
           gap-8
         "
             >
-                {reservations.map((reservation: any) => (
+                {reservations.map((reservation) => (
                     <ListingCard
                         key={reservation.id}
                         data={reservation.listing}
@@ -75,4 +75,4 @@ const TripsClient: React.FC<TripsClientProps> = ({
     );
 }
 
-export default TripsClient;
+export default RentalsClient;

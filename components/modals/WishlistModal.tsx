@@ -9,7 +9,7 @@ import Image from 'next/image';
 import useWishlistModal from '@/hooks/useWishlistModal';
 import Modal from './Modal';
 import Heading from '../Heading';
-import Input from '../inputs/Input';
+import SoftInput from '../inputs/SoftInput';
 import { Button } from '../ui/Button';
 import { FieldValues, useForm, SubmitHandler } from 'react-hook-form';
 
@@ -150,7 +150,7 @@ const WishlistModal = () => {
                     />
                 ) : (
                     <div className="flex flex-col gap-4">
-                        <Input
+                        <SoftInput
                             id="name"
                             label="Name"
                             register={register}

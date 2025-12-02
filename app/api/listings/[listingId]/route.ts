@@ -104,7 +104,10 @@ export async function PUT(
                 totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
                 buildYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
                 city: city || location?.city,
+                district: body.district || location?.district,
                 country: country || location?.country,
+                latitude: location?.latlng ? location.latlng[0] : undefined,
+                longitude: location?.latlng ? location.latlng[1] : undefined,
             };
 
             // Handle amenities only if provided

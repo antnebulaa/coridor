@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({
                     >
                         <HiChevronLeft size={32} />
                     </Link>
-                    <Avatar src={otherUser?.image} />
+                    <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} />
                     <div className="flex flex-col">
                         <div>
                             {conversation.name || otherUser?.name}

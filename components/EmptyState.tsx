@@ -8,12 +8,16 @@ interface EmptyStateProps {
     title?: string;
     subtitle?: string;
     showReset?: boolean;
+    actionLabel?: string;
+    actionUrl?: string;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
     title = "No exact matches",
     subtitle = "Try changing or removing some of your filters",
-    showReset
+    showReset,
+    actionLabel,
+    actionUrl
 }) => {
     const router = useRouter();
 
@@ -33,7 +37,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
                 title={title}
                 subtitle={subtitle}
             />
-            <div className="w-48 mt-4">
+            <div className="mt-4 flex flex-col items-center">
                 {showReset && (
                     <Button
                         variant="outline"
@@ -41,6 +45,15 @@ const EmptyState: React.FC<EmptyStateProps> = ({
                     >
                         Remove all filters
                     </Button>
+                )}
+                {actionLabel && actionUrl && (
+                    <div className="w-auto">
+                        <Button
+                            label={actionLabel}
+                            onClick={() => router.push(actionUrl)}
+                            className="w-auto rounded-full px-[20px] py-[15px]"
+                        />
+                    </div>
                 )}
             </div>
         </div>

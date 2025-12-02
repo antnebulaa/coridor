@@ -10,7 +10,7 @@ import Heading from '../Heading';
 import GoogleAddressSelect, { AddressSelectValue } from '../inputs/GoogleAddressSelect';
 import CategoryInput from '../inputs/CategoryInput';
 import Counter from '../inputs/Counter';
-import Input from '../inputs/Input'; // Assuming we can reuse Input or create a simple one
+import SoftInput from '../inputs/SoftInput'; // Assuming we can reuse Input or create a simple one
 import { categories } from '../navbar/Categories';
 
 enum STEPS {
@@ -332,7 +332,7 @@ const SearchModal = () => {
                 <div id="budget" className="flex flex-col gap-4">
                     <div className="font-semibold text-lg">Budget (par mois)</div>
                     <div className="flex flex-row gap-4 items-center">
-                        <Input
+                        <SoftInput
                             id="minPrice"
                             label="Prix min"
                             formatPrice
@@ -341,7 +341,7 @@ const SearchModal = () => {
                             value={minPrice}
                             onChange={(e) => setMinPrice(e.target.value)}
                         />
-                        <Input
+                        <SoftInput
                             id="maxPrice"
                             label="Prix max"
                             formatPrice
@@ -358,7 +358,7 @@ const SearchModal = () => {
                 <div id="surface" className="flex flex-col gap-4">
                     <div className="font-semibold text-lg">Surface (m²)</div>
                     <div className="flex flex-row gap-4 items-center">
-                        <Input
+                        <SoftInput
                             id="minSurface"
                             label="Surface min (m²)"
                             type="number"
@@ -366,7 +366,7 @@ const SearchModal = () => {
                             value={minSurface}
                             onChange={(e) => setMinSurface(e.target.value)}
                         />
-                        <Input
+                        <SoftInput
                             id="maxSurface"
                             label="Surface max (m²)"
                             type="number"

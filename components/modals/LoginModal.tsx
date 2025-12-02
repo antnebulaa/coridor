@@ -11,7 +11,7 @@ import useRegisterModal from '@/hooks/useRegisterModal';
 import useLoginModal from '@/hooks/useLoginModal';
 import Modal from './Modal';
 import Heading from '../Heading';
-import Input from '../inputs/Input';
+import SoftInput from '../inputs/SoftInput';
 import { Button } from '../ui/Button';
 
 const LoginModal = () => {
@@ -66,7 +66,7 @@ const LoginModal = () => {
                 title="Welcome back"
                 subtitle="Login to your account!"
             />
-            <Input
+            <SoftInput
                 id="email"
                 label="Email"
                 disabled={isLoading}
@@ -74,7 +74,7 @@ const LoginModal = () => {
                 errors={errors}
                 required
             />
-            <Input
+            <SoftInput
                 id="password"
                 label="Password"
                 type="password"

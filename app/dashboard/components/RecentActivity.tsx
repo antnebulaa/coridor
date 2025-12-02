@@ -30,7 +30,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
                 ) : (
                     reservations.map((reservation) => (
                         <div key={reservation.id} className="flex items-center gap-4 border-b-[1px] pb-4 last:border-0 last:pb-0">
-                            <Avatar src={reservation.user?.image} />
+                            <Avatar src={reservation.user?.image} seed={reservation.user?.email || reservation.user?.name} />
                             <div className="flex flex-col flex-1">
                                 <div className="text-sm font-medium">
                                     {reservation.user?.name || 'Guest'} reserved {reservation.listingTitle}

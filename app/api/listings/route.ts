@@ -60,6 +60,7 @@ export async function POST(
             leaseType,
             dpe,
             city: location.city,
+            district: location.district,
             country: location.country,
             charges: { amount: parseInt(charges, 10) },
             // New fields

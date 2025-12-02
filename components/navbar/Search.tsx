@@ -65,11 +65,11 @@ const Search = () => {
     }, [roomCount]);
 
     return (
-        <div className="flex flex-row items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex flex-row items-center gap-2 overflow-x-auto md:overflow-visible w-full md:w-auto pb-2 scrollbar-hide">
             {/* Location Search */}
             <div
                 onClick={() => searchModal.onOpen({ step: 0 })}
-                className="border-[1px] min-w-fit py-2 rounded-full shadow-sm hover:shadow-md transition cursor-pointer"
+                className="border-[1px] border-[#dfdfdf] min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer"
             >
                 <div className="flex flex-row items-center justify-between px-2 gap-3">
                     <div className="p-2 bg-blue-600 rounded-full text-white">
@@ -84,25 +84,25 @@ const Search = () => {
             {/* Advanced Filters */}
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'budget' })}
-                className={`border-[1px] py-3 px-4 rounded-full shadow-sm hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-neutral-100 border-neutral-800' : ''}`}
             >
                 {budgetLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'surface' })}
-                className={`border-[1px] py-3 px-4 rounded-full shadow-sm hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-neutral-100 border-neutral-800' : ''}`}
             >
                 {surfaceLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'rooms' })}
-                className={`border-[1px] py-3 px-4 rounded-full shadow-sm hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-neutral-100 border-neutral-800' : ''}`}
             >
                 {roomsLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2 })}
-                className="border-[1px] py-3 px-4 rounded-full shadow-sm hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
+                className="border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
             >
                 Filtres
             </div>

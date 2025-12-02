@@ -84,6 +84,15 @@ model TenantProfile {
   jobTitle          String?
   netSalary         Int?
   
+  // Partner Info
+  partnerJobType    String?
+  partnerJobTitle   String?
+  partnerNetSalary  Int?
+
+  // APL Info
+  aplAmount         Int?
+  aplDirectPayment  Boolean @default(false)
+
   user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
   guarantors        Guarantor[]
   additionalIncomes Income[]
@@ -145,6 +154,9 @@ model Listing {
   price         Int
   city          String?
   country       String?
+  district      String?
+  latitude      Float?
+  longitude     Float?
   
   // Coridor Fields
   leaseType     LeaseType?
@@ -205,6 +217,22 @@ model Listing {
   // New Photo Structure
   rooms         Room[]
   images        PropertyImage[]
+
+  // Caching
+  transitData   Json?
+
+  // Visits
+  visitSlots    VisitSlot[]
+}
+
+model VisitSlot {
+  id        String   @id @default(uuid())
+  listingId String
+  date      DateTime // Specific date for the visit slot
+  startTime String   // Format "HH:mm"
+  endTime   String   // Format "HH:mm"
+
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 model Room {
@@ -277,4 +305,20 @@ model Message {
   
   senderId String
   sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model Amenity {
+  id        String   @id @default(uuid())
+  type      String
+  latitude  Float
+  longitude Float
+  name      String?
+  city      String?
+  zipCode   String?
+  sourceId  String?  @unique
+  geom      Unsupported("geometry(Point, 4326)")?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([geom], name: "amenity_geom_idx", type: Gist)
 }

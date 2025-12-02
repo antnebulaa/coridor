@@ -1,43 +1,53 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
-// import Avatar from '../Avatar'; // I don't have Avatar yet. I'll use a placeholder.
-import { useMemo } from 'react';
+import { LucideIcon, Ruler, Building2, Calendar, Home } from 'lucide-react';
+import useCountries from '@/hooks/useCountries';
+import NeighborhoodScore from './NeighborhoodScore';
+import { SafeListing, SafeUser } from '@/types';
+import ListingAmenities from './ListingAmenities';
+import ListingLocation from './ListingLocation';
+import ListingTransit from './ListingTransit';
+import Avatar from '../Avatar';
 
 interface ListingInfoProps {
-    user: any;
-    description: string;
-    guestCount: number;
-    roomCount: number;
-    bathroomCount: number;
+    user: SafeUser;
     category: {
         icon: LucideIcon;
         label: string;
         description: string;
     } | undefined;
+    description: string;
+    roomCount: number;
+    guestCount: number;
+    bathroomCount: number;
     locationValue: string;
+    listing: SafeListing;
 }
 
 const ListingInfo: React.FC<ListingInfoProps> = ({
     user,
-    description,
-    guestCount,
-    roomCount,
-    bathroomCount,
     category,
+    description,
+    roomCount,
+    guestCount,
+    bathroomCount,
     locationValue,
+    listing
 }) => {
+    const { getByValue } = useCountries();
+    const coordinates = getByValue(locationValue)?.latlng;
+
     return (
         <div className="col-span-4 flex flex-col gap-8">
             <div className="flex flex-col gap-2">
                 <div className="text-xl font-medium flex flex-row items-center gap-2">
-                    <div>Hosted by {user?.name || 'Host'}</div>
-                    <div className="h-[30px] w-[30px] rounded-full bg-gray-500" />
+                    <div>Proposé par {user?.name}</div>
+                    <Avatar src={user?.image} seed={user?.email || user?.name} />
                 </div>
                 <div className="flex flex-row items-center gap-4 font-light text-neutral-500">
-                    <div>{guestCount} guests</div>
-                    <div>{roomCount} rooms</div>
-                    <div>{bathroomCount} bathrooms</div>
+                    <div>{guestCount} Capacité</div>
+                    <div>{roomCount} chambres</div>
+                    <div>{bathroomCount} salles de bain</div>
                 </div>
             </div>
             <hr />
@@ -57,14 +67,77 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                 </div>
             )}
             <hr />
+
+            {/* Property Details Section */}
+            <div className="flex flex-col gap-6">
+                <div className="text-xl font-semibold flex items-center gap-2">
+                    <Home size={24} />
+                    Détails du logement
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-neutral-600">
+                    {listing.surface && (
+                        <div className="flex items-center gap-2">
+                            <Ruler size={20} />
+                            <span>{listing.surface} {listing.surfaceUnit === 'imperial' ? 'sq ft' : 'm²'}</span>
+                        </div>
+                    )}
+                    {listing.floor !== null && (
+                        <div className="flex items-center gap-2">
+                            <Building2 size={20} />
+                            <span>Étage {listing.floor} {listing.totalFloors ? `/ ${listing.totalFloors}` : ''}</span>
+                        </div>
+                    )}
+                    {listing.buildYear && (
+                        <div className="flex items-center gap-2">
+                            <Calendar size={20} />
+                            <span>Année de construction : {listing.buildYear}</span>
+                        </div>
+                    )}
+                    {listing.isFurnished !== undefined && (
+                        <div className="flex items-center gap-2">
+                            <Home size={20} />
+                            <span>{listing.isFurnished ? 'Meublé' : 'Non meublé'}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <hr />
             <div className="text-lg font-light text-neutral-500">
                 {description}
             </div>
             <hr />
-            {/* Map placeholder */}
-            <div className="h-[200px] w-full bg-neutral-100 rounded-lg flex items-center justify-center text-neutral-500">
-                Map Placeholder
-            </div>
+
+            <ListingAmenities listing={listing} />
+
+            <hr />
+
+            <ListingLocation listing={listing} />
+
+            <hr />
+
+            {/* Transit Section - Uses same coordinates as Map */}
+            {(() => {
+                const countryCoords = getByValue(locationValue)?.latlng;
+                const lat = listing.latitude ?? countryCoords?.[0];
+                const lng = listing.longitude ?? countryCoords?.[1];
+
+                if (lat && lng) {
+                    return (
+                        <>
+                            <ListingTransit
+                                latitude={lat}
+                                longitude={lng}
+                                listingId={listing.id}
+                            />
+                            <hr />
+                        </>
+                    );
+                }
+                return null;
+            })()}
+
+            <NeighborhoodScore latitude={listing.latitude!} longitude={listing.longitude!} />
         </div>
     );
 };

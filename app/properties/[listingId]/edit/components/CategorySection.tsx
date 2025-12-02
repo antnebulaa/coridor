@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { SafeListing, SafeUser } from "@/types";
 import { Button } from "@/components/ui/Button";
 import Counter from "@/components/inputs/Counter";
-import Input from "@/components/inputs/Input";
+import SoftInput from "@/components/inputs/SoftInput";
+import SoftSelect from "@/components/inputs/SoftSelect";
 
 interface CategorySectionProps {
     listing: SafeListing;
@@ -62,54 +63,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
         })
     }
 
-    // Custom Select Component for consistent styling
-    const CustomSelect = ({ value, onChange, options, disabled }: any) => (
-        <div className="relative w-full">
-            <select
-                value={value}
-                onChange={onChange}
-                disabled={disabled}
-                className="
-                    w-full 
-                    p-4 
-                    border-[1px] 
-                    rounded-xl 
-                    outline-none 
-                    transition 
-                    disabled:opacity-70 
-                    disabled:cursor-not-allowed 
-                    border-neutral-300 
-                    focus:border-black 
-                    bg-white 
-                    appearance-none
-                    cursor-pointer
-                "
-            >
-                {options.map((opt: any) => (
-                    <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                    </option>
-                ))}
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                <svg
-                    width="14"
-                    height="8"
-                    viewBox="0 0 14 8"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        d="M1 1L7 7L13 1"
-                        stroke="black"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                </svg>
-            </div>
-        </div>
-    );
+
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
         setIsLoading(true);
@@ -131,10 +85,11 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
         <div className="flex flex-col gap-8 pb-28 md:pb-0">
             {/* Type de bien */}
             <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm text-neutral-500">Quel type de bien louez-vous ?</label>
-                <CustomSelect
+                <SoftSelect
+                    id="category"
+                    label="Quel type de bien louez-vous ?"
                     value={category}
-                    onChange={(e: any) => setCustomValue('category', e.target.value)}
+                    onChange={(e) => setCustomValue('category', e.target.value)}
                     disabled={isLoading}
                     options={[
                         { value: "Maison", label: "Une maison" },
@@ -146,10 +101,11 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
 
             {/* Meublé */}
             <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm text-neutral-500">Votre logement est-il meublé ?</label>
-                <CustomSelect
+                <SoftSelect
+                    id="isFurnished"
+                    label="Votre logement est-il meublé ?"
                     value={isFurnished ? 'true' : 'false'}
-                    onChange={(e: any) => setCustomValue('isFurnished', e.target.value === 'true')}
+                    onChange={(e) => setCustomValue('isFurnished', e.target.value === 'true')}
                     disabled={isLoading}
                     options={[
                         { value: "true", label: "Logement meublé" },
@@ -161,7 +117,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             {/* Surface */}
             <div className="flex flex-row gap-2">
                 <div className="w-full">
-                    <Input
+                    <SoftInput
                         id="surface"
                         label={`Surface du logement (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})`}
                         type="number"
@@ -172,9 +128,11 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
                     />
                 </div>
                 <div className="w-[140px]">
-                    <CustomSelect
+                    <SoftSelect
+                        id="surfaceUnit"
+                        label="Unité"
                         value={surfaceUnit}
-                        onChange={(e: any) => setCustomValue('surfaceUnit', e.target.value)}
+                        onChange={(e) => setCustomValue('surfaceUnit', e.target.value)}
                         disabled={isLoading}
                         options={[
                             { value: "metric", label: "m²" },
@@ -219,10 +177,11 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
 
             {/* Cuisine */}
             <div className="flex flex-col gap-2">
-                <label className="font-medium text-sm text-neutral-500">Votre bien dispose t-il d’une cuisine séparée?</label>
-                <CustomSelect
+                <SoftSelect
+                    id="kitchenType"
+                    label="Votre bien dispose t-il d’une cuisine séparée?"
                     value={kitchenType || 'open'}
-                    onChange={(e: any) => setCustomValue('kitchenType', e.target.value)}
+                    onChange={(e) => setCustomValue('kitchenType', e.target.value)}
                     disabled={isLoading}
                     options={[
                         { value: "separate", label: "Cuisine séparée" },
@@ -258,7 +217,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             <hr />
 
             {/* Année construction */}
-            <Input
+            <SoftInput
                 id="buildYear"
                 label="Année de construction"
                 type="number"
