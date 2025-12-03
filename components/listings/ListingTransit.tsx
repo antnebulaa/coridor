@@ -65,6 +65,11 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
         if (cat.includes("subway") || cat.includes("metro")) return <div className="font-bold text-xl border-2 border-current rounded-full w-8 h-8 flex items-center justify-center">M</div>;
         if (cat.includes("tram") || cat.includes("lightrail")) return <TramFront size={24} />;
         if (cat.includes("train") || cat.includes("rail") || cat.includes("regional")) return <Train size={24} />;
+        if (cat.includes("bus")) return (
+            <div className="w-[52px] h-[30px] rounded-[15px] flex items-center justify-center text-[0.9rem] font-semibold border-2 border-[#333] bg-white text-[#333]">
+                BUS
+            </div>
+        );
         return <Bus size={24} />;
     };
 
@@ -99,25 +104,62 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
             <div className="flex flex-col gap-4">
                 {sortedCategories.map((category) => (
                     <div key={category} className="flex items-center gap-4">
-                        <div className="w-32 font-medium text-neutral-600 flex items-center gap-2">
+                        <div className="w-[60px] flex justify-center">
                             {getIcon(category)}
-                            {getCategoryLabel(category)}
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            {groupedLines[category].map((line, index) => (
-                                <div
-                                    key={index}
-                                    className="px-3 py-1 rounded-md font-bold text-sm shadow-sm"
-                                    style={{
+                        <div className="flex flex-wrap gap-2 items-center">
+                            {groupedLines[category].map((line, index) => {
+                                const cat = String(category).toLowerCase().trim();
+                                const isMetro = cat.includes("subway") || cat.includes("metro");
+                                const isBus = cat.includes("bus");
+                                const isTrain = cat.includes("train") || cat.includes("rail") || cat.includes("regional") || cat.includes("rer");
+
+                                let styleClass = "";
+                                let customStyle: React.CSSProperties = {
+                                    backgroundColor: line.color,
+                                    color: line.textColor || '#fff',
+                                };
+
+                                if (isMetro) {
+                                    // Metro: 30x30px, radius 20px (effectively circle), Inter Semi-Bold 0.9rem
+                                    styleClass = "w-[30px] h-[30px] rounded-[20px] flex items-center justify-center text-[0.9rem] font-semibold";
+                                    customStyle = {
                                         backgroundColor: line.color,
-                                        color: line.textColor || '#fff',
-                                        border: line.color === '#ffffff' ? '1px solid #e5e5e5' : 'none'
-                                    }}
-                                    title={line.headsign}
-                                >
-                                    {line.name}
-                                </div>
-                            ))}
+                                        color: line.textColor || '#333',
+                                        fontFamily: 'Inter, sans-serif'
+                                    };
+                                } else if (isBus) {
+                                    // Bus: 52x30px, radius 15px, Inter Semi-Bold 0.9rem
+                                    styleClass = "w-[52px] h-[30px] rounded-[15px] flex items-center justify-center text-[0.9rem] font-semibold";
+                                    customStyle = {
+                                        backgroundColor: line.color,
+                                        color: line.textColor || '#333',
+                                        fontFamily: 'Inter, sans-serif'
+                                    };
+                                } else if (isTrain) {
+                                    // Train/RER: 30x30px, radius 7px, Inter Semi-Bold 0.9rem
+                                    styleClass = "w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[0.9rem] font-semibold";
+                                    customStyle = {
+                                        backgroundColor: line.color,
+                                        color: line.textColor || '#333',
+                                        fontFamily: 'Inter, sans-serif'
+                                    };
+                                } else {
+                                    // Default fallback
+                                    styleClass = "px-2 py-1 rounded-md font-bold text-xs";
+                                }
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className={styleClass}
+                                        style={customStyle}
+                                        title={line.headsign}
+                                    >
+                                        {line.name}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
