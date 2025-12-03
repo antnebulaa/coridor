@@ -29,6 +29,7 @@ export type SectionType =
     | 'amenities'
     | 'availability'
     | 'photos'
+    | 'visits'
     | 'lease'
     | 'price'
     | 'tenant'
