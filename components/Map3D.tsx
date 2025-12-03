@@ -32,7 +32,6 @@ const Map3D: React.FC<Map3DProps> = ({ center }) => {
             scrollZoom={false}
             dragPan={false}
             doubleClickZoom={false}
-            touchZoom={false}
             boxZoom={false}
             keyboard={false}
             dragRotate={false}
