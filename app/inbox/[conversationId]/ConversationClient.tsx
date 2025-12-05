@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { SafeUser, SafeMessage, SafeListing } from "@/types";
+import clsx from "clsx";
 import Header from "./components/Header";
 import Body from "./components/Body";
 import Form from "./components/Form";
@@ -95,6 +96,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     />
                 </div>
             </div>
+            {/* Dossier Sidebar - Desktop Only for now or Drawer? keeping simple for existing logic */}
             {showDossier && otherUser && otherUser.id !== currentUser?.id && otherUser.tenantProfile && (
                 <div className="hidden xl:flex flex-col w-[340px] h-full bg-white border-l border-gray-200">
                     <div className="
@@ -144,8 +146,15 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     </div>
                 </div>
             )}
+
+            {/* Right Sidebar (Visit Selection or Listing Recap) */}
             {!showDossier && rent && (
-                <div className="hidden xl:flex flex-col w-[340px] h-full bg-white border-l border-gray-200">
+                <div className={clsx(`
+                    flex flex-col h-full bg-white border-l border-gray-200
+                    xl:w-[340px]
+                    `,
+                    isVisitSelectionOpen ? "fixed inset-0 z-50 w-full xl:static xl:z-auto" : "hidden xl:flex w-[340px]"
+                )}>
                     <div className="
                         flex-none
                         bg-white 
@@ -156,11 +165,24 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         py-3 
                         px-6 
                         items-center
+                        justify-between
                         h-[73px]
                     ">
                         <h2 className="text-2xl font-medium text-neutral-800">
                             {isVisitSelectionOpen ? 'Visites' : 'Récapitulatif'}
                         </h2>
+                        {/* Mobile Close Button */}
+                        {isVisitSelectionOpen && (
+                            <button
+                                onClick={() => setIsVisitSelectionOpen(false)}
+                                className="p-2 -mr-2 text-gray-500 hover:text-black xl:hidden"
+                            >
+                                <span className="sr-only">Fermer</span>
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
 
                     {isVisitSelectionOpen && listing ? (

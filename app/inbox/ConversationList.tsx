@@ -42,25 +42,29 @@ const ConversationList: React.FC<ConversationListProps> = ({
     });
 
     return (
-        <aside className={clsx(`
-        hidden
-        lg:block
-        w-[340px]
-        h-full
-        overflow-y-auto 
-        border-r 
-        border-gray-200 
-      `,
-            isOpen ? 'hidden' : 'block w-full left-0'
+        <aside className={clsx(
+            /* Base Styles */
+            `bg-white border-r border-gray-200 flex flex-col`,
+
+            /* Mobile Styles */
+            isOpen ? 'hidden lg:flex' : 'fixed inset-0 z-40 w-full pb-20 lg:pb-0',
+
+            /* Desktop Styles */
+            `lg:static 
+             lg:w-[340px] 
+             lg:inset-auto 
+             lg:z-auto 
+             lg:h-full
+             lg:block`
         )}>
-            <div className="px-5">
-                <div className="flex justify-between mb-4 pt-4">
+            <div className="px-5 pt-4 pb-2 border-b border-gray-200 flex-none bg-white z-10">
+                <div className="flex justify-between mb-4">
                     <div className="text-2xl font-medium text-neutral-800">
                         Messages
                     </div>
                 </div>
 
-                <div className="flex gap-4 mb-4 border-b border-gray-200">
+                <div className="flex gap-4">
                     <button
                         onClick={() => setFilter('all')}
                         className={clsx(`
@@ -94,7 +98,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
                         Non lus
                     </button>
                 </div>
+            </div>
 
+            <div className="flex-1 overflow-y-auto px-5">
                 {filteredItems.map((item) => (
                     <ConversationBox
                         key={item.id}

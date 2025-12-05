@@ -43,6 +43,8 @@ const Header: React.FC<HeaderProps> = ({
         lg:px-6 
         justify-between 
         items-center 
+        relative
+        z-10
       ">
                 <div className="flex gap-3 items-center">
                     <Link
