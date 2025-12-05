@@ -751,7 +751,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         <Button
                             label="Aperçu"
                             onClick={() => setIsPreviewOpen(true)}
-                            outline
+                            variant="outline"
                             icon={Eye}
                         />
                         <div className="w-full md:w-auto">
