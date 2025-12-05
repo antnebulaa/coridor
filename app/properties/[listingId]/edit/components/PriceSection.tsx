@@ -187,8 +187,8 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                         </div>
                         <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden relative">
                             <div
-                                className={`h-full transition-all duration-500 rounded-full ${gaugeStatus === 'red' ? 'bg-rose-500' :
-                                        gaugeStatus === 'orange' ? 'bg-orange-500' : 'bg-emerald-500'
+                                className={`h-full transition-all duration-500 rounded-full ${gaugeStatus === 'red' ? 'bg-primary' :
+                                    gaugeStatus === 'orange' ? 'bg-orange-500' : 'bg-emerald-500'
                                     }`}
                                 style={{ width: `${percentage}%` }}
                             />
@@ -201,7 +201,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                     </div>
 
                     <div className={`text-sm p-3 rounded-lg flex items-start gap-3 ${gaugeStatus === 'red' ? 'bg-rose-100 text-rose-800' :
-                            gaugeStatus === 'orange' ? 'bg-orange-100 text-orange-800' : 'bg-emerald-100 text-emerald-800'
+                        gaugeStatus === 'orange' ? 'bg-orange-100 text-orange-800' : 'bg-emerald-100 text-emerald-800'
                         }`}>
                         {gaugeStatus === 'red' && <AlertTriangle className="shrink-0 mt-0.5" size={18} />}
                         {gaugeStatus === 'orange' && <Info className="shrink-0 mt-0.5" size={18} />}

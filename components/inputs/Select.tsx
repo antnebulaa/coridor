@@ -40,8 +40,8 @@ const Select: React.FC<SelectProps> = ({
           transition
           disabled:opacity-70
           disabled:cursor-not-allowed
-          ${errors[id] ? 'border-rose-500' : 'border-neutral-300'}
-          ${errors[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+          ${errors[id] ? 'border-primary' : 'border-neutral-300'}
+          ${errors[id] ? 'focus:border-primary' : 'focus:border-black'}
         `}
             >
                 {options.map((option) => (
@@ -65,7 +65,7 @@ const Select: React.FC<SelectProps> = ({
           peer-placeholder-shown:translate-y-0
           peer-focus:scale-75
           peer-focus:-translate-y-4
-          ${errors[id] ? 'text-rose-500' : 'text-zinc-400'}
+          ${errors[id] ? 'text-primary' : 'text-zinc-400'}
           pointer-events-none
         `}
             >

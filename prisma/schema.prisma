@@ -75,6 +75,7 @@ model User {
   seenMessages Message[] @relation("Seen")
   
   messages Message[]
+  visits   Visit[] // Visits as candidate
 }
 
 model TenantProfile {
@@ -92,6 +93,11 @@ model TenantProfile {
   // APL Info
   aplAmount         Int?
   aplDirectPayment  Boolean @default(false)
+
+  // Rent Verification (GoCardless)
+  rentVerified      Boolean @default(false)
+  detectedRentAmount Int?
+  rentPaymentDate   Int? // Day of the month (1-31)
 
   user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
   guarantors        Guarantor[]
@@ -222,7 +228,12 @@ model Listing {
   transitData   Json?
 
   // Visits
+  // Visits
+  visitDuration Int?    @default(20) // Duration in minutes (15, 20, 30, 45)
   visitSlots    VisitSlot[]
+  visits        Visit[]
+
+  applicationMessages Message[]
 }
 
 model VisitSlot {
@@ -233,6 +244,26 @@ model VisitSlot {
   endTime   String   // Format "HH:mm"
 
   listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+enum VisitStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Visit {
+  id          String   @id @default(uuid())
+  listingId   String
+  candidateId String
+  date        DateTime
+  startTime   String   // Format "HH:mm"
+  endTime     String   // Format "HH:mm"
+  status      VisitStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 }
 
 model Room {
@@ -305,6 +336,9 @@ model Message {
   
   senderId String
   sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  listingId String?
+  listing Listing? @relation(fields: [listingId], references: [id])
 }
 
 model Amenity {

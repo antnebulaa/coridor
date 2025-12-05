@@ -16,7 +16,20 @@ const getConversationById = async (
                 id: conversationId
             },
             include: {
-                users: true
+                users: {
+                    include: {
+                        tenantProfile: {
+                            include: {
+                                guarantors: {
+                                    include: {
+                                        additionalIncomes: true
+                                    }
+                                },
+                                additionalIncomes: true
+                            }
+                        }
+                    }
+                }
             }
         });
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 interface AvatarProps {
     src: string | null | undefined;
     seed?: string | null;
+    size?: number;
 }
 
 const gradients = [
@@ -44,7 +45,7 @@ const getGradient = (seed?: string | null) => {
     return gradients[Math.abs(hash) % gradients.length];
 };
 
-const Avatar: React.FC<AvatarProps> = ({ src, seed }) => {
+const Avatar: React.FC<AvatarProps> = ({ src, seed, size = 30 }) => {
     if (!src) {
         const gradient = getGradient(seed);
         return (
@@ -52,8 +53,8 @@ const Avatar: React.FC<AvatarProps> = ({ src, seed }) => {
                 className="rounded-full"
                 style={{
                     background: gradient,
-                    height: '30px',
-                    width: '30px'
+                    height: `${size}px`,
+                    width: `${size}px`
                 }}
             />
         );
@@ -62,8 +63,8 @@ const Avatar: React.FC<AvatarProps> = ({ src, seed }) => {
     return (
         <Image
             className="rounded-full"
-            height="30"
-            width="30"
+            height={size}
+            width={size}
             alt="Avatar"
             src={src}
         />

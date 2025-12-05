@@ -22,6 +22,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<any
   return (
     <Container>
       <div className="
+        pt-4
+        sm:pt-2
+        md:pt-10
+        xl:pt-20
         grid
         grid-cols-1
         sm:grid-cols-2

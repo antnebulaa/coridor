@@ -1,16 +1,17 @@
 'use client';
 
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FieldValues, SubmitHandler, useForm, useFieldArray } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SafeUser } from "@/types";
 import { GuarantorType, GuarantorStatus, IncomeType } from "@prisma/client";
 import { generateDossierHtml } from "@/utils/dossierGenerator";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { Info } from "lucide-react";
+import { Info, ShieldCheck, CheckCircle, AlertCircle, Eye } from "lucide-react";
+import Modal from "@/components/modals/Modal";
 
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
@@ -18,6 +19,7 @@ import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
 import { Button } from "@/components/ui/Button";
 import SoftButton from "@/components/ui/SoftButton";
+import TenantProfilePreview from "@/components/profile/TenantProfilePreview";
 
 interface TenantProfileClientProps {
     currentUser: SafeUser;
@@ -29,7 +31,90 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
     tenantProfile
 }) => {
     const router = useRouter();
+    const params = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
+    const [isRentModalOpen, setIsRentModalOpen] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [recipientName, setRecipientName] = useState("");
+    const [detectedTransactions, setDetectedTransactions] = useState<any[]>([]);
+    const processingRef = useRef(false);
+
+    const handleConnectBank = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get('/api/powens/init');
+            window.location.href = response.data.link;
+        } catch (error) {
+            toast.error("Impossible d'initialiser la connexion.");
+            setIsLoading(false);
+        }
+    };
+
+    const handleAnalyzeRent = async (code: string) => {
+        if (processingRef.current) return;
+        processingRef.current = true;
+        setIsLoading(true);
+
+        try {
+            const response = await axios.post('/api/powens/analyze', {
+                code,
+                recipientName
+            });
+            if (response.data.found) {
+                setDetectedTransactions(response.data.transactions || []);
+                setIsRentModalOpen(true);
+                // Remove code from URL to prevent re-trigger
+                router.replace('/account/tenant-profile');
+            } else {
+                toast.error("Aucun paiement de loyer récurrent détecté.");
+                router.replace('/account/tenant-profile');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Erreur lors de l'analyse.");
+            router.replace('/account/tenant-profile');
+        } finally {
+            setIsLoading(false);
+            processingRef.current = false;
+        }
+    };
+
+    // Check for Powens callback (code)
+    useEffect(() => {
+        const code = params?.get('code');
+        if (code && !isRentModalOpen && !tenantProfile?.rentVerified) {
+            handleAnalyzeRent(code);
+        }
+    }, [params, isRentModalOpen, tenantProfile?.rentVerified]);
+
+    const handleConfirmRent = async () => {
+        setIsLoading(true);
+        try {
+            await axios.post('/api/profile/verify-rent');
+            toast.success("Fiabilité confirmée !");
+            setIsRentModalOpen(false);
+            router.refresh();
+        } catch (error) {
+            toast.error("Erreur lors de la confirmation.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleResetRent = async () => {
+        if (!confirm("Voulez-vous vraiment supprimer cette vérification ?")) return;
+
+        setIsLoading(true);
+        try {
+            await axios.delete('/api/profile/verify-rent');
+            toast.success("Vérification supprimée.");
+            router.refresh();
+        } catch (error) {
+            toast.error("Erreur lors de la suppression.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Prepare default values
     const defaultValues = {
@@ -210,6 +295,110 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         </div>
                     </div>
 
+                    {/* Rent Verification Badge or Button */}
+                    <div className="flex flex-col gap-4 p-6 border border-[#dddddd] rounded-xl bg-white">
+                        <h3 className="text-xl font-semibold flex items-center gap-2">
+                            Fiabilité Financière
+                            {tenantProfile?.rentVerified && (
+                                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold flex items-center gap-1">
+                                    <ShieldCheck size={14} />
+                                    VÉRIFIÉ
+                                </span>
+                            )}
+                        </h3>
+
+                        {tenantProfile?.rentVerified ? (
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                                    <CheckCircle size={32} />
+                                    <div>
+                                        <div className="font-bold">Paiements de loyer détectés sur 12 mois</div>
+                                        <div className="text-sm">Votre régularité de paiement est certifiée. C&apos;est un atout majeur pour votre dossier !</div>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={handleResetRent}
+                                        disabled={isLoading}
+                                        className="text-xs text-red-400 hover:text-red-600 hover:underline transition"
+                                    >
+                                        Réinitialiser la vérification
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+                                        <ShieldCheck size={24} />
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-blue-900">Prouver ma fiabilité</div>
+                                        <div className="text-sm text-blue-700">Connectez votre compte bancaire pour certifier vos paiements de loyer. (Sécurisé par Powens)</div>
+                                        <div className="mt-3">
+                                            <label className="text-xs font-bold text-blue-800 block mb-1">
+                                                Nom du bénéficiaire (Optionnel, pour aider la détection)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ex: Agence Immo, M. Dupont..."
+                                                value={recipientName}
+                                                onChange={(e) => setRecipientName(e.target.value)}
+                                                className="w-full p-2 text-sm border border-blue-300 rounded-md bg-white text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button
+                                    label={isLoading ? "Récupération des loyers..." : "Connecter ma banque"}
+                                    onClick={handleConnectBank}
+                                    disabled={isLoading}
+                                    loading={isLoading}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Rent Confirmation Modal */}
+                    <Modal
+                        isOpen={isRentModalOpen}
+                        onClose={() => setIsRentModalOpen(false)}
+                        onSubmit={handleConfirmRent}
+                        title="Confirmation de loyer"
+                        actionLabel="Oui, c'est mon loyer"
+                        secondaryActionLabel="Non"
+                        secondaryAction={() => setIsRentModalOpen(false)}
+                        body={
+                            <div className="flex flex-col gap-4">
+                                <div className="text-center">
+                                    <div className="text-4xl mb-4">🕵️‍♂️</div>
+                                    <div className="text-lg font-semibold mb-2">
+                                        Nous avons détecté des virements réguliers de {tenantProfile?.detectedRentAmount} €
+                                    </div>
+                                    <div className="text-neutral-500 mb-4">
+                                        Voici les transactions identifiées :
+                                    </div>
+
+                                    <div className="bg-neutral-50 rounded-lg p-3 max-h-60 overflow-y-auto flex flex-col gap-2">
+                                        {detectedTransactions.map((tx: any, index: number) => (
+                                            <div key={index} className="flex justify-between items-center text-sm p-2 bg-white border rounded shadow-sm">
+                                                <div className="flex flex-col items-start">
+                                                    <span className="font-semibold text-neutral-700">{new Date(tx.date).toLocaleDateString()}</span>
+                                                    <span className="text-xs text-neutral-500 truncate max-w-[180px]" title={tx.description}>{tx.description}</span>
+                                                </div>
+                                                <span className="font-bold text-neutral-900">-{tx.amount} €</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="text-neutral-500 mt-4 text-sm">
+                                        Est-ce bien votre loyer actuel ? En confirmant, vous obtiendrez le badge "Paiements de loyer détectés".
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    />
+
                     {/* Tenant Section */}
                     <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
                         <h3 className="text-xl font-semibold">Emploi & Revenus (Vous)</h3>
@@ -354,8 +543,8 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                         h-5 w-5 
                                         rounded 
                                         border-gray-300 
-                                        text-rose-500 
-                                        focus:ring-rose-500
+                                        text-primary 
+                                        focus:ring-primary
                                         cursor-pointer
                                     "
                                 />
@@ -436,7 +625,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                             <button
                                                 type="button"
                                                 onClick={() => addGuarantorIncome(index)}
-                                                className="text-sm text-rose-500 font-medium hover:underline"
+                                                className="text-sm text-primary font-medium hover:underline"
                                             >
                                                 + Ajouter
                                             </button>
@@ -558,7 +747,13 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         </div>
                     </div>
 
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex justify-end gap-4">
+                        <Button
+                            label="Aperçu"
+                            onClick={() => setIsPreviewOpen(true)}
+                            outline
+                            icon={Eye}
+                        />
                         <div className="w-full md:w-auto">
                             <Button
                                 label="Enregistrer le profil"
@@ -569,6 +764,33 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     </div>
                 </div>
             </div>
+
+            {/* Preview Modal */}
+            <Modal
+                isOpen={isPreviewOpen}
+                onClose={() => setIsPreviewOpen(false)}
+                onSubmit={() => setIsPreviewOpen(false)}
+                actionLabel="Fermer"
+                title="Aperçu de votre dossier"
+                body={
+                    <TenantProfilePreview
+                        user={currentUser}
+                        tenantProfile={{
+                            ...tenantProfile,
+                            ...watch(), // Use live form data for preview
+                            netSalary: parseInt(watch('netSalary') || '0'),
+                            partnerNetSalary: parseInt(watch('partnerNetSalary') || '0'),
+                            aplAmount: parseInt(watch('aplAmount') || '0'),
+                            additionalIncomes: watch('additionalIncomes')?.map((i: any) => ({ ...i, amount: parseInt(i.amount || '0') })) || [],
+                            guarantors: watch('guarantors')?.map((g: any) => ({
+                                ...g,
+                                netIncome: parseInt(g.netIncome || '0'),
+                                additionalIncomes: g.additionalIncomes?.map((i: any) => ({ ...i, amount: parseInt(i.amount || '0') })) || []
+                            })) || []
+                        }}
+                    />
+                }
+            />
         </Container>
     );
 }

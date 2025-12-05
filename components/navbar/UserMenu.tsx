@@ -123,7 +123,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 >
                     <AiOutlineMenu />
                     {unreadCount && unreadCount > 0 ? (
-                        <div className="absolute top-0 right-0 h-3 w-3 bg-rose-500 rounded-full border-2 border-white" />
+                        <div className="absolute top-0 right-0 h-3 w-3 bg-primary rounded-full border-2 border-white" />
                     ) : null}
                     <div className="hidden md:block">
                         <Avatar src={currentUser?.image} seed={currentUser?.email || currentUser?.name} />
@@ -182,7 +182,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                             <span>Messages</span>
                                         </div>
                                         {unreadCount && unreadCount > 0 ? (
-                                            <div className="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            <div className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                                 {unreadCount}
                                             </div>
                                         ) : null}

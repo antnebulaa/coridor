@@ -25,10 +25,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // Home: pt-24 md:pt-28 (Keep original-ish)
     // Others: pt-0 md:pt-20 (Reduce gap)
 
-    const paddingTop = isMainPage ? 'pt-24 md:pt-40' : 'pt-0 md:pt-28';
+    // Home (Search only):
+    // Mobile: Logo + Search ~ 120px -> pt-32 (128px) or pt-28
+    // Desktop: Navbar ~ 80px -> pt-24 (96px)
+    const paddingTop = isMainPage ? 'pt-32 md:pt-24' : 'pt-20 md:pt-24';
+
+    const isInbox = pathname?.includes('/inbox');
+    const paddingBottom = isInbox ? 'pb-0' : 'pb-20';
 
     return (
-        <div className={`pb-20 ${paddingTop}`}>
+        <div className={`${paddingBottom} ${paddingTop}`}>
             {children}
         </div>
     );

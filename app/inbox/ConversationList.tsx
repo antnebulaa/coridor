@@ -43,28 +43,14 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
     return (
         <aside className={clsx(`
-        fixed 
-        inset-y-0 
-        pt-0
-        md:pt-20
-        bg-white
-        pb-20
-        lg:pb-0
-        lg:left-0
-        lg:w-80 
+        hidden
         lg:block
+        w-[340px]
+        h-full
         overflow-y-auto 
         border-r 
         border-gray-200 
       `,
-            // On mobile, hide if a chat is open (we can check params, but layout handles children)
-            // Actually, in Next.js nested layouts, the list is always rendered.
-            // We need to hide it on mobile if we are in a conversation.
-            // But `layout` doesn't know about params easily without `useParams`.
-            // Let's just make it always visible on desktop, and on mobile... it's tricky with nested layout.
-            // Simpler approach: `app/inbox/page.tsx` shows list. `app/inbox/[id]/page.tsx` shows chat.
-            // But then we lose the split view on desktop.
-            // Let's stick to split view.
             isOpen ? 'hidden' : 'block w-full left-0'
         )}>
             <div className="px-5">

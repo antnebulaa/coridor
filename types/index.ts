@@ -92,10 +92,23 @@ export type SafeUser = Omit<
 
 export type FullMessageType = Message & {
     sender: User,
-    seen: User[]
+    seen: User[],
+    listing?: Listing | null,
+    listingId?: string | null
 };
 
 export type FullConversationType = Conversation & {
     users: User[],
     messages: FullMessageType[]
+};
+
+export type SafeMessage = Omit<
+    Message,
+    "createdAt"
+> & {
+    createdAt: string;
+    sender: SafeUser;
+    seen: SafeUser[];
+    listing?: SafeListing | null;
+    listingId?: string | null;
 };

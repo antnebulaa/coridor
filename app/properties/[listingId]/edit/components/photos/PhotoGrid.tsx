@@ -99,7 +99,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                                                     opacity-0 
                                                     group-hover:opacity-100 
                                                     transition
-                                                    hover:bg-rose-500
+                                                    hover:bg-primary
                                                     hover:text-white
                                                 "
                                             >

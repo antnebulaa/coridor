@@ -167,7 +167,7 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                             onClick={handleDeleteSelected}
                             small
                             variant="outline"
-                            className="text-rose-500 border-rose-500 hover:bg-rose-50"
+                            className="text-primary border-primary hover:bg-primary/10"
                         />
                         <button onClick={handleClearSelection} className="text-sm underline font-medium ml-2">
                             Annuler

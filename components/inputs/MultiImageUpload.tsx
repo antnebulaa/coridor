@@ -110,7 +110,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                                     absolute 
                                     top-2 
                                     right-2 
-                                    bg-rose-500 
+                                    bg-primary 
                                     text-white 
                                     p-1 
                                     rounded-full 

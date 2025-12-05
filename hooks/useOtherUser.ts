@@ -7,18 +7,17 @@ const useOtherUser = (conversation: FullConversationType | { users: User[] }) =>
     const session = useSession();
 
     const otherUser = useMemo(() => {
-        const currentUserEmail = session?.data?.user?.email;
         const currentUserId = session?.data?.user?.id;
 
-        const otherUser = conversation.users.filter((user) => {
-            if (currentUserId) {
-                return user.id !== currentUserId;
-            }
-            return user.email !== currentUserEmail;
-        });
+        // If we have no current user ID, we can't safely determine the other user.
+        if (!currentUserId) {
+            return null;
+        }
+
+        const otherUser = conversation.users.filter((user) => user.id !== currentUserId);
 
         return otherUser[0];
-    }, [session?.data?.user?.email, session?.data?.user?.id, conversation.users]);
+    }, [session?.data?.user?.id, conversation.users]);
 
     return otherUser;
 };

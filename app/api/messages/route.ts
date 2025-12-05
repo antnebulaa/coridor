@@ -11,7 +11,8 @@ export async function POST(
         const {
             message,
             image,
-            conversationId
+            conversationId,
+            listingId
         } = body;
 
         if (!currentUser?.id || !currentUser?.email) {
@@ -36,11 +37,17 @@ export async function POST(
                     connect: {
                         id: currentUser.id
                     }
-                }
+                },
+                ...(listingId && {
+                    listing: {
+                        connect: { id: listingId }
+                    }
+                })
             },
             include: {
                 seen: true,
-                sender: true
+                sender: true,
+                listing: true
             }
         });
 

@@ -50,6 +50,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
             emailVerified: currentUser.emailVerified?.toISOString() || null,
             birthDate: currentUser.birthDate?.toISOString() || null,
             wishlists: safeWishlists,
+            userMode: currentUser.userMode,
         };
     } catch (error: any) {
         return null;

@@ -138,9 +138,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         {data.roomCount} pièces • {data.roomCount - 1} chambres • {surfaceDisplay}
                     </div>
 
-                    <div className="font-medium text-neutral-800 text-sm mt-1">
-                        Disponible maintenant
-                    </div>
+
                 </div>
 
                 {onAction && actionLabel && (

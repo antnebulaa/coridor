@@ -51,13 +51,22 @@ export async function POST(
             where: {
                 OR: [
                     {
-                        users: {
-                            every: {
-                                id: {
-                                    in: [currentUser.id, userId]
+                        AND: [
+                            {
+                                users: {
+                                    some: {
+                                        id: currentUser.id
+                                    }
+                                }
+                            },
+                            {
+                                users: {
+                                    some: {
+                                        id: userId
+                                    }
                                 }
                             }
-                        }
+                        ]
                     }
                 ]
             }

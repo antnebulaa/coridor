@@ -50,7 +50,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
                             e.stopPropagation();
                             onDelete();
                         }}
-                        className="p-2 hover:bg-neutral-100 rounded-full transition text-neutral-500 hover:text-rose-500"
+                        className="p-2 hover:bg-neutral-100 rounded-full transition text-neutral-500 hover:text-primary"
                     >
                         <Trash size={18} />
                     </button>

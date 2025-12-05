@@ -18,9 +18,6 @@ const getConversations = async () => {
                     some: {
                         id: currentUser.id
                     }
-                },
-                messages: {
-                    some: {}
                 }
             },
             include: {

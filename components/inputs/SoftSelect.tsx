@@ -56,8 +56,8 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
           disabled:opacity-70
           disabled:cursor-not-allowed
           appearance-none
-          ${errors?.[id] ? 'border-rose-500' : 'border-neutral-300'}
-          ${errors?.[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+          ${errors?.[id] ? 'border-primary' : 'border-neutral-300'}
+          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-black'}
         `}
             >
                 {/* Empty option for placeholder behavior if needed, though select doesn't support placeholder-shown natively */}
@@ -85,7 +85,7 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
           origin-top-left
           left-3
           scale-75
-          ${errors?.[id] ? 'text-rose-500' : 'text-zinc-400'}
+          ${errors?.[id] ? 'text-primary' : 'text-zinc-400'}
           pointer-events-none
         `}
             >

@@ -30,10 +30,18 @@ import { fr } from "date-fns/locale";
 interface VisitsSectionProps {
     listing: SafeListing & {
         visitSlots?: any[];
+        visitDuration?: number | null;
     };
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+const RECOMMENDATIONS = {
+    STUDIO: 15,
+    SMALL: 20,
+    LARGE: 30,
+    HOUSE: 40
+};
 
 const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
     const router = useRouter();
@@ -42,9 +50,46 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
 
     // Local state for slots
     const [slots, setSlots] = useState<any[]>(listing.visitSlots || []);
+    const [visitDuration, setVisitDuration] = useState(listing.visitDuration || 20);
 
     const [startTime, setStartTime] = useState("09:00");
     const [endTime, setEndTime] = useState("18:00");
+
+    // Recommend duration on mount if not set
+    useMemo(() => {
+        // If we have a saved duration that is NOT the default (20), we respect it.
+        // If it IS the default (20), we allow the recommendation logic to run 
+        // in case the surface dictates a better default (e.g. 40min for large house).
+        if (listing.visitDuration && listing.visitDuration !== 20) return;
+
+        let recommended = 20;
+        const surface = listing.surface || 0;
+
+        if (surface < 20) {
+            recommended = 15;
+        } else if (surface >= 20 && surface < 50) {
+            recommended = 20;
+        } else if (surface >= 50 && surface < 80) {
+            recommended = 30;
+        } else {
+            recommended = 40;
+        }
+
+        setVisitDuration(recommended);
+    }, [listing.visitDuration, listing.surface]); // Depend on specific fields
+
+    // Calculate Capacity
+    const capacity = useMemo(() => {
+        let totalMinutes = 0;
+        slots.forEach(slot => {
+            const start = parseInt(slot.startTime.split(':')[0]) * 60 + parseInt(slot.startTime.split(':')[1] || '0');
+            const end = parseInt(slot.endTime.split(':')[0]) * 60 + parseInt(slot.endTime.split(':')[1] || '0');
+            totalMinutes += (end - start);
+        });
+        // 2 candidates per slot
+        const slotsCount = Math.floor(totalMinutes / visitDuration);
+        return slotsCount * 2;
+    }, [slots, visitDuration]);
 
     // Calendar Logic: Generate next 12 months
     const today = startOfToday();
@@ -109,7 +154,8 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
 
             await axios.post(`/api/listings/${listing.id}/visits`, {
                 slots: payload,
-                dates: selectedDates.map(d => d.toISOString())
+                dates: selectedDates.map(d => d.toISOString()),
+                visitDuration
             });
 
             toast.success("Disponibilités ajoutées");
@@ -256,9 +302,30 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
                                 <h3 className="text-lg font-semibold mb-2">
                                     {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''} sélectionnée{selectedDates.length > 1 ? 's' : ''}
                                 </h3>
-                                <p className="text-sm text-neutral-500">
+                                <p className="text-sm text-neutral-500 mb-4">
                                     Définissez les horaires.
                                 </p>
+
+                                {/* Duration Selector */}
+                                <div className="bg-neutral-100 p-3 rounded-lg flex flex-col gap-2 mb-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium">Durée visite</span>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
+                                                className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-sm font-bold hover:bg-neutral-50"
+                                            >-</button>
+                                            <span className="font-semibold text-sm w-12 text-center">{visitDuration} min</span>
+                                            <button
+                                                onClick={() => setVisitDuration(visitDuration + 5)}
+                                                className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-sm font-bold hover:bg-neutral-50"
+                                            >+</button>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-neutral-500">
+                                        Recommandé : {visitDuration} min
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex flex-col gap-2 mb-2">
@@ -301,6 +368,15 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
                     <div className="flex flex-col items-center justify-center h-full text-center text-neutral-500 md:p-6">
                         <CalendarIcon size={24} className="mb-2 opacity-20 md:w-12 md:h-12" />
                         <p className="text-sm">Sélectionnez des dates.</p>
+
+                        {/* Global Capacity (When no date selected) */}
+                        {slots.length > 0 && (
+                            <div className="mt-8 bg-neutral-50 p-4 rounded-xl text-center w-full">
+                                <p className="text-xs uppercase text-neutral-500 font-bold mb-1">Capacité Estimée</p>
+                                <p className="text-2xl font-bold">{capacity} candidats</p>
+                                <p className="text-xs text-neutral-400 mt-1">sur {slots.length} créneaux</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

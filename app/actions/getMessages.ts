@@ -11,6 +11,7 @@ const getMessages = async (
             include: {
                 sender: true,
                 seen: true,
+                listing: true
             },
             orderBy: {
                 createdAt: 'asc'

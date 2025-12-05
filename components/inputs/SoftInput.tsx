@@ -69,8 +69,8 @@ const SoftInput: React.FC<SoftInputProps> = ({
           disabled:opacity-70
           disabled:cursor-not-allowed
           ${formatPrice ? 'pl-3 pr-9' : 'pl-3'}
-          ${errors?.[id] ? 'border-rose-500' : 'border-neutral-300'}
-          ${errors?.[id] ? 'focus:border-rose-500' : 'focus:border-black'}
+          ${errors?.[id] ? 'border-primary' : 'border-neutral-300'}
+          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-black'}
         `}
             />
             <label
@@ -89,7 +89,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
           peer-placeholder-shown:translate-y-0
           peer-focus:scale-75
           peer-focus:-translate-y-3
-          ${errors?.[id] ? 'text-rose-500' : 'text-zinc-400'}
+          ${errors?.[id] ? 'text-primary' : 'text-zinc-400'}
           pointer-events-none
         `}
             >

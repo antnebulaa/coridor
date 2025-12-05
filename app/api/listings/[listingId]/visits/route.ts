@@ -24,7 +24,7 @@ export async function POST(
     console.log("Params:", params);
     console.log("Body:", JSON.stringify(body, null, 2));
 
-    const { slots, dates } = body;
+    const { slots, dates, visitDuration } = body;
 
     if (!listingId || !slots || !dates) {
         return NextResponse.json({ error: "Missing fields", fields: { listingId, slots: !!slots, dates: !!dates } }, { status: 400 });
@@ -79,6 +79,14 @@ export async function POST(
                     }))
                 });
                 console.log("Created count:", createResult.count);
+            }
+            // 3. Update visit duration if provided
+            if (visitDuration) {
+                console.log("Updating visit duration to:", visitDuration);
+                await tx.listing.update({
+                    where: { id: listingId },
+                    data: { visitDuration: parseInt(visitDuration) }
+                });
             }
         });
 

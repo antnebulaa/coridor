@@ -41,7 +41,7 @@ const Map3D: React.FC<Map3DProps> = ({ center }) => {
                 latitude={coordinates.latitude}
                 anchor="bottom"
             >
-                <div className="text-rose-500">
+                <div className="text-primary">
                     <MapPin size={40} fill="currentColor" />
                 </div>
             </Marker>

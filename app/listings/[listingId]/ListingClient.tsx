@@ -13,6 +13,7 @@ import { categories } from "@/components/navbar/Categories";
 import ListingHead from "@/components/listings/ListingHead";
 import ListingInfo from "@/components/listings/ListingInfo";
 import { Button } from "@/components/ui/Button";
+import ApplicationModal from "@/components/modals/ApplicationModal";
 
 interface ListingClientProps {
     listing: SafeListing & {
@@ -36,6 +37,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
     }, [listing.category]);
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
 
     const onContactHost = useCallback(() => {
         if (!currentUser) {
@@ -57,6 +59,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 setIsLoading(false);
             })
     }, [currentUser, loginModal, listing.user.id, router]);
+
+    const onApply = useCallback(() => {
+        if (!currentUser) {
+            return loginModal.onOpen();
+        }
+        setIsApplicationModalOpen(true);
+    }, [currentUser, loginModal]);
 
     return (
         <Container>
@@ -98,11 +107,28 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     onClick={onContactHost}
                                     disabled={isLoading}
                                 />
+                                <hr />
+                                <div className="text-neutral-500 font-light text-sm">
+                                    Vous avez un dossier complet ? Déposez votre candidature directement.
+                                </div>
+                                <Button
+                                    label="Déposer ma candidature"
+                                    onClick={onApply}
+                                    disabled={isLoading}
+                                    className="bg-[#1719FF] border-[#1719FF] hover:opacity-90"
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <ApplicationModal
+                isOpen={isApplicationModalOpen}
+                onClose={() => setIsApplicationModalOpen(false)}
+                listing={listing}
+                currentUser={currentUser}
+            />
         </Container>
     );
 }

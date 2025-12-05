@@ -63,9 +63,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                                 py-3
                                 md:py-2
                                 rounded-full
-                                bg-rose-500
+                                bg-primary
                                 text-white
-                                hover:bg-rose-600
+                                hover:bg-primary-hover
                                 transition
                                 cursor-pointer
                                 text-sm
