@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import prisma from "@/app/libs/prismadb";
+import prisma from "@/libs/prismadb";
 
 interface IParams {
     listingId?: string;
