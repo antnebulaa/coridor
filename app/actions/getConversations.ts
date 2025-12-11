@@ -21,7 +21,15 @@ const getConversations = async () => {
                 }
             },
             include: {
-                users: true,
+                users: {
+                    include: {
+                        createdScopes: {
+                            include: {
+                                applications: true
+                            }
+                        }
+                    }
+                },
                 messages: {
                     include: {
                         sender: true,

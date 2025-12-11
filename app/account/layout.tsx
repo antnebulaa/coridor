@@ -17,7 +17,7 @@ export default async function AccountLayout({
 
     return (
         <ClientOnly>
-            <AccountClientLayout sidebar={<AccountSidebar />}>
+            <AccountClientLayout sidebar={<AccountSidebar currentUser={currentUser} />}>
                 {children}
             </AccountClientLayout>
         </ClientOnly>

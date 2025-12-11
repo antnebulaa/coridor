@@ -1,6 +1,7 @@
 import Container from "@/components/Container";
 import EmptyState from "@/components/EmptyState";
 import ListingCard from "@/components/listings/ListingCard";
+import HomeClient from "./HomeClient";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getListings from "@/app/actions/getListings";
@@ -20,25 +21,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<any
   }
 
   return (
-    <Container>
-      <div className="
-        pt-4
-        sm:pt-2
-        md:pt-10
-        xl:pt-20
-        grid
-        grid-cols-1
-        sm:grid-cols-2
-        gap-8
-      ">
-        {listings.map((listing: any) => (
-          <ListingCard
-            currentUser={currentUser}
-            key={listing.id}
-            data={listing}
-          />
-        ))}
-      </div>
-    </Container >
+    <HomeClient
+      listings={listings}
+      currentUser={currentUser}
+    />
   );
 }

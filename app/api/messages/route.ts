@@ -73,6 +73,28 @@ export async function POST(
             }
         });
 
+        // Update application status if it's a visit invitation
+        if (message === 'INVITATION_VISITE' && listingId) {
+            const application = await prisma.rentalApplication.findFirst({
+                where: {
+                    propertyId: listingId,
+                    candidateScope: {
+                        creatorUserId: (await prisma.conversation.findUnique({
+                            where: { id: conversationId },
+                            include: { users: true }
+                        }))?.users.find(u => u.id !== currentUser.id)?.id
+                    }
+                }
+            });
+
+            if (application) {
+                await prisma.rentalApplication.update({
+                    where: { id: application.id },
+                    data: { status: 'VISIT_PROPOSED' }
+                });
+            }
+        }
+
         return NextResponse.json(newMessage);
     } catch (error: any) {
         console.log(error, 'ERROR_MESSAGES');

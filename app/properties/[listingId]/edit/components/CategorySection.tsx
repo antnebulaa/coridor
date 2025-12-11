@@ -41,7 +41,9 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             kitchenType: listing.kitchenType,
             totalFloors: listing.totalFloors,
             floor: listing.floor,
-            buildYear: listing.buildYear
+            buildYear: listing.buildYear,
+            dpe: listing.dpe || 'C',
+            ges: listing.ges || 'A'
         }
     });
 
@@ -54,6 +56,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
     const bathroomCount = watch('bathroomCount');
     const totalFloors = watch('totalFloors');
     const floor = watch('floor');
+    const dpe = watch('dpe');
+    const ges = watch('ges');
 
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
@@ -225,6 +229,32 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
                 register={register}
                 errors={errors}
             />
+
+            <hr />
+
+            {/* DPE & GES */}
+            <div className="flex flex-row gap-4 w-full">
+                <div className="flex flex-col gap-2 w-full">
+                    <SoftSelect
+                        id="dpe"
+                        label="DPE (Classe énergie)"
+                        value={dpe}
+                        onChange={(e) => setCustomValue('dpe', e.target.value)}
+                        disabled={isLoading}
+                        options={['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(grade => ({ value: grade, label: grade }))}
+                    />
+                </div>
+                <div className="flex flex-col gap-2 w-full">
+                    <SoftSelect
+                        id="ges"
+                        label="GES"
+                        value={ges}
+                        onChange={(e) => setCustomValue('ges', e.target.value)}
+                        disabled={isLoading}
+                        options={['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(grade => ({ value: grade, label: grade }))}
+                    />
+                </div>
+            </div>
 
             <div className="
                 fixed 

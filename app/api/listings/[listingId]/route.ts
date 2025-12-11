@@ -63,6 +63,7 @@ export async function PUT(
         price,
         leaseType,
         dpe,
+        ges,
         amenities,
         charges,
         rooms,
@@ -94,6 +95,7 @@ export async function PUT(
                 price: price ? parseInt(String(price), 10) : undefined,
                 leaseType,
                 dpe,
+                ges,
                 charges: charges ? { amount: parseInt(String(charges), 10) } : undefined,
                 // New fields
                 isFurnished,
@@ -105,6 +107,7 @@ export async function PUT(
                 buildYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
                 city: city || location?.city,
                 district: body.district || location?.district,
+                neighborhood: body.neighborhood || location?.neighborhood,
                 country: country || location?.country,
                 latitude: location?.latlng ? location.latlng[0] : undefined,
                 longitude: location?.latlng ? location.latlng[1] : undefined,

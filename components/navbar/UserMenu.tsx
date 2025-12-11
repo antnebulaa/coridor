@@ -142,7 +142,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             right-0 
             top-12 
             text-white
-            z-50
+            z-[9999]
           "
                 >
                     <div className="flex flex-col">

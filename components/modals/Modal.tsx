@@ -88,7 +88,7 @@ const Modal: React.FC<ModalProps> = ({
                     md:overflow-y-auto 
                     fixed 
                     inset-0 
-                    z-[60] 
+                    z-[2000] 
                     outline-none 
                     focus:outline-none
                     transition

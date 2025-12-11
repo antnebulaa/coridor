@@ -59,7 +59,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount }) => 
         {
             label: 'Profil',
             icon: User,
-            href: currentUser?.userMode === 'TENANT' ? '/account/tenant-profile' : '/account/personal-info',
+            href: '/account',
             active: activePath?.startsWith('/account')
         }
     ];

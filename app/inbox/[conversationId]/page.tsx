@@ -71,6 +71,14 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
 
     const hasTenantProfile = !!otherUser?.tenantProfile;
 
+    // Extract scope
+    const latestScope = (otherUser as any)?.createdScopes?.[0] || null;
+    const safeScope = latestScope ? {
+        ...latestScope,
+        createdAt: latestScope.createdAt.toISOString(),
+        targetMoveInDate: latestScope.targetMoveInDate?.toISOString() || null
+    } : null;
+
     // Show dossier ONLY if current user is the owner of the listing
     const isListingOwner = currentUser?.id === listingUserId;
     const showDossier = !!(hasTenantProfile && isListingOwner);
@@ -124,6 +132,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 otherUser={safeOtherUser}
                 showDossier={showDossier}
                 listing={safeListing}
+                candidateScope={safeScope}
             />
         </div>
     );

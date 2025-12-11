@@ -14,6 +14,7 @@ export type AddressSelectValue = {
     region: string;
     city?: string;
     district?: string;
+    neighborhood?: string;
     country?: string;
 }
 
@@ -114,6 +115,12 @@ const PlacesAutocomplete = ({ value, onChange, placeholder, autoFocus }: GoogleA
             );
             let district = districtComponent ? districtComponent.long_name.replace(' Arrondissement', '') : '';
 
+            // Extract neighborhood
+            const neighborhoodComponent = results[0].address_components.find(
+                (c) => c.types.includes('neighborhood')
+            );
+            const neighborhood = neighborhoodComponent ? neighborhoodComponent.long_name : '';
+
             // Fallback: Infer district from postal code for Paris, Marseille, Lyon
             if (!district) {
                 const postalCodeComponent = results[0].address_components.find(
@@ -151,6 +158,7 @@ const PlacesAutocomplete = ({ value, onChange, placeholder, autoFocus }: GoogleA
                 region: region,
                 city: city,
                 district: district,
+                neighborhood: neighborhood,
                 country: region
             });
         } catch (error) {

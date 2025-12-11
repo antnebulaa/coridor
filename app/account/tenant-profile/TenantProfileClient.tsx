@@ -256,6 +256,33 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
         }
     };
 
+    // Professional Situations Options
+    const professionalSituations = [
+        { value: 'Salarié du secteur privé', label: 'Salarié du secteur privé' },
+        { value: 'Fonctionnaire / agent public', label: 'Fonctionnaire / agent public' },
+        { value: 'Indépendant / profession libérale', label: 'Indépendant / profession libérale' },
+        { value: 'Micro‑entrepreneur / auto‑entrepreneur', label: 'Micro‑entrepreneur / auto‑entrepreneur' },
+        { value: 'Apprenti', label: 'Apprenti' },
+        { value: 'Étudiant', label: 'Étudiant' },
+        { value: 'Stagiaire / service civique / volontaire', label: 'Stagiaire / service civique / volontaire' },
+        { value: 'Demandeur d’emploi', label: 'Demandeur d’emploi' },
+        { value: 'Retraité', label: 'Retraité' },
+        { value: 'Homme ou femme au foyer', label: 'Homme ou femme au foyer' },
+        { value: 'Sans activité / sans profession', label: 'Sans activité / sans profession' },
+        { value: 'Autre situation professionnelle', label: 'Autre situation professionnelle' },
+    ];
+
+    // Contract Type Options
+    const contractTypes = [
+        { value: 'CDI', label: 'CDI' },
+        { value: 'CDD', label: 'CDD' },
+        { value: 'Intérim / mission', label: 'Intérim / mission' },
+        { value: 'Apprentissage / Alternance', label: 'Apprentissage / Alternance' },
+        { value: 'Fonctionnaire / agent public', label: 'Fonctionnaire / agent public' },
+        { value: 'Indépendant / Micro‑entrepreneur / Profession libérale', label: 'Indépendant / Micro‑entrepreneur / Profession libérale' },
+        { value: 'Autre', label: 'Autre' },
+    ];
+
     return (
         <Container>
             <div className="max-w-4xl mx-auto">
@@ -403,21 +430,21 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
                         <h3 className="text-xl font-semibold">Emploi & Revenus (Vous)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <SoftInput
+                            <SoftSelect
                                 id="jobTitle"
-                                label="Intitulé du poste"
+                                label="Situation professionnelle"
                                 disabled={isLoading}
                                 register={register}
                                 errors={errors}
-                                required
+                                options={professionalSituations}
                             />
-                            <SoftInput
+                            <SoftSelect
                                 id="jobType"
-                                label="Type de contrat (CDI, CDD...)"
+                                label="Type de contrat"
                                 disabled={isLoading}
                                 register={register}
                                 errors={errors}
-                                required
+                                options={contractTypes}
                             />
                             <SoftInput
                                 id="netSalary"
@@ -436,19 +463,21 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
                         <h3 className="text-xl font-semibold">Emploi & Revenus (Conjoint·e)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <SoftInput
+                            <SoftSelect
                                 id="partnerJobTitle"
-                                label="Intitulé du poste"
+                                label="Situation professionnelle"
                                 disabled={isLoading}
                                 register={register}
                                 errors={errors}
+                                options={professionalSituations}
                             />
-                            <SoftInput
+                            <SoftSelect
                                 id="partnerJobType"
-                                label="Type de contrat (CDI, CDD...)"
+                                label="Type de contrat"
                                 disabled={isLoading}
                                 register={register}
                                 errors={errors}
+                                options={contractTypes}
                             />
                             <SoftInput
                                 id="partnerNetSalary"

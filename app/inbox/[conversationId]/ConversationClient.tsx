@@ -23,6 +23,14 @@ interface ConversationClientProps {
     rent?: number;
     otherUser: SafeUser | null;
     showDossier: boolean;
+    candidateScope?: {
+        compositionType: string;
+        membersIds: string[];
+        coupleLegalStatus?: string | null;
+        targetLeaseType: string;
+        targetMoveInDate?: string | null;
+        childCount: number;
+    } | null;
     listing?: (SafeListing & { user?: SafeUser }) | null;
 }
 
@@ -33,7 +41,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     rent,
     otherUser,
     showDossier,
-    listing
+    listing,
+    candidateScope
 }) => {
     const router = useRouter();
 
@@ -98,7 +107,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             </div>
             {/* Dossier Sidebar - Desktop Only for now or Drawer? keeping simple for existing logic */}
             {showDossier && otherUser && otherUser.id !== currentUser?.id && otherUser.tenantProfile && (
-                <div className="hidden xl:flex flex-col w-[340px] h-full bg-white border-l border-gray-200">
+                <div className="hidden xl:flex flex-col w-[410px] h-full bg-white border-l border-gray-200">
                     <div className="
                         flex-none
                         bg-white 
@@ -111,20 +120,22 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         items-center
                         h-[73px]
                     ">
-                        <h2 className="text-2xl font-medium text-neutral-800">Dossier Locataire</h2>
+                        <h2 className="text-2xl font-medium text-neutral-800">Dossier candidat</h2>
                     </div>
+
                     <div className="flex-1 overflow-y-auto p-6">
                         <TenantProfilePreview
                             user={otherUser}
                             tenantProfile={otherUser.tenantProfile as any}
                             rent={rent}
+                            candidateScope={candidateScope}
                         />
                     </div>
                     <div className="
-                        flex-none 
-                        bg-white 
-                        border-t 
-                        border-gray-200 
+                        flex-none
+                        bg-white
+                        border-t
+                        border-gray-200
                         p-4
                     ">
                         <Button
@@ -151,9 +162,9 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             {!showDossier && rent && (
                 <div className={clsx(`
                     flex flex-col h-full bg-white border-l border-gray-200
-                    xl:w-[340px]
+                    xl:w-[410px]
                     `,
-                    isVisitSelectionOpen ? "fixed inset-0 z-50 w-full xl:static xl:z-auto" : "hidden xl:flex w-[340px]"
+                    isVisitSelectionOpen ? "fixed inset-0 z-50 w-full xl:static xl:z-auto" : "hidden xl:flex w-[410px]"
                 )}>
                     <div className="
                         flex-none

@@ -85,6 +85,23 @@ export async function POST(
             });
         }
 
+        // Get tenant candidate scope
+        const candidateScope = await prisma.tenantCandidateScope.findFirst({
+            where: {
+                creatorUserId: currentUser.id
+            }
+        });
+
+        if (candidateScope) {
+            await prisma.rentalApplication.create({
+                data: {
+                    propertyId: listingId,
+                    candidateScopeId: candidateScope.id,
+                    status: 'SENT'
+                }
+            });
+        }
+
         // Create the application message
         const newMessage = await prisma.message.create({
             data: {

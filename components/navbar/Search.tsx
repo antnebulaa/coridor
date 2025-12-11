@@ -69,40 +69,45 @@ const Search = () => {
             {/* Location Search */}
             <div
                 onClick={() => searchModal.onOpen({ step: 0 })}
-                className="border-[1px] border-[#dfdfdf] min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer"
+                className="border-[1px] border-[#dfdfdf] w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer"
             >
                 <div className="flex flex-row items-center justify-between px-2 gap-3">
-                    <div className="p-2 bg-blue-600 rounded-full text-white">
-                        <MapPin size={18} strokeWidth={1.5} />
+                    <div className="p-2 bg-primary rounded-full text-white">
+                        <SearchIcon size={18} strokeWidth={2.5} />
                     </div>
-                    <div className="text-sm font-medium pr-4">
+                    <div className="text-sm font-medium">
                         {label}
+                    </div>
+                    {/* Ghost element for centering balance */}
+                    <div className="p-2 bg-transparent rounded-full text-transparent invisible">
+                        <SearchIcon size={18} />
                     </div>
                 </div>
             </div>
 
             {/* Advanced Filters */}
+            {/* Advanced Filters - Hidden on Mobile */}
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'budget' })}
-                className={`border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-neutral-100 border-neutral-800' : ''}`}
             >
                 {budgetLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'surface' })}
-                className={`border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-neutral-100 border-neutral-800' : ''}`}
             >
                 {surfaceLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'rooms' })}
-                className={`border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-neutral-100 border-neutral-800' : ''}`}
             >
                 {roomsLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2 })}
-                className="border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
+                className="hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
             >
                 Filtres
             </div>

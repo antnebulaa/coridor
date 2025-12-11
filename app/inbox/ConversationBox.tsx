@@ -60,7 +60,81 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         }
 
         return 'New conversation';
+        return 'New conversation';
     }, [lastMessage]);
+
+    // Application Status Logic
+    const { applicationStatus, applicationColor, applicationLabel } = useMemo(() => {
+        // 1. Find the listing ID discussed in this conversation
+        const listingId = data.messages.find(m => m.listingId)?.listingId;
+
+        if (!listingId) {
+            return { applicationStatus: null, applicationColor: null, applicationLabel: null };
+        }
+
+        // 2. Find if there is an application for this listing from the users in the conversation
+        // We look through all users' scopes
+        let application = null;
+
+        for (const user of data.users) {
+            // Check created scopes
+            if (user.createdScopes) {
+                for (const scope of user.createdScopes) {
+                    if (scope.applications) {
+                        const app = scope.applications.find(a => a.propertyId === listingId);
+                        if (app) {
+                            application = app;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (application) break;
+        }
+
+        if (!application) {
+            return { applicationStatus: null, applicationColor: null, applicationLabel: null };
+        }
+
+        // 3. Determine label and color
+        let color = 'bg-gray-400';
+        let label = 'En attente';
+
+        switch (application.status) {
+            case 'SENT':
+                color = 'bg-blue-500';
+                label = 'Candidature envoyée';
+                break;
+            case 'REJECTED':
+                color = 'bg-red-500';
+                label = 'Candidature rejetée';
+                break;
+            case 'VISIT_PROPOSED':
+                color = 'bg-purple-500';
+                label = 'Proposition de visite';
+                break;
+            case 'VISIT_CONFIRMED':
+                color = 'bg-indigo-500';
+                label = 'Visite programmée';
+                break;
+            case 'ACCEPTED':
+                color = 'bg-green-500';
+                label = 'Dossier accepté';
+                break;
+            case 'PENDING':
+            default:
+                color = 'bg-yellow-500';
+                label = 'En attente';
+                break;
+        }
+
+        return {
+            applicationStatus: application.status,
+            applicationColor: color,
+            applicationLabel: label
+        };
+
+    }, [data.messages, data.users]);
 
     return (
         <div
@@ -83,7 +157,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} />
             <div className="min-w-0 flex-1">
                 <div className="focus:outline-none">
-                    <div className="flex justify-between items-center mb-1">
+                    <div className="flex justify-between items-center">
                         <p className="text-md font-medium text-gray-900">
                             {data.name || otherUser?.name || 'Unknown User'}
                         </p>
@@ -101,6 +175,12 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                     )}>
                         {lastMessageText}
                     </p>
+                    {applicationStatus && (
+                        <div className="flex items-center gap-2 mt-1">
+                            <div className={clsx("w-2 h-2 rounded-full", applicationColor)}></div>
+                            <div className="text-xs text-neutral-500 font-medium">{applicationLabel}</div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

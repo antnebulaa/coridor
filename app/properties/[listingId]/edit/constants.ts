@@ -10,9 +10,11 @@ export const sidebarTabs = [
 export const sidebarLinks: Record<TabType, { id: string; label: string }[]> = {
     logement: [
         { id: 'title', label: 'Titre de l\'annonce' },
+        { id: 'description', label: 'Description détaillée' },
         { id: 'location', label: 'Emplacement' },
         { id: 'category', label: 'Type de logement' },
         { id: 'amenities', label: 'Atouts' },
+        { id: 'furniture', label: 'Équipements' },
         { id: 'availability', label: 'Disponibilité' },
         { id: 'photos', label: 'Gestion des photos' },
     ],

@@ -8,6 +8,7 @@ import ListingAmenities from './ListingAmenities';
 import ListingLocation from './ListingLocation';
 import ListingTransit from './ListingTransit';
 import Avatar from '../Avatar';
+import ListingEnergy from './ListingEnergy';
 
 interface ListingInfoProps {
     user: SafeUser;
@@ -103,6 +104,10 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             </div>
 
             <hr />
+
+            <ListingEnergy dpe={listing.dpe} ges={listing.ges} />
+
+            <hr />
             <div className="text-lg font-light text-neutral-500">
                 {description}
             </div>
@@ -117,28 +122,30 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <hr />
 
             {/* Transit Section - Uses same coordinates as Map */}
-            {(() => {
-                const countryCoords = getByValue(locationValue)?.latlng;
-                const lat = listing.latitude ?? countryCoords?.[0];
-                const lng = listing.longitude ?? countryCoords?.[1];
+            {
+                (() => {
+                    const countryCoords = getByValue(locationValue)?.latlng;
+                    const lat = listing.latitude ?? countryCoords?.[0];
+                    const lng = listing.longitude ?? countryCoords?.[1];
 
-                if (lat && lng) {
-                    return (
-                        <>
-                            <ListingTransit
-                                latitude={lat}
-                                longitude={lng}
-                                listingId={listing.id}
-                            />
-                            <hr />
-                        </>
-                    );
-                }
-                return null;
-            })()}
+                    if (lat && lng) {
+                        return (
+                            <>
+                                <ListingTransit
+                                    latitude={lat}
+                                    longitude={lng}
+                                    listingId={listing.id}
+                                />
+                                <hr />
+                            </>
+                        );
+                    }
+                    return null;
+                })()
+            }
 
             <NeighborhoodScore latitude={listing.latitude!} longitude={listing.longitude!} />
-        </div>
+        </div >
     );
 };
 

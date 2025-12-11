@@ -46,89 +46,97 @@ enum IncomeType {
   OTHER
 }
 
-model User {
-  id              String @id @default(uuid())
-  name            String?
-  email           String? @unique
-  emailVerified   DateTime?
-  image           String?
-  hashedPassword  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  favoriteIds     String[]
-  
-  // Coridor Fields
-  userMode        UserMode @default(TENANT)
-  phoneNumber     String?
-  birthDate       DateTime?
-  address         String?
-  measurementSystem String? @default("metric") // "metric" or "imperial"
+enum Plan {
+  FREE
+  PLUS
+  PRO
+}
 
-  accounts        Account[]
-  listings        Listing[]
-  reservations    Reservation[]
-  wishlists       Wishlist[]
-  
-  tenantProfile   TenantProfile?
+model User {
+  id             String    @id @default(uuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  favoriteIds    String[]
+
+  // Coridor Fields
+  userMode          UserMode  @default(TENANT)
+  plan              Plan      @default(FREE)
+  phoneNumber       String?
+  birthDate         DateTime?
+  address           String?
+  measurementSystem String?   @default("metric") // "metric" or "imperial"
+
+  accounts     Account[]
+  listings     Listing[]
+  reservations Reservation[]
+  wishlists    Wishlist[]
+
+  tenantProfile TenantProfile?
 
   conversations Conversation[]
-  seenMessages Message[] @relation("Seen")
-  
-  messages Message[]
-  visits   Visit[] // Visits as candidate
+  seenMessages  Message[]      @relation("Seen")
+
+  messages      Message[]
+  visits        Visit[] // Visits as candidate
+  createdScopes TenantCandidateScope[] @relation("CreatedScope")
 }
 
 model TenantProfile {
-  id                String @id @default(uuid())
-  userId            String @unique
-  jobType           String?
-  jobTitle          String?
-  netSalary         Int?
-  
+  id        String  @id @default(uuid())
+  userId    String  @unique
+  jobType   String?
+  jobTitle  String?
+  netSalary Int?
+
   // Partner Info
-  partnerJobType    String?
-  partnerJobTitle   String?
-  partnerNetSalary  Int?
+  partnerJobType   String?
+  partnerJobTitle  String?
+  partnerNetSalary Int?
 
   // APL Info
-  aplAmount         Int?
-  aplDirectPayment  Boolean @default(false)
+  aplAmount        Int?
+  aplDirectPayment Boolean @default(false)
 
   // Rent Verification (GoCardless)
-  rentVerified      Boolean @default(false)
+  rentVerified       Boolean @default(false)
   detectedRentAmount Int?
-  rentPaymentDate   Int? // Day of the month (1-31)
+  rentPaymentDate    Int? // Day of the month (1-31)
 
-  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   guarantors        Guarantor[]
   additionalIncomes Income[]
 }
 
 model Guarantor {
-  id                String @id @default(uuid())
-  tenantProfileId   String
-  type              GuarantorType
-  status            GuarantorStatus
-  netIncome         Int
-  
+  id              String          @id @default(uuid())
+  tenantProfileId String
+  type            GuarantorType
+  status          GuarantorStatus
+  netIncome       Int
+
   tenantProfile     TenantProfile @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
   additionalIncomes Income[]
 }
 
 model Income {
-  id                String @id @default(uuid())
-  type              IncomeType
-  amount            Int
-  
-  tenantProfileId   String?
-  tenantProfile     TenantProfile? @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
-  
-  guarantorId       String?
-  guarantor         Guarantor? @relation(fields: [guarantorId], references: [id], onDelete: Cascade)
+  id     String     @id @default(uuid())
+  type   IncomeType
+  amount Int
+
+  tenantProfileId String?
+  tenantProfile   TenantProfile? @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
+
+  guarantorId String?
+  guarantor   Guarantor? @relation(fields: [guarantorId], references: [id], onDelete: Cascade)
 }
 
 model Account {
-  id                String @id @default(uuid())
+  id                String  @id @default(uuid())
   userId            String
   type              String
   provider          String
@@ -147,7 +155,7 @@ model Account {
 }
 
 model Listing {
-  id            String @id @default(uuid())
+  id            String   @id @default(uuid())
   title         String
   description   String
   createdAt     DateTime @default(now())
@@ -161,89 +169,127 @@ model Listing {
   city          String?
   country       String?
   district      String?
+  neighborhood  String?
   latitude      Float?
   longitude     Float?
-  
+
   // Coridor Fields
-  leaseType     LeaseType?
-  dpe           String?
-  charges       Json? // Stores tax, insurance, etc.
-  
+  leaseType LeaseType?
+  dpe       String?
+  ges       String?
+  charges   Json? // Stores tax, insurance, etc.
+
   // New Category Fields
-  isFurnished   Boolean @default(false)
-  surface       Float?
-  surfaceUnit   String? @default("metric") // "metric" (m²) or "imperial" (sq ft)
-  kitchenType   String? // "separate", "open"
-  floor         Int?
-  totalFloors   Int?
-  buildYear     Int?
-  
+  isFurnished Boolean @default(false)
+  surface     Float?
+  surfaceUnit String? @default("metric") // "metric" (m²) or "imperial" (sq ft)
+  kitchenType String? // "separate", "open"
+  floor       Int?
+  totalFloors Int?
+  buildYear   Int?
+
   // Amenities (Booleans)
-  isTraversant          Boolean @default(false)
-  hasGarden             Boolean @default(false)
-  isRefurbished         Boolean @default(false)
-  petsAllowed           Boolean @default(false)
-  isKitchenEquipped     Boolean @default(false)
-  isSouthFacing         Boolean @default(false)
-  hasStorage            Boolean @default(false)
-  hasFiber              Boolean @default(false)
-  hasBikeRoom           Boolean @default(false)
-  hasLaundry            Boolean @default(false)
-  isNearTransport       Boolean @default(false)
-  hasDigicode           Boolean @default(false)
-  hasIntercom           Boolean @default(false)
-  hasCaretaker          Boolean @default(false)
-  hasArmoredDoor        Boolean @default(false)
-  isQuietArea           Boolean @default(false)
-  isNearGreenSpace      Boolean @default(false)
-  isNearSchools         Boolean @default(false)
-  isNearShops           Boolean @default(false)
-  isNearHospital        Boolean @default(false)
-  
+  isTraversant      Boolean @default(false)
+  hasGarden         Boolean @default(false)
+  isRefurbished     Boolean @default(false)
+  petsAllowed       Boolean @default(false)
+  isKitchenEquipped Boolean @default(false)
+  isSouthFacing     Boolean @default(false)
+  hasStorage        Boolean @default(false)
+  hasFiber          Boolean @default(false)
+  hasBikeRoom       Boolean @default(false)
+  hasLaundry        Boolean @default(false)
+  isNearTransport   Boolean @default(false)
+  hasDigicode       Boolean @default(false)
+  hasIntercom       Boolean @default(false)
+  hasCaretaker      Boolean @default(false)
+  hasArmoredDoor    Boolean @default(false)
+  isQuietArea       Boolean @default(false)
+  isNearGreenSpace  Boolean @default(false)
+  isNearSchools     Boolean @default(false)
+  isNearShops       Boolean @default(false)
+  isNearHospital    Boolean @default(false)
+
   // New Amenities from User Request
-  hasElevator           Boolean @default(false)
-  isAccessible          Boolean @default(false)
-  hasAutomaticDoors     Boolean @default(false)
-  isLastFloor           Boolean @default(false)
-  isBright              Boolean @default(false)
-  hasNoOpposite         Boolean @default(false)
-  hasView               Boolean @default(false)
-  isQuiet               Boolean @default(false)
-  hasPool               Boolean @default(false)
-  hasBathtub            Boolean @default(false)
-  hasAirConditioning    Boolean @default(false)
-  isStudentFriendly     Boolean @default(false)
-  hasConcierge          Boolean @default(false)
+  hasElevator        Boolean @default(false)
+  isAccessible       Boolean @default(false)
+  hasAutomaticDoors  Boolean @default(false)
+  isLastFloor        Boolean @default(false)
+  isBright           Boolean @default(false)
+  hasNoOpposite      Boolean @default(false)
+  hasView            Boolean @default(false)
+  isQuiet            Boolean @default(false)
+  hasPool            Boolean @default(false)
+  hasBathtub         Boolean @default(false)
+  hasAirConditioning Boolean @default(false)
+  isStudentFriendly  Boolean @default(false)
+  hasConcierge       Boolean @default(false)
 
   // Relations
-  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reservations  Reservation[]
-  wishlists     Wishlist[]
-  
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+  wishlists    Wishlist[]
+
   // New Photo Structure
-  rooms         Room[]
-  images        PropertyImage[]
+  rooms  Room[]
+  images PropertyImage[]
 
   // Caching
-  transitData   Json?
+  transitData Json?
 
   // Visits
   // Visits
-  visitDuration Int?    @default(20) // Duration in minutes (15, 20, 30, 45)
+  visitDuration Int?        @default(20) // Duration in minutes (15, 20, 30, 45)
   visitSlots    VisitSlot[]
   visits        Visit[]
 
   applicationMessages Message[]
+
+  applications RentalApplication[]
+
+  furniture Furniture?
+}
+
+model Furniture {
+  id        String  @id @default(uuid())
+  listingId String  @unique
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  // Mandatory (Meublé)
+  bedding  Boolean @default(false)
+  curtains Boolean @default(false)
+  hob      Boolean @default(false)
+  oven     Boolean @default(false) // Or microwave
+  fridge   Boolean @default(false)
+  freezer  Boolean @default(false)
+  dishes   Boolean @default(false)
+  utensils Boolean @default(false)
+  table    Boolean @default(false)
+  seats    Boolean @default(false)
+  shelves  Boolean @default(false)
+  lights   Boolean @default(false)
+  vacuum   Boolean @default(false)
+
+  // Optional
+  washingMachine Boolean @default(false)
+  coffeeMaker    Boolean @default(false)
+  toaster        Boolean @default(false)
+  dishwasher     Boolean @default(false)
+  hairDryer      Boolean @default(false)
+  mirror         Boolean @default(false) // Often mandatory in bathroom but listed as optional here
+  sheets         Boolean @default(false)
+  towels         Boolean @default(false)
+  cloths         Boolean @default(false) // Torchons
 }
 
 model VisitSlot {
   id        String   @id @default(uuid())
   listingId String
   date      DateTime // Specific date for the visit slot
-  startTime String   // Format "HH:mm"
-  endTime   String   // Format "HH:mm"
+  startTime String // Format "HH:mm"
+  endTime   String // Format "HH:mm"
 
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 enum VisitStatus {
@@ -253,106 +299,168 @@ enum VisitStatus {
 }
 
 model Visit {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   listingId   String
   candidateId String
   date        DateTime
-  startTime   String   // Format "HH:mm"
-  endTime     String   // Format "HH:mm"
+  startTime   String // Format "HH:mm"
+  endTime     String // Format "HH:mm"
   status      VisitStatus @default(PENDING)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime    @default(now())
 
-  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  candidate User    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 }
 
 model Room {
   id        String @id @default(uuid())
   name      String
   listingId String
-  
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  images    PropertyImage[]
+
+  listing Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  images  PropertyImage[]
 }
 
 model PropertyImage {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   url       String
   listingId String
   roomId    String?
   order     Int     @default(0)
-  
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  room      Room? @relation(fields: [roomId], references: [id])
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  room    Room?   @relation(fields: [roomId], references: [id])
 }
 
 model Reservation {
-  id          String @id @default(uuid())
-  userId      String
-  listingId   String
-  startDate   DateTime
-  endDate     DateTime
-  totalPrice  Int
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  listingId  String
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Int
+  createdAt  DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 model Wishlist {
-  id String @id @default(uuid())
-  userId String
-  name String
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   listings Listing[]
 }
 
 model Conversation {
-  id String @id @default(uuid())
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
   lastMessageAt DateTime @default(now())
-  name String?
-  isGroup Boolean?
-  
+  name          String?
+  isGroup       Boolean?
+
   messagesIds String[]
-  messages Message[]
+  messages    Message[]
 
   users User[]
 }
 
 model Message {
-  id String @id @default(uuid())
-  body String?
-  image String?
+  id        String   @id @default(uuid())
+  body      String?
+  image     String?
   createdAt DateTime @default(now())
 
   seenIds String[]
-  seen User[] @relation("Seen")
+  seen    User[]   @relation("Seen")
 
   conversationId String
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   senderId String
-  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   listingId String?
-  listing Listing? @relation(fields: [listingId], references: [id])
+  listing   Listing? @relation(fields: [listingId], references: [id])
 }
 
 model Amenity {
-  id        String   @id @default(uuid())
+  id        String                                @id @default(uuid())
   type      String
   latitude  Float
   longitude Float
   name      String?
   city      String?
   zipCode   String?
-  sourceId  String?  @unique
+  sourceId  String?                               @unique
   geom      Unsupported("geometry(Point, 4326)")?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime                              @default(now())
+  updatedAt DateTime                              @updatedAt
 
   @@index([geom], name: "amenity_geom_idx", type: Gist)
+}
+
+enum CompositionType {
+  SOLO
+  COUPLE
+  GROUP
+}
+
+enum CoupleLegalStatus {
+  NONE
+  MARRIED
+  PACS
+  CONCUBINAGE
+}
+
+enum TargetLeaseType {
+  ANY
+  FURNISHED
+  EMPTY
+  MOBILITY
+}
+
+model TenantCandidateScope {
+  id                String             @id @default(uuid())
+  creatorUserId     String
+  compositionType   CompositionType
+  membersIds        String[]
+  coupleLegalStatus CoupleLegalStatus?
+  targetLeaseType   TargetLeaseType
+  childCount        Int                @default(0)
+  targetMoveInDate  DateTime?
+  createdAt         DateTime           @default(now())
+
+  creatorUser  User                @relation("CreatedScope", fields: [creatorUserId], references: [id], onDelete: Cascade)
+  applications RentalApplication[]
+}
+
+enum ApplicationStatus {
+  PENDING
+  SENT
+  REJECTED
+  VISIT_PROPOSED
+  VISIT_CONFIRMED
+  ACCEPTED
+}
+
+enum SpecificLeaseRequest {
+  DEFAULT
+  STUDENT
+  MOBILITY
+}
+
+model RentalApplication {
+  id                   String               @id @default(uuid())
+  propertyId           String
+  candidateScopeId     String
+  status               ApplicationStatus    @default(SENT)
+  specificLeaseRequest SpecificLeaseRequest @default(DEFAULT)
+  appliedAt            DateTime             @default(now())
+
+  property       Listing              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
 }

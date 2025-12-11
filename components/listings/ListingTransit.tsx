@@ -62,11 +62,11 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
 
     const getIcon = (category: string) => {
         const cat = String(category).toLowerCase().trim();
-        if (cat.includes("subway") || cat.includes("metro")) return <div className="font-bold text-xl border-2 border-current rounded-full w-8 h-8 flex items-center justify-center">M</div>;
+        if (cat.includes("subway") || cat.includes("metro")) return <div className="font-bold text-[12px] border-2 border-current rounded-full w-[25px] h-[25px] flex items-center justify-center">M</div>;
         if (cat.includes("tram") || cat.includes("lightrail")) return <TramFront size={24} />;
         if (cat.includes("train") || cat.includes("rail") || cat.includes("regional")) return <Train size={24} />;
         if (cat.includes("bus")) return (
-            <div className="w-[52px] h-[30px] rounded-[15px] flex items-center justify-center text-[0.9rem] font-semibold border-2 border-[#333] bg-white text-[#333]">
+            <div className="w-[25px] h-[25px] rounded-[7px] flex items-center justify-center border-2 border-[#333] text-[#333] text-[9px] font-bold">
                 BUS
             </div>
         );
@@ -103,8 +103,8 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
             </div>
             <div className="flex flex-col gap-4">
                 {sortedCategories.map((category) => (
-                    <div key={category} className="flex items-center gap-4">
-                        <div className="w-[60px] flex justify-center">
+                    <div key={category} className="flex items-start gap-4">
+                        <div className="w-[45px] flex justify-start">
                             {getIcon(category)}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
@@ -121,24 +121,24 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
                                 };
 
                                 if (isMetro) {
-                                    // Metro: 30x30px, radius 20px (effectively circle), Inter Semi-Bold 0.9rem
-                                    styleClass = "w-[30px] h-[30px] rounded-[20px] flex items-center justify-center text-[0.9rem] font-semibold";
+                                    // Metro: 25x25px, radius 20px (effectively circle), 12px font
+                                    styleClass = "w-[25px] h-[25px] rounded-[20px] flex items-center justify-center text-[12px] font-semibold";
                                     customStyle = {
                                         backgroundColor: line.color,
                                         color: line.textColor || '#333',
                                         fontFamily: 'Inter, sans-serif'
                                     };
                                 } else if (isBus) {
-                                    // Bus: 52x30px, radius 15px, Inter Semi-Bold 0.9rem
-                                    styleClass = "w-[52px] h-[30px] rounded-[15px] flex items-center justify-center text-[0.9rem] font-semibold";
+                                    // Bus: min-width 42px, height 25px, radius 15px, 12px font
+                                    styleClass = "min-w-[42px] px-1 h-[25px] rounded-[15px] flex items-center justify-center text-[12px] font-semibold";
                                     customStyle = {
                                         backgroundColor: line.color,
                                         color: line.textColor || '#333',
                                         fontFamily: 'Inter, sans-serif'
                                     };
                                 } else if (isTrain) {
-                                    // Train/RER: 30x30px, radius 7px, Inter Semi-Bold 0.9rem
-                                    styleClass = "w-[30px] h-[30px] rounded-[7px] flex items-center justify-center text-[0.9rem] font-semibold";
+                                    // Train/RER: 25x25px, radius 7px, 12px font
+                                    styleClass = "w-[25px] h-[25px] rounded-[7px] flex items-center justify-center text-[12px] font-semibold";
                                     customStyle = {
                                         backgroundColor: line.color,
                                         color: line.textColor || '#333',

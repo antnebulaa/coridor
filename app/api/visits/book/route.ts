@@ -52,6 +52,23 @@ export async function POST(
             }
         });
 
+        // Update application status
+        const application = await prisma.rentalApplication.findFirst({
+            where: {
+                propertyId: listingId,
+                candidateScope: {
+                    creatorUserId: currentUser.id
+                }
+            }
+        });
+
+        if (application) {
+            await prisma.rentalApplication.update({
+                where: { id: application.id },
+                data: { status: 'VISIT_CONFIRMED' }
+            });
+        }
+
         return NextResponse.json(visit);
     } catch (error) {
         console.error("Booking Error:", error);

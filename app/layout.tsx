@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import MobileMenu from "@/components/navbar/MobileMenu";
-import Footer from "@/components/Footer";
+import ClientFooter from "@/components/ClientFooter";
 import SearchModal from "@/components/modals/SearchModal";
 import CommuteModal from "@/components/modals/CommuteModal";
 import RegisterModal from "@/components/modals/RegisterModal";
@@ -47,7 +47,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={font.className}>
         <AuthProvider>
-          <Toaster />
+          <Toaster toastOptions={{ className: 'z-[100000]' }} containerStyle={{ zIndex: 100000 }} />
           <Suspense fallback={<div></div>}>
             <SearchModal />
             <CommuteModal />
@@ -63,7 +63,7 @@ export default async function RootLayout({
           <MainLayout>
             {children}
           </MainLayout>
-          <Footer />
+          <ClientFooter />
           <Suspense fallback={<div></div>}>
             <MobileMenu currentUser={currentUser} unreadCount={unreadCount} />
           </Suspense>

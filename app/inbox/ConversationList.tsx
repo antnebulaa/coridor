@@ -51,7 +51,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
             /* Desktop Styles */
             `lg:static 
-             lg:w-[340px] 
+             lg:w-[410px] 
              lg:inset-auto 
              lg:z-auto 
              lg:h-full

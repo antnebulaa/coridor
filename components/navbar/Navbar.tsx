@@ -17,12 +17,44 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
     const isHomePage = pathname === '/';
 
     return (
-        <div className={`fixed w-full bg-white z-10 ${!isHomePage ? 'hidden md:block' : ''}`}>
-            <div className="py-2 md:py-4 border-b-[1px] border-[#dfdfdf]">
+        <div className={`fixed w-full bg-white z-[9999] ${!isHomePage ? 'hidden md:block' : ''}`}>
+            <div className="py-2 md:py-4 border-b border-[#dfdfdf]">
                 <Container>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex flex-row items-center justify-between w-full md:w-auto">
-                            <Logo />
+                        {/* Top Row: Logo, Badges, Mobile Menu - HIDDEN on Mobile Home */}
+                        <div className={`
+                            flex flex-row items-center justify-between w-full md:w-auto
+                            ${isHomePage ? 'hidden md:flex' : 'flex'}
+                        `}>
+                            <div className="flex items-center gap-2">
+                                <Logo />
+                                {currentUser?.plan === 'PLUS' && (
+                                    <div className="
+                                        bg-rose-500 
+                                        text-white 
+                                        text-[10px] 
+                                        font-bold 
+                                        px-2 
+                                        py-0.5 
+                                        rounded-full
+                                    ">
+                                        PLUS
+                                    </div>
+                                )}
+                                {currentUser?.plan === 'PRO' && (
+                                    <div className="
+                                        bg-black 
+                                        text-white 
+                                        text-[10px] 
+                                        font-bold 
+                                        px-2 
+                                        py-0.5 
+                                        rounded-full
+                                    ">
+                                        PRO
+                                    </div>
+                                )}
+                            </div>
                             <div className="md:hidden">
                                 <UserMenu currentUser={currentUser} unreadCount={unreadCount} />
                             </div>

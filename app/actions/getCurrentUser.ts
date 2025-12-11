@@ -43,7 +43,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
             listings: wishlist.listings.map((listing) => ({ id: listing.id }))
         }));
 
-        return {
+        const safeUser = {
             ...currentUser,
             createdAt: currentUser.createdAt.toISOString(),
             updatedAt: currentUser.updatedAt.toISOString(),
@@ -51,7 +51,10 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
             birthDate: currentUser.birthDate?.toISOString() || null,
             wishlists: safeWishlists,
             userMode: currentUser.userMode,
+            plan: (currentUser as any).plan || 'FREE', // Fallback to FREE if missing, though it shouldn't be
         };
+
+        return safeUser;
     } catch (error: any) {
         return null;
     }

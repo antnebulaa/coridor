@@ -5,14 +5,22 @@ import { SafeListing, SafeUser } from "@/types";
 import Container from "@/components/Container";
 import EditPropertySidebar from "@/components/properties/EditPropertySidebar";
 import Heading from "@/components/Heading";
+
+import DescriptionSection from "./components/DescriptionSection";
 import TitleSection from "./components/TitleSection";
 import LocationSection from "./components/LocationSection";
 import CategorySection from "./components/CategorySection";
 import AmenitiesSection from "./components/AmenitiesSection";
+import FurnitureSection from "./components/FurnitureSection";
 import PriceSection from "./components/PriceSection";
 import PhotosSection from "./components/PhotosSection";
 import VisitsSection from "./components/VisitsSection";
 import { sidebarLinks } from "./constants";
+
+export type SectionType =
+    | 'title'
+    | 'description'
+    | 'location'
 
 interface EditPropertyClientProps {
     listing: SafeListing & {
@@ -27,6 +35,7 @@ export type SectionType =
     | 'location'
     | 'category'
     | 'amenities'
+    | 'furniture'
     | 'availability'
     | 'photos'
     | 'visits'
@@ -82,6 +91,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         location: 'Emplacement',
         category: 'Type de logement',
         amenities: 'Atouts',
+        furniture: 'Équipements',
         availability: 'Disponibilité',
         photos: 'Gestion des photos',
         visits: 'Visites',
@@ -103,6 +113,8 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                 return <CategorySection listing={listing} currentUser={currentUser} />;
             case 'amenities':
                 return <AmenitiesSection listing={listing} />;
+            case 'furniture':
+                return <FurnitureSection listing={listing} />;
             case 'availability':
                 return <div>Availability Form Placeholder</div>;
             case 'photos':

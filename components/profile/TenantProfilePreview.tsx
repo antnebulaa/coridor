@@ -19,15 +19,50 @@ interface TenantProfilePreviewProps {
         jobType?: string | null;
     };
     rent?: number;
+    candidateScope?: {
+        compositionType: string;
+        membersIds: string[];
+        coupleLegalStatus?: string | null;
+        targetLeaseType: string;
+        targetMoveInDate?: string | null;
+        childCount: number;
+    } | null;
 }
-
 
 const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
     user,
     tenantProfile,
-    rent
+    rent,
+    candidateScope
 }) => {
     if (!tenantProfile) return null;
+
+    // Helper functions
+    const formatDate = (dateString?: string | null) => {
+        if (!dateString) return 'Non renseignée';
+        return new Date(dateString).toLocaleDateString('fr-FR');
+    }
+
+    const getCompositionLabel = (val: string) => {
+        if (val === 'SOLO') return 'Seul(e)';
+        if (val === 'COUPLE') return 'En couple';
+        if (val === 'GROUP') return 'En colocation';
+        return val;
+    }
+    const getStatusLabel = (val?: string | null) => {
+        if (!val || val === 'NONE') return 'Célibataire / Autre';
+        if (val === 'MARRIED') return 'Marié(e)';
+        if (val === 'PACS') return 'Pacsé(e)';
+        if (val === 'CONCUBINAGE') return 'Concubinage';
+        return 'Non renseigné';
+    }
+    const getLeaseLabel = (val: string) => {
+        if (val === 'ANY') return 'Pas de préférences';
+        if (val === 'FURNISHED') return 'Meublé';
+        if (val === 'EMPTY') return 'Vide';
+        if (val === 'MOBILITY') return 'Mobilité';
+        return val;
+    }
 
     // Calculate totals
     const netSalary = tenantProfile.netSalary || 0;
@@ -79,6 +114,41 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                     <div>
                         <div className="font-bold text-sm">Paiements de loyer certifiés</div>
                         <div className="text-xs">Ce candidat a prouvé sa régularité de paiement sur les 12 derniers mois.</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rental Project Section */}
+            {candidateScope && (
+                <div className="flex flex-col gap-3">
+                    <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                        <Home size={16} /> Projet de location
+                    </h3>
+                    <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-3 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-neutral-600">Recherche</span>
+                            <span className="font-medium text-neutral-900">{getCompositionLabel(candidateScope.compositionType)}</span>
+                        </div>
+                        {candidateScope.compositionType === 'COUPLE' && (
+                            <div className="flex justify-between">
+                                <span className="text-neutral-600">Statut</span>
+                                <span className="font-medium text-neutral-900">{getStatusLabel(candidateScope.coupleLegalStatus)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between">
+                            <span className="text-neutral-600">Bail</span>
+                            <span className="font-medium text-neutral-900">{getLeaseLabel(candidateScope.targetLeaseType)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-neutral-600">Emménagement</span>
+                            <span className="font-medium text-neutral-900">{formatDate(candidateScope.targetMoveInDate)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-neutral-600">Enfants</span>
+                            <span className="font-medium text-neutral-900">
+                                {candidateScope.childCount > 0 ? candidateScope.childCount : "Aucun"}
+                            </span>
+                        </div>
                     </div>
                 </div>
             )}

@@ -7,7 +7,7 @@ import Modal from './Modal';
 import useSearchModal from '@/hooks/useSearchModal';
 import useCommuteModal from '@/hooks/useCommuteModal';
 import Heading from '../Heading';
-import GoogleAddressSelect, { AddressSelectValue } from '../inputs/GoogleAddressSelect';
+import MapboxAddressSelect, { AddressSelectValue } from '../inputs/MapboxAddressSelect';
 import CategoryInput from '../inputs/CategoryInput';
 import Counter from '../inputs/Counter';
 import SoftInput from '../inputs/SoftInput'; // Assuming we can reuse Input or create a simple one
@@ -221,7 +221,7 @@ const SearchModal = () => {
                 subtitle=""
             />
 
-            <GoogleAddressSelect
+            <MapboxAddressSelect
                 value={undefined} // Always empty to allow new selection
                 onChange={handleLocationSelect}
                 placeholder="Ajouter un autre lieu"

@@ -1,4 +1,4 @@
-import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMode, Conversation, Message, Wishlist } from "@prisma/client";
+import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMode, Conversation, Message, Wishlist, Plan, RentalApplication, TenantCandidateScope, ApplicationStatus } from "@prisma/client";
 
 export type SafeListing = Omit<
     Listing,
@@ -13,9 +13,12 @@ export type SafeListing = Omit<
     kitchenType: string | null;
     floor: number | null;
     totalFloors: number | null;
+    dpe?: string | null;
+    ges?: string | null;
     buildYear: number | null;
     city: string | null;
     district: string | null;
+    neighborhood: string | null;
     country: string | null;
     latitude: number | null;
     longitude: number | null;
@@ -83,6 +86,7 @@ export type SafeUser = Omit<
     updatedAt: string;
     emailVerified: string | null;
     userMode: UserMode;
+    plan: Plan;
     phoneNumber: string | null;
     birthDate: string | null;
     tenantProfile: TenantProfile | null;
@@ -93,12 +97,15 @@ export type SafeUser = Omit<
 export type FullMessageType = Message & {
     sender: User,
     seen: User[],
-    listing?: Listing | null,
-    listingId?: string | null
+    listing?: Listing | null
 };
 
 export type FullConversationType = Conversation & {
-    users: User[],
+    users: (User & {
+        createdScopes: (TenantCandidateScope & {
+            applications: RentalApplication[]
+        })[]
+    })[],
     messages: FullMessageType[]
 };
 

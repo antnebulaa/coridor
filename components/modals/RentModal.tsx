@@ -7,7 +7,7 @@ import Modal from "./Modal";
 import Heading from "../Heading";
 import { categories } from "../navbar/Categories";
 import CategoryInput from "../inputs/CategoryInput";
-import GoogleAddressSelect from "../inputs/GoogleAddressSelect";
+import MapboxAddressSelect from "../inputs/MapboxAddressSelect";
 import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
 import MultiImageUpload from "../inputs/MultiImageUpload";
@@ -66,6 +66,7 @@ const RentModal = () => {
             description: '',
             leaseType: LeaseType.LONG_TERM,
             dpe: 'C',
+            ges: 'A',
             charges: 0,
             amenities: [],
             rooms: []
@@ -88,6 +89,7 @@ const RentModal = () => {
                 description: listing.description,
                 leaseType: listing.leaseType,
                 dpe: listing.dpe,
+                ges: listing.ges || 'A',
                 charges: typeof listing.charges === 'object' ? (listing.charges as any)?.amount : 0,
                 amenities: Object.keys(listing).filter((key) => (listing as any)[key] === true),
                 rooms: listing.rooms?.map((room: any) => ({
@@ -110,6 +112,7 @@ const RentModal = () => {
                 description: '',
                 leaseType: LeaseType.LONG_TERM,
                 dpe: 'C',
+                ges: 'A',
                 charges: 0,
                 amenities: [],
                 rooms: []
@@ -237,7 +240,7 @@ const RentModal = () => {
                     title="Where is your place located?"
                     subtitle="Help guests find you!"
                 />
-                <GoogleAddressSelect
+                <MapboxAddressSelect
                     value={location}
                     onChange={(value) => setCustomValue('location', value)}
                 />
@@ -248,6 +251,7 @@ const RentModal = () => {
 
     const leaseType = watch('leaseType');
     const dpe = watch('dpe');
+    const ges = watch('ges');
 
     if (step === STEPS.INFO) {
         bodyContent = (
@@ -291,19 +295,35 @@ const RentModal = () => {
                         ))}
                     </select>
                 </div>
-                <div className="flex flex-col gap-2">
-                    <label className="font-medium">DPE (Energy Performance)</label>
-                    <select
-                        value={dpe}
-                        onChange={(e) => setCustomValue('dpe', e.target.value)}
-                        className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed border-neutral-300 focus:border-black"
-                    >
-                        {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
-                            <option key={grade} value={grade}>
-                                {grade}
-                            </option>
-                        ))}
-                    </select>
+                <div className="flex flex-row gap-4 w-full">
+                    <div className="flex flex-col gap-2 w-full">
+                        <label className="font-medium">Classe énergie (DPE)</label>
+                        <select
+                            value={dpe}
+                            onChange={(e) => setCustomValue('dpe', e.target.value)}
+                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed border-neutral-300 focus:border-black"
+                        >
+                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
+                                <option key={grade} value={grade}>
+                                    {grade}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex flex-col gap-2 w-full">
+                        <label className="font-medium">GES</label>
+                        <select
+                            value={ges}
+                            onChange={(e) => setCustomValue('ges', e.target.value)}
+                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed border-neutral-300 focus:border-black"
+                        >
+                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
+                                <option key={grade} value={grade}>
+                                    {grade}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
         )

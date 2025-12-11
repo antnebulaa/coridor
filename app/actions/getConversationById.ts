@@ -18,6 +18,7 @@ const getConversationById = async (
             include: {
                 users: {
                     include: {
+                        createdScopes: true,
                         tenantProfile: {
                             include: {
                                 guarantors: {
