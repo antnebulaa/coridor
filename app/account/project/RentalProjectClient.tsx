@@ -17,7 +17,7 @@ interface RentalProjectClientProps {
         membersIds: string[];
         coupleLegalStatus?: CoupleLegalStatus | null;
         targetLeaseType: TargetLeaseType;
-        targetMoveInDate?: Date | null;
+        targetMoveInDate?: string | null;
         childCount: number;
     } | null;
 }
@@ -31,7 +31,7 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
     const [coupleLegalStatus, setCoupleLegalStatus] = useState<string>(existingScope?.coupleLegalStatus || '');
     const [targetLeaseType, setTargetLeaseType] = useState<string>(existingScope?.targetLeaseType || '');
     const [targetMoveInDate, setTargetMoveInDate] = useState<string>(
-        existingScope?.targetMoveInDate ? new Date(existingScope.targetMoveInDate).toISOString().split('T')[0] : ''
+        existingScope?.targetMoveInDate ? existingScope.targetMoveInDate.split('T')[0] : ''
     );
     const [childCount, setChildCount] = useState(existingScope?.childCount || 0);
 
