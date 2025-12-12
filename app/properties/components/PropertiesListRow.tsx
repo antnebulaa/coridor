@@ -36,6 +36,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 gap-4 
                 p-4 
                 border-b 
+                border-neutral-200
                 bg-white
                 hover:bg-neutral-50 
                 transition 
