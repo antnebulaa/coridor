@@ -17,13 +17,14 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
     onSelectListing
 }) => {
     // Snap points: 
-    // - "150px": Collapsed view (Header only)
+    // - "130px": Collapsed view (Header only)
+    // - "40%": Half-height view (shows ~1-2 listings)
     // - "1": Expanded view (Full available height)
-    const [snap, setSnap] = useState<number | string | null>("150px");
+    const [snap, setSnap] = useState<number | string | null>("40%");
 
     return (
         <Drawer.Root
-            snapPoints={["150px", 1]}
+            snapPoints={["130px", "40%", 1]}
             activeSnapPoint={snap}
             setActiveSnapPoint={setSnap}
             open={true}
@@ -32,9 +33,10 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         >
             <Drawer.Portal>
                 <Drawer.Content
-                    className="fixed flex flex-col bg-white border border-gray-100 border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[96%] mx-[-1px] z-[1001] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] outline-none"
+                    className="fixed flex flex-col bg-white border border-gray-100 border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[96%] -mx-px z-1001 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] outline-none"
                     style={{ pointerEvents: 'auto' }} // Ensure content captures events
                 >
+                    <Drawer.Title className="sr-only">Liste des logements</Drawer.Title>
                     {/* Handle + Header */}
                     <div className="w-full bg-white flex flex-col items-center pt-4 pb-2 rounded-t-[10px] shrink-0 border-b border-gray-100/50">
                         <div className="w-12 h-1.5 bg-gray-300 rounded-full mb-4" />
