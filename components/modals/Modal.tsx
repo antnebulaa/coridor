@@ -114,7 +114,20 @@ const Modal: React.FC<ModalProps> = ({
                             <div className="flex items-center p-6 rounded-t justify-center relative border-b-[1px] border-[#dfdfdf]">
                                 <button
                                     onClick={handleClose}
-                                    className="p-1 border-0 hover:opacity-70 transition absolute left-9"
+                                    className="
+                                        w-10 
+                                        h-10 
+                                        rounded-full 
+                                        bg-neutral-100 
+                                        hover:bg-neutral-200 
+                                        flex 
+                                        items-center 
+                                        justify-center 
+                                        transition 
+                                        absolute 
+                                        left-6
+                                        border-0
+                                    "
                                 >
                                     <X size={18} />
                                 </button>

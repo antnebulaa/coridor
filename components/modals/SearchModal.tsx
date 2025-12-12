@@ -216,10 +216,7 @@ const SearchModal = () => {
 
     let bodyContent = (
         <div className="flex flex-col gap-6">
-            <Heading
-                title="Zone de recherche"
-                subtitle=""
-            />
+
 
             <MapboxAddressSelect
                 value={undefined} // Always empty to allow new selection
