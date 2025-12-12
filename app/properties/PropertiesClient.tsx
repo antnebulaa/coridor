@@ -79,7 +79,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 {viewMode === 'list' ? (
                     <div className="flex flex-col">
                         <div className="
-                            flex 
+                            hidden md:flex 
                             items-center 
                             gap-4 
                             px-4 

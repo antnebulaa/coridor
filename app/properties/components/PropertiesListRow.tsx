@@ -44,7 +44,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 group
             "
         >
-            {/* Column 1: Annonce (Image + Details) - 40% */}
+            {/* Column 1: Annonce (Image + Details) - Mobile: 100%, Desktop: 40% */}
             <div className="flex-[3] flex gap-4 items-center min-w-0">
                 <div className="
                     relative 
@@ -62,20 +62,39 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                         className="object-cover group-hover:scale-110 transition"
                     />
                 </div>
-                <div className="flex flex-col min-w-0">
+                <div className="flex flex-col min-w-0 gap-0.5">
+                    {/* Title: Category + Location (Mobile) */}
                     <span className="font-semibold text-neutral-900 truncate">
                         {data.category}
+                        <span className="md:hidden font-normal text-neutral-600 ml-1">
+                            à {data.city} {data.district}
+                        </span>
                     </span>
+
+                    {/* Details: Rooms/Surface */}
                     <span className="text-sm text-neutral-500 truncate">
                         {data.roomCount} pièces
                         {data.roomCount > 1 ? ` • ${data.roomCount - 1} ch.` : ''}
                         {surfaceDisplay ? ` • ${surfaceDisplay}` : ''}
                     </span>
+
+                    {/* Status: Mobile Only */}
+                    <div className="md:hidden mt-1 flex items-center gap-2">
+                        {data.isPublished ? (
+                            <div className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
+                                En ligne
+                            </div>
+                        ) : (
+                            <div className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-neutral-100 text-neutral-800">
+                                En pause
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Column 2: Location - 30% */}
-            <div className="flex-[2] text-sm text-neutral-600 min-w-0">
+            {/* Column 2: Location - 30% (Desktop Only) */}
+            <div className="hidden md:block flex-[2] text-sm text-neutral-600 min-w-0">
                 <div className="font-medium text-neutral-900 truncate">
                     {data.city || location?.label}
                 </div>
@@ -86,13 +105,13 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 )}
             </div>
 
-            {/* Column 3: Price - 15% */}
-            <div className="flex-1 font-medium text-neutral-900 whitespace-nowrap">
+            {/* Column 3: Price - 15% (Desktop Only) */}
+            <div className="hidden md:block flex-1 font-medium text-neutral-900 whitespace-nowrap">
                 {data.price}€ /mois
             </div>
 
-            {/* Column 4: Status - 15% */}
-            <div className="flex-1 flex flex-col items-end">
+            {/* Column 4: Status - 15% (Desktop Only) */}
+            <div className="hidden md:flex flex-1 flex-col items-end">
                 {data.isPublished ? (
                     <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         En ligne
