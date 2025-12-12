@@ -55,20 +55,20 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`
-                                p-2 rounded-full transition
+                                p-1.5 rounded-full transition
                                 ${viewMode === 'grid' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
                             `}
                         >
-                            <LayoutGrid size={20} />
+                            <LayoutGrid size={18} />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
                             className={`
-                                p-2 rounded-full transition
+                                p-1.5 rounded-full transition
                                 ${viewMode === 'list' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
                             `}
                         >
-                            <List size={20} />
+                            <List size={18} />
                         </button>
                     </div>
                 }
