@@ -243,6 +243,7 @@ const RentModal = () => {
                 <MapboxAddressSelect
                     value={location}
                     onChange={(value) => setCustomValue('location', value)}
+                    limitCountry="fr"
                 />
                 <Map center={location?.latlng} />
             </div>

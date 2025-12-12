@@ -21,6 +21,8 @@ interface MapboxAddressSelectProps {
     onChange: (value: AddressSelectValue) => void;
     placeholder?: string;
     autoFocus?: boolean;
+    searchTypes?: string; // e.g. "address,poi" or "place,district,locality"
+    limitCountry?: string; // e.g. "fr"
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -29,7 +31,9 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     value,
     onChange,
     placeholder,
-    autoFocus
+    autoFocus,
+    searchTypes = "address,poi", // Default to address search
+    limitCountry = "fr" // Default to France
 }) => {
     const [inputValue, setInputValue] = useState(value?.label || '');
     const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -65,10 +69,10 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
 
         try {
             // Mapbox Geocoding API
-            // types=address,poi allows searching for specific addresses
-            // country=fr limits to France (optional, but maybe good for this app context)
+            // types configurable via props
+            // country configurable via props
             const response = await axios.get(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=address,poi&language=fr`
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=${searchTypes}&country=${limitCountry}&language=fr`
             );
 
             if (response.data && response.data.features) {

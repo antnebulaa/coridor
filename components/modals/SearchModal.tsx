@@ -224,7 +224,9 @@ const SearchModal = () => {
             <MapboxAddressSelect
                 value={undefined} // Always empty to allow new selection
                 onChange={handleLocationSelect}
-                placeholder="Ajouter un autre lieu"
+                placeholder="Ajouter un autre lieu (Ville, Arrondissement...)"
+                searchTypes="place,district,locality,neighborhood" // Prioritize cities and districts
+                limitCountry="fr"
             />
 
             {/* Selected Locations List */}
