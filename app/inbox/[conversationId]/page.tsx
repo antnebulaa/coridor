@@ -95,7 +95,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             updatedAt: (otherUser.tenantProfile as any).updatedAt?.toISOString() || new Date().toISOString(),
             guarantors: (otherUser.tenantProfile as any).guarantors,
             additionalIncomes: (otherUser.tenantProfile as any).additionalIncomes
-        } : null
+        } : null,
+        wishlists: null
     } as SafeUser : null;
 
     const safeMessages = messages.map((message) => ({
