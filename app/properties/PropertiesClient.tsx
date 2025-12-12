@@ -81,8 +81,8 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 {viewMode === 'list' ? (
                     <div className="flex flex-col">
                         <div className="
-                            grid 
-                            grid-cols-[3fr,2fr,1fr,1fr] 
+                            flex 
+                            items-center 
                             gap-4 
                             px-4 
                             py-3
@@ -92,10 +92,10 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                             text-neutral-500 
                             font-medium
                         ">
-                            <span>Annonce</span>
-                            <span>Adresse</span>
-                            <span>Prix</span>
-                            <span>Statut</span>
+                            <span className="flex-[3]">Annonce</span>
+                            <span className="flex-[2]">Adresse</span>
+                            <span className="flex-1">Prix</span>
+                            <span className="flex-1 text-right md:pr-1">Statut</span>
                         </div>
                         <div className="flex flex-col">
                             {listings.map((listing: any) => (
