@@ -44,6 +44,8 @@ export default async function getListings(
 
         if (userId) {
             query.userId = userId;
+        } else {
+            query.isPublished = true;
         }
 
         if (category) {
