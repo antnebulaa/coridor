@@ -5,10 +5,10 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Airbnb Brand Colors */
-  --primary: #1719FF;
+  /* Airbnb Brand Colors - Custom Green */
+  --primary: #004700;
   --primary-foreground: #ffffff;
-  --primary-hover: #1214CC;
+  --primary-hover: #003300;
 
   --muted: #f7f7f7;
   --muted-foreground: #717171;

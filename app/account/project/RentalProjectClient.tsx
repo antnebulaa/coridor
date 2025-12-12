@@ -175,12 +175,12 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
                             onClick={onSubmit}
                             className="
                                 p-3 
-                                bg-rose-500 
+                                bg-primary 
                                 text-white 
                                 rounded-lg 
                                 text-center 
                                 cursor-pointer 
-                                hover:bg-rose-600 
+                                hover:bg-primary-hover 
                                 transition 
                                 font-bold
                             "

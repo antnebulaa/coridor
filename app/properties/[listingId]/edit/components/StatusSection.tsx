@@ -94,7 +94,7 @@ const StatusSection: React.FC<StatusSectionProps> = ({ listing }) => {
                             focus-visible:ring-2
                             focus-visible:ring-black
                             focus-visible:ring-offset-2
-                            ${isPublished ? 'bg-rose-500' : 'bg-neutral-200'}
+                            ${isPublished ? 'bg-primary' : 'bg-neutral-200'}
                             ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
                     >

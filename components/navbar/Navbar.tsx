@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
                                 <Logo />
                                 {currentUser?.plan === 'PLUS' && (
                                     <div className="
-                                        bg-rose-500 
+                                        bg-primary 
                                         text-white 
                                         text-[10px] 
                                         font-bold 
