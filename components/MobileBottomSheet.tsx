@@ -33,7 +33,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         >
             <Drawer.Portal>
                 <Drawer.Content
-                    className="fixed flex flex-col bg-white border border-gray-100 border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[96%] -mx-px z-1001 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] outline-none"
+                    className="fixed flex flex-col bg-white border border-gray-100 border-b-none rounded-t-[10px] bottom-0 left-0 right-0 h-full max-h-[96%] -mx-px z-1001 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] outline-none md:hidden"
                     style={{ pointerEvents: 'auto' }} // Ensure content captures events
                 >
                     <Drawer.Title className="sr-only">Liste des logements</Drawer.Title>
