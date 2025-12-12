@@ -20,10 +20,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<any
     )
   }
 
+  const isSearchActive = Object.keys(resolvedParams).length > 0;
+
   return (
     <HomeClient
       listings={listings}
       currentUser={currentUser}
+      isSearchActive={isSearchActive}
     />
   );
 }
