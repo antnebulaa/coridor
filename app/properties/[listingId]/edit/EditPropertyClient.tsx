@@ -17,10 +17,6 @@ import PhotosSection from "./components/PhotosSection";
 import VisitsSection from "./components/VisitsSection";
 import { sidebarLinks } from "./constants";
 
-export type SectionType =
-    | 'title'
-    | 'description'
-    | 'location'
 
 interface EditPropertyClientProps {
     listing: SafeListing & {
