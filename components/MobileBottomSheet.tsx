@@ -18,13 +18,13 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
 }) => {
     // Snap points: 
     // - "130px": Collapsed view (Header only)
-    // - "40%": Half-height view (shows ~1-2 listings)
-    // - "1": Expanded view (Full available height)
-    const [snap, setSnap] = useState<number | string | null>("40%");
+    // - 0.4: Half-height view (shows ~1-2 listings)
+    // - 1: Expanded view (Full available height)
+    const [snap, setSnap] = useState<number | string | null>(0.4);
 
     return (
         <Drawer.Root
-            snapPoints={["130px", "40%", 1]}
+            snapPoints={["130px", 0.4, 1]}
             activeSnapPoint={snap}
             setActiveSnapPoint={setSnap}
             open={true}
