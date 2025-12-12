@@ -46,36 +46,34 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 
     return (
         <Container>
-            <div className="flex items-center justify-between">
-                <PageHeader
-                    title="Properties"
-                    subtitle="List of your properties"
-                    actionLabel="Add Property"
-                    onAction={() => rentModal.onOpen()}
-                    actionControls={
-                        <div className="flex items-center bg-neutral-100 rounded-full p-1 gap-1">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`
-                                    p-1.5 rounded-full transition
-                                    ${viewMode === 'grid' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
-                                `}
-                            >
-                                <LayoutGrid size={18} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`
-                                    p-1.5 rounded-full transition
-                                    ${viewMode === 'list' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
-                                `}
-                            >
-                                <List size={18} />
-                            </button>
-                        </div>
-                    }
-                />
-            </div>
+            <PageHeader
+                title="Properties"
+                subtitle="List of your properties"
+                actionLabel="Add Property"
+                onAction={() => rentModal.onOpen()}
+                actionControls={
+                    <div className="flex items-center bg-neutral-100 rounded-full p-1 gap-1">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`
+                                p-1.5 rounded-full transition
+                                ${viewMode === 'grid' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
+                            `}
+                        >
+                            <LayoutGrid size={18} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`
+                                p-1.5 rounded-full transition
+                                ${viewMode === 'list' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
+                            `}
+                        >
+                            <List size={18} />
+                        </button>
+                    </div>
+                }
+            />
 
             <div className="mt-10">
                 {viewMode === 'list' ? (
