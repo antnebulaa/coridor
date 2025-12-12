@@ -6,7 +6,7 @@ import ListingCard from "@/components/listings/ListingCard";
 import { SafeListing, SafeUser } from "@/types";
 
 interface MobileBottomSheetProps {
-    listings: any[]; // SafeListing + relation
+    listings: any[];
     currentUser?: SafeUser | null;
     onSelectListing: (id: string) => void;
 }
@@ -30,13 +30,22 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
     };
 
     const handleDragEnd = (_: any, info: PanInfo) => {
-        if (info.offset.y < -50 || (info.velocity.y < -500 && !isOpen)) {
+        // Velocity check for flick
+        const velocity = info.velocity.y;
+        const offset = info.offset.y;
+
+        // If dragging UP (negative velocity/offset)
+        if (offset < -50 || velocity < -300) {
             setIsOpen(true);
             controls.start("expanded");
-        } else if (info.offset.y > 50 || (info.velocity.y > 500 && isOpen)) {
+        }
+        // If dragging DOWN (positive velocity/offset)
+        else if (offset > 50 || velocity > 300) {
             setIsOpen(false);
             controls.start("collapsed");
-        } else {
+        }
+        else {
+            // Snap back to nearest state
             controls.start(isOpen ? "expanded" : "collapsed");
         }
     };
@@ -46,32 +55,37 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             animate={controls}
             initial="collapsed"
             variants={variants}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            transition={{ type: "spring", damping: 40, stiffness: 300 }}
             className="
-            md:hidden
-            fixed 
-            left-0 
-            right-0 
-            bottom-0 
-            h-[85vh] 
-            bg-white 
-            rounded-t-[24px] 
-            shadow-[0_-4px_25px_rgba(0,0,0,0.15)] 
-            z-[1001]
-            flex
-            flex-col
-            will-change-transform
-            pointer-events-auto
-        "
+                md:hidden
+                fixed 
+                left-0 
+                right-0 
+                bottom-0 
+                h-[85vh] 
+                bg-white 
+                rounded-t-[24px] 
+                shadow-[0_-4px_25px_rgba(0,0,0,0.15)] 
+                z-[1001]
+                flex
+                flex-col
+                will-change-transform
+                pointer-events-auto
+            "
+            // Drag Configuration
             drag="y"
-            dragListener={false}
+            dragListener={false} // Trigger via handle only
             dragControls={dragControls}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={0.05}
-            dragMomentum={false}
+            dragConstraints={{ top: 0 }} // Only stop at top, allow dragging down freely
+            dragElastic={0.1} // Resistance at edges
+            dragMomentum={false} // Replaced by manual snap for Drawer behavior
             onDragEnd={handleDragEnd}
+
+            // Stop propagation to prevent Map interaction underneath
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
         >
-            {/* Drag Handle Area - Target for Drag */}
+            {/* Drag Handle Area */}
             <div
                 className="
                     w-full 
@@ -104,7 +118,8 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             </div>
 
             {/* Scrollable List */}
-            <div className="flex-1 overflow-y-auto overscroll-contain bg-neutral-50 p-4 pb-32">
+            {/* Added touch-action-pan-y to allow internal scroll without triggering page actions */}
+            <div className="flex-1 overflow-y-auto overscroll-contain bg-neutral-50 p-4 pb-32 touch-pan-y">
                 <div className="flex flex-col gap-4">
                     {listings.map((listing) => (
                         <ListingCard
