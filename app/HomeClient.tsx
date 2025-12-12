@@ -48,7 +48,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                     overflow-y-auto 
                     scrollbar-hide
                 ">
-                    <div className="pt-6 px-4 md:pl-6 md:pr-3 pb-32 md:pb-6">
+                    <div className="pt-6 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
                         <div className="
                             grid 
                             grid-cols-1 
