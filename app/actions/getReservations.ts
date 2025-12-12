@@ -59,6 +59,7 @@ export default async function getReservations(
                 listing: {
                     ...reservation.listing,
                     createdAt: reservation.listing.createdAt.toISOString(),
+                    statusUpdatedAt: reservation.listing.statusUpdatedAt.toISOString(),
                 },
                 user: {
                     ...reservation.user,

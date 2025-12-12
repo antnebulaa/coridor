@@ -15,6 +15,7 @@ import FurnitureSection from "./components/FurnitureSection";
 import PriceSection from "./components/PriceSection";
 import PhotosSection from "./components/PhotosSection";
 import VisitsSection from "./components/VisitsSection";
+import StatusSection from "./components/StatusSection";
 import { sidebarLinks } from "./constants";
 
 
@@ -134,7 +135,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
             case 'application':
                 return <div>Application Settings Form Placeholder</div>;
             case 'status':
-                return <div>Status Form Placeholder</div>;
+                return <StatusSection listing={listing} />;
             case 'delete':
                 return <div>Delete Form Placeholder</div>;
             default:

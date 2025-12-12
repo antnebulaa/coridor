@@ -217,3 +217,36 @@ export async function PUT(
         return NextResponse.json({ error: "Internal Server Error", details: error }, { status: 500 });
     }
 }
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<IParams> }
+) {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+        return NextResponse.error();
+    }
+
+    const { listingId } = await params;
+
+    if (!listingId || typeof listingId !== 'string') {
+        throw new Error('Invalid ID');
+    }
+
+    const body = await request.json();
+    const { isPublished } = body;
+
+    const listing = await prisma.listing.update({
+        where: {
+            id: listingId,
+            userId: currentUser.id
+        },
+        data: {
+            isPublished,
+            statusUpdatedAt: new Date()
+        }
+    });
+
+    return NextResponse.json(listing);
+}

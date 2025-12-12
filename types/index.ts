@@ -2,9 +2,11 @@ import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMod
 
 export type SafeListing = Omit<
     Listing,
-    "createdAt"
+    "createdAt" | "statusUpdatedAt"
 > & {
     createdAt: string;
+    statusUpdatedAt: string;
+    isPublished: boolean;
     images: PropertyImage[];
     rooms?: (Room & { images: PropertyImage[] })[];
     isFurnished: boolean;

@@ -159,6 +159,8 @@ model Listing {
   title         String
   description   String
   createdAt     DateTime @default(now())
+  statusUpdatedAt DateTime @default(now())
+  isPublished   Boolean  @default(true)
   category      String
   roomCount     Int
   bathroomCount Int
