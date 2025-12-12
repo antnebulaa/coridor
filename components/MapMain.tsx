@@ -59,7 +59,7 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
         }
 
         // Final sanity check before calling Leaflet
-        if (!Number.isFinite(finalLat) || !Number.isFinite(finalLng)) {
+        if (!Number.isFinite(finalLat) || !Number.isFinite(finalLng) || Number.isNaN(finalLat) || Number.isNaN(finalLng)) {
             // console.warn("Skipping flyTo due to invalid coordinates", { finalLat, finalLng });
             return;
         }

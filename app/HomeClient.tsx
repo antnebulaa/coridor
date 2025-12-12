@@ -13,6 +13,7 @@ import { SafeListing, SafeUser } from "@/types";
 import { useState, useMemo } from "react";
 
 import { IoClose } from 'react-icons/io5';
+import MobileBottomSheet from "@/components/MobileBottomSheet";
 
 interface HomeClientProps {
     listings: any[]; // SafeListing + relation
@@ -132,21 +133,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
 
                 {/* BOTTOM SHEET - Mobile Search Only */}
                 {isSearchActive && (
-                    <div className="md:hidden absolute bottom-24 left-0 right-0 z-10 p-4">
-                        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x">
-                            {listings.map((listing: any) => (
-                                <div key={listing.id} className="min-w-[280px] w-[280px] snap-center bg-white rounded-2xl shadow-lg border border-neutral-200 overflow-hidden">
-                                    <ListingCard
-                                        currentUser={currentUser}
-                                        data={listing}
-                                        variant="vertical" // Vertical variant for compact card feel
-                                        onSelect={() => setSelectedListingId(listing.id)}
-                                        showHeart={true}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <MobileBottomSheet
+                        listings={listings}
+                        currentUser={currentUser}
+                        onSelectListing={(id) => setSelectedListingId(id)}
+                    />
                 )}
             </div>
 
