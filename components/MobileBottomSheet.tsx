@@ -26,7 +26,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
 
     const variants = {
         expanded: { y: 0 },
-        collapsed: { y: "calc(100% - 150px)" }
+        collapsed: { y: "calc(100% - 160px)" }
     };
 
     const handleDragEnd = (_: any, info: PanInfo) => {
@@ -76,15 +76,13 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             onDragEnd={handleDragEnd}
 
             // Stop propagation to prevent Map interaction underneath
-            onPointerDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
         >
             {/* Drag Handle Area - Target for Drag */}
             <div
                 className="
                     w-full 
-                    pt-4 
+                    pt-6 
                     pb-4 
                     flex 
                     flex-col 
@@ -100,11 +98,12 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                     border-neutral-100
                 "
                 onPointerDown={(e) => {
-                    // e.preventDefault(); // Removed preventDefault to allow click events if needed, but handled by dragControls
                     dragControls.start(e);
+                    e.preventDefault ? e.preventDefault() : null;
+                    e.stopPropagation(); // Stop map click
                 }}
             >
-                <div className="w-10 h-1.5 bg-neutral-300 rounded-full mb-3" />
+                <div className="w-12 h-1.5 bg-neutral-300 rounded-full mb-3" />
                 <div className="w-full px-6 flex justify-between items-center pointer-events-none">
                     <h2 className="text-sm font-semibold text-neutral-800">
                         {listings.length} {listings.length > 1 ? 'logements' : 'logement'}
@@ -116,7 +115,10 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             </div>
 
             {/* Scrollable List */}
-            <div className="flex-1 overflow-y-auto overscroll-contain bg-neutral-50 p-4 pb-32 touch-pan-y">
+            <div
+                className="flex-1 overflow-y-auto overscroll-contain bg-neutral-50 p-4 pb-32 touch-pan-y"
+                onPointerDown={(e) => e.stopPropagation()} // Stop map click
+            >
                 <div className="flex flex-col gap-4">
                     {listings.map((listing) => (
                         <ListingCard
