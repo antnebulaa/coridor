@@ -51,11 +51,11 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 actionLabel="Add Property"
                 onAction={() => rentModal.onOpen()}
                 actionControls={
-                    <div className="flex items-center bg-neutral-100 rounded-lg p-1 gap-1">
+                    <div className="flex items-center bg-neutral-100 rounded-full p-1 gap-1">
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`
-                                p-2 rounded-md transition
+                                p-2 rounded-full transition
                                 ${viewMode === 'grid' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
                             `}
                         >
@@ -64,7 +64,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                         <button
                             onClick={() => setViewMode('list')}
                             className={`
-                                p-2 rounded-md transition
+                                p-2 rounded-full transition
                                 ${viewMode === 'list' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
                             `}
                         >
