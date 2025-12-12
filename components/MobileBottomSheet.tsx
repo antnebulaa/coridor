@@ -30,44 +30,106 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
     };
 
     const handleDragEnd = (_: any, info: PanInfo) => {
-        // Velocity check for flick
         const velocity = info.velocity.y;
         const offset = info.offset.y;
 
-        // If dragging UP (negative velocity/offset)
         if (offset < -50 || velocity < -300) {
             setIsOpen(true);
             controls.start("expanded");
-        }
-        // If dragging DOWN (positive velocity/offset)
-        else if (offset > 50 || velocity > 300) {
+        } else if (offset > 50 || velocity > 300) {
             setIsOpen(false);
             controls.start("collapsed");
-        }
-        else {
-            // Snap back to nearest state
+        } else {
             controls.start(isOpen ? "expanded" : "collapsed");
         }
     };
-                </div >
-            </div >
 
-    {/* Scrollable List */ }
-{/* Added touch-action-pan-y to allow internal scroll without triggering page actions */ }
-<div className="flex-1 overflow-y-auto overscroll-contain bg-neutral-50 p-4 pb-32 touch-pan-y">
-    <div className="flex flex-col gap-4">
-        {listings.map((listing) => (
-            <ListingCard
-                key={listing.id}
-                data={listing}
-                currentUser={currentUser}
-                variant="horizontal"
-                onSelect={() => onSelectListing(listing.id)}
-            />
-        ))}
-    </div>
-</div>
-        </motion.div >
+    return (
+        <motion.div
+            animate={controls}
+            initial="collapsed"
+            variants={variants}
+            transition={{ type: "spring", damping: 20, stiffness: 200 }}
+            className="
+                md:hidden
+                fixed 
+                left-0 
+                right-0 
+                bottom-0 
+                h-[85vh] 
+                bg-white 
+                rounded-t-[24px] 
+                shadow-[0_-4px_25px_rgba(0,0,0,0.15)] 
+                z-[1001]
+                flex
+                flex-col
+                will-change-transform
+                pointer-events-auto
+            "
+            // Drag Configuration
+            drag="y"
+            dragListener={false}
+            dragControls={dragControls}
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.05}
+            dragMomentum={false}
+            onDragEnd={handleDragEnd}
+
+            // Stop propagation to prevent Map interaction underneath
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+        >
+            {/* Drag Handle Area - Target for Drag */}
+            <div
+                className="
+                    w-full 
+                    pt-4 
+                    pb-4 
+                    flex 
+                    flex-col 
+                    items-center 
+                    justify-center 
+                    shrink-0 
+                    touch-none 
+                    cursor-grab 
+                    active:cursor-grabbing 
+                    bg-white 
+                    rounded-t-[24px]
+                    border-b
+                    border-neutral-100
+                "
+                onPointerDown={(e) => {
+                    // e.preventDefault(); // Removed preventDefault to allow click events if needed, but handled by dragControls
+                    dragControls.start(e);
+                }}
+            >
+                <div className="w-10 h-1.5 bg-neutral-300 rounded-full mb-3" />
+                <div className="w-full px-6 flex justify-between items-center pointer-events-none">
+                    <h2 className="text-sm font-semibold text-neutral-800">
+                        {listings.length} {listings.length > 1 ? 'logements' : 'logement'}
+                    </h2>
+                    {!isOpen && (
+                        <span className="text-xs text-neutral-500 font-medium bg-neutral-100 px-2 py-1 rounded-full">Afficher la liste</span>
+                    )}
+                </div>
+            </div>
+
+            {/* Scrollable List */}
+            <div className="flex-1 overflow-y-auto overscroll-contain bg-neutral-50 p-4 pb-32 touch-pan-y">
+                <div className="flex flex-col gap-4">
+                    {listings.map((listing) => (
+                        <ListingCard
+                            key={listing.id}
+                            data={listing}
+                            currentUser={currentUser}
+                            variant="horizontal"
+                            onSelect={() => onSelectListing(listing.id)}
+                        />
+                    ))}
+                </div>
+            </div>
+        </motion.div>
     );
 };
 
