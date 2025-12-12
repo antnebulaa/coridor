@@ -1,5 +1,7 @@
 'use client';
 
+import { LayoutGrid, List } from 'lucide-react';
+
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useCallback, useState } from "react";
@@ -22,6 +24,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 }) => {
     const router = useRouter();
     const rentModal = useRentModal();
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [deletingId, setDeletingId] = useState('');
 
     const onCancel = useCallback((id: string) => {
@@ -42,24 +45,46 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 
     return (
         <Container>
-            <PageHeader
-                title="Properties"
-                subtitle="List of your properties"
-                actionLabel="Add Property"
-                onAction={() => rentModal.onOpen()}
-            />
+            <div className="flex items-center justify-between">
+                <PageHeader
+                    title="Properties"
+                    subtitle="List of your properties"
+                    actionLabel="Add Property"
+                    onAction={() => rentModal.onOpen()}
+                />
+            </div>
+
+            <div className="flex justify-end mt-4 mb-2">
+                <div className="flex items-center bg-neutral-100 rounded-lg p-1 gap-1">
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`
+                            p-2 rounded-md transition
+                            ${viewMode === 'grid' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
+                        `}
+                    >
+                        <LayoutGrid size={20} />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`
+                            p-2 rounded-md transition
+                            ${viewMode === 'list' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
+                        `}
+                    >
+                        <List size={20} />
+                    </button>
+                </div>
+            </div>
+
             <div
-                className="
-          mt-10
-          grid 
-          grid-cols-1 
-          sm:grid-cols-2 
-          md:grid-cols-3 
-          lg:grid-cols-4
-          xl:grid-cols-5
-          2xl:grid-cols-6
-          gap-8
-        "
+                className={`
+                    mt-4
+                    grid 
+                    grid-cols-1 
+                    ${viewMode === 'grid' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' : ''}
+                    gap-8
+                `}
             >
                 {listings.map((listing: any) => (
                     <div
@@ -71,6 +96,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                             data={listing}
                             currentUser={currentUser}
                             showHeart={false}
+                            variant={viewMode === 'list' ? 'horizontal' : 'vertical'}
                         />
                     </div>
                 ))}
