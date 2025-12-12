@@ -188,16 +188,16 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                 className="
                     w-full
                     p-4
-                    pt-6 
-                    font-light 
+                    font-medium
+                    text-lg
+                    text-center
                     bg-white 
                     border-2
-                    rounded-md
+                    rounded-full
                     outline-none
                     transition
                     disabled:opacity-70
                     disabled:cursor-not-allowed
-                    pl-4
                     border-neutral-300
                     focus:border-black
                 "
