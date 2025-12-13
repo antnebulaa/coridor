@@ -3,6 +3,7 @@
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer, useMap, Circle } from 'react-leaflet';
 import { useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 import 'leaflet/dist/leaflet.css';
 
@@ -30,6 +31,14 @@ const Recenter = ({ center }: { center: number[] }) => {
 }
 
 const Map: React.FC<MapProps> = ({ center }) => {
+    const { theme } = useTheme();
+
+    // Default to light if theme is undefined or light
+    // Use CartoDB Dark Matter for dark mode
+    const tileUrl = theme === 'dark'
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
     return (
         <MapContainer
             center={center as L.LatLngExpression || [51, -0.09]}
@@ -40,7 +49,7 @@ const Map: React.FC<MapProps> = ({ center }) => {
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                url={tileUrl}
             />
             {center && (
                 <>

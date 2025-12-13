@@ -22,8 +22,8 @@ const SecurityClient: React.FC<SecurityClientProps> = ({ currentUser }) => {
                 </div>
 
                 <div className="flex flex-col gap-8">
-                    <div className="flex flex-col gap-4 p-6 border border-gray-200 rounded-xl bg-white">
-                        <div className="flex items-center gap-4 text-neutral-800">
+                    <div className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-card">
+                        <div className="flex items-center gap-4 text-foreground">
                             <Shield size={24} />
                             <h3 className="text-xl font-semibold">Sécurité</h3>
                         </div>
@@ -35,7 +35,7 @@ const SecurityClient: React.FC<SecurityClientProps> = ({ currentUser }) => {
                                 label="Se déconnecter"
                                 onClick={() => signOut()}
                                 variant="outline"
-                                className="border-red-500 text-red-500 hover:bg-red-50"
+                                className="border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
                             />
                         </div>
                     </div>

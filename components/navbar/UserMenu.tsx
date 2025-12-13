@@ -95,6 +95,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             px-4 
             rounded-full 
             hover:bg-neutral-100 
+            dark:hover:bg-neutral-800
             transition 
             cursor-pointer
           "
@@ -109,7 +110,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             md:py-1
             md:px-2
             border-[1px] 
-            border-[#dfdfdf] 
+            border-border 
             hidden
             md:flex 
             flex-row 
@@ -123,7 +124,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 >
                     <AiOutlineMenu />
                     {unreadCount && unreadCount > 0 ? (
-                        <div className="absolute top-0 right-0 h-3 w-3 bg-primary rounded-full border-2 border-white" />
+                        <div className="absolute top-0 right-0 h-3 w-3 bg-primary rounded-full border-2 border-background" />
                     ) : null}
                     <div className="hidden md:block">
                         <Avatar src={currentUser?.image} seed={currentUser?.email || currentUser?.name} />
@@ -133,17 +134,18 @@ const UserMenu: React.FC<UserMenuProps> = ({
             {isOpen && (
                 <div
                     className="
-            absolute 
-            rounded-2xl 
+            absolute
+            rounded-2xl
             shadow-xl
             w-[260px]
-            bg-[#414141] 
-            overflow-hidden 
-            right-0 
-            top-12 
-            text-white
+            bg-popover
+            border border-border
+            overflow-hidden
+            right-0
+            top-12
+            text-popover-foreground
             z-[9999]
-          "
+            "
                 >
                     <div className="flex flex-col">
                         {currentUser ? (
@@ -151,15 +153,18 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                 {/* Header */}
                                 <div className="p-4 flex flex-col gap-1">
                                     <div className="font-semibold text-lg">{formattedName}</div>
-                                    <div className="text-neutral-300 text-sm mb-3">{currentUser.email}</div>
+                                    <div className="text-muted-foreground text-sm mb-3">{currentUser.email}</div>
                                     <button
                                         onClick={() => router.push('/account/personal-info')}
                                         className="
                       w-full 
                       py-2 
                       rounded-full 
-                      bg-[#505050] 
-                      hover:bg-[#5D5D5D] 
+                      w-full 
+                      py-2 
+                      rounded-full 
+                      bg-secondary 
+                      hover:bg-secondary/80 
                       transition 
                       text-sm 
                       font-medium
@@ -169,16 +174,16 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     </button>
                                 </div>
 
-                                <hr className="border-neutral-600 w-full" />
+                                <hr className="border-border w-full" />
 
                                 {/* Menu Items */}
                                 <div className="flex flex-col p-2">
                                     <div
                                         onClick={() => router.push('/inbox')}
-                                        className="flex items-center justify-between px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                        className="flex items-center justify-between px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <MessageSquare size={20} className="text-neutral-300" strokeWidth={2} />
+                                            <MessageSquare size={20} className="text-muted-foreground" strokeWidth={2} />
                                             <span>Messages</span>
                                         </div>
                                         {unreadCount && unreadCount > 0 ? (
@@ -190,40 +195,40 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
                                     <div
                                         onClick={() => router.push('/favorites')}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
                                     >
-                                        <IoHeartOutline size={20} className="text-neutral-300" strokeWidth="40" />
+                                        <IoHeartOutline size={20} className="text-muted-foreground" strokeWidth="40" />
                                         <span>Favoris</span>
                                     </div>
 
                                     {currentUser.userMode === 'LANDLORD' ? (
                                         <div
                                             onClick={() => router.push('/properties')}
-                                            className="flex items-center gap-3 px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                            className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
                                         >
-                                            <IoKeyOutline size={20} className="text-neutral-300" strokeWidth="40" />
+                                            <IoKeyOutline size={20} className="text-muted-foreground" strokeWidth="40" />
                                             <span>Mes locations</span>
                                         </div>
                                     ) : (
                                         <div
                                             onClick={() => router.push('/rentals')}
-                                            className="flex items-center gap-3 px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                            className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
                                         >
-                                            <IoKeyOutline size={20} className="text-neutral-300" strokeWidth="40" />
+                                            <IoKeyOutline size={20} className="text-muted-foreground" strokeWidth="40" />
                                             <span>Ma location</span>
                                         </div>
                                     )}
 
                                     <div
-                                        onClick={() => router.push('/account')}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                        onClick={() => router.push('/account/settings')}
+                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
                                     >
-                                        <IoSettingsOutline size={20} className="text-neutral-300" strokeWidth="40" />
+                                        <IoSettingsOutline size={20} className="text-muted-foreground" strokeWidth="40" />
                                         <span>Réglages</span>
                                     </div>
 
                                     {/* Mode Switch */}
-                                    <div className="flex items-center justify-between px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition">
+                                    <div className="flex items-center justify-between px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition">
                                         <span>Mode</span>
                                         <button
                                             onClick={(e) => {
@@ -231,15 +236,15 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                                 toggleMode();
                                             }}
                                             className="
-                        bg-[#505050] 
+                        bg-secondary 
                         px-3 
                         py-1 
                         rounded-full 
                         text-sm 
                         font-medium 
                         border-[1px] 
-                        border-neutral-600
-                        hover:border-neutral-400
+                        border-border
+                        hover:border-foreground/50
                         transition
                       "
                                         >
@@ -248,13 +253,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     </div>
                                 </div>
 
-                                <hr className="border-neutral-600 w-full" />
+                                <hr className="border-border w-full" />
 
                                 {/* Logout */}
                                 <div className="p-2">
                                     <div
                                         onClick={() => signOut()}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
                                     >
                                         <span>Déconnexion</span>
                                     </div>
@@ -264,13 +269,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
                             <div className="flex flex-col p-2">
                                 <div
                                     onClick={loginModal.onOpen}
-                                    className="px-4 py-3 hover:bg-[#505050] rounded-lg cursor-pointer transition font-semibold"
+                                    className="px-4 py-3 hover:bg-secondary rounded-lg cursor-pointer transition font-semibold"
                                 >
                                     Connexion
                                 </div>
                                 <div
                                     onClick={registerModal.onOpen}
-                                    className="px-4 py-3 hover:bg-[#505050] rounded-lg cursor-pointer transition"
+                                    className="px-4 py-3 hover:bg-secondary rounded-lg cursor-pointer transition"
                                 >
                                     Inscription
                                 </div>
@@ -278,8 +283,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
                         )}
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
 

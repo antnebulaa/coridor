@@ -16,6 +16,7 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import getUnreadMessageCount from "@/app/actions/getUnreadMessageCount";
 import AuthProvider from "@/providers/AuthProvider";
 import MainLayout from "@/components/MainLayout";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Suspense } from "react";
 
@@ -44,29 +45,31 @@ export default async function RootLayout({
   const unreadCount = await getUnreadMessageCount();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={font.className}>
         <AuthProvider>
-          <Toaster toastOptions={{ className: 'z-[100000]' }} containerStyle={{ zIndex: 100000 }} />
-          <Suspense fallback={<div></div>}>
-            <SearchModal />
-            <CommuteModal />
-          </Suspense>
-          <RentModal />
-          <RegisterModal />
-          <LoginModal />
-          <WishlistModal />
-          <LeaseModal currentUser={currentUser} />
-          <Suspense fallback={<div></div>}>
-            <Navbar currentUser={currentUser} unreadCount={unreadCount} />
-          </Suspense>
-          <MainLayout>
-            {children}
-          </MainLayout>
-          <ClientFooter />
-          <Suspense fallback={<div></div>}>
-            <MobileMenu currentUser={currentUser} unreadCount={unreadCount} />
-          </Suspense>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <Toaster toastOptions={{ className: 'z-[100000]' }} containerStyle={{ zIndex: 100000 }} />
+            <Suspense fallback={<div></div>}>
+              <SearchModal />
+              <CommuteModal />
+            </Suspense>
+            <RentModal />
+            <RegisterModal />
+            <LoginModal />
+            <WishlistModal />
+            <LeaseModal currentUser={currentUser} />
+            <Suspense fallback={<div></div>}>
+              <Navbar currentUser={currentUser} unreadCount={unreadCount} />
+            </Suspense>
+            <MainLayout>
+              {children}
+            </MainLayout>
+            <ClientFooter />
+            <Suspense fallback={<div></div>}>
+              <MobileMenu currentUser={currentUser} unreadCount={unreadCount} />
+            </Suspense>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

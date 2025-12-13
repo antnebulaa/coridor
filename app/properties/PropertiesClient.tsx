@@ -57,7 +57,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                             onClick={() => setViewMode('grid')}
                             className={`
                                 p-1.5 rounded-full transition
-                                ${viewMode === 'grid' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
+                                ${viewMode === 'grid' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}
                             `}
                         >
                             <LayoutGrid size={18} />
@@ -66,7 +66,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                             onClick={() => setViewMode('list')}
                             className={`
                                 p-1.5 rounded-full transition
-                                ${viewMode === 'list' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'}
+                                ${viewMode === 'list' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}
                             `}
                         >
                             <List size={18} />
@@ -85,9 +85,9 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                             px-4 
                             py-3
                             border-b
-                            border-neutral-200
+                            border-border
                             text-sm 
-                            text-neutral-500 
+                            text-muted-foreground 
                             font-medium
                         ">
                             <span className="flex-[3]">Annonce</span>

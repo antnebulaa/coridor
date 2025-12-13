@@ -69,10 +69,10 @@ const Search = () => {
             {/* Location Search */}
             <div
                 onClick={() => searchModal.onOpen({ step: 0 })}
-                className="border-[1px] border-[#dfdfdf] w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer"
+                className="border border-border w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer"
             >
                 <div className="flex flex-row items-center justify-between px-2 gap-3">
-                    <div className="p-2 bg-primary rounded-full text-white">
+                    <div className="p-2 bg-primary rounded-full text-primary-foreground">
                         <SearchIcon size={18} strokeWidth={2.5} />
                     </div>
                     <div className="text-sm font-medium">
@@ -89,25 +89,25 @@ const Search = () => {
             {/* Advanced Filters - Hidden on Mobile */}
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'budget' })}
-                className={`hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {budgetLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'surface' })}
-                className={`hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {surfaceLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'rooms' })}
-                className={`hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-neutral-100 border-neutral-800' : ''}`}
+                className={`hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {roomsLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2 })}
-                className="hidden md:block border-[1px] border-[#dfdfdf] py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
+                className="hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
             >
                 Filtres
             </div>

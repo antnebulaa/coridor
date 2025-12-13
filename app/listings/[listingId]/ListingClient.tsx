@@ -96,11 +96,11 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             listing={listing}
                         />
                         <div className="order-first mb-10 md:order-last md:col-span-3">
-                            <div className="bg-white border-[1px] border-neutral-200 overflow-hidden rounded-xl p-4 flex flex-col gap-4 sticky top-28">
+                            <div className="bg-card border border-border overflow-hidden rounded-xl p-4 flex flex-col gap-4 sticky top-28">
                                 <div className="text-xl font-semibold">
                                     Intéressé ?
                                 </div>
-                                <div className="text-neutral-500 font-light">
+                                <div className="text-muted-foreground font-light">
                                     Contactez l'hôte pour plus d'informations ou pour organiser une visite.
                                 </div>
                                 <Button
@@ -109,7 +109,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     disabled={isLoading}
                                 />
                                 <hr />
-                                <div className="text-neutral-500 font-light text-sm">
+                                <div className="text-muted-foreground font-light text-sm">
                                     Vous avez un dossier complet ? Déposez votre candidature directement.
                                 </div>
                                 <Button

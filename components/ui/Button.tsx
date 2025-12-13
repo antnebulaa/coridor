@@ -22,8 +22,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                     "relative disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer rounded-lg hover:opacity-80 transition w-full active:scale-95 flex items-center justify-center gap-2",
                     small ? 'py-1 text-sm font-light border-[1px]' : 'py-3 text-md font-medium border-2',
                     variant === 'primary' && "bg-primary border-primary text-white",
-                    variant === 'outline' && "bg-white border-black text-black",
-                    variant === 'ghost' && "bg-transparent border-transparent hover:bg-neutral-100",
+                    variant === 'outline' && "bg-white border-black text-black dark:bg-transparent dark:border-white dark:text-white dark:hover:bg-neutral-800",
+                    variant === 'ghost' && "bg-transparent border-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800",
                     className
                 )}
                 {...props}

@@ -112,7 +112,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-white rounded-[20px] p-2 hover:bg-neutral-50 transition border border-transparent hover:border-neutral-200">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-[20px] p-2 hover:bg-secondary transition border border-transparent hover:border-border">
                     {/* Image Section - Stacked on Mobile, Side by Side on Desktop */}
                     <div className="
                         w-full h-[200px]
@@ -148,18 +148,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {/* Title / Location */}
                             <div className="flex justify-between items-start">
                                 <div className="flex-1 min-w-0 pr-1">
-                                    <div className="font-semibold text-base md:text-lg text-neutral-900 line-clamp-1">
+                                    <div className="font-semibold text-base md:text-lg text-foreground line-clamp-1">
                                         {data.category}
                                     </div>
-                                    <div className="hidden md:block font-medium text-neutral-500 text-sm md:text-base line-clamp-2">
+                                    <div className="hidden md:block font-medium text-muted-foreground text-sm md:text-base line-clamp-2">
                                         {data.city || location?.label}{data.district ? `, ${data.district}` : ''}
                                     </div>
                                 </div>
                                 <div className="text-right flex flex-col items-end whitespace-nowrap pl-1">
-                                    <div className="font-semibold text-lg md:text-[22px] text-neutral-900 leading-tight">
-                                        {price}€<span className="md:hidden text-neutral-500 font-semibold"> CC</span>
+                                    <div className="font-semibold text-lg md:text-[22px] text-foreground leading-tight">
+                                        {price}€<span className="md:hidden text-muted-foreground font-semibold"> CC</span>
                                     </div>
-                                    <div className="hidden md:block text-neutral-500 text-xs font-normal">
+                                    <div className="hidden md:block text-muted-foreground text-xs font-normal">
                                         charges comprises
                                     </div>
                                 </div>
@@ -178,24 +178,24 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             )}
 
                             {/* Details Row */}
-                            <div className="flex flex-row items-center gap-2 md:gap-3 text-xs md:text-sm text-neutral-600 mt-1 md:mt-2">
-                                <div className="flex items-center gap-1 bg-neutral-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
-                                    <span className="font-medium text-black">{data.roomCount}</span> {data.roomCount > 1 ? 'pièces' : 'pièce'}
+                            <div className="flex flex-row items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">
+                                <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                    <span className="font-medium text-foreground">{data.roomCount}</span> {data.roomCount > 1 ? 'pièces' : 'pièce'}
                                 </div>
-                                <div className="flex items-center gap-1 bg-neutral-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
-                                    <span className="font-medium text-black">{data.roomCount - 1}</span> {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'}
+                                <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
+                                    <span className="font-medium text-foreground">{data.roomCount - 1}</span> {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'}
                                 </div>
                                 {/* Mobile-only compact bedroom count if space is tight? Or just hide/show based on width. 
                                     Let's keep it simple for now, maybe hide 'chambres' text on very small screens if needed.
                                     For now, I'll keep it as is but with tighter padding above.
                                 */}
-                                <div className="flex items-center gap-1 bg-neutral-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
-                                    <span className="font-medium text-black">{data.roomCount - 1}</span> ch.
+                                <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
+                                    <span className="font-medium text-foreground">{data.roomCount - 1}</span> ch.
                                 </div>
 
                                 {surfaceDisplay && (
-                                    <div className="flex items-center gap-1 bg-neutral-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
-                                        <span className="font-medium text-black">{surfaceDisplay}</span>
+                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                        <span className="font-medium text-foreground">{surfaceDisplay}</span>
                                     </div>
                                 )}
                             </div>
@@ -237,7 +237,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                     <ListingCardCarousel images={data.images} />
                     {isNew && (
-                        <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm z-10">
+                        <div className="absolute top-3 left-3 bg-card px-3 py-1 rounded-full text-xs font-semibold shadow-sm z-10 text-card-foreground">
                             Nouvelle annonce
                         </div>
                     )}
@@ -253,20 +253,20 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                 <div className="flex flex-col gap-1 mt-2">
                     <div className="font-semibold text-xl">
-                        {price}€ <span className="text-neutral-500 font-normal text-base">par mois CC</span>
+                        {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
                     </div>
 
-                    <div className="font-medium text-neutral-800">
+                    <div className="font-medium text-foreground">
                         {data.category} à {data.city || location?.label}{data.district ? ` ${data.district}` : ''}
                     </div>
                     {data.neighborhood && (
-                        <div className="text-neutral-500 text-sm flex items-center gap-1">
+                        <div className="text-muted-foreground text-sm flex items-center gap-1">
                             <LayoutGrid size={14} />
                             <span>Quartier {data.neighborhood}</span>
                         </div>
                     )}
 
-                    <div className="flex flex-row items-center gap-1 text-neutral-500 text-sm">
+                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-sm">
                         {data.roomCount} {data.roomCount > 1 ? 'pièces' : 'pièce'} • {data.roomCount - 1} {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'} • {surfaceDisplay}
                     </div>
 

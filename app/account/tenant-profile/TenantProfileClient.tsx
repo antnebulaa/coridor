@@ -301,7 +301,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
 
                 <div className="flex flex-col gap-10">
                     {/* DossierFacile Section */}
-                    <div className="flex flex-col items-center text-center gap-4 p-8 border border-[#dddddd] rounded-xl bg-neutral-50">
+                    <div className="flex flex-col items-center text-center gap-4 p-8 border border-border rounded-xl bg-secondary/50">
                         <button
                             onClick={() => signIn('dossier-facile')}
                             className="hover:opacity-90 transition"
@@ -323,7 +323,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     </div>
 
                     {/* Rent Verification Badge or Button */}
-                    <div className="flex flex-col gap-4 p-6 border border-[#dddddd] rounded-xl bg-white">
+                    <div className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-card">
                         <h3 className="text-xl font-semibold flex items-center gap-2">
                             Fiabilité Financière
                             {tenantProfile?.rentVerified && (
@@ -336,7 +336,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
 
                         {tenantProfile?.rentVerified ? (
                             <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                                <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg text-green-800 dark:text-green-200">
                                     <CheckCircle size={32} />
                                     <div>
                                         <div className="font-bold">Paiements de loyer détectés sur 12 mois</div>
@@ -354,16 +354,16 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                <div className="flex items-center gap-4 w-full">
+                                    <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-full text-blue-600 dark:text-blue-200 shrink-0">
                                         <ShieldCheck size={24} />
                                     </div>
-                                    <div>
-                                        <div className="font-bold text-blue-900">Prouver ma fiabilité</div>
-                                        <div className="text-sm text-blue-700">Connectez votre compte bancaire pour certifier vos paiements de loyer. (Sécurisé par Powens)</div>
+                                    <div className="w-full">
+                                        <div className="font-bold text-blue-900 dark:text-blue-200">Prouver ma fiabilité</div>
+                                        <div className="text-sm text-blue-700 dark:text-blue-300">Connectez votre compte bancaire pour certifier vos paiements de loyer. (Sécurisé par Powens)</div>
                                         <div className="mt-3">
-                                            <label className="text-xs font-bold text-blue-800 block mb-1">
+                                            <label className="text-xs font-bold text-blue-800 dark:text-blue-200 block mb-1">
                                                 Nom du bénéficiaire (Optionnel, pour aider la détection)
                                             </label>
                                             <input
@@ -371,17 +371,19 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                                 placeholder="Ex: Agence Immo, M. Dupont..."
                                                 value={recipientName}
                                                 onChange={(e) => setRecipientName(e.target.value)}
-                                                className="w-full p-2 text-sm border border-blue-300 rounded-md bg-white text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="w-full p-2 text-sm border border-blue-300 dark:border-blue-700 rounded-md bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
                                     </div>
                                 </div>
-                                <Button
-                                    label={isLoading ? "Récupération des loyers..." : "Connecter ma banque"}
-                                    onClick={handleConnectBank}
-                                    disabled={isLoading}
-                                    loading={isLoading}
-                                />
+                                <div className="shrink-0">
+                                    <Button
+                                        label={isLoading ? "Récupération des loyers..." : "Connecter ma banque"}
+                                        onClick={handleConnectBank}
+                                        disabled={isLoading}
+                                        loading={isLoading}
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>
@@ -427,7 +429,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     />
 
                     {/* Tenant Section */}
-                    <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
                         <h3 className="text-xl font-semibold">Emploi & Revenus (Vous)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <SoftSelect
@@ -460,7 +462,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     </div>
 
                     {/* Partner Section */}
-                    <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
                         <h3 className="text-xl font-semibold">Emploi & Revenus (Conjoint·e)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <SoftSelect
@@ -492,7 +494,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     </div>
 
                     {/* Additional Incomes Section */}
-                    <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl font-semibold">Revenus Complémentaires</h3>
                             <SoftButton
@@ -501,9 +503,9 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                             />
                         </div>
                         {additionalIncomes.map((item: any, index: number) => (
-                            <div key={index} className="p-4 border border-[#dddddd] rounded-lg flex flex-col gap-4 bg-gray-50">
+                            <div key={index} className="p-4 border border-border rounded-lg flex flex-col gap-4 bg-muted">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="font-medium text-gray-700">Revenu #{index + 1}</span>
+                                    <span className="font-medium text-foreground">Revenu #{index + 1}</span>
                                     <button
                                         onClick={() => removeIncome(index)}
                                         className="text-red-500 hover:underline text-sm font-medium"
@@ -540,14 +542,14 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                             </div>
                         ))}
                         {additionalIncomes.length === 0 && (
-                            <div className="text-center text-gray-500 py-4 italic">
+                            <div className="text-center text-muted-foreground py-4 italic">
                                 Aucun revenu complémentaire ajouté.
                             </div>
                         )}
                     </div>
 
                     {/* APL Section */}
-                    <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
                         <h3 className="text-xl font-semibold">Aides au Logement (APL)</h3>
                         <div className="flex flex-col gap-4">
                             <SoftInput
@@ -559,8 +561,8 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                 register={register}
                                 errors={errors}
                             />
-                            <div className="text-sm text-neutral-500">
-                                Pas sûr ? <a href="https://wwwd.caf.fr/wps/portal/caffr/aidesetdemarches/mesdemarches/faireunesimulation/lelogement#/preparation" target="_blank" rel="noreferrer" className="underline font-medium text-black">Faire la simulation officielle</a>
+                            <div className="text-sm text-muted-foreground">
+                                Pas sûr ? <a href="https://wwwd.caf.fr/wps/portal/caffr/aidesetdemarches/mesdemarches/faireunesimulation/lelogement#/preparation" target="_blank" rel="noreferrer" className="underline font-medium text-foreground">Faire la simulation officielle</a>
                             </div>
                             <div className="flex flex-row items-center gap-3 mt-2">
                                 <input
@@ -577,7 +579,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                         cursor-pointer
                                     "
                                 />
-                                <label htmlFor="aplDirectPayment" className="text-sm text-neutral-600 cursor-pointer select-none">
+                                <label htmlFor="aplDirectPayment" className="text-sm text-neutral-600 dark:text-neutral-400 cursor-pointer select-none">
                                     Autoriser le versement direct de l&apos;APL au propriétaire (Tiers Payant)
                                 </label>
                             </div>
@@ -585,7 +587,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     </div>
 
                     {/* Guarantors Section */}
-                    <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-white">
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl font-semibold">Garants</h3>
                             <SoftButton
@@ -594,9 +596,9 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                             />
                         </div>
                         {guarantors.map((item: any, index: number) => (
-                            <div key={index} className="p-4 border border-[#dddddd] rounded-lg flex flex-col gap-4 bg-gray-50">
+                            <div key={index} className="p-4 border border-border rounded-lg flex flex-col gap-4 bg-muted">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="font-medium text-gray-700">Garant #{index + 1}</span>
+                                    <span className="font-medium text-foreground">Garant #{index + 1}</span>
                                     <button
                                         onClick={() => removeGuarantor(index)}
                                         className="text-red-500 hover:underline text-sm font-medium"
@@ -648,9 +650,9 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                 </div>
 
                                 {(item.type === 'FAMILY' || item.type === 'THIRD_PARTY') && (
-                                    <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                                    <div className="mt-4 p-4 bg-card rounded-lg border border-border">
                                         <div className="flex justify-between items-center mb-4">
-                                            <span className="text-sm font-medium text-gray-700">Revenus Complémentaires (Garant)</span>
+                                            <span className="text-sm font-medium text-foreground">Revenus Complémentaires (Garant)</span>
                                             <button
                                                 type="button"
                                                 onClick={() => addGuarantorIncome(index)}
@@ -660,9 +662,9 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                             </button>
                                         </div>
                                         {item.additionalIncomes?.map((income: any, incomeIndex: number) => (
-                                            <div key={incomeIndex} className="flex flex-col gap-4 mb-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0 last:mb-0">
+                                            <div key={incomeIndex} className="flex flex-col gap-4 mb-4 pb-4 border-b border-border last:border-0 last:pb-0 last:mb-0">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-xs text-gray-500">Revenu #{incomeIndex + 1}</span>
+                                                    <span className="text-xs text-muted-foreground">Revenu #{incomeIndex + 1}</span>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeGuarantorIncome(index, incomeIndex)}
@@ -709,35 +711,35 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                             </div>
                         ))}
                         {guarantors.length === 0 && (
-                            <div className="text-center text-gray-500 py-4 italic">
+                            <div className="text-center text-muted-foreground py-4 italic">
                                 Aucun garant ajouté.
                             </div>
                         )}
                     </div>
 
                     {/* Summary Section */}
-                    <div className="flex flex-col gap-6 p-6 border border-[#dddddd] rounded-xl bg-neutral-50">
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-secondary/30">
                         <h3 className="text-xl font-semibold">Récapitulatif Financier</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="flex flex-col gap-2">
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                                     <span>Salaire Net (Vous)</span>
                                     <span>{parseInt(netSalary || '0')} €</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                                     <span>Salaire Net (Conjoint·e)</span>
                                     <span>{parseInt(partnerNetSalary || '0')} €</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                                     <span>Revenus Complémentaires</span>
                                     <span>{totalAdditionalIncome} €</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                                     <span>Aides au Logement</span>
                                     <span>{parseInt(aplAmount || '0')} €</span>
                                 </div>
-                                <hr className="my-2 border-gray-300" />
-                                <div className="flex justify-between font-bold text-lg text-gray-900">
+                                <hr className="my-2 border-border" />
+                                <div className="flex justify-between font-bold text-lg text-foreground">
                                     <span>Total Foyer</span>
                                     <span>{totalHouseholdIncome} €</span>
                                 </div>
@@ -751,12 +753,12 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                         : 0;
                                     return (
                                         <div key={index} className="flex flex-col gap-1 mb-2">
-                                            <div className="flex justify-between text-gray-600">
+                                            <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                                                 <span>Revenus Garant #{index + 1}</span>
                                                 <span>{salary} €</span>
                                             </div>
                                             {additional > 0 && (
-                                                <div className="flex justify-between text-gray-500 text-sm pl-4">
+                                                <div className="flex justify-between text-neutral-500 dark:text-neutral-500 text-sm pl-4">
                                                     <span>Revenus Complémentaires #{index + 1}</span>
                                                     <span>{additional} €</span>
                                                 </div>
@@ -765,10 +767,10 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                     );
                                 })}
                                 {guarantors.length === 0 && (
-                                    <div className="text-gray-500 italic">Aucun garant</div>
+                                    <div className="text-muted-foreground italic">Aucun garant</div>
                                 )}
-                                <hr className="my-2 border-gray-300" />
-                                <div className="flex justify-between font-bold text-lg text-gray-900">
+                                <hr className="my-2 border-border" />
+                                <div className="flex justify-between font-bold text-lg text-foreground">
                                     <span>Total Garants</span>
                                     <span>{totalGuarantorIncome} €</span>
                                 </div>
@@ -792,17 +794,17 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Preview Modal */}
-            <Modal
+            < Modal
                 isOpen={isPreviewOpen}
                 onClose={() => setIsPreviewOpen(false)}
                 onSubmit={() => setIsPreviewOpen(false)}
                 actionLabel="Fermer"
                 title="Aperçu de votre dossier"
                 body={
-                    <TenantProfilePreview
+                    < TenantProfilePreview
                         user={currentUser}
                         tenantProfile={{
                             ...tenantProfile,
@@ -820,7 +822,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     />
                 }
             />
-        </Container>
+        </Container >
     );
 }
 

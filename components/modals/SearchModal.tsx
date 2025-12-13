@@ -221,7 +221,7 @@ const SearchModal = () => {
             <MapboxAddressSelect
                 value={undefined} // Always empty to allow new selection
                 onChange={handleLocationSelect}
-                placeholder="Ajouter un autre lieu (Ville, Arrondissement...)"
+                placeholder="Rechercher un lieu"
                 searchTypes="place,district,locality,neighborhood" // Prioritize cities and districts
                 limitCountry="fr"
             />
@@ -230,7 +230,7 @@ const SearchModal = () => {
             {locations.length > 0 && (
                 <div className="flex flex-col gap-3">
                     {locations.map((loc) => (
-                        <div key={loc.value} className="flex flex-col p-4 bg-neutral-100 rounded-xl relative">
+                        <div key={loc.value} className="flex flex-col p-4 bg-secondary rounded-xl relative text-foreground">
                             <div className="flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                                     <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -242,7 +242,7 @@ const SearchModal = () => {
 
                             <button
                                 onClick={() => handleLocationRemove(loc.value)}
-                                className="absolute top-4 right-4 p-1 hover:bg-neutral-200 rounded-full transition"
+                                className="absolute top-4 right-4 p-1 hover:bg-background/50 rounded-full transition"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -255,9 +255,9 @@ const SearchModal = () => {
 
             {/* Alternative Searches */}
             <div className="mt-4">
-                <div className="text-sm font-medium text-neutral-500 mb-3">Recherches alternatives</div>
+                <div className="text-sm font-medium text-muted-foreground mb-3">Recherches alternatives</div>
                 <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition">
                         <div className="flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -265,29 +265,29 @@ const SearchModal = () => {
                             </svg>
                             <span className="font-medium">Recherche par périmètre</span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-neutral-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
-                    <div className="flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition">
                         <div className="flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                             </svg>
                             <span className="font-medium">Recherche par temps de trajet</span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-neutral-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
-                    <div className="flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition">
                         <div className="flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                             </svg>
                             <span className="font-medium">Recherche par dessin sur la carte</span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-neutral-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>

@@ -3,12 +3,16 @@
 import Map, { Marker } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 interface Map3DProps {
     center?: number[];
 }
 
 const Map3D: React.FC<Map3DProps> = ({ center }) => {
+    const { theme } = useTheme();
+    const mapStyle = theme === 'dark' ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/streets-v12";
+
     // Mapbox Token
     const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "pk.eyJ1IjoiYWRyaWVubGMiLCJhIjoiY2x6eGZ6eGZ6MDB6eDJxcXJ6eGZ6eGZ6In0.placeholder";
 
@@ -27,7 +31,7 @@ const Map3D: React.FC<Map3DProps> = ({ center }) => {
                 zoom: 15
             }}
             style={{ width: '100%', height: '100%', borderRadius: '12px' }}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle={mapStyle}
             mapboxAccessToken={MAPBOX_TOKEN}
             scrollZoom={false}
             dragPan={false}

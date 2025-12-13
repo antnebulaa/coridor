@@ -47,10 +47,10 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
                 />
 
                 <div className="mt-10 flex flex-col gap-8">
-                    <div className="flex flex-col gap-4 p-6 border-[1px] border-neutral-200 rounded-xl">
+                    <div className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-card">
                         <div className="flex flex-col gap-1">
                             <h3 className="text-lg font-semibold">Measurement System</h3>
-                            <p className="text-neutral-500 text-sm">
+                            <p className="text-muted-foreground text-sm">
                                 Choose your preferred unit system for surface areas (m² vs sq ft).
                             </p>
                         </div>
@@ -69,7 +69,9 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
                                     items-center
                                     justify-center
                                     font-medium
-                                    ${measurementSystem === 'metric' ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}
+                                    ${measurementSystem === 'metric'
+                                        ? 'border-black dark:border-white bg-secondary'
+                                        : 'border-border hover:border-neutral-300 dark:hover:border-neutral-500 bg-transparent'}
                                 `}
                             >
                                 Metric (m²)
@@ -87,7 +89,9 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
                                     items-center
                                     justify-center
                                     font-medium
-                                    ${measurementSystem === 'imperial' ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}
+                                    ${measurementSystem === 'imperial'
+                                        ? 'border-black dark:border-white bg-secondary'
+                                        : 'border-border hover:border-neutral-300 dark:hover:border-neutral-500 bg-transparent'}
                                 `}
                             >
                                 Imperial (sq ft)

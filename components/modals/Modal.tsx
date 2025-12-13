@@ -15,6 +15,7 @@ interface ModalProps {
     disabled?: boolean;
     secondaryAction?: () => void;
     secondaryActionLabel?: string;
+    className?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -28,6 +29,7 @@ const Modal: React.FC<ModalProps> = ({
     disabled,
     secondaryAction,
     secondaryActionLabel,
+    className
 }) => {
     const [showModal, setShowModal] = useState(false);
 
@@ -94,6 +96,7 @@ const Modal: React.FC<ModalProps> = ({
                     transition
                     duration-300
                     ${showModal ? 'bg-neutral-800/50' : 'bg-neutral-800/0'}
+                    ${className}
                 `}
             >
                 <div
@@ -110,17 +113,17 @@ const Modal: React.FC<ModalProps> = ({
             ${showModal ? 'opacity-100' : 'opacity-0'}
           `}
                     >
-                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white outline-none focus:outline-none">
+                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-background outline-none focus:outline-none">
                             {/* HEADER */}
-                            <div className="flex items-center p-6 rounded-t justify-center relative border-b-[1px] border-[#dfdfdf]">
+                            <div className="flex items-center p-6 rounded-t justify-center relative border-b border-border">
                                 <button
                                     onClick={handleClose}
                                     className="
                                         w-10 
                                         h-10 
                                         rounded-full 
-                                        bg-neutral-100 
-                                        hover:bg-neutral-200 
+                                        bg-secondary 
+                                        hover:bg-secondary/80 
                                         flex 
                                         items-center 
                                         justify-center 

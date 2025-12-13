@@ -45,7 +45,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <div>Proposé par {user?.name}</div>
                     <Avatar src={user?.image} seed={user?.email || user?.name} />
                 </div>
-                <div className="flex flex-row items-center gap-4 font-light text-neutral-500">
+                <div className="flex flex-row items-center gap-4 font-light text-muted-foreground">
                     <div>{guestCount} Capacité</div>
                     <div>{roomCount} chambres</div>
                     <div>{bathroomCount} salles de bain</div>
@@ -55,12 +55,12 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             {category && (
                 <div className="flex flex-col gap-6">
                     <div className="flex flex-row items-center gap-4">
-                        <category.icon size={40} className="text-neutral-600" />
+                        <category.icon size={40} className="text-muted-foreground" />
                         <div className="flex flex-col">
                             <div className="text-lg font-medium">
                                 {category.label}
                             </div>
-                            <div className="text-neutral-500 font-light">
+                            <div className="text-muted-foreground font-light">
                                 {category.description}
                             </div>
                         </div>
@@ -75,7 +75,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <Home size={24} />
                     Détails du logement
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-neutral-600">
+                <div className="grid grid-cols-2 gap-4 text-muted-foreground">
                     {listing.surface && (
                         <div className="flex items-center gap-2">
                             <Ruler size={20} />
@@ -108,7 +108,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <ListingEnergy dpe={listing.dpe} ges={listing.ges} />
 
             <hr />
-            <div className="text-lg font-light text-neutral-500">
+            <div className="text-lg font-light text-muted-foreground">
                 {description}
             </div>
             <hr />

@@ -22,7 +22,7 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
             <div className="pb-20">
                 <div className="mb-8">
                     <h1 className="text-2xl font-medium">Dashboard</h1>
-                    <p className="text-neutral-500 mt-2">Overview of your rental business</p>
+                    <p className="text-muted-foreground mt-2">Overview of your rental business</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -50,16 +50,16 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                     <RecentActivity reservations={stats.recentReservations} />
                     {/* Placeholder for future chart or other widget */}
                     <div className="
-            bg-white 
+            bg-card
             rounded-xl 
             border-[1px] 
-            border-neutral-200 
+            border-border
             p-6
             shadow-sm
             flex
             items-center
             justify-center
-            text-neutral-400
+            text-muted-foreground
           ">
                         Chart coming soon...
                     </div>

@@ -40,6 +40,10 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Manage placeholder state to clear on focus
+    const defaultPlaceholder = placeholder || "Entrez une adresse...";
+    const [currentPlaceholder, setCurrentPlaceholder] = useState(defaultPlaceholder);
+
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     // Sync input with value prop
@@ -183,7 +187,9 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
             <input
                 value={inputValue}
                 onChange={handleInput}
-                placeholder={placeholder || "Entrez une adresse..."}
+                placeholder={currentPlaceholder}
+                onFocus={() => setCurrentPlaceholder('')}
+                onBlur={() => setCurrentPlaceholder(defaultPlaceholder)}
                 autoFocus={autoFocus}
                 className="
                     w-full
@@ -191,15 +197,20 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     font-medium
                     text-lg
                     text-center
-                    bg-white 
+                    bg-background
                     border-2
+                    border-border
+                    focus:border-primary
+                    dark:border-0
+                    dark:bg-[#282828]
+                    dark:focus:bg-[#323232]
                     rounded-full
                     outline-none
                     transition
                     disabled:opacity-70
                     disabled:cursor-not-allowed
-                    border-neutral-300
-                    focus:border-black
+                    ring-0
+                    focus:ring-0
                 "
             />
             {showSuggestions && suggestions.length > 0 && (
@@ -207,14 +218,15 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     absolute 
                     z-[9999] 
                     w-full 
-                    bg-white 
+                    bg-popover 
                     border 
-                    border-neutral-200 
+                    border-border 
                     rounded-md 
                     mt-1 
                     shadow-lg 
                     max-h-60 
                     overflow-auto
+                    text-popover-foreground
                 ">
                     {suggestions.map((feature) => (
                         <li
@@ -222,11 +234,11 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                             onClick={() => handleSelect(feature)}
                             className="
                                 p-3 
-                                hover:bg-neutral-100 
+                                hover:bg-secondary
                                 cursor-pointer 
                                 transition
                                 border-b
-                                border-neutral-100
+                                border-border
                                 last:border-none
                             "
                         >

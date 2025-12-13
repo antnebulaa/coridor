@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, CreditCard, Globe, Briefcase, Building, Wrench, ChevronRight, Home, Repeat } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, CreditCard, Globe, Briefcase, Building, Wrench, ChevronRight, Home, Repeat, Settings } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -87,6 +87,12 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             active: pathname === '/account/preferences'
         },
         {
+            label: 'Réglages',
+            icon: Settings,
+            href: '/account/settings',
+            active: pathname === '/account/settings'
+        },
+        {
             label: 'Travel for work',
             icon: Briefcase,
             href: '/account/travel',
@@ -119,20 +125,20 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                             justify-between
                             gap-4 
                             p-[9px] 
-                            hover:bg-neutral-100 
+                            hover:bg-secondary 
                             transition 
                             rounded-xl
                             w-full
-                            ${route.active ? 'bg-neutral-100' : ''}
+                            ${route.active ? 'bg-secondary' : ''}
                         `}
                     >
                         <div className="flex items-center gap-4">
-                            <route.icon size={24} className="text-[#262626]" />
-                            <div className="font-light text-[#262626]">
+                            <route.icon size={24} className="text-foreground" />
+                            <div className="font-light text-foreground">
                                 {route.label}
                             </div>
                         </div>
-                        <ChevronRight size={20} className="text-[#262626] md:hidden" />
+                        <ChevronRight size={20} className="text-foreground md:hidden" />
                     </Link>
                 ))}
             </div>
@@ -144,9 +150,9 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                         disabled={isLoading}
                         whileTap={{ scale: 0.95 }}
                         className="
-                            bg-white 
+                            bg-card 
                             border 
-                            border-neutral-200 
+                            border-border 
                             shadow-xl 
                             px-5 
                             py-3 
@@ -156,10 +162,10 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                             flex
                             items-center
                             gap-2
-                            hover:bg-neutral-50
+                            hover:bg-secondary
                             transition
                             disabled:opacity-50
-                            text-neutral-800
+                            text-foreground
                         "
                     >
                         <motion.div

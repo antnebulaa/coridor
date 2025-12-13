@@ -17,8 +17,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
     const isHomePage = pathname === '/';
 
     return (
-        <div className={`fixed w-full bg-white z-[9999] ${!isHomePage ? 'hidden md:block' : ''}`}>
-            <div className="py-2 md:py-4 border-b border-[#dfdfdf]">
+        <div
+            className={`fixed w-full bg-background z-[9999] ${!isHomePage ? 'hidden md:block' : ''}`}
+            suppressHydrationWarning
+        >
+            <div className="py-2 md:py-4 border-b border-border">
                 <Container>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         {/* Top Row: Logo, Badges, Mobile Menu - HIDDEN on Mobile Home */}
@@ -36,6 +39,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
                                         font-bold 
                                         px-2 
                                         py-0.5 
+                                        bg-primary
+                                        text-white
+                                        text-[10px]
+                                        font-bold
+                                        px-2
+                                        py-0.5
                                         rounded-full
                                     ">
                                         PLUS
@@ -43,12 +52,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
                                 )}
                                 {currentUser?.plan === 'PRO' && (
                                     <div className="
-                                        bg-black 
-                                        text-white 
-                                        text-[10px] 
-                                        font-bold 
-                                        px-2 
-                                        py-0.5 
+                                        bg-black
+                                        text-white
+                                        text-[10px]
+                                        font-bold
+                                        px-2
+                                        py-0.5
                                         rounded-full
                                     ">
                                         PRO

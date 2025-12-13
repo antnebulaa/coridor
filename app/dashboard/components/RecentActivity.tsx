@@ -12,10 +12,10 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
 }) => {
     return (
         <div className="
-      bg-white 
+      bg-card
       rounded-xl 
       border-[1px] 
-      border-neutral-200 
+      border-border 
       p-6
       shadow-sm
     ">
@@ -24,7 +24,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
             </div>
             <div className="flex flex-col gap-4">
                 {reservations.length === 0 ? (
-                    <div className="text-neutral-500 text-sm">
+                    <div className="text-muted-foreground text-sm">
                         No recent activity.
                     </div>
                 ) : (
@@ -35,7 +35,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
                                 <div className="text-sm font-medium">
                                     {reservation.user?.name || 'Guest'} reserved {reservation.listingTitle}
                                 </div>
-                                <div className="text-xs text-neutral-500">
+                                <div className="text-xs text-muted-foreground">
                                     {format(new Date(reservation.createdAt), 'PP')}
                                 </div>
                             </div>

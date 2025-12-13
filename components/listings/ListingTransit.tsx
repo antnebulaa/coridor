@@ -41,7 +41,7 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
     }, [latitude, longitude, listingId]);
 
     if (isLoading) {
-        return <div className="h-20 animate-pulse bg-neutral-100 rounded-xl" />;
+        return <div className="h-20 animate-pulse bg-muted/50 rounded-xl" />;
     }
 
     if (lines.length === 0) {

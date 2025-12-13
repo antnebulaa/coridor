@@ -287,7 +287,7 @@ const RentModal = () => {
                     <select
                         value={leaseType}
                         onChange={(e) => setCustomValue('leaseType', e.target.value)}
-                        className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed border-neutral-300 focus:border-black"
+                        className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
                     >
                         {Object.values(LeaseType).map((type) => (
                             <option key={type} value={type}>
@@ -302,7 +302,7 @@ const RentModal = () => {
                         <select
                             value={dpe}
                             onChange={(e) => setCustomValue('dpe', e.target.value)}
-                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed border-neutral-300 focus:border-black"
+                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
                         >
                             {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
                                 <option key={grade} value={grade}>
@@ -316,7 +316,7 @@ const RentModal = () => {
                         <select
                             value={ges}
                             onChange={(e) => setCustomValue('ges', e.target.value)}
-                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed border-neutral-300 focus:border-black"
+                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
                         >
                             {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
                                 <option key={grade} value={grade}>
@@ -374,7 +374,7 @@ const RentModal = () => {
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
                     {amenityList.map((item) => (
-                        <div key={item.key} className="flex flex-row items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-black transition" onClick={() => toggleAmenity(item.key)}>
+                        <div key={item.key} className="flex flex-row items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-foreground transition" onClick={() => toggleAmenity(item.key)}>
                             <input
                                 type="checkbox"
                                 checked={amenities?.includes(item.key)}

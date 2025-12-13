@@ -129,14 +129,19 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
                                     pt-6
                                     font-light
                                     bg-white
+                                    dark:bg-neutral-900
+                                    text-foreground
                                     border
                                     border-neutral-300
+                                    dark:border-neutral-700
                                     rounded-xl
                                     outline-none
                                     focus:border-black
+                                    dark:focus:border-neutral-400
                                     transition
                                     disabled:opacity-70
                                     disabled:cursor-not-allowed
+                                    [color-scheme:light] dark:[color-scheme:dark]
                                 "
                             />
                             <label className="

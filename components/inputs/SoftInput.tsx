@@ -35,7 +35,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
             {formatPrice && (
                 <BiEuro
                     size={24}
-                    className="text-neutral-700 absolute top-5 right-[15px]"
+                    className="text-muted-foreground absolute top-5 right-[15px]"
                 />
             )}
             <input
@@ -61,7 +61,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
           pb-2
           pt-6
           font-normal
-          bg-white
+          bg-background
           border-[1px]
           rounded-xl
           outline-none
@@ -69,8 +69,8 @@ const SoftInput: React.FC<SoftInputProps> = ({
           disabled:opacity-70
           disabled:cursor-not-allowed
           ${formatPrice ? 'pl-3 pr-9' : 'pl-3'}
-          ${errors?.[id] ? 'border-primary' : 'border-neutral-300'}
-          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-black'}
+          ${errors?.[id] ? 'border-primary' : 'border-input'}
+          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-foreground'}
         `}
             />
             <label
@@ -89,7 +89,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
           peer-placeholder-shown:translate-y-0
           peer-focus:scale-75
           peer-focus:-translate-y-3
-          ${errors?.[id] ? 'text-primary' : 'text-zinc-400'}
+          ${errors?.[id] ? 'text-primary' : 'text-muted-foreground'}
           pointer-events-none
         `}
             >

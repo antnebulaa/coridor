@@ -1,5 +1,6 @@
 import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
 
 import 'leaflet/dist/leaflet.css';
 import { SafeListing } from '@/types';
@@ -24,53 +25,75 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
     const map = useMap();
 
     useEffect(() => {
-        // Prevent map operations if map is hidden (e.g. mobile view) to avoid NaN errors
-        if (!map.getContainer().offsetParent) {
-            return;
-        }
-
-        // Strict validation: center must be an array of two finite numbers
-        if (!Array.isArray(center) || center.length < 2 || !Number.isFinite(center[0]) || !Number.isFinite(center[1])) {
-            return;
-        }
-
-        // Use primitive variables to ensure we don't pass complex objects that might hide NaNs
-        let finalLat = center[0];
-        let finalLng = center[1];
-        let targetZoom = 13;
-
-        if (useOffset) {
-            try {
-                const mapZoom = map.getZoom();
-                // Ensure zoom is valid
-                targetZoom = (Number.isFinite(mapZoom) && mapZoom >= 13) ? mapZoom : 13;
-
-                const point = map.project([center[0], center[1]], targetZoom);
-                const pointWithOffset = L.point(point.x - 200, point.y);
-                const latLngWithOffset = map.unproject(pointWithOffset, targetZoom);
-
-                if (latLngWithOffset && Number.isFinite(latLngWithOffset.lat) && Number.isFinite(latLngWithOffset.lng)) {
-                    finalLat = latLngWithOffset.lat;
-                    finalLng = latLngWithOffset.lng;
-                }
-            } catch (e) {
-                console.warn("Error calculating map offset", e);
-            }
-        }
-
-        // Final sanity check before calling Leaflet
-        if (!Number.isFinite(finalLat) || !Number.isFinite(finalLng) || Number.isNaN(finalLat) || Number.isNaN(finalLng)) {
-            // console.warn("Skipping flyTo due to invalid coordinates", { finalLat, finalLng });
-            return;
-        }
+        // Guard against invalid component state or missing map
+        if (!map) return;
 
         try {
-            map.flyTo([finalLat, finalLng], targetZoom, {
-                duration: 0.5,
-                easeLinearity: 0.25
-            });
+            // 1. Basic Validation of 'center' prop
+            if (!Array.isArray(center) || center.length !== 2) return;
+
+            const lat = center[0];
+            const lng = center[1];
+
+            // Strict check: Must be numbers, finite, and not NaN
+            const isLatValid = typeof lat === 'number' && Number.isFinite(lat) && !Number.isNaN(lat);
+            const isLngValid = typeof lng === 'number' && Number.isFinite(lng) && !Number.isNaN(lng);
+
+            if (!isLatValid || !isLngValid) {
+                // console.warn("Map Recenter: Invalid center coordinates", center);
+                return;
+            }
+
+            let finalLat = lat;
+            let finalLng = lng;
+
+            // 2. Validate Zoom
+            let targetZoom = 13;
+            const currentZoom = map.getZoom();
+            if (typeof currentZoom === 'number' && Number.isFinite(currentZoom) && currentZoom >= 13) {
+                targetZoom = currentZoom;
+            }
+
+            // 3. Optional Offset Logic (only if standard check passed)
+            if (useOffset) {
+                try {
+                    const point = map.project([lat, lng], targetZoom);
+                    // Check projection results
+                    if (point && typeof point.x === 'number' && typeof point.y === 'number') {
+                        const pointWithOffset = L.point(point.x - 200, point.y);
+                        const latLngWithOffset = map.unproject(pointWithOffset, targetZoom);
+
+                        if (latLngWithOffset &&
+                            typeof latLngWithOffset.lat === 'number' && !Number.isNaN(latLngWithOffset.lat) &&
+                            typeof latLngWithOffset.lng === 'number' && !Number.isNaN(latLngWithOffset.lng)
+                        ) {
+                            finalLat = latLngWithOffset.lat;
+                            finalLng = latLngWithOffset.lng;
+                        }
+                    }
+                } catch (offsetError) {
+                    // Silently fail offset and stick to original center
+                }
+            }
+
+            // 4. Final FlyTo Execution with Double Check & Try-Catch
+            if (
+                typeof finalLat === 'number' && Number.isFinite(finalLat) && !Number.isNaN(finalLat) &&
+                typeof finalLng === 'number' && Number.isFinite(finalLng) && !Number.isNaN(finalLng) &&
+                typeof targetZoom === 'number' && Number.isFinite(targetZoom)
+            ) {
+                try {
+                    // Double check with Leaflet's own validator if possible, or just try-catch
+                    map.flyTo([finalLat, finalLng], targetZoom, {
+                        duration: 0.5,
+                        easeLinearity: 0.25
+                    });
+                } catch (flyError) {
+                    console.error("Map flyTo failed despite validation", flyError);
+                }
+            }
         } catch (e) {
-            console.error("Leaflet flyTo failed", e);
+            console.error("Map Recenter Error", e);
         }
     }, [center, useOffset, map]);
 
@@ -78,7 +101,12 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
 }
 
 const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect }) => {
+    const { theme } = useTheme();
     const [center, setCenter] = useState<number[]>([48.8566, 2.3522]); // Default Paris
+
+    const tileUrl = theme === 'dark'
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
     useEffect(() => {
         if (selectedListingId) {
@@ -96,18 +124,33 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
 
 
     const getIcon = (price: number, isSelected: boolean) => {
+        const isDark = theme === 'dark';
+
+        // Define colors based on theme and selection state
+        let backgroundColor, textColor;
+
+        if (isDark) {
+            // Dark Mode: Default is Dark Grey, Selected is White
+            backgroundColor = isSelected ? '#ffffff' : '#262626';
+            textColor = isSelected ? '#000000' : '#ffffff';
+        } else {
+            // Light Mode: Default is White, Selected is Black
+            backgroundColor = isSelected ? '#000000' : '#ffffff';
+            textColor = isSelected ? '#ffffff' : '#000000';
+        }
+
         return L.divIcon({
             className: 'custom-icon',
             html: `
                 <div style="
-                    background-color: ${isSelected ? 'black' : 'white'};
-                    color: ${isSelected ? 'white' : 'black'};
+                    background-color: ${backgroundColor};
+                    color: ${textColor};
                     padding: 4px 8px;
                     border-radius: 9999px;
                     font-weight: bold;
                     font-size: 14px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                    border: 1px solid rgba(0,0,0,0.1);
+                    border: 1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
                     transform: scale(${isSelected ? 1.2 : 1});
                     transition: all 0.2s;
                     display: flex;
@@ -134,7 +177,7 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                url={tileUrl}
             />
             <ZoomControl position="topright" />
 

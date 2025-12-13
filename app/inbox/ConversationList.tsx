@@ -44,7 +44,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
     return (
         <aside className={clsx(
             /* Base Styles */
-            `bg-white border-r border-gray-200 flex flex-col`,
+            `bg-background border-r border-border flex flex-col`,
 
             /* Mobile Styles */
             isOpen ? 'hidden lg:flex' : 'fixed inset-0 z-40 w-full pb-20 lg:pb-0',
@@ -57,9 +57,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
              lg:h-full
              lg:block`
         )}>
-            <div className="px-5 pt-4 pb-2 border-b border-gray-200 flex-none bg-white z-10">
+            <div className="px-5 pt-4 pb-2 border-b border-border flex-none bg-background z-10">
                 <div className="flex justify-between mb-4">
-                    <div className="text-2xl font-medium text-neutral-800">
+                    <div className="text-2xl font-medium text-foreground">
                         Messages
                     </div>
                 </div>
@@ -75,8 +75,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
                             border-b-2
                         `,
                             filter === 'all'
-                                ? 'border-black text-black'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-foreground text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
                         )}
                     >
                         Tout
@@ -91,8 +91,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
                             border-b-2
                         `,
                             filter === 'unread'
-                                ? 'border-black text-black'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-foreground text-foreground'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
                         )}
                     >
                         Non lus

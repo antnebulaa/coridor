@@ -10,10 +10,12 @@ const MapMain = dynamic(() => import('@/components/MapMain'), {
 });
 import Footer from "@/components/Footer";
 import { SafeListing, SafeUser } from "@/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import { IoClose } from 'react-icons/io5';
 import MobileBottomSheet from "@/components/MobileBottomSheet";
+import Modal from "@/components/modals/Modal";
 
 interface HomeClientProps {
     listings: any[]; // SafeListing + relation
@@ -27,6 +29,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
     isSearchActive = false
 }) => {
     const [selectedListingId, setSelectedListingId] = useState<string>('');
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const selectedListing = useMemo(() =>
         listings.find((listing) => listing.id === selectedListingId) || listings[0],
@@ -39,8 +46,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
 
     // List Column Classes
     const listColumnClasses = isSearchActive
-        ? "hidden md:block col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto scrollbar-hide"
-        : "col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto scrollbar-hide";
+        ? "hidden md:block col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto"
+        : "col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto";
 
     return (
         <div className="
@@ -96,7 +103,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                 left-6 
                                 w-[400px] 
                                 z-[1000]
-                                bg-white 
+                                bg-card 
                                 rounded-[20px] 
                                 shadow-2xl
                                 overflow-hidden
@@ -111,15 +118,15 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             right-4 
                                             z-50 
                                             p-2
-                                            bg-white 
+                                            bg-card 
                                             rounded-full 
-                                            hover:bg-gray-100 
+                                            hover:bg-muted 
                                             shadow-md
                                         "
                                     >
                                         <IoClose size={24} />
                                     </button>
-                                    <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
+                                    <div className="flex-1 overflow-y-auto p-6">
                                         <ListingPreview
                                             listing={selectedListing}
                                             currentUser={currentUser}
@@ -131,8 +138,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
                     </div>
                 </div>
 
-                {/* BOTTOM SHEET - Mobile Search Only */}
-                {isSearchActive && (
+                {/* BOTTOM SHEET - Mobile Search Only - Hide when a listing is selected to prevent scroll locking */}
+                {isSearchActive && !selectedListingId && (
                     <MobileBottomSheet
                         listings={listings}
                         currentUser={currentUser}
@@ -141,45 +148,25 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 )}
             </div>
 
-            {/* Mobile Listing Modal - Full Screen */}
-            {selectedListingId && selectedListing && (
-                <div className="
-                    md:hidden
-                    fixed 
-                    inset-0 
-                    z-[2000] 
-                    bg-white 
-                    flex 
-                    flex-col
-                ">
-                    <div className="relative flex-1 flex flex-col">
-                        <button
-                            onClick={() => setSelectedListingId('')}
-                            className="
-                                absolute 
-                                top-4 
-                                left-4 
-                                z-50 
-                                p-2
-                                bg-white 
-                                rounded-full 
-                                hover:bg-neutral-100 
-                                shadow-sm
-                                border
-                                border-neutral-200
-                            "
-                        >
-                            <IoClose size={24} />
-                        </button>
-                        <div className="flex-1 overflow-y-auto scrollbar-hide pt-16 px-6 pb-6">
+            {/* Mobile Listing Modal - Using Shared Modal Component to fix scroll */}
+            <Modal
+                isOpen={!!(selectedListingId && selectedListing)}
+                onClose={() => setSelectedListingId('')}
+                onSubmit={() => setSelectedListingId('')}
+                title="Détails du logement"
+                actionLabel="" /* Hide default footer button */
+                className="md:hidden"
+                body={
+                    selectedListing ? (
+                        <div className="pb-24">
                             <ListingPreview
                                 listing={selectedListing}
                                 currentUser={currentUser}
                             />
                         </div>
-                    </div>
-                </div>
-            )}
+                    ) : undefined
+                }
+            />
         </div>
     );
 };

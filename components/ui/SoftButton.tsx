@@ -28,7 +28,10 @@ const SoftButton: React.FC<SoftButtonProps> = ({
                 w-auto
                 bg-[#f2f2f2]
                 hover:bg-[#EBEBEB]
+                dark:bg-neutral-800
+                dark:hover:bg-neutral-700
                 text-neutral-800
+                dark:text-white
                 px-[18px]
                 py-[13px]
                 font-medium

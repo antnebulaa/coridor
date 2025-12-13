@@ -116,7 +116,11 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                                 -translate-y-1/2 
                                 left-2 
                                 bg-white/80 
-                                hover:bg-white 
+                                hover:bg-white
+                                dark:bg-neutral-800/80
+                                dark:hover:bg-neutral-800
+                                text-neutral-900
+                                dark:text-white
                                 rounded-full 
                                 p-2 
                                 opacity-0 
@@ -138,6 +142,10 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                                 right-2 
                                 bg-white/80 
                                 hover:bg-white 
+                                dark:bg-neutral-800/80
+                                dark:hover:bg-neutral-800
+                                text-neutral-900
+                                dark:text-white
                                 rounded-full 
                                 p-2 
                                 opacity-0 

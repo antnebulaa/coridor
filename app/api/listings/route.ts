@@ -41,11 +41,10 @@ export async function POST(
         imageSrcs
     } = body;
 
-    Object.keys(body).forEach((value: any) => {
-        if (!body[value]) {
-            NextResponse.error();
-        }
-    });
+    // Validate essential fields
+    if (!title || !description || !price || !location) {
+        return NextResponse.error();
+    }
 
     const listing = await prisma.listing.create({
         data: {
@@ -55,19 +54,19 @@ export async function POST(
             roomCount,
             bathroomCount,
             guestCount,
-            locationValue: location.value,
-            price: parseInt(price, 10),
+            locationValue: location ? location.value : 'Unknown', // Fallback
+            price: typeof price === 'string' ? parseInt(price, 10) : price,
             userId: currentUser.id,
             leaseType,
             dpe,
             ges,
-            city: location.city,
-            district: location.district,
-            neighborhood: location.neighborhood,
-            country: location.country,
-            latitude: location.latlng ? location.latlng[0] : null,
-            longitude: location.latlng ? location.latlng[1] : null,
-            charges: { amount: parseInt(charges, 10) },
+            city: location?.city,
+            district: location?.district,
+            neighborhood: location?.neighborhood,
+            country: location?.country,
+            latitude: location?.latlng ? location.latlng[0] : null,
+            longitude: location?.latlng ? location.latlng[1] : null,
+            charges: { amount: typeof charges === 'string' ? parseInt(charges, 10) : (typeof charges === 'number' ? charges : 0) },
             // New fields
             isFurnished,
             surface: surface ? parseFloat(surface) : null,

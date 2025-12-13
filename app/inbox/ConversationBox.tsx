@@ -145,24 +145,24 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         flex 
         items-center 
         space-x-3 
-        hover:bg-neutral-100 
+        hover:bg-secondary 
         rounded-lg 
         transition
         cursor-pointer
         p-3
       `,
-                selected ? 'bg-neutral-100' : 'bg-white'
+                selected ? 'bg-secondary' : 'bg-background'
             )}
         >
             <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} />
             <div className="min-w-0 flex-1">
                 <div className="focus:outline-none">
                     <div className="flex justify-between items-center">
-                        <p className="text-md font-medium text-gray-900">
+                        <p className="text-md font-medium text-foreground">
                             {data.name || otherUser?.name || 'Unknown User'}
                         </p>
                         {lastMessage?.createdAt && (
-                            <p className="text-xs text-gray-400 font-light">
+                            <p className="text-xs text-muted-foreground font-light">
                                 {format(new Date(lastMessage.createdAt), 'p')}
                             </p>
                         )}
@@ -171,14 +171,14 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             truncate 
             text-sm
           `,
-                        hasSeen ? 'text-gray-500' : 'text-black font-medium'
+                        hasSeen ? 'text-muted-foreground' : 'text-foreground font-medium'
                     )}>
                         {lastMessageText}
                     </p>
                     {applicationStatus && (
                         <div className="flex items-center gap-2 mt-1">
                             <div className={clsx("w-2 h-2 rounded-full", applicationColor)}></div>
-                            <div className="text-xs text-neutral-500 font-medium">{applicationLabel}</div>
+                            <div className="text-xs text-muted-foreground font-medium">{applicationLabel}</div>
                         </div>
                     )}
                 </div>

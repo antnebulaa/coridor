@@ -49,6 +49,7 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
           pt-6
           font-normal
           bg-white
+          dark:bg-neutral-900
           border
           rounded-xl
           outline-none
@@ -56,8 +57,9 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
           disabled:opacity-70
           disabled:cursor-not-allowed
           appearance-none
-          ${errors?.[id] ? 'border-primary' : 'border-neutral-300'}
-          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-black'}
+          text-foreground
+          ${errors?.[id] ? 'border-primary' : 'border-neutral-300 dark:border-neutral-700'}
+          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-black dark:focus:border-neutral-400'}
         `}
             >
                 {/* Empty option for placeholder behavior if needed, though select doesn't support placeholder-shown natively */}
@@ -70,7 +72,7 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
             </select>
 
             <div className="absolute top-5 right-3 pointer-events-none">
-                <BiChevronDown size={24} className="text-neutral-700" />
+                <BiChevronDown size={24} className="text-neutral-700 dark:text-neutral-300" />
             </div>
 
             <label
@@ -85,7 +87,7 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
           origin-top-left
           left-3
           scale-75
-          ${errors?.[id] ? 'text-primary' : 'text-zinc-400'}
+          ${errors?.[id] ? 'text-primary' : 'text-zinc-400 dark:text-zinc-500'}
           pointer-events-none
         `}
             >
