@@ -94,7 +94,7 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
                         className="flex items-center gap-3 p-3 border-[1px] border-neutral-200 rounded-xl hover:shadow-sm transition"
                     >
                         <item.icon size={24} className="text-neutral-600" />
-                        <div className="font-light text-neutral-600">
+                        <div className="font-normal text-neutral-600">
                             {item.label}
                         </div>
                     </div>

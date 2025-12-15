@@ -82,7 +82,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                     <div className="md:hidden mt-1 flex items-center gap-2">
                         {data.isPublished ? (
                             <div className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
-                                En ligne
+                                Publié
                             </div>
                         ) : (
                             <div className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-neutral-100 text-neutral-800">
@@ -114,7 +114,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
             <div className="hidden md:flex flex-1 flex-col items-end">
                 {data.isPublished ? (
                     <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        En ligne
+                        Publié
                     </div>
                 ) : (
                     <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">

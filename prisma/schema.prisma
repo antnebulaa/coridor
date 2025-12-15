@@ -84,6 +84,11 @@ model User {
   messages      Message[]
   visits        Visit[] // Visits as candidate
   createdScopes TenantCandidateScope[] @relation("CreatedScope")
+
+  // Contacts System
+  uniqueCode String? @unique
+  contacts   User[]  @relation("UserContacts")
+  contactOf  User[]  @relation("UserContacts")
 }
 
 model TenantProfile {

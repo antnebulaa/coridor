@@ -13,6 +13,7 @@ import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
 import ListingCard from "@/components/listings/ListingCard";
 import PropertiesListRow from "./components/PropertiesListRow";
+import EmptyState from "@/components/EmptyState";
 
 interface PropertiesClientProps {
     listings: SafeListing[];
@@ -76,62 +77,70 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
             />
 
             <div className="mt-10">
-                {viewMode === 'list' ? (
-                    <div className="flex flex-col">
-                        <div className="
-                            hidden md:flex 
-                            items-center 
-                            gap-4 
-                            px-4 
-                            py-3
-                            border-b
-                            border-border
-                            text-sm 
-                            text-muted-foreground 
-                            font-medium
-                        ">
-                            <span className="flex-[3]">Annonce</span>
-                            <span className="flex-[2]">Adresse</span>
-                            <span className="flex-1">Prix</span>
-                            <span className="flex-1 text-right md:pr-1">Statut</span>
-                        </div>
+                {listings.length === 0 ? (
+                    <EmptyState
+                        title="No properties found"
+                        subtitle="Looks like you have no properties."
+                    />
+                ) : (
+                    viewMode === 'list' ? (
                         <div className="flex flex-col">
+                            <div className="
+                                hidden md:flex 
+                                items-center 
+                                gap-4 
+                                px-4 
+                                py-3
+                                border-b
+                                border-border
+                                text-sm 
+                                text-muted-foreground 
+                                font-medium
+                            ">
+                                <span className="flex-[3]">Annonce</span>
+                                <span className="flex-[2]">Adresse</span>
+                                <span className="flex-1">Prix</span>
+                                <span className="flex-1 text-right md:pr-1">Statut</span>
+                            </div>
+                            <div className="flex flex-col">
+                                {listings.map((listing: any) => (
+                                    <PropertiesListRow
+                                        key={listing.id}
+                                        data={listing}
+                                        currentUser={currentUser}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div
+                            className="
+                                grid 
+                                grid-cols-1 
+                                sm:grid-cols-2 
+                                md:grid-cols-3 
+                                lg:grid-cols-4
+                                xl:grid-cols-5
+                                2xl:grid-cols-6
+                                gap-4
+                                sm:gap-8
+                            "
+                        >
                             {listings.map((listing: any) => (
-                                <PropertiesListRow
+                                <div
                                     key={listing.id}
-                                    data={listing}
-                                    currentUser={currentUser}
-                                />
+                                    onClick={() => router.push(`/properties/${listing.id}/edit`)}
+                                    className="cursor-pointer border-b border-neutral-200 dark:border-neutral-800 pb-4 sm:border-none sm:pb-0 last:border-none"
+                                >
+                                    <ListingCard
+                                        data={listing}
+                                        currentUser={currentUser}
+                                        showHeart={false}
+                                    />
+                                </div>
                             ))}
                         </div>
-                    </div>
-                ) : (
-                    <div
-                        className="
-                            grid 
-                            grid-cols-1 
-                            sm:grid-cols-2 
-                            md:grid-cols-3 
-                            lg:grid-cols-4
-                            xl:grid-cols-5
-                            2xl:grid-cols-6
-                            gap-8
-                        "
-                    >
-                        {listings.map((listing: any) => (
-                            <div
-                                key={listing.id}
-                                onClick={() => router.push(`/properties/${listing.id}/edit`)}
-                                className="cursor-pointer"
-                            >
-                                <ListingCard
-                                    data={listing}
-                                    currentUser={currentUser}
-                                    showHeart={false}
-                                />
-                            </div>
-                        ))}
-                    </div>
+                    )
                 )}
             </div>
         </Container>

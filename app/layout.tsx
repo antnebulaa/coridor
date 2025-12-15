@@ -11,6 +11,7 @@ import LoginModal from "@/components/modals/LoginModal";
 import RentModal from "@/components/modals/RentModal";
 import WishlistModal from "@/components/modals/WishlistModal";
 import LeaseModal from "@/components/modals/LeaseModal";
+import MyCodeModal from "@/components/modals/MyCodeModal";
 import { Toaster } from "react-hot-toast";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getUnreadMessageCount from "@/app/actions/getUnreadMessageCount";
@@ -58,6 +59,7 @@ export default async function RootLayout({
             <RegisterModal />
             <LoginModal />
             <WishlistModal />
+            <MyCodeModal currentUser={currentUser} />
             <LeaseModal currentUser={currentUser} />
             <Suspense fallback={<div></div>}>
               <Navbar currentUser={currentUser} unreadCount={unreadCount} />

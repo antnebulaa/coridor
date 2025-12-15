@@ -3,8 +3,13 @@ import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 
 import 'leaflet/dist/leaflet.css';
-import { SafeListing } from '@/types';
+import { SafeListing, SafeUser } from '@/types';
 import L from 'leaflet';
+import dynamic from 'next/dynamic';
+
+const StationsLayer = dynamic(() => import('./map/StationsLayer'), {
+    ssr: false
+});
 
 // Fix for Leaflet default marker
 // @ts-ignore
@@ -19,6 +24,7 @@ interface MapMainProps {
     listings: SafeListing[];
     selectedListingId?: string;
     onSelect?: (id: string) => void;
+    currentUser?: SafeUser | null;
 }
 
 const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean }) => {
@@ -40,7 +46,6 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
             const isLngValid = typeof lng === 'number' && Number.isFinite(lng) && !Number.isNaN(lng);
 
             if (!isLatValid || !isLngValid) {
-                // console.warn("Map Recenter: Invalid center coordinates", center);
                 return;
             }
 
@@ -50,7 +55,11 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
             // 2. Validate Zoom
             let targetZoom = 13;
             const currentZoom = map.getZoom();
-            if (typeof currentZoom === 'number' && Number.isFinite(currentZoom) && currentZoom >= 13) {
+
+            // If listing selected (useOffset is true), force tighter zoom
+            if (useOffset) {
+                targetZoom = Math.max(currentZoom, 15);
+            } else if (typeof currentZoom === 'number' && Number.isFinite(currentZoom) && currentZoom >= 13) {
                 targetZoom = currentZoom;
             }
 
@@ -76,20 +85,21 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
                 }
             }
 
-            // 4. Final FlyTo Execution with Double Check & Try-Catch
+            // 4. Final Execution with Robust Start/End Checks
             if (
                 typeof finalLat === 'number' && Number.isFinite(finalLat) && !Number.isNaN(finalLat) &&
                 typeof finalLng === 'number' && Number.isFinite(finalLng) && !Number.isNaN(finalLng) &&
                 typeof targetZoom === 'number' && Number.isFinite(targetZoom)
             ) {
-                try {
-                    // Double check with Leaflet's own validator if possible, or just try-catch
-                    map.flyTo([finalLat, finalLng], targetZoom, {
-                        duration: 0.5,
-                        easeLinearity: 0.25
-                    });
-                } catch (flyError) {
-                    console.error("Map flyTo failed despite validation", flyError);
+                // Ensure map has dimensions before attempting view operations
+                const size = map.getSize();
+                if (size.x > 0 && size.y > 0) {
+                    try {
+                        // Use setView instead of flyTo to avoid curve calculation crashes with NaNs
+                        map.setView([finalLat, finalLng], targetZoom);
+                    } catch (viewError) {
+                        console.error("Map setView failed", viewError);
+                    }
                 }
             }
         } catch (e) {
@@ -100,7 +110,56 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
     return null;
 }
 
-const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect }) => {
+const ResizeHandler = () => {
+    const map = useMap();
+
+    useEffect(() => {
+        const handleResize = () => {
+            map.invalidateSize();
+        };
+
+        // 1. Initial invalidation (Wrapped in RAF to prevent sync race conditions with Map mount)
+        requestAnimationFrame(() => {
+            handleResize();
+        });
+
+        // 2. Delayed invalidation (catches animation end)
+        const timer = setTimeout(handleResize, 400);
+
+        // 3. Window resize
+        window.addEventListener('resize', handleResize);
+
+        // 4. Focus / Visibility Change (Mobile Tab switching)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                handleResize();
+                // Double check after a small delay ensures rendering on slow mobile browsers
+                setTimeout(handleResize, 200);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleResize);
+
+        // 5. ResizeObserver (Detects container size changes not triggered by window resize)
+        const container = map.getContainer();
+        const resizeObserver = new ResizeObserver(() => {
+            handleResize();
+        });
+        resizeObserver.observe(container);
+
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', handleResize);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleResize);
+            resizeObserver.disconnect();
+        };
+    }, [map]);
+
+    return null;
+}
+
+const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect, currentUser }) => {
     const { theme } = useTheme();
     const [center, setCenter] = useState<number[]>([48.8566, 2.3522]); // Default Paris
 
@@ -111,30 +170,77 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
     useEffect(() => {
         if (selectedListingId) {
             const selected = listings.find(l => l.id === selectedListingId);
-            if (selected && selected.latitude && selected.longitude) {
+            if (selected &&
+                typeof selected.latitude === 'number' && Number.isFinite(selected.latitude) &&
+                typeof selected.longitude === 'number' && Number.isFinite(selected.longitude)
+            ) {
                 setCenter([selected.latitude, selected.longitude]);
             }
         } else if (listings.length > 0) {
             const first = listings[0];
-            if (first.latitude && first.longitude) {
+            if (first.latitude && first.longitude &&
+                typeof first.latitude === 'number' && Number.isFinite(first.latitude) &&
+                typeof first.longitude === 'number' && Number.isFinite(first.longitude)
+            ) {
                 setCenter([first.latitude, first.longitude]);
             }
         }
     }, [selectedListingId, listings]);
 
 
-    const getIcon = (price: number, isSelected: boolean) => {
+    const getIcon = (price: number, isSelected: boolean, listingId: string) => {
         const isDark = theme === 'dark';
 
-        // Define colors based on theme and selection state
-        let backgroundColor, textColor;
+        // Correctly check favorites via Wishlists (Relation), not legacy favoriteIds (Scalar)
+        const isFavorite = currentUser?.wishlists?.some(wishlist =>
+            wishlist.listings.some(l => l.id === listingId)
+        ) || false;
 
+        // Base classes for the marker
+        const baseClasses = `
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            white-space: nowrap;
+        `;
+
+        if (isFavorite || isSelected) {
+            // Favorite or Selected: Primary Background, White Text
+            // We use standard CSS variables directly for maximum reliability
+            const bg = 'var(--primary)';
+            const text = 'var(--primary-foreground)';
+
+            return L.divIcon({
+                className: 'custom-icon',
+                html: `
+                    <div style="
+                        background-color: ${bg};
+                        color: ${text};
+                        border: 1px solid ${bg};
+                        ${baseClasses}
+                        transform: scale(${isSelected ? 1.2 : 1});
+                    ">
+                        ${price}€
+                    </div>
+                `,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+        }
+
+        // Standard Logic (Non-Favorite) - Preserving exact previous behavior or close to it
+        let backgroundColor, textColor;
         if (isDark) {
-            // Dark Mode: Default is Dark Grey, Selected is White
             backgroundColor = isSelected ? '#ffffff' : '#262626';
             textColor = isSelected ? '#000000' : '#ffffff';
         } else {
-            // Light Mode: Default is White, Selected is Black
             backgroundColor = isSelected ? '#000000' : '#ffffff';
             textColor = isSelected ? '#ffffff' : '#000000';
         }
@@ -145,30 +251,21 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
                 <div style="
                     background-color: ${backgroundColor};
                     color: ${textColor};
-                    padding: 4px 8px;
-                    border-radius: 9999px;
-                    font-weight: bold;
-                    font-size: 14px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    ${baseClasses}
                     border: 1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
                     transform: scale(${isSelected ? 1.2 : 1});
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: fit-content;
-                    white-space: nowrap;
                 ">
                     ${price}€
                 </div>
             `,
-            iconSize: [40, 40], // Approximate, css handles it
+            iconSize: [40, 40],
             iconAnchor: [20, 20]
         });
     };
 
     return (
         <MapContainer
+            key={theme} // Force remount on theme change to prevent specific tile layer issues
             center={center as L.LatLngExpression}
             zoom={12}
             scrollWheelZoom={true}
@@ -190,7 +287,7 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
                     <Marker
                         key={listing.id}
                         position={[listing.latitude, listing.longitude]}
-                        icon={getIcon(listing.price, isSelected)}
+                        icon={getIcon(listing.price, isSelected, listing.id)}
                         eventHandlers={{
                             click: () => onSelect && onSelect(listing.id)
                         }}
@@ -198,6 +295,8 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
                 )
             })}
             <Recenter center={center} useOffset={!!selectedListingId} />
+            <ResizeHandler />
+            <StationsLayer />
         </MapContainer>
     )
 };

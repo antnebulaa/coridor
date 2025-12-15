@@ -45,7 +45,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                     <div>Proposé par {user?.name}</div>
                     <Avatar src={user?.image} seed={user?.email || user?.name} />
                 </div>
-                <div className="flex flex-row items-center gap-4 font-light text-muted-foreground">
+                <div className="flex flex-row items-center gap-4 font-normal text-muted-foreground">
                     <div>{guestCount} Capacité</div>
                     <div>{roomCount} chambres</div>
                     <div>{bathroomCount} salles de bain</div>
@@ -60,7 +60,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
                             <div className="text-lg font-medium">
                                 {category.label}
                             </div>
-                            <div className="text-muted-foreground font-light">
+                            <div className="text-muted-foreground font-normal">
                                 {category.description}
                             </div>
                         </div>
@@ -108,7 +108,7 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <ListingEnergy dpe={listing.dpe} ges={listing.ges} />
 
             <hr />
-            <div className="text-lg font-light text-muted-foreground">
+            <div className="text-lg font-normal text-muted-foreground">
                 {description}
             </div>
             <hr />

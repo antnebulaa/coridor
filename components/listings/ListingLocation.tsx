@@ -31,7 +31,7 @@ const ListingLocation: React.FC<ListingLocationProps> = ({
                     <MapPin size={24} />
                     Emplacement
                 </div>
-                <div className="text-neutral-500 font-light">
+                <div className="text-neutral-500 font-normal">
                     {listing.city}, {listing.country}
                 </div>
             </div>

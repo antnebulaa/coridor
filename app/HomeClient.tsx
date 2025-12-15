@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import { IoClose } from 'react-icons/io5';
 import MobileBottomSheet from "@/components/MobileBottomSheet";
 import Modal from "@/components/modals/Modal";
+import ResumeSearch from "@/components/listings/ResumeSearch";
 
 interface HomeClientProps {
     listings: any[]; // SafeListing + relation
@@ -46,8 +47,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
 
     // List Column Classes
     const listColumnClasses = isSearchActive
-        ? "hidden md:block col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto"
-        : "col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto";
+        ? "hidden md:block col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto scrollbar-hide"
+        : "col-span-1 md:col-span-7 xl:col-span-6 h-full overflow-y-auto scrollbar-hide";
 
     return (
         <div className="
@@ -65,19 +66,27 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 {/* Left Column: List + Footer */}
                 <div className={listColumnClasses}>
                     <div className="pt-6 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
+
+                        {!isSearchActive && (
+                            <ResumeSearch />
+                        )}
                         <div className="
                             grid 
                             grid-cols-1 
                             gap-1.5
                         ">
                             {listings.map((listing: any) => (
-                                <ListingCard
+                                <div
                                     key={listing.id}
-                                    currentUser={currentUser}
-                                    data={listing}
-                                    variant="horizontal"
-                                    onSelect={() => setSelectedListingId(listing.id)}
-                                />
+                                    className="cursor-pointer border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-4 md:border-none md:pb-0 md:mb-0 last:border-none last:pb-0 last:mb-0"
+                                >
+                                    <ListingCard
+                                        currentUser={currentUser}
+                                        data={listing}
+                                        variant="horizontal"
+                                        onSelect={() => setSelectedListingId(listing.id)}
+                                    />
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -91,6 +100,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                             listings={listings}
                             selectedListingId={selectedListingId}
                             onSelect={(id) => setSelectedListingId(id)}
+                            currentUser={currentUser}
                         />
 
                         {/* DESKTOP Overlay Modal */}
@@ -131,6 +141,25 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             listing={selectedListing}
                                             currentUser={currentUser}
                                         />
+                                    </div>
+                                    {/* Fixed Bottom Footer for Desktop Overlay */}
+                                    <div className="p-4 border-t bg-white flex items-center justify-between">
+                                        <div className="flex flex-col">
+                                            <div className="flex flex-row items-center gap-1">
+                                                <div className="font-semibold text-lg">
+                                                    {selectedListing.price} €
+                                                </div>
+                                                <div className="font-light text-neutral-500 text-sm">
+                                                    / mois
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="w-[140px]">
+                                            <ListingPreview.ApplyButton
+                                                currentUser={currentUser}
+                                                listing={selectedListing}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

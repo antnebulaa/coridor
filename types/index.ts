@@ -1,5 +1,14 @@
 import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMode, Conversation, Message, Wishlist, Plan, RentalApplication, TenantCandidateScope, ApplicationStatus } from "@prisma/client";
 
+export type SafePropertyImage = PropertyImage;
+
+export type SafeRoom = Omit<
+    Room,
+    "images"
+> & {
+    images: SafePropertyImage[];
+};
+
 export type SafeListing = Omit<
     Listing,
     "createdAt" | "statusUpdatedAt"
@@ -7,8 +16,8 @@ export type SafeListing = Omit<
     createdAt: string;
     statusUpdatedAt: string;
     isPublished: boolean;
-    images: PropertyImage[];
-    rooms?: (Room & { images: PropertyImage[] })[];
+    images: SafePropertyImage[];
+    rooms?: SafeRoom[];
     isFurnished: boolean;
     surface: number | null;
     surfaceUnit: string | null;
@@ -94,6 +103,7 @@ export type SafeUser = Omit<
     tenantProfile: TenantProfile | null;
     wishlists: SafeWishlist[] | null;
     measurementSystem: string | null;
+    uniqueCode: string | null;
 };
 
 export type FullMessageType = Message & {

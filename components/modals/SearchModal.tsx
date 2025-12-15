@@ -128,6 +128,30 @@ const SearchModal = () => {
 
         const url = `/?${urlParams.toString()}`;
 
+        // Save detailed search info for "Resume Search" feature
+        const locationLabel = locations.length > 0
+            ? locations.map(l => l.city || l.label.split(',')[0].trim()).join(', ')
+            : 'France';
+
+        const detailsParts = [];
+        if (category) detailsParts.push(category);
+        if (roomCount > 1) detailsParts.push(`${roomCount} pièces`);
+        if (bathroomCount > 1) detailsParts.push(`${bathroomCount} sdb`);
+        if (minSurface) detailsParts.push(`${minSurface}m² min`);
+        if (maxPrice) detailsParts.push(`Max ${maxPrice}€`);
+
+        const resumeData = {
+            locationLabel,
+            queryString: urlParams.toString(),
+            details: detailsParts.join(' • ')
+        };
+
+        try {
+            localStorage.setItem('coridor_last_search', JSON.stringify(resumeData));
+        } catch (error) {
+            console.error('Failed to save search history', error);
+        }
+
         setStep(STEPS.LOCATION);
         searchModal.onClose();
         router.push(url);

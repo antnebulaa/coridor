@@ -6,9 +6,6 @@ import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Euro, Info, AlertTriangle, CheckCircle } from "lucide-react";
-import { useLoadScript } from "@react-google-maps/api";
-import { getGeocode } from "use-places-autocomplete";
-
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { calculateRentControl } from "./rentControlUtils";
@@ -17,18 +14,13 @@ interface PriceSectionProps {
     listing: SafeListing;
 }
 
-const libraries: ("places")[] = ["places"];
-
 const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [rentControlData, setRentControlData] = useState<any>(null);
-    const [city, setCity] = useState<string>("");
 
-    const { isLoaded } = useLoadScript({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
-        libraries,
-    });
+    // Use stored city directly
+    const city = listing.city || '';
 
     const {
         register,
@@ -44,27 +36,6 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     });
 
     const price = watch('price');
-
-    // Fetch City from LocationValue (Place ID)
-    useEffect(() => {
-        if (isLoaded && listing.locationValue && !city) {
-            getGeocode({ placeId: listing.locationValue })
-                .then((results) => {
-                    if (results && results.length > 0) {
-                        const addressComponents = results[0].address_components;
-                        const cityComponent = addressComponents.find(
-                            (c) => c.types.includes('locality') || c.types.includes('administrative_area_level_1')
-                        );
-                        if (cityComponent) {
-                            setCity(cityComponent.long_name);
-                        }
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching location details:", error);
-                });
-        }
-    }, [isLoaded, listing.locationValue, city]);
 
     // Calculate Rent Control
     useEffect(() => {
@@ -108,7 +79,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
             <div className="flex flex-col gap-2">
                 <h3 className="text-lg font-semibold">Loyer mensuel</h3>
                 <p className="text-neutral-500 font-light">
-                    Indiquez le montant du loyer mensuel charges comprises.
+                    Indiquez le montant du loyer mensuel hors charges.
                 </p>
             </div>
 

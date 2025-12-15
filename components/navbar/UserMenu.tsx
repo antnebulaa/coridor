@@ -1,7 +1,7 @@
 'use client';
 
 import { AiOutlineMenu } from "react-icons/ai";
-import { IoSettingsOutline, IoLogOutOutline, IoHeartOutline, IoKeyOutline } from "react-icons/io5";
+import { IoSettingsOutline, IoLogOutOutline, IoHeartOutline, IoKeyOutline, IoQrCodeOutline, IoPeopleOutline } from "react-icons/io5";
 import { MessageSquare } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -10,6 +10,7 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import useRegisterModal from "@/hooks/useRegisterModal";
 import useLoginModal from "@/hooks/useLoginModal";
 import useRentModal from "@/hooks/useRentModal";
+import useMyCodeModal from "@/hooks/useMyCodeModal";
 import { SafeUser } from "@/types";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
     const registerModal = useRegisterModal();
     const loginModal = useLoginModal();
     const rentModal = useRentModal();
+    const myCodeModal = useMyCodeModal();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -218,6 +220,22 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                             <span>Ma location</span>
                                         </div>
                                     )}
+
+                                    <div
+                                        onClick={() => router.push('/contacts')}
+                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                    >
+                                        <IoPeopleOutline size={20} className="text-muted-foreground" strokeWidth="40" />
+                                        <span>Mes contacts</span>
+                                    </div>
+
+                                    <div
+                                        onClick={myCodeModal.onOpen}
+                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                    >
+                                        <IoQrCodeOutline size={20} className="text-muted-foreground" strokeWidth="40" />
+                                        <span>Mon QR Code</span>
+                                    </div>
 
                                     <div
                                         onClick={() => router.push('/account/settings')}

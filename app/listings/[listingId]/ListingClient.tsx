@@ -14,6 +14,7 @@ import ListingHead from "@/components/listings/ListingHead";
 import ListingInfo from "@/components/listings/ListingInfo";
 import { Button } from "@/components/ui/Button";
 import ApplicationModal from "@/components/modals/ApplicationModal";
+import ListingMobileFooter from "@/components/listings/ListingMobileFooter";
 
 interface ListingClientProps {
     listing: SafeListing & {
@@ -129,6 +130,11 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 onClose={() => setIsApplicationModalOpen(false)}
                 listing={listing}
                 currentUser={currentUser}
+            />
+            <ListingMobileFooter
+                listing={listing}
+                onApply={onApply}
+                disabled={isLoading}
             />
         </Container>
     );

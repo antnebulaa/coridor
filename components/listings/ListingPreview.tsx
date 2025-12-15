@@ -3,7 +3,7 @@
 import { SafeListing, SafeUser } from "@/types";
 import Avatar from "../Avatar";
 import useCountries from "@/hooks/useCountries";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import ListingEnergy from "./ListingEnergy";
 import ListingAmenities from "./ListingAmenities";
@@ -13,8 +13,16 @@ import HeartButton from "../HeartButton";
 import Heading from "../Heading";
 import ListingTransit from "./ListingTransit";
 import NeighborhoodScore from "./NeighborhoodScore";
+import ListingCardCarousel from "./ListingCardCarousel";
+import { Camera } from "lucide-react";
+import ImageModal from "../modals/ImageModal";
+import { Button } from "../ui/Button";
+import useLoginModal from "@/hooks/useLoginModal";
+import ApplicationModal from "../modals/ApplicationModal";
+import { useCallback } from "react";
+import ListingMobileFooter from "./ListingMobileFooter";
 
-const Map = dynamic(() => import('../Map'), {
+const MapComponent = dynamic(() => import('../Map'), {
     ssr: false
 });
 
@@ -28,6 +36,17 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
     currentUser
 }) => {
     const { getByValue } = useCountries();
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+    const loginModal = useLoginModal();
+
+    const onApply = useCallback(() => {
+        if (!currentUser) {
+            return loginModal.onOpen();
+        }
+        setIsApplicationModalOpen(true);
+    }, [currentUser, loginModal]);
+
     const location = getByValue(listing.locationValue);
     const coordinates = listing.latitude && listing.longitude ? [listing.latitude, listing.longitude] : undefined;
 
@@ -93,42 +112,93 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         return listing.title;
     }, [listing.category, surfaceDisplay, listing.title]);
 
+
+
+    const listingImages = useMemo(() => {
+        // Create a map of room IDs to room names for O(1) lookup
+        const roomMap = new Map<string, string>();
+        if (listing.rooms) {
+            listing.rooms.forEach(room => {
+                roomMap.set(room.id, room.name);
+            });
+        }
+
+        return listing.images.map(img => {
+            let label = undefined;
+            if (img.roomId && roomMap.has(img.roomId)) {
+                label = roomMap.get(img.roomId);
+            }
+
+            return {
+                url: img.url,
+                label: label
+            };
+        });
+    }, [listing.images, listing.rooms]);
+
     return (
-        <div className="col-span-4 flex flex-col gap-8">
-            {/* Header Section */}
-            <div className="flex flex-col gap-6">
-                <Heading
-                    title={titleDisplay}
-                    subtitle={locationLabel}
-                    subtitleClassName="mt-1"
-                />
-                <div
-                    className="
+        <>
+            <div className="col-span-4 flex flex-col gap-8">
+                {/* Header Section */}
+                <div className="flex flex-col gap-6">
+                    <Heading
+                        title={titleDisplay}
+                        subtitle={locationLabel}
+                        subtitleClassName="mt-1"
+                    />
+                    <div
+                        className="
                         w-full
                         h-[40vh]
                         overflow-hidden 
                         rounded-xl
                         relative
+                        group
                     "
-                >
-                    <Image
-                        alt="Image"
-                        src={listing.images[0]?.url || '/images/placeholder.svg'} // Access via relation if available or listing.imageSrc
-                        fill
-                        className="object-cover w-full"
-                    />
-                    <div className="absolute top-5 right-5">
-                        <HeartButton
-                            listingId={listing.id}
-                            currentUser={currentUser}
-                        />
+                    >
+                        <div onClick={() => setIsImageModalOpen(true)} className="w-full h-full cursor-pointer">
+                            <ListingCardCarousel images={listingImages} />
+                        </div>
+
+                        <div className="absolute top-5 right-5 z-10">
+                            <HeartButton
+                                listingId={listing.id}
+                                currentUser={currentUser}
+                            />
+                        </div>
+
+                        {/* "Voir toutes les photos" Button */}
+                        <button
+                            onClick={() => setIsImageModalOpen(true)}
+                            className="
+                            absolute 
+                            bottom-5 
+                            right-5 
+                            bg-white 
+                            hover:bg-neutral-100 
+                            text-black 
+                            px-4 
+                            py-2 
+                            rounded-lg 
+                            text-sm 
+                            font-semibold 
+                            shadow-md 
+                            transition 
+                            flex 
+                            items-center 
+                            gap-2
+                            z-20
+                        "
+                        >
+                            <Camera size={18} />
+                            Voir toutes les photos
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex flex-col gap-2">
-                <div
-                    className="
+                <div className="flex flex-col gap-2">
+                    <div
+                        className="
                         text-xl 
                         font-semibold 
                         flex 
@@ -136,68 +206,127 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                         items-center
                         gap-2
                     "
-                >
-                    <div>Hébergé par {listing.user?.name}</div>
-                    <Avatar src={listing.user?.image} />
-                </div>
-                <div className="
+                    >
+                        <div>Hébergé par {listing.user?.name}</div>
+                        <Avatar src={listing.user?.image} />
+                    </div>
+                    <div className="
                     flex 
                     flex-row 
                     items-center 
                     gap-4 
-                    font-light
+                    font-normal
+                    text-base
                     text-neutral-500
                 ">
-                    <div>
-                        {listing.guestCount} guests
-                    </div>
-                    <div>
-                        {listing.roomCount} rooms
-                    </div>
-                    <div>
-                        {listing.bathroomCount} bathrooms
+                        <div>
+                            {listing.guestCount} guests
+                        </div>
+                        <div>
+                            {listing.roomCount} rooms
+                        </div>
+                        <div>
+                            {listing.bathroomCount} bathrooms
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <hr />
+                <hr />
 
-            <div className="text-lg font-light text-neutral-500">
-                {listing.description}
-            </div>
+                <div className="text-lg font-normal text-neutral-500">
+                    {listing.description}
+                </div>
 
-            <hr />
+                <hr />
 
-            <ListingAmenities listing={listing} />
+                <ListingAmenities listing={listing} />
 
-            <hr />
+                <hr />
 
-            <ListingEnergy dpe={listing.dpe} ges={listing.ges} />
+                <ListingEnergy dpe={listing.dpe} ges={listing.ges} />
 
-            <hr />
+                <hr />
 
-            {/* Transit Section */}
-            {listing.latitude && listing.longitude && (
-                <>
-                    <ListingTransit
+                {/* Transit Section */}
+                {listing.latitude && listing.longitude && (
+                    <>
+                        <ListingTransit
+                            latitude={listing.latitude}
+                            longitude={listing.longitude}
+                            listingId={listing.id}
+                        />
+                        <hr />
+                    </>
+                )}
+
+                {/* Neighborhood Score Section */}
+                {listing.latitude && listing.longitude && (
+                    <NeighborhoodScore
                         latitude={listing.latitude}
                         longitude={listing.longitude}
-                        listingId={listing.id}
                     />
-                    <hr />
-                </>
-            )}
+                )}
 
-            {/* Neighborhood Score Section */}
-            {listing.latitude && listing.longitude && (
-                <NeighborhoodScore
-                    latitude={listing.latitude}
-                    longitude={listing.longitude}
-                />
-            )}
+            </div>
 
-        </div>
+            <ImageModal
+                isOpen={isImageModalOpen}
+                onClose={() => setIsImageModalOpen(false)}
+                images={listingImages}
+            />
+
+            <ApplicationModal
+                isOpen={isApplicationModalOpen}
+                onClose={() => setIsApplicationModalOpen(false)}
+                listing={listing}
+                currentUser={currentUser}
+            />
+
+            <ListingMobileFooter
+                listing={listing}
+                onApply={onApply}
+            />
+        </>
     );
 }
 
-export default ListingPreview;
+// Subcomponent to handle Apply logic independently
+const ApplyButton: React.FC<{ listing: SafeListing, currentUser?: SafeUser | null }> = ({
+    listing,
+    currentUser
+}) => {
+    const loginModal = useLoginModal();
+    const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+
+    const onApply = useCallback(() => {
+        if (!currentUser) {
+            return loginModal.onOpen();
+        }
+        setIsApplicationModalOpen(true);
+    }, [currentUser, loginModal]);
+
+    return (
+        <>
+            <Button
+                label="Candidater"
+                onClick={onApply}
+            />
+            <ApplicationModal
+                isOpen={isApplicationModalOpen}
+                onClose={() => setIsApplicationModalOpen(false)}
+                listing={listing}
+                currentUser={currentUser}
+            />
+        </>
+    );
+};
+
+// Start of assigning static property to the component function
+type ListingPreviewType = React.FC<ListingPreviewProps> & {
+    ApplyButton: React.FC<{ listing: SafeListing, currentUser?: SafeUser | null }>
+};
+
+const ListingPreviewWithSub = ListingPreview as ListingPreviewType;
+ListingPreviewWithSub.ApplyButton = ApplyButton;
+
+export default ListingPreviewWithSub;

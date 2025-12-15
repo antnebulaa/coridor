@@ -7,6 +7,9 @@ import EditPropertySidebar from "@/components/properties/EditPropertySidebar";
 import Heading from "@/components/Heading";
 
 import DescriptionSection from "./components/DescriptionSection";
+import PillButton from "@/components/ui/PillButton";
+import CircleButton from "@/components/ui/CircleButton";
+import PageBody from "@/components/ui/PageBody";
 import TitleSection from "./components/TitleSection";
 import LocationSection from "./components/LocationSection";
 import CategorySection from "./components/CategorySection";
@@ -63,7 +66,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     // Photo Tour State (Lifted)
     const [isAllPhotosOpen, setIsAllPhotosOpen] = useState(false);
     const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
-    const [photoViewMode, setPhotoViewMode] = useState<'global' | 'room'>('room');
+
+    // Detailed Photo Navigation State
+    const [activeView, setActiveView] = useState<'global' | 'unassigned' | 'room'>('global');
+    const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
 
     const handleTabChange = (tab: TabType) => {
         setActiveTab(tab);
@@ -121,8 +127,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                     setIsAllPhotosOpen={setIsAllPhotosOpen}
                     isAddRoomModalOpen={isAddRoomModalOpen}
                     setIsAddRoomModalOpen={setIsAddRoomModalOpen}
-                    photoViewMode={photoViewMode}
-                    setPhotoViewMode={setPhotoViewMode}
+                    activeView={activeView}
+                    setActiveView={setActiveView}
+                    activeRoomId={activeRoomId}
+                    setActiveRoomId={setActiveRoomId}
                 />;
             case 'visits':
                 return <VisitsSection listing={listing} />;
@@ -145,9 +153,9 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
     return (
         <Container>
-            <div className="pt-4 md:pt-0 grid grid-cols-1 md:grid-cols-4 gap-10">
+            <div className="md:pt-0 grid grid-cols-1 md:grid-cols-4 gap-10">
                 {/* Sidebar - Hidden on mobile if content is shown */}
-                <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'}`}>
+                <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} pt-4 md:pt-0`}>
                     <EditPropertySidebar
                         activeTab={activeTab}
                         activeSection={activeSection}
@@ -158,17 +166,15 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
                 {/* Content - Hidden on mobile if content is NOT shown */}
                 <div className={`col-span-3 ${!showContent ? 'hidden md:block' : 'block'}`}>
-                    <div className="md:border-[1px] md:rounded-xl md:p-8 md:shadow-sm relative">
+                    <div className="md:border-[1px] md:rounded-xl md:shadow-sm relative bg-white min-h-[50vh] -mx-4 md:mx-0">
                         {/* Mobile Header: Back Button (Sticky) */}
                         <div className="
                             md:hidden 
                             sticky 
-                            top-0 
+                            h-16
                             z-50 
                             bg-white 
-                            p-4
-                            -mx-4
-                            sm:-mx-2
+                            px-6
                             border-b
                             flex
                             items-center
@@ -191,45 +197,36 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
                             {activeSection === 'photos' && (
                                 <div className="flex gap-2 items-center">
-                                    <button
+                                    <PillButton
+                                        label="Toutes les photos"
                                         onClick={() => {
-                                            setPhotoViewMode('global');
+                                            setActiveView('global');
+                                            setActiveRoomId(null);
                                             setIsAllPhotosOpen(true);
                                         }}
-                                        className="
-                                            px-4 
-                                            py-2 
-                                            bg-neutral-100 
-                                            hover:bg-neutral-200 
-                                            rounded-full 
-                                            font-semibold 
-                                            text-xs 
-                                            transition
-                                            cursor-pointer
-                                            whitespace-nowrap
-                                        "
-                                    >
-                                        Toutes les photos
-                                    </button>
-                                    <button
+                                        className="h-10 px-4 text-xs bg-neutral-100 hover:bg-neutral-200"
+                                    />
+                                    <CircleButton
+                                        icon={Plus}
                                         onClick={() => setIsAddRoomModalOpen(true)}
-                                        className="w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition cursor-pointer"
-                                    >
-                                        <Plus size={18} />
-                                    </button>
+                                        className="w-10 h-10 bg-neutral-100 hover:bg-neutral-200"
+                                    />
                                 </div>
                             )}
                         </div>
 
-                        {/* Mobile Header: Title (Not Sticky) */}
-                        {activeSection !== 'photos' && activeSection !== 'visits' && (
-                            <div className="md:hidden mb-6">
-                                <h2 className="text-2xl font-bold">
-                                    {sectionTitles[activeSection]}
-                                </h2>
-                            </div>
-                        )}
-                        {renderContent()}
+                        {/* Content Wrapper with Padding - Standardized via PageBody */}
+                        <PageBody padVertical={false} className="px-6 md:px-8 py-6 md:py-8">
+                            {/* Mobile Header: Title (Not Sticky) */}
+                            {activeSection !== 'photos' && activeSection !== 'visits' && (
+                                <div className="md:hidden mb-6">
+                                    <h2 className="text-2xl font-bold">
+                                        {sectionTitles[activeSection]}
+                                    </h2>
+                                </div>
+                            )}
+                            {renderContent()}
+                        </PageBody>
                     </div>
                 </div>
             </div>

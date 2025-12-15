@@ -16,6 +16,7 @@ interface ModalProps {
     secondaryAction?: () => void;
     secondaryActionLabel?: string;
     className?: string;
+    widthClass?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -29,7 +30,8 @@ const Modal: React.FC<ModalProps> = ({
     disabled,
     secondaryAction,
     secondaryActionLabel,
-    className
+    className,
+    widthClass
 }) => {
     const [showModal, setShowModal] = useState(false);
 
@@ -101,7 +103,16 @@ const Modal: React.FC<ModalProps> = ({
             >
                 <div
                     onClick={(e) => e.stopPropagation()}
-                    className="relative w-full md:w-4/6 lg:w-3/6 xl:w-2/5 md:my-6 mx-auto h-full lg:h-auto md:h-auto"
+                    className={`
+                        relative 
+                        mx-auto 
+                        h-full 
+                        md:h-auto 
+                        lg:h-auto 
+                        md:my-6
+                        ${className ? '' : ''} 
+                        ${widthClass ? widthClass : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
+                    `}
                 >
                     {/* CONTENT */}
                     <div
@@ -115,7 +126,7 @@ const Modal: React.FC<ModalProps> = ({
                     >
                         <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-background outline-none focus:outline-none">
                             {/* HEADER */}
-                            <div className="flex items-center p-6 rounded-t justify-center relative border-b border-border">
+                            <div className={`flex items-center p-6 rounded-t justify-center relative ${title ? 'border-b border-border' : ''}`}>
                                 <button
                                     onClick={handleClose}
                                     className="
@@ -130,6 +141,7 @@ const Modal: React.FC<ModalProps> = ({
                                         transition 
                                         absolute 
                                         left-6
+                                        top-6
                                         border-0
                                     "
                                 >
@@ -140,14 +152,14 @@ const Modal: React.FC<ModalProps> = ({
                             {/* BODY */}
                             <div className="relative p-6 flex-auto overflow-y-auto">{body}</div>
                             {/* FOOTER */}
-                            <div className="flex flex-col gap-2 p-3 md:p-6">
+                            <div className="flex flex-col gap-2 p-6 md:p-6 mb-12 md:mb-0">
                                 <div className="flex flex-row items-center gap-4 w-full">
                                     {secondaryAction && secondaryActionLabel && (
                                         <Button
                                             variant="outline"
                                             disabled={disabled}
                                             onClick={handleSecondaryAction}
-                                            className="w-full"
+                                            className="w-full rounded-full"
                                         >
                                             {secondaryActionLabel}
                                         </Button>
@@ -156,7 +168,7 @@ const Modal: React.FC<ModalProps> = ({
                                         <Button
                                             disabled={disabled}
                                             onClick={handleSubmit}
-                                            className="w-full"
+                                            className="w-full rounded-full"
                                         >
                                             {actionLabel}
                                         </Button>

@@ -3,18 +3,21 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 import { LucideIcon } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface CategoryBoxProps {
     icon: LucideIcon;
     label: string;
     selected?: boolean;
+    image?: string;
 }
 
 const CategoryBox: React.FC<CategoryBoxProps> = ({
     icon: Icon,
     label,
     selected,
+    image,
 }) => {
     const router = useRouter();
     const params = useSearchParams();
@@ -44,7 +47,18 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
                 selected ? 'border-b-neutral-800 text-neutral-800' : 'border-transparent text-neutral-500'
             )}
         >
-            <Icon size={26} />
+            {image ? (
+                <div className="relative w-[26px] h-[26px]">
+                    <Image
+                        src={image}
+                        alt={label}
+                        fill
+                        className="object-contain"
+                    />
+                </div>
+            ) : (
+                <Icon size={26} />
+            )}
             <div className="font-medium text-xs">
                 {label}
             </div>

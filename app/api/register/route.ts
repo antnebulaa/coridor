@@ -1,6 +1,4 @@
-import bcrypt from "bcryptjs";
-import prisma from "@/libs/prismadb";
-import { NextResponse } from "next/server";
+import { generateUniqueCode } from "@/libs/uniqueCode";
 
 export async function POST(request: Request) {
     const body = await request.json();
@@ -15,6 +13,9 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Generate a unique code (simple loop to ensure uniqueness could be added but for MVP just generating is fine, chance of collision is low but handled by DB constraint unique error if really needed, but for now just single attempt)
+    const uniqueCode = generateUniqueCode();
+
     const user = await prisma.user.create({
         data: {
             email,
@@ -22,7 +23,8 @@ export async function POST(request: Request) {
             hashedPassword,
             phoneNumber,
             birthDate: birthDate ? new Date(birthDate) : null,
-            address
+            address,
+            uniqueCode // Add unique code
         },
     });
 

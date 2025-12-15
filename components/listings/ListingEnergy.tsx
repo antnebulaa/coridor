@@ -53,7 +53,7 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges }) => {
                 {/* DPE Section */}
                 {dpe && (
                     <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 text-neutral-500 font-light">
+                        <div className="flex items-center gap-2 text-neutral-500 font-normal">
                             <span>Classe énergie</span>
                             <HelpCircle size={16} className="text-neutral-400" />
                         </div>
@@ -83,7 +83,7 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges }) => {
                 {/* GES Section */}
                 {ges && (
                     <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 text-neutral-500 font-light">
+                        <div className="flex items-center gap-2 text-neutral-500 font-normal">
                             <span>GES</span>
                             <HelpCircle size={16} className="text-neutral-400" />
                         </div>

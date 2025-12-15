@@ -13,6 +13,8 @@ interface PhotoGridProps {
     onSelect?: (imageId: string) => void;
     selectedIds?: string[];
     selectable?: boolean;
+    emptyContent?: React.ReactNode;
+    getItemBadge?: (image: PropertyImage) => string | null | undefined;
 }
 
 const PhotoGrid: React.FC<PhotoGridProps> = ({
@@ -21,7 +23,9 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
     onDelete,
     onSelect,
     selectedIds = [],
-    selectable = false
+    selectable = false,
+    emptyContent,
+    getItemBadge
 }) => {
     return (
         <Droppable droppableId={id} direction="horizontal">
@@ -29,10 +33,16 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                 <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                    className={
+                        images.length > 0
+                            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                            : "w-full h-full min-h-[100px]"
+                    }
                 >
+                    {images.length === 0 && emptyContent}
                     {images.map((image, index) => {
                         const isSelected = selectedIds.includes(image.id);
+                        const badge = getItemBadge?.(image);
 
                         return (
                             <Draggable key={image.id} draggableId={image.id} index={index}>
@@ -46,11 +56,13 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                                             aspect-square 
                                             rounded-2xl 
                                             overflow-hidden 
+                                            relative 
+                                            aspect-square 
+                                            rounded-2xl 
+                                            overflow-hidden 
                                             group
                                             cursor-pointer
-                                            border-2
                                             transition-colors
-                                            ${isSelected ? 'border-black' : 'border-transparent'}
                                         `}
                                         onClick={() => selectable && onSelect && onSelect(image.id)}
                                     >
@@ -60,6 +72,13 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                                             alt="Property"
                                             className="object-cover group-hover:scale-110 transition"
                                         />
+
+                                        {/* Badge */}
+                                        {badge && (
+                                            <div className="absolute bottom-2 left-2 bg-white/90 px-2 py-1 rounded-md text-xs font-semibold shadow-sm z-10 pointer-events-none">
+                                                {badge}
+                                            </div>
+                                        )}
 
                                         {/* Selection Overlay */}
                                         {selectable && (
@@ -76,6 +95,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                                                 items-center 
                                                 justify-center
                                                 transition
+                                                z-20
                                                 ${isSelected ? 'bg-black border-black' : 'bg-black/20 hover:bg-black/40'}
                                             `}>
                                                 {isSelected && <Check size={14} className="text-white" />}
@@ -101,6 +121,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                                                     transition
                                                     hover:bg-primary
                                                     hover:text-white
+                                                    z-20
                                                 "
                                             >
                                                 <Trash size={16} />

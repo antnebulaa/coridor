@@ -12,8 +12,12 @@ interface PhotosSectionProps {
     setIsAllPhotosOpen: (value: boolean) => void;
     isAddRoomModalOpen: boolean;
     setIsAddRoomModalOpen: (value: boolean) => void;
-    photoViewMode: 'global' | 'room';
-    setPhotoViewMode: (mode: 'global' | 'room') => void;
+
+    // Lifted State
+    activeView: 'global' | 'unassigned' | 'room';
+    setActiveView: (view: 'global' | 'unassigned' | 'room') => void;
+    activeRoomId: string | null;
+    setActiveRoomId: (id: string | null) => void;
 }
 
 const PhotosSection: React.FC<PhotosSectionProps> = ({
@@ -22,8 +26,10 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({
     setIsAllPhotosOpen,
     isAddRoomModalOpen,
     setIsAddRoomModalOpen,
-    photoViewMode,
-    setPhotoViewMode
+    activeView,
+    setActiveView,
+    activeRoomId,
+    setActiveRoomId
 }) => {
     // Filter unassigned images (those where roomId is null)
     const unassignedImages = listing.images.filter(img => !img.roomId);
@@ -39,8 +45,10 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({
                 setIsAllPhotosOpen={setIsAllPhotosOpen}
                 isAddRoomModalOpen={isAddRoomModalOpen}
                 setIsAddRoomModalOpen={setIsAddRoomModalOpen}
-                photoViewMode={photoViewMode}
-                setPhotoViewMode={setPhotoViewMode}
+                activeView={activeView}
+                setActiveView={setActiveView}
+                activeRoomId={activeRoomId}
+                setActiveRoomId={setActiveRoomId}
             />
         </div>
     );

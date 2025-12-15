@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
 import MultiImageUpload from "@/components/inputs/MultiImageUpload";
+import PillButton from "@/components/ui/PillButton";
+import CircleButton from "@/components/ui/CircleButton";
 import RoomCard from "./RoomCard";
 import AllPhotosModal from "./AllPhotosModal";
 import AddRoomModal from "./AddRoomModal";
@@ -22,8 +24,12 @@ interface PhotoTourProps {
     setIsAllPhotosOpen: (value: boolean) => void;
     isAddRoomModalOpen: boolean;
     setIsAddRoomModalOpen: (value: boolean) => void;
-    photoViewMode: 'global' | 'room';
-    setPhotoViewMode: (mode: 'global' | 'room') => void;
+
+    // Lifted props
+    activeView: 'global' | 'unassigned' | 'room';
+    setActiveView: (view: 'global' | 'unassigned' | 'room') => void;
+    activeRoomId: string | null;
+    setActiveRoomId: (id: string | null) => void;
 }
 
 const PhotoTour: React.FC<PhotoTourProps> = ({
@@ -35,12 +41,20 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
     setIsAllPhotosOpen,
     isAddRoomModalOpen,
     setIsAddRoomModalOpen,
-    photoViewMode,
-    setPhotoViewMode
+    activeView,
+    setActiveView,
+    activeRoomId,
+    setActiveRoomId
 }) => {
     const router = useRouter();
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Local state removed in favor of props
+    // const [activeView, setActiveView] = useState<'global' | 'unassigned' | 'room'>('global');
+    // const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+
+    // Initial sync (optional, or just rely on handlers)
 
     // Room Deletion
     const handleDeleteRoom = (roomId: string) => {
@@ -73,42 +87,30 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
             {/* Header / Actions */}
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
-                    <div className="text-xl md:text-2xl font-medium">
+                    <h3 className="text-xl font-semibold">
                         Gestion des photos
-                    </div>
+                    </h3>
                     <div className="font-light text-neutral-500 mt-2 hidden md:block">
                         Organisez vos photos par pièce pour offrir une visite virtuelle.
                     </div>
                 </div>
                 <div className="hidden md:flex gap-2 md:gap-3 shrink-0 items-center">
-                    <button
+                    <PillButton
+                        label="Toutes les photos"
                         onClick={() => {
-                            setPhotoViewMode('global');
+                            setActiveView('global');
+                            setActiveRoomId(null);
                             setIsAllPhotosOpen(true);
                         }}
-                        className="
-                            px-6 
-                            py-3 
-                            bg-neutral-100 
-                            hover:bg-neutral-200 
-                            rounded-full 
-                            font-semibold 
-                            text-sm 
-                            transition
-                            cursor-pointer
-                        "
-                    >
-                        Toutes les photos
-                    </button>
-                    <div className="w-12 h-12 relative">
-                        {/* Plus button for quick add */}
-                        <button
+                    />
+
+                    {/* Plus button for quick add */}
+                    <div className="relative">
+                        <CircleButton
+                            icon={Plus}
                             onClick={() => setIsAddRoomModalOpen(true)}
-                            className="w-12 h-12 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition cursor-pointer"
                             title="Ajouter une pièce"
-                        >
-                            <Plus size={20} />
-                        </button>
+                        />
                     </div>
                 </div>
             </div>
@@ -120,7 +122,8 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                     <div
                         className="flex flex-col gap-3 cursor-pointer group"
                         onClick={() => {
-                            setPhotoViewMode('room');
+                            setActiveView('unassigned');
+                            setActiveRoomId(null);
                             setIsAllPhotosOpen(true);
                         }}
                     >
@@ -146,21 +149,13 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                         key={room.id}
                         room={room}
                         onClick={() => {
-                            setPhotoViewMode('room');
+                            setActiveView('room');
+                            setActiveRoomId(room.id);
                             setIsAllPhotosOpen(true);
                         }}
                         onDelete={() => handleDeleteRoom(room.id)}
                     />
                 ))}
-            </div>
-
-            {/* Upload Area */}
-            <div className="mt-4 border-t pt-6">
-                <h4 className="font-medium mb-4">Ajouter des photos</h4>
-                <MultiImageUpload
-                    value={[]}
-                    onChange={handleUpload}
-                />
             </div>
 
             <AllPhotosModal
@@ -169,8 +164,11 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                 listingId={listingId}
                 rooms={rooms}
                 unassignedImages={unassignedImages}
-                viewMode={photoViewMode}
                 initialGlobalImages={allImages}
+
+                // New props for focused view
+                activeView={activeView}
+                activeRoomId={activeRoomId}
             />
 
             <AddRoomModal

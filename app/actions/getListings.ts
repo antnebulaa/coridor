@@ -130,6 +130,7 @@ export default async function getListings(
             where: query,
             include: {
                 user: true,
+                rooms: true, // Needed for photo badges
                 images: {
                     orderBy: {
                         order: 'asc'

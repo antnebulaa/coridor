@@ -13,17 +13,14 @@ export const categories = [
     {
         label: 'Maison',
         icon: Home,
+        image: '/images/house_icon.jpg',
         description: 'Une maison entière pour vous !',
     },
     {
         label: 'Appartement',
         icon: Building2,
+        image: '/images/apartment_icon.jpg',
         description: 'Un appartement cosy !',
-    },
-    {
-        label: 'Bateau',
-        icon: Ship,
-        description: 'Un séjour sur l\'eau !',
     },
 ];
 
@@ -47,6 +44,7 @@ const Categories = () => {
                         label={item.label}
                         selected={category === item.label}
                         icon={item.icon}
+                        image={item.image}
                     />
                 ))}
             </div>

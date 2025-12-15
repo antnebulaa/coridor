@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ListingCardCarouselProps {
-    images: { url: string }[];
+    images: { url: string; label?: string }[];
 }
 
 const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
@@ -99,7 +99,28 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                             src={image.url}
                             className="object-cover h-full w-full"
                             draggable={false}
+                            priority={index === 0}
                         />
+                        {image.label && (
+                            <div className="
+                                 absolute 
+                                 bottom-3 
+                                 left-3 
+                                 bg-white/90 
+                                 backdrop-blur-md
+                                 text-neutral-900 
+                                 px-3 
+                                 py-1.5 
+                                 rounded-lg 
+                                 text-xs 
+                                 font-semibold
+                                 z-10
+                                 shadow-sm
+                                 pointer-events-none
+                             ">
+                                {image.label}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

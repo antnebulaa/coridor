@@ -63,7 +63,7 @@ const StatusSection: React.FC<StatusSectionProps> = ({ listing }) => {
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col">
                         <div className="font-semibold text-lg">
-                            {isPublished ? 'Annonce en ligne' : 'Annonce en pause'}
+                            {isPublished ? 'Annonce publiée' : 'Annonce en pause'}
                         </div>
                         <div className="font-light text-neutral-500 mt-1">
                             {isPublished
@@ -71,7 +71,7 @@ const StatusSection: React.FC<StatusSectionProps> = ({ listing }) => {
                                 : "Votre annonce est masquée et n'apparaît plus dans les résultats de recherche."}
                         </div>
                         <div className="text-sm text-neutral-400 mt-2">
-                            {isPublished ? 'En ligne' : 'En pause'} {formattedDate}
+                            {isPublished ? 'Publié' : 'En pause'} {formattedDate}
                         </div>
                     </div>
                     <div

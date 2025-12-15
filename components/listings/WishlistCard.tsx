@@ -87,7 +87,7 @@ const WishlistCard: React.FC<WishlistCardProps> = ({
                 <div className="font-medium text-lg">
                     {data.name}
                 </div>
-                <div className="font-light text-neutral-500">
+                <div className="font-normal text-neutral-500">
                     {data._count.listings} items
                 </div>
             </div>

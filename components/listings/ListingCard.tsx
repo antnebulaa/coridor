@@ -148,7 +148,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {/* Title / Location */}
                             <div className="flex justify-between items-start">
                                 <div className="flex-1 min-w-0 pr-1">
-                                    <div className="font-semibold text-base md:text-lg text-foreground line-clamp-1">
+                                    <div className="font-medium text-base md:text-lg text-foreground line-clamp-1">
                                         {data.category}
                                     </div>
                                     <div className="hidden md:block font-medium text-muted-foreground text-sm md:text-base line-clamp-2">

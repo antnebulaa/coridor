@@ -81,7 +81,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount }) => 
 
     return (
         <div
-            className="fixed bottom-6 w-full z-50 md:hidden px-4 pointer-events-none"
+            className="fixed bottom-6 w-full z-[2000] md:hidden px-4 pointer-events-none"
             suppressHydrationWarning
         >
             <div className="flex flex-row items-center justify-center max-w-[400px] mx-auto">

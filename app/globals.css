@@ -1,14 +1,16 @@
 @import "tailwindcss";
 @plugin "tailwindcss-motion";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
 
   /* Airbnb Brand Colors - Custom Green */
-  --primary: #004700;
+  --primary: #436A81;
   --primary-foreground: #ffffff;
-  --primary-hover: #003300;
+  --primary-hover: #4B768F;
 
   --muted: #f7f7f7;
   --muted-foreground: #717171;

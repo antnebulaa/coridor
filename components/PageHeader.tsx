@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from './ui/Button';
+
 interface PageHeaderProps {
     title: string;
     subtitle?: string;
@@ -35,45 +37,19 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                 <div className="flex flex-row items-center justify-end gap-2 w-full md:w-auto">
                     {actionControls}
                     {secondaryAction && secondaryActionLabel && (
-                        <button
+                        <Button
+                            variant="outline"
                             onClick={secondaryAction}
-                            className="
-                                px-4
-                                py-3
-                                md:py-2
-                                rounded-full
-                                border-[1px]
-                                border-neutral-300
-                                hover:shadow-md
-                                hover:bg-neutral-50
-                                transition
-                                cursor-pointer
-                                text-sm
-                                font-semibold
-                            "
-                        >
-                            {secondaryActionLabel}
-                        </button>
+                            label={secondaryActionLabel}
+                            className="w-auto rounded-full px-4 border-neutral-300 hover:bg-neutral-50"
+                        />
                     )}
                     {onAction && actionLabel && (
-                        <button
+                        <Button
                             onClick={onAction}
-                            className="
-                                px-4
-                                py-3
-                                md:py-2
-                                rounded-full
-                                bg-primary
-                                text-white
-                                hover:bg-primary-hover
-                                transition
-                                cursor-pointer
-                                text-sm
-                                font-semibold
-                            "
-                        >
-                            {actionLabel}
-                        </button>
+                            label={actionLabel}
+                            className="w-auto rounded-full px-4"
+                        />
                     )}
                 </div>
             </div>

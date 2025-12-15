@@ -1,10 +1,14 @@
+'use client';
+
 import useCountries from "@/hooks/useCountries";
 import { SafeUser, SafeListing } from "@/types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import Heading from "../Heading";
 import HeartButton from "../HeartButton";
 import Image from "next/image";
+import ImageModal from "../modals/ImageModal";
+import { Camera } from "lucide-react";
 
 interface ListingHeadProps {
     title: string;
@@ -12,7 +16,7 @@ interface ListingHeadProps {
     imageSrc: string;
     id: string;
     currentUser?: SafeUser | null;
-    listing?: SafeListing; // Make optional initially to avoid breaking other usages slightly, or fix usage
+    listing?: SafeListing;
 }
 
 const ListingHead: React.FC<ListingHeadProps> = ({
@@ -62,6 +66,28 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         return location?.label || "Localisation inconnue";
     }, [location, listing]);
 
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+    const images = useMemo(() => {
+        if (!listing) return [{ url: imageSrc }];
+
+        if (listing.images && listing.images.length > 0) {
+            return listing.images.map(img => {
+                const room = listing.rooms?.find(r => r.id === img.roomId);
+
+                // DEBUG: Force label visualization
+                const debugLabel = room?.name || (img.roomId ? `ERR: ROOM NOT FOUND` : `UNASSIGNED`);
+
+                return {
+                    url: img.url,
+                    label: debugLabel
+                }
+            })
+        }
+
+        return [{ url: imageSrc }];
+    }, [listing, imageSrc]);
+
     return (
         <>
             <Heading
@@ -69,27 +95,63 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                 subtitle={locationLabel}
             />
             <div
+                onClick={() => setIsImageModalOpen(true)}
                 className="
           w-full
           h-[60vh]
           overflow-hidden 
           rounded-xl
           relative
+          cursor-pointer
+          group
         "
             >
                 <Image
                     alt="Image"
                     src={imageSrc || '/images/placeholder.svg'}
                     fill
-                    className="object-cover w-full"
+                    className="object-cover w-full group-hover:scale-110 transition"
                 />
-                <div className="absolute top-5 right-5">
+                <div className="absolute top-5 right-5 z-10">
                     <HeartButton
                         listingId={id}
                         currentUser={currentUser}
                     />
                 </div>
+                <div className="absolute bottom-5 right-5 z-10">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsImageModalOpen(true);
+                        }}
+                        className="
+                            bg-white 
+                            hover:bg-neutral-100 
+                            text-neutral-800 
+                            px-4 
+                            py-2 
+                            rounded-lg 
+                            text-sm 
+                            font-semibold 
+                            shadow-md 
+                            transition 
+                            flex 
+                            items-center 
+                            gap-2
+                            border
+                            border-neutral-200
+                        "
+                    >
+                        <Camera size={16} />
+                        Voir toutes les photos
+                    </button>
+                </div>
             </div>
+            <ImageModal
+                isOpen={isImageModalOpen}
+                onClose={() => setIsImageModalOpen(false)}
+                images={images}
+            />
         </>
     );
 }

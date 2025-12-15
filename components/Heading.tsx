@@ -13,7 +13,7 @@ const Heading: React.FC<HeadingProps> = ({ title, subtitle, center, subtitleClas
             <div className="text-2xl font-medium">
                 {title}
             </div>
-            <div className={`font-light text-muted-foreground whitespace-pre-wrap ${subtitleClassName || 'mt-2'}`}>
+            <div className={`font-normal text-muted-foreground whitespace-pre-wrap ${subtitleClassName || 'mt-2'}`}>
                 {subtitle}
             </div>
         </div>

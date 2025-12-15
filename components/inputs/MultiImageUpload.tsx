@@ -97,7 +97,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             {value.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-h-[50vh] overflow-y-auto">
                     {value.map((url) => (
-                        <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
+                        <div key={url} className="relative h-48 w-full rounded-xl overflow-hidden group">
                             <Image
                                 fill
                                 style={{ objectFit: 'cover' }}
