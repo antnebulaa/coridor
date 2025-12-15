@@ -118,7 +118,7 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
             isOpen={isOpen}
             onClose={onClose}
             onSubmit={() => { }}
-            actionLabel={undefined} // No default footer actions
+            actionLabel="" // No default footer actions
             secondaryActionLabel={undefined}
             title="Nouveau contact"
             body={bodyContent}

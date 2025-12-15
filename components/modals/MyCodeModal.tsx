@@ -123,7 +123,7 @@ const MyCodeModal: React.FC<MyCodeModalProps> = ({ currentUser }) => {
         <Modal
             isOpen={myCodeModal.isOpen}
             title="Ajouter un contact"
-            actionLabel={uniqueCode ? "Fermer" : undefined}
+            actionLabel={uniqueCode ? "Fermer" : ""}
             onClose={myCodeModal.onClose}
             onSubmit={myCodeModal.onClose}
             body={bodyContent}

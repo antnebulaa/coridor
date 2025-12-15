@@ -32,6 +32,8 @@ export default async function getContacts() {
             updatedAt: contact.updatedAt.toISOString(),
             emailVerified: contact.emailVerified?.toISOString() || null,
             birthDate: contact.birthDate?.toISOString() || null,
+            tenantProfile: null,
+            wishlists: [],
         }));
 
         return safeContacts;
