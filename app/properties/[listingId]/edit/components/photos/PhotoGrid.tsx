@@ -56,10 +56,6 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                                             aspect-square 
                                             rounded-2xl 
                                             overflow-hidden 
-                                            relative 
-                                            aspect-square 
-                                            rounded-2xl 
-                                            overflow-hidden 
                                             group
                                             cursor-pointer
                                             transition-colors

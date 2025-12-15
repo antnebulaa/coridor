@@ -116,7 +116,7 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
             </div>
 
             {/* Rooms Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {/* Unassigned Card if any */}
                 {unassignedImages.length > 0 && (
                     <div
