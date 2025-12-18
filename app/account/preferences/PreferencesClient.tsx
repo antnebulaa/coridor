@@ -8,6 +8,7 @@ import { SafeUser } from "@/types";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import { Button } from "@/components/ui/Button";
+import CommutePreferences from "@/components/profile/CommutePreferences";
 
 interface PreferencesClientProps {
     currentUser: SafeUser;
@@ -98,6 +99,8 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
                             </div>
                         </div>
                     </div>
+
+                    <CommutePreferences currentUser={currentUser} />
 
                     <div className="flex justify-end">
                         <Button

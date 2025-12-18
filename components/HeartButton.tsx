@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from "react";
-import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
+import { Bookmark } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -69,18 +69,12 @@ const HeartButton: React.FC<HeartButtonProps> = ({
                 cursor-pointer
             "
         >
-            <AiOutlineHeart
+            <Bookmark
                 size={28}
-                className="
-                    fill-white
-                    absolute
-                    -top-[2px]
-                    -right-[2px]
-                "
-            />
-            <AiFillHeart
-                size={24}
-                className={hasFavorited ? 'fill-primary' : 'fill-neutral-500/70'}
+                className={`
+                    ${hasFavorited ? 'fill-primary text-primary' : 'fill-black/50 text-white'}
+                `}
+                strokeWidth={hasFavorited ? 0 : 2}
             />
         </div>
     );

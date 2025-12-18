@@ -143,7 +143,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                         "
                     >
                         <Camera size={16} />
-                        Voir toutes les photos
+                        {images.length} photos
                     </button>
                 </div>
             </div>

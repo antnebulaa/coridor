@@ -30,7 +30,8 @@ import {
     Bath,
     ThermometerSnowflake,
     GraduationCap,
-    ConciergeBell
+    ConciergeBell,
+    Check
 } from 'lucide-react';
 import { IconType } from 'react-icons';
 import { SafeListing } from '@/types';
@@ -85,16 +86,16 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
     return (
         <div className="flex flex-col gap-6">
             <div className="text-xl font-semibold">
-                Les atouts de ce logement
+                Les atouts
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {amenities.map((item) => (
                     <div
                         key={item.label}
-                        className="flex items-center gap-3 p-3 border-[1px] border-neutral-200 rounded-xl hover:shadow-sm transition"
+                        className="flex items-center gap-3 p-1"
                     >
-                        <item.icon size={24} className="text-neutral-600" />
-                        <div className="font-normal text-neutral-600">
+                        <Check size={24} className="text-neutral-600" />
+                        <div className="font-normal text-neutral-600 text-base">
                             {item.label}
                         </div>
                     </div>

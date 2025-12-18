@@ -95,11 +95,11 @@ const WishlistModal = () => {
     const bodyContent = (
         <div className="flex flex-col gap-4">
             <Heading
-                title="Add to wishlist"
-                subtitle="Save this property to one of your lists."
+                title="Ajouter aux favoris"
+                subtitle="Sauvegardez cette annonce dans une de vos listes."
             />
 
-            <div className="grid grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-8 max-h-[50vh] overflow-y-auto p-2">
                 {wishlists.map((wishlist) => (
                     <div
                         key={wishlist.id}
@@ -109,18 +109,17 @@ const WishlistModal = () => {
               group 
               flex 
               flex-col 
-              gap-2
+              gap-3
             "
                     >
                         <div className="
-              aspect-square 
+              w-[160px]
+              h-[160px]
               relative 
               overflow-hidden 
-              rounded-xl
+              rounded-[30px]
               bg-neutral-100
-              border-2
-              border-transparent
-              group-hover:border-black
+              shadow-sm
               transition
             ">
                             {/* Show last added image or placeholder */}
@@ -128,31 +127,32 @@ const WishlistModal = () => {
                                 fill
                                 alt="Wishlist"
                                 src={wishlist.listings[0]?.images?.[0]?.url || "/images/placeholder.svg"}
-                                className="object-cover"
+                                className="object-cover group-hover:scale-110 transition duration-300"
                             />
                         </div>
-                        <div className="font-medium text-sm">
-                            {wishlist.name}
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                            {wishlist._count?.listings || 0} saved
+                        <div className="flex flex-col gap-0.5">
+                            <div className="font-semibold text-sm">
+                                {wishlist.name}
+                            </div>
+                            <div className="text-xs text-neutral-500">
+                                {wishlist._count?.listings || 0} sauvegardés
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4">
                 {!isCreating ? (
                     <Button
-                        variant="outline"
-                        label="Create new wishlist"
+                        label="Créer une nouvelle liste"
                         onClick={() => setIsCreating(true)}
                     />
                 ) : (
                     <div className="flex flex-col gap-4">
                         <SoftInput
                             id="name"
-                            label="Name"
+                            label="Nom"
                             register={register}
                             errors={errors}
                             required
@@ -161,12 +161,12 @@ const WishlistModal = () => {
                         <div className="flex flex-row gap-4">
                             <Button
                                 variant="outline"
-                                label="Cancel"
+                                label="Annuler"
                                 onClick={() => setIsCreating(false)}
                                 disabled={isLoading}
                             />
                             <Button
-                                label="Create"
+                                label="Créer"
                                 onClick={handleSubmit(onCreateWishlist)}
                                 disabled={isLoading || !name}
                             />
@@ -183,7 +183,7 @@ const WishlistModal = () => {
             onClose={wishlistModal.onClose}
             onSubmit={() => { }}
             actionLabel=""
-            title="Wishlists"
+            title="Favoris"
             body={bodyContent}
             disabled={isLoading}
         />

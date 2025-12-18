@@ -6,7 +6,7 @@ import { BiChevronDown } from "react-icons/bi";
 interface SoftSelectProps {
     id: string;
     label: string;
-    options: { value: string; label: string }[];
+    options: { value: string; label: string; disabled?: boolean }[];
     disabled?: boolean;
     required?: boolean;
     register?: UseFormRegister<FieldValues>;
@@ -65,7 +65,12 @@ const SoftSelect: React.FC<SoftSelectProps> = ({
                 {/* Empty option for placeholder behavior if needed, though select doesn't support placeholder-shown natively */}
                 <option value="" disabled hidden></option>
                 {options.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option
+                        key={option.value}
+                        value={option.value}
+                        disabled={option.disabled}
+                        className={option.disabled ? "text-neutral-400 bg-neutral-100 italic" : ""}
+                    >
                         {option.label}
                     </option>
                 ))}

@@ -34,6 +34,7 @@ export default async function getContacts() {
             birthDate: contact.birthDate?.toISOString() || null,
             tenantProfile: null,
             wishlists: [],
+            commuteLocations: [],
         }));
 
         return safeContacts;

@@ -68,7 +68,8 @@ export default async function getReservations(
                     emailVerified: reservation.user.emailVerified?.toISOString() || null,
                     birthDate: reservation.user.birthDate?.toISOString() || null,
                     tenantProfile: reservation.user.tenantProfile,
-                    wishlists: null
+                    wishlists: null,
+                    commuteLocations: null
                 }
             }));
 

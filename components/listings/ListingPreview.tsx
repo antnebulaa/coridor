@@ -12,9 +12,10 @@ import Image from "next/image";
 import HeartButton from "../HeartButton";
 import Heading from "../Heading";
 import ListingTransit from "./ListingTransit";
+import ListingCommute from "./ListingCommute";
 import NeighborhoodScore from "./NeighborhoodScore";
 import ListingCardCarousel from "./ListingCardCarousel";
-import { Camera } from "lucide-react";
+import { Camera, Euro } from "lucide-react";
 import ImageModal from "../modals/ImageModal";
 import { Button } from "../ui/Button";
 import useLoginModal from "@/hooks/useLoginModal";
@@ -29,11 +30,13 @@ const MapComponent = dynamic(() => import('../Map'), {
 interface ListingPreviewProps {
     listing: SafeListing & { user?: SafeUser };
     currentUser?: SafeUser | null;
+    isMobileModal?: boolean;
 }
 
 const ListingPreview: React.FC<ListingPreviewProps> = ({
     listing,
-    currentUser
+    currentUser,
+    isMobileModal = false
 }) => {
     const { getByValue } = useCountries();
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -136,138 +139,208 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         });
     }, [listing.images, listing.rooms]);
 
+    // Reusable Image Component
+    const ImageSection = (
+        <div
+            className={`
+                w-full
+                overflow-hidden 
+                relative
+                group
+                ${isMobileModal ? 'h-[40vh] rounded-none' : 'h-[40vh] rounded-xl'}
+            `}
+        >
+            <div onClick={() => setIsImageModalOpen(true)} className="w-full h-full cursor-pointer">
+                <ListingCardCarousel images={listingImages} />
+            </div>
+
+            <div className={`absolute z-10 ${isMobileModal ? 'top-6 right-6' : 'top-5 right-5'}`}>
+                <HeartButton
+                    listingId={listing.id}
+                    currentUser={currentUser}
+                />
+            </div>
+
+            {/* "Voir toutes les photos" Button */}
+            <button
+                onClick={() => setIsImageModalOpen(true)}
+                className="
+                absolute 
+                bottom-5 
+                right-5 
+                bg-white 
+                hover:bg-neutral-100 
+                text-black 
+                px-4 
+                py-2 
+                rounded-lg 
+                text-sm 
+                font-semibold 
+                shadow-md 
+                transition 
+                flex 
+                items-center 
+                gap-2
+                z-20
+            "
+            >
+                <Camera size={18} />
+                {listingImages.length} photos
+            </button>
+        </div>
+    );
+
+    // Reusable Header Component
+    const HeaderSection = (
+        <Heading
+            title={titleDisplay}
+            subtitle={locationLabel}
+            subtitleClassName="mt-1"
+        />
+    );
+
+
     return (
         <>
-            <div className="col-span-4 flex flex-col gap-8">
+            <div className={`col-span-4 flex flex-col gap-8`}>
                 {/* Header Section */}
-                <div className="flex flex-col gap-6">
-                    <Heading
-                        title={titleDisplay}
-                        subtitle={locationLabel}
-                        subtitleClassName="mt-1"
-                    />
-                    <div
-                        className="
-                        w-full
-                        h-[40vh]
-                        overflow-hidden 
-                        rounded-xl
-                        relative
-                        group
-                    "
-                    >
-                        <div onClick={() => setIsImageModalOpen(true)} className="w-full h-full cursor-pointer">
-                            <ListingCardCarousel images={listingImages} />
-                        </div>
-
-                        <div className="absolute top-5 right-5 z-10">
-                            <HeartButton
-                                listingId={listing.id}
-                                currentUser={currentUser}
-                            />
-                        </div>
-
-                        {/* "Voir toutes les photos" Button */}
-                        <button
-                            onClick={() => setIsImageModalOpen(true)}
-                            className="
-                            absolute 
-                            bottom-5 
-                            right-5 
-                            bg-white 
-                            hover:bg-neutral-100 
-                            text-black 
-                            px-4 
-                            py-2 
-                            rounded-lg 
-                            text-sm 
-                            font-semibold 
-                            shadow-md 
-                            transition 
-                            flex 
-                            items-center 
-                            gap-2
-                            z-20
-                        "
-                        >
-                            <Camera size={18} />
-                            Voir toutes les photos
-                        </button>
-                    </div>
+                <div className={`flex flex-col gap-6 ${isMobileModal ? 'px-0' : ''}`}>
+                    {isMobileModal ? (
+                        <>
+                            {ImageSection}
+                            <div className="px-6">
+                                {HeaderSection}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {HeaderSection}
+                            {ImageSection}
+                        </>
+                    )}
                 </div>
 
-                <div className="flex flex-col gap-2">
-                    <div
-                        className="
-                        text-xl 
-                        font-semibold 
-                        flex 
-                        flex-row 
-                        items-center
-                        gap-2
-                    "
-                    >
-                        <div>Hébergé par {listing.user?.name}</div>
-                        <Avatar src={listing.user?.image} />
-                    </div>
-                    <div className="
+
+                <div className={`
                     flex 
                     flex-row 
+                    flex-wrap 
                     items-center 
                     gap-4 
                     font-normal
                     text-base
                     text-neutral-500
-                ">
-                        <div>
-                            {listing.guestCount} guests
-                        </div>
-                        <div>
-                            {listing.roomCount} rooms
-                        </div>
-                        <div>
-                            {listing.bathroomCount} bathrooms
-                        </div>
+                    ${isMobileModal ? 'px-6' : ''}
+                `}>
+                    <div>
+                        {listing.guestCount} {listing.guestCount > 1 ? 'chambres' : 'chambre'}
                     </div>
+                    <div>
+                        {listing.roomCount} {listing.roomCount > 1 ? 'pièces' : 'pièce'}
+                    </div>
+                    <div>
+                        {listing.bathroomCount} {listing.bathroomCount > 1 ? 'salles de bain' : 'salle de bain'}
+                    </div>
+                    {listing.isFurnished !== undefined && (
+                        <div>• {listing.isFurnished ? 'Meublé' : 'Non meublé'}</div>
+                    )}
+                    {listing.floor !== undefined && listing.floor !== null && (
+                        <div>
+                            • {listing.floor === 0 ? 'RDC' : `Étage ${listing.floor}`}{listing.totalFloors ? ` / ${listing.totalFloors}` : ''}
+                        </div>
+                    )}
                 </div>
 
-                <hr />
 
-                <div className="text-lg font-normal text-neutral-500">
+                <hr className={isMobileModal ? 'mx-6' : ''} />
+
+                <div className={`text-base font-normal text-neutral-500 ${isMobileModal ? 'px-6' : ''}`}>
                     {listing.description}
                 </div>
 
-                <hr />
+                <hr className={isMobileModal ? 'mx-6' : ''} />
 
-                <ListingAmenities listing={listing} />
+                {/* Financial Details Section */}
+                <div className={`flex flex-col gap-6 ${isMobileModal ? 'px-6' : ''}`}>
+                    <div className="text-xl font-semibold flex items-center gap-2">
+                        <Euro size={24} />
+                        Informations financières
+                    </div>
+                    <div className="flex flex-col gap-4 text-muted-foreground">
+                        <div className="flex justify-between max-w-[400px]">
+                            <span>Loyer hors charges :</span>
+                            <span className="font-medium text-black">{listing.price} € / mois</span>
+                        </div>
+                        {listing.charges && (
+                            <div className="flex justify-between max-w-[400px]">
+                                <span>Provisions sur charges :</span>
+                                <span className="font-medium text-black">+ {(listing.charges as any).amount} € / mois</span>
+                            </div>
+                        )}
+                        {/* Total Display */}
+                        <div className="flex justify-between max-w-[400px] border-t pt-2 mt-1">
+                            <span className="font-medium text-black">Loyer charges comprises :</span>
+                            <span className="font-bold text-black">{listing.price + (listing.charges ? (listing.charges as any).amount : 0)} € / mois</span>
+                        </div>
 
-                <hr />
+                        {listing.securityDeposit !== undefined && listing.securityDeposit !== null && (
+                            <div className="flex justify-between max-w-[400px] mt-2 bg-neutral-50 p-2 rounded-lg">
+                                <span>Dépôt de garantie :</span>
+                                <span className="font-medium text-black">{listing.securityDeposit === 0 ? "Aucun" : `${listing.securityDeposit} €`}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-                <ListingEnergy dpe={listing.dpe} ges={listing.ges} />
+                <hr className={isMobileModal ? 'mx-6' : ''} />
 
-                <hr />
+                <div className={isMobileModal ? 'px-6' : ''}>
+                    <ListingAmenities listing={listing} />
+                </div>
+
+                <hr className={isMobileModal ? 'mx-6' : ''} />
+
+                <div className={isMobileModal ? 'px-6' : ''}>
+                    <ListingEnergy
+                        dpe={listing.dpe}
+                        ges={listing.ges}
+                        heatingSystem={listing.heatingSystem}
+                        glazingType={listing.glazingType}
+                        listing={listing}
+                    />
+                </div>
+
+                <hr className={isMobileModal ? 'mx-6' : ''} />
+
+                {/* Commute Section */}
+                <div className={isMobileModal ? 'px-6' : ''}>
+                    <ListingCommute listing={listing} currentUser={currentUser} />
+                </div>
+                <hr className={isMobileModal ? 'mx-6' : ''} />
 
                 {/* Transit Section */}
                 {listing.latitude && listing.longitude && (
                     <>
-                        <ListingTransit
-                            latitude={listing.latitude}
-                            longitude={listing.longitude}
-                            listingId={listing.id}
-                        />
-                        <hr />
+                        <div className={isMobileModal ? 'px-6' : ''}>
+                            <ListingTransit
+                                latitude={listing.latitude}
+                                longitude={listing.longitude}
+                                listingId={listing.id}
+                            />
+                        </div>
+                        <hr className={isMobileModal ? 'mx-6' : ''} />
                     </>
                 )}
 
                 {/* Neighborhood Score Section */}
-                {listing.latitude && listing.longitude && (
+                {/* {listing.latitude && listing.longitude && (
                     <NeighborhoodScore
                         latitude={listing.latitude}
                         longitude={listing.longitude}
                     />
-                )}
+                )} */}
 
-            </div>
+            </div >
 
             <ImageModal
                 isOpen={isImageModalOpen}

@@ -50,6 +50,7 @@ export default async function getListingById(
                 birthDate: listing.user.birthDate?.toISOString() || null,
                 tenantProfile: null,
                 wishlists: null,
+                commuteLocations: null,
             },
             visitSlots: listing.visitSlots.map((slot: any) => ({
                 ...slot,

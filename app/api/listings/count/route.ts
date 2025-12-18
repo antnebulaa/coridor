@@ -27,7 +27,10 @@ export async function GET(request: Request) {
         }
 
         if (category) {
-            query.category = category;
+            const categories = category.split(',');
+            if (categories.length > 0) {
+                query.category = { in: categories };
+            }
         }
 
         if (roomCount) {

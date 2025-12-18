@@ -8,6 +8,7 @@ import FloatingValuesButton from "@/components/ui/FloatingValuesButton";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import SoftSelect from "@/components/inputs/SoftSelect";
 import {
     format,
     addMonths,
@@ -274,49 +275,50 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
                 })}
             </div>
 
+
             {/* Sidebar / Bottom Panel */}
             <div className={`
                 fixed bottom-4 left-4 right-4 z-20 pointer-events-none flex flex-col gap-3 justify-end
-                md:static md:inset-auto md:w-[350px] md:border-l md:pointer-events-auto md:bg-white md:p-0 md:block md:gap-0
+                md:static md:inset-auto md:w-[350px] md:border-l md:pointer-events-auto md:bg-white md:p-6 md:block md:gap-6 overflow-y-auto
             `}>
                 {/* Block 1: Status / Existing Slots */}
                 <div className={`
                     pointer-events-auto bg-neutral-900 text-white rounded-3xl p-4 shadow-xl shrink-0 transition-all
-                    md:bg-transparent md:text-black md:shadow-none md:rounded-none md:p-0 md:h-1/2 md:flex md:flex-col
+                    md:bg-transparent md:text-black md:shadow-none md:rounded-none md:p-0
                     ${selectedDates.length === 0 ? 'w-auto mx-auto' : 'w-full'}
                 `}>
                     {selectedDates.length === 0 ? (
-                        <div className="flex items-center gap-3 justify-center">
+                        <div className="flex items-center gap-3 justify-center md:justify-start pt-10">
                             <CalendarIcon size={20} className="text-neutral-400" />
-                            <span className="font-medium text-sm">Sélectionnez des dates</span>
+                            <span className="font-medium text-sm text-neutral-500">Sélectionnez des dates pour commencer</span>
                         </div>
                     ) : (
                         <div className="flex flex-col h-full max-h-[20vh] md:max-h-none overflow-hidden">
-                            <h4 className="font-medium mb-2 md:mb-4 text-sm md:text-base px-2">
+                            <h4 className="font-bold mb-2 md:mb-4 text-sm md:text-lg px-2 text-foreground">
                                 <span className="md:hidden">Créneaux existants ({selectedDates.length} dates)</span>
                                 <span className="hidden md:inline">Créneaux existants</span>
                             </h4>
-                            <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar px-2">
+                            <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar px-2 max-h-[200px] mb-6">
                                 {selectedDates.flatMap(date => {
                                     const daySlots = getSlotsForDate(date);
                                     if (daySlots.length === 0) return null;
                                     return daySlots.map((slot, idx) => (
-                                        <div key={`${date.toISOString()}-${idx}`} className="flex items-center justify-between p-2 border border-neutral-700 md:border-neutral-200 rounded-xl text-xs md:text-sm bg-neutral-800 md:bg-white">
+                                        <div key={`${date.toISOString()}-${idx}`} className="flex items-center justify-between p-3 border border-neutral-700 md:border-neutral-200 rounded-xl text-xs md:text-sm bg-neutral-800 md:bg-white">
                                             <div>
-                                                <p className="font-medium">{format(date, 'd MMM', { locale: fr })}</p>
-                                                <p className="text-neutral-400 md:text-neutral-500">{slot.startTime}-{slot.endTime}</p>
+                                                <p className="font-semibold">{format(date, 'd MMM', { locale: fr })}</p>
+                                                <p className="text-neutral-400 md:text-neutral-500">{slot.startTime} - {slot.endTime}</p>
                                             </div>
                                             <button
                                                 onClick={() => handleDeleteSlot(slot)}
-                                                className="text-red-400 hover:text-red-300 md:text-red-500 md:hover:bg-red-50 p-1 rounded-full"
+                                                className="text-red-400 hover:text-red-300 md:text-red-500 md:hover:bg-red-50 p-2 rounded-full transition"
                                             >
-                                                <Trash2 size={14} />
+                                                <Trash2 size={16} />
                                             </button>
                                         </div>
                                     ));
                                 })}
                                 {selectedDates.every(d => getSlotsForDate(d).length === 0) && (
-                                    <p className="text-xs md:text-sm text-neutral-500 italic text-center py-2">Aucun créneau pour cette sélection</p>
+                                    <p className="text-sm text-neutral-500 italic py-2">Aucun créneau planifié pour cette sélection</p>
                                 )}
                             </div>
                         </div>
@@ -327,125 +329,98 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
                 {selectedDates.length > 0 && (
                     <div className={`
                         pointer-events-auto bg-neutral-900 text-white rounded-3xl p-4 shadow-xl shrink-0 w-full mt-auto
-                        md:bg-transparent md:text-black md:shadow-none md:rounded-none md:p-0 md:h-1/2 md:flex md:flex-col md:justify-end md:mt-0
+                        md:bg-transparent md:text-black md:shadow-none md:rounded-none md:p-0 md:mt-0 flex flex-col gap-4
                     `}>
-                        <div className="hidden md:block mb-6">
-                            <h3 className="text-lg font-semibold mb-2">
+                        <div className="hidden md:block border-t pt-6">
+                            <h3 className="text-lg font-bold mb-1">
                                 {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''} sélectionnée{selectedDates.length > 1 ? 's' : ''}
                             </h3>
-                            <p className="text-sm text-neutral-500 mb-4">
-                                Définissez les horaires.
+                            <p className="text-sm text-neutral-500">
+                                Définissez les horaires pour ces dates.
                             </p>
                         </div>
 
-                        {/* Mobile: Compact Header */}
+                        {/* Mobile Header */}
                         <div className="md:hidden flex justify-between items-center mb-4 px-2">
                             <span className="font-semibold text-sm">Ajouter un créneau</span>
-                            {/* Duration Helper */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
-                                    className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold hover:bg-neutral-700"
-                                >-</button>
-                                <span className="text-xs text-neutral-400">{visitDuration}m</span>
-                                <button
-                                    onClick={() => setVisitDuration(visitDuration + 5)}
-                                    className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold hover:bg-neutral-700"
-                                >+</button>
-                            </div>
                         </div>
 
-
-                        {/* Desktop Duration (Hidden on mobile as incorporated above/simplified) */}
-                        <div className="bg-neutral-100 p-3 rounded-lg hidden md:flex flex-col gap-2 mb-4">
+                        {/* Duration Control */}
+                        <div className="bg-neutral-100 p-4 rounded-xl flex flex-col gap-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">Durée visite</span>
+                                <span className="text-sm font-medium text-neutral-700">Durée visite</span>
                                 <div className="flex items-center gap-3">
                                     <button
                                         onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
-                                        className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-sm font-bold hover:bg-neutral-50"
+                                        className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm font-bold hover:bg-neutral-50 transition"
                                     >-</button>
-                                    <span className="font-semibold text-sm w-12 text-center">{visitDuration} min</span>
+                                    <span className="font-bold text-sm min-w-[3rem] text-center">{visitDuration} min</span>
                                     <button
                                         onClick={() => setVisitDuration(visitDuration + 5)}
-                                        className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-sm font-bold hover:bg-neutral-50"
+                                        className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm font-bold hover:bg-neutral-50 transition"
                                     >+</button>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-2 mb-2">
-                            <div className="flex gap-2">
-                                <select
-                                    value={startTime}
-                                    onChange={(e) => setStartTime(e.target.value)}
-                                    className="p-1.5 border rounded-md w-full bg-neutral-800 md:bg-white border-neutral-700 md:border-neutral-200 text-white md:text-black text-sm"
-                                >
-                                    {HOURS.map(h => {
-                                        const hourStr = `${h.toString().padStart(2, '0')}:00`;
-                                        const isOccupied = selectedDates.some(date => {
-                                            const daySlots = getSlotsForDate(date);
-                                            return daySlots.some(slot => {
-                                                const s = parseInt(slot.startTime.split(':')[0]);
-                                                const e = parseInt(slot.endTime.split(':')[0]);
-                                                return h >= s && h < e;
-                                            });
+                        <div className="grid grid-cols-2 gap-4">
+                            <SoftSelect
+                                id="startTime"
+                                label="Début"
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                options={HOURS.map(h => {
+                                    const hourStr = `${h.toString().padStart(2, '0')}:00`;
+                                    const isOccupied = selectedDates.some(date => {
+                                        const daySlots = getSlotsForDate(date);
+                                        return daySlots.some(slot => {
+                                            const s = parseInt(slot.startTime.split(':')[0]);
+                                            const e = parseInt(slot.endTime.split(':')[0]);
+                                            return h >= s && h < e;
                                         });
+                                    });
+                                    return {
+                                        value: hourStr,
+                                        label: hourStr,
+                                        disabled: isOccupied
+                                    };
+                                })}
+                            />
 
-                                        return (
-                                            <option
-                                                key={`start-${h}`}
-                                                value={hourStr}
-                                                disabled={isOccupied}
-                                                className={isOccupied ? "text-neutral-400 bg-neutral-100 italic" : ""}
-                                            >
-                                                {hourStr}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                                <select
-                                    value={endTime}
-                                    onChange={(e) => setEndTime(e.target.value)}
-                                    className="p-1.5 border rounded-md w-full bg-neutral-800 md:bg-white border-neutral-700 md:border-neutral-200 text-white md:text-black text-sm"
-                                >
-                                    {HOURS.map(h => {
-                                        const hourStr = `${h.toString().padStart(2, '0')}:00`;
-                                        const startH = parseInt(startTime.split(':')[0]);
+                            <SoftSelect
+                                id="endTime"
+                                label="Fin"
+                                value={endTime}
+                                onChange={(e) => setEndTime(e.target.value)}
+                                options={HOURS.map(h => {
+                                    const hourStr = `${h.toString().padStart(2, '0')}:00`;
+                                    const startH = parseInt(startTime.split(':')[0]);
 
-                                        const isOccupied = selectedDates.some(date => {
-                                            const daySlots = getSlotsForDate(date);
-                                            return daySlots.some(slot => {
-                                                const s = parseInt(slot.startTime.split(':')[0]);
-                                                const e = parseInt(slot.endTime.split(':')[0]);
-                                                return h > s && h <= e; // check end time overlap logic
-                                            });
+                                    const isOccupied = selectedDates.some(date => {
+                                        const daySlots = getSlotsForDate(date);
+                                        return daySlots.some(slot => {
+                                            const s = parseInt(slot.startTime.split(':')[0]);
+                                            const e = parseInt(slot.endTime.split(':')[0]);
+                                            return h > s && h <= e;
                                         });
+                                    });
 
-                                        // Must be after start time
-                                        const isValid = h > startH;
+                                    const isValid = h > startH;
 
-                                        return (
-                                            <option
-                                                key={`end-${h}`}
-                                                value={hourStr}
-                                                disabled={!isValid || isOccupied}
-                                                className={(!isValid || isOccupied) ? "text-neutral-400 bg-neutral-100 italic" : ""}
-                                            >
-                                                {hourStr}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                            </div>
+                                    return {
+                                        value: hourStr,
+                                        label: hourStr,
+                                        disabled: !isValid || isOccupied
+                                    };
+                                })}
+                            />
                         </div>
 
-                        <FloatingValuesButton
-                            label="Ajouter"
+                        <Button
+                            label="Ajouter le créneau"
                             onClick={handleAddSlot}
                             disabled={isLoading}
-                            loading={isLoading}
-                            className="bg-white text-black hover:bg-neutral-200 md:bg-black md:text-white md:hover:bg-neutral-800"
+
                         />
                     </div>
                 )}

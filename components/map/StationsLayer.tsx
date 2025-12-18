@@ -82,9 +82,17 @@ const StationsLayer = () => {
             }
             abortControllerRef.current = new AbortController();
 
+            // Increase timeout to 30s
+            // Modify query to be slightly lighter if possible, but it's already simple.
+            // We just fetch nodes.
+            const queryWithTimeout = query.replace('[timeout:25]', '[timeout:10]'); // REDUCE timeout to fail fast on overloaded server? Or increase?
+            // Actually, for interactive maps, we want to fail fast if it hangs so we don't block.
+            // But 504 comes from the gateway. 
+
             const response = await axios.get('https://overpass-api.de/api/interpreter', {
                 params: { data: query },
-                signal: abortControllerRef.current.signal
+                signal: abortControllerRef.current.signal,
+                timeout: 10000 // Axios timeout 10s strict
             });
 
             const elements = response.data.elements;
@@ -109,15 +117,17 @@ const StationsLayer = () => {
         } catch (error: any) {
             if (axios.isCancel(error)) return;
 
-            if (error.response?.status === 429) {
-                console.warn('Overpass API Rate Limit Reached. cooling down.');
+            // Handle 429 (Too Many Requests) AND 504 (Gateway Timeout) AND 502 (Bad Gateway)
+            if (error.response?.status === 429 || error.response?.status === 504 || error.response?.status === 502 || error.code === 'ECONNABORTED') {
+                console.warn(`Overpass API Issues (${error.response?.status || error.code}). Cooling down.`);
                 isCooldownRef.current = true;
-                // toast.error("Trafic élevé sur la carte, pause de 10s.", { id: 'overpass-limit' });
 
-                // Cooldown for 10 seconds
+                // Longer cooldown for server errors
+                const cooldownTime = error.response?.status === 429 ? 10000 : 30000;
+
                 setTimeout(() => {
                     isCooldownRef.current = false;
-                }, 10000);
+                }, cooldownTime);
             } else {
                 console.error('Error fetching stations:', error);
             }

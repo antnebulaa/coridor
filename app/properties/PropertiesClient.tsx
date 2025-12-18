@@ -26,7 +26,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 }) => {
     const router = useRouter();
     const rentModal = useRentModal();
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [deletingId, setDeletingId] = useState('');
 
     const onCancel = useCallback((id: string) => {

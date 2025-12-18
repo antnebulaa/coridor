@@ -64,8 +64,11 @@ export async function PUT(
         leaseType,
         dpe,
         ges,
+        heatingSystem, // NEW
+        glazingType, // NEW
         amenities,
         charges,
+        securityDeposit, // NEW
         rooms,
         // New fields
         isFurnished,
@@ -77,7 +80,10 @@ export async function PUT(
         buildYear,
         city,
         country,
-        imageSrcs
+        imageSrcs,
+        energy_cost_min,
+        energy_cost_max,
+        dpe_year
     } = body;
 
     try {
@@ -96,7 +102,10 @@ export async function PUT(
                 leaseType,
                 dpe,
                 ges,
+                heatingSystem,
+                glazingType,
                 charges: charges ? { amount: parseInt(String(charges), 10) } : undefined,
+                securityDeposit: (securityDeposit !== undefined && securityDeposit !== null) ? parseInt(String(securityDeposit), 10) : undefined,
                 // New fields
                 isFurnished,
                 surface: surface ? parseFloat(String(surface)) : undefined,
@@ -105,6 +114,10 @@ export async function PUT(
                 floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
                 totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
                 buildYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
+                // DPE Energy Costs
+                energy_cost_min: energy_cost_min ? parseInt(String(energy_cost_min), 10) : null,
+                energy_cost_max: energy_cost_max ? parseInt(String(energy_cost_max), 10) : null,
+                dpe_year: dpe_year ? parseInt(String(dpe_year), 10) : null,
                 city: city || location?.city,
                 district: body.district || location?.district,
                 neighborhood: body.neighborhood || location?.neighborhood,

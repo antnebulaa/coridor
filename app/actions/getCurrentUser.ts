@@ -29,7 +29,8 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
                         }
                     }
                 },
-                tenantProfile: true
+                tenantProfile: true,
+                commuteLocations: true // NEW: Fetch commute locations
             }
         });
 
@@ -43,6 +44,12 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
             listings: wishlist.listings.map((listing) => ({ id: listing.id }))
         }));
 
+        const safeCommuteLocations = (currentUser as any).commuteLocations.map((location: any) => ({
+            ...location,
+            createdAt: location.createdAt.toISOString(),
+            updatedAt: location.updatedAt.toISOString(),
+        }));
+
         const safeUser = {
             ...currentUser,
             createdAt: currentUser.createdAt.toISOString(),
@@ -50,6 +57,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
             emailVerified: currentUser.emailVerified?.toISOString() || null,
             birthDate: currentUser.birthDate?.toISOString() || null,
             wishlists: safeWishlists,
+            commuteLocations: safeCommuteLocations, // NEW
             userMode: currentUser.userMode,
             plan: (currentUser as any).plan || 'FREE', // Fallback to FREE if missing, though it shouldn't be
         };

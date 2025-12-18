@@ -95,6 +95,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             bathroomCount={listing.bathroomCount}
                             locationValue={listing.locationValue}
                             listing={listing}
+                            currentUser={currentUser}
                         />
                         <div className="order-first mb-10 md:order-last md:col-span-3">
                             <div className="bg-card border border-border overflow-hidden rounded-xl p-4 flex flex-col gap-4 sticky top-28">

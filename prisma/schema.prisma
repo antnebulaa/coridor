@@ -89,6 +89,7 @@ model User {
   uniqueCode String? @unique
   contacts   User[]  @relation("UserContacts")
   contactOf  User[]  @relation("UserContacts")
+  commuteLocations CommuteLocation[] // NEW: Relation to commute locations
 }
 
 model TenantProfile {
@@ -184,7 +185,15 @@ model Listing {
   leaseType LeaseType?
   dpe       String?
   ges       String?
+  heatingSystem String? // NEW: Système de chauffage
+  glazingType   String? // NEW: Type de vitrage
   charges   Json? // Stores tax, insurance, etc.
+  securityDeposit Int? // NEW: Dépôt de garantie
+  
+  // DPE Energy Costs (New)
+  energy_cost_min Int? // Coût annuel min
+  energy_cost_max Int? // Coût annuel max
+  dpe_year        Int? // Année de référence
 
   // New Category Fields
   isFurnished Boolean @default(false)
@@ -470,4 +479,18 @@ model RentalApplication {
 
   property       Listing              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
+}
+
+// NEW: Commute Location Model
+model CommuteLocation {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   // e.g., "Travail", "École"
+  address       String
+  latitude      Float
+  longitude     Float
+  transportMode String   @default("TRANSIT") // TRANSIT, DRIVING, CYCLING, WALKING
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

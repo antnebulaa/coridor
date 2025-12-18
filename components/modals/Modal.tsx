@@ -16,6 +16,8 @@ interface ModalProps {
     secondaryAction?: () => void;
     secondaryActionLabel?: string;
     className?: string;
+    transparentHeader?: boolean;
+    noBodyPadding?: boolean;
     widthClass?: string;
 }
 
@@ -31,7 +33,9 @@ const Modal: React.FC<ModalProps> = ({
     secondaryAction,
     secondaryActionLabel,
     className,
-    widthClass
+    widthClass,
+    transparentHeader,
+    noBodyPadding
 }) => {
     const [showModal, setShowModal] = useState(false);
 
@@ -126,10 +130,17 @@ const Modal: React.FC<ModalProps> = ({
                     >
                         <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-background outline-none focus:outline-none">
                             {/* HEADER */}
-                            <div className={`flex items-center p-6 rounded-t justify-center relative ${title ? 'border-b border-border' : ''}`}>
+                            <div className={`
+                                flex items-center justify-center 
+                                ${title ? 'border-b border-border' : ''}
+                                ${transparentHeader
+                                    ? 'absolute top-0 left-0 right-0 z-50 bg-transparent border-none pointer-events-none p-6'
+                                    : 'relative p-6 rounded-t'
+                                }
+                            `}>
                                 <button
                                     onClick={handleClose}
-                                    className="
+                                    className={`
                                         w-10 
                                         h-10 
                                         rounded-full 
@@ -143,14 +154,16 @@ const Modal: React.FC<ModalProps> = ({
                                         left-6
                                         top-6
                                         border-0
-                                    "
+                                        ${transparentHeader ? 'bg-white text-black shadow-md' : ''}
+                                        pointer-events-auto z-50
+                                    `}
                                 >
                                     <X size={18} />
                                 </button>
                                 <div className="text-lg font-medium">{title}</div>
                             </div>
                             {/* BODY */}
-                            <div className="relative p-6 flex-auto overflow-y-auto">{body}</div>
+                            <div className={`relative flex-auto overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}>{body}</div>
                             {/* FOOTER */}
                             <div className="flex flex-col gap-2 p-6 md:p-6 mb-12 md:mb-0">
                                 <div className="flex flex-row items-center gap-4 w-full">

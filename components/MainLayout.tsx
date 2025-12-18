@@ -42,7 +42,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
     let paddingTop = 'pt-0';
     if (isMainPage) {
-        paddingTop = 'pt-20 md:pt-20'; // Match Navbar height (approx 80px)
+        paddingTop = 'pt-0 md:pt-20'; // Match Navbar height (approx 80px)
     } else {
         // Not Home
         paddingTop = 'md:pt-24'; // Hidden on mobile, block on desktop

@@ -228,9 +228,9 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     overflow-auto
                     text-popover-foreground
                 ">
-                    {suggestions.map((feature) => (
+                    {suggestions.map((feature, index) => (
                         <li
-                            key={feature.id}
+                            key={`${feature.id}-${index}`}
                             onClick={() => handleSelect(feature)}
                             className="
                                 p-3 

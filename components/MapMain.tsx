@@ -1,4 +1,4 @@
-import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet';
+import { MapContainer, Marker, TileLayer, useMap, ZoomControl, GeoJSON } from 'react-leaflet';
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 
@@ -25,6 +25,7 @@ interface MapMainProps {
     selectedListingId?: string;
     onSelect?: (id: string) => void;
     currentUser?: SafeUser | null;
+    isochrone?: any; // Add isochrone prop
 }
 
 const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean }) => {
@@ -159,7 +160,7 @@ const ResizeHandler = () => {
     return null;
 }
 
-const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect, currentUser }) => {
+const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect, currentUser, isochrone }) => {
     const { theme } = useTheme();
     const [center, setCenter] = useState<number[]>([48.8566, 2.3522]); // Default Paris
 
@@ -277,6 +278,21 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
                 url={tileUrl}
             />
             <ZoomControl position="topright" />
+
+            {/* Isochrone Polygon */}
+            {isochrone && (
+                <GeoJSON
+                    key={JSON.stringify(isochrone)} // Force re-render on change
+                    data={isochrone}
+                    style={{
+                        color: "#22c55e", // Green-500
+                        weight: 2,
+                        opacity: 0.6,
+                        fillColor: "#22c55e",
+                        fillOpacity: 0.2
+                    }}
+                />
+            )}
 
             {listings.map((listing) => {
                 if (!listing.latitude || !listing.longitude) return null;

@@ -96,7 +96,7 @@ const NeighborhoodScore: React.FC<NeighborhoodScoreProps> = ({ latitude, longitu
     ];
 
     return (
-        <div className="mt-6 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="mt-6 p-6 bg-white rounded-xl">
             <h3 className="text-xl font-semibold mb-4">Le quartier</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {items.map((item) => (

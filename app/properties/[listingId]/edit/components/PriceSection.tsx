@@ -25,13 +25,16 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const {
         register,
         handleSubmit,
+        setValue, // NEW
         formState: {
             errors,
         },
         watch
     } = useForm<FieldValues>({
         defaultValues: {
-            price: listing.price
+            price: listing.price,
+            charges: listing.charges ? (listing.charges as any).amount : '',
+            securityDeposit: listing.securityDeposit
         }
     });
 
@@ -39,17 +42,51 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
 
     // Calculate Rent Control
     useEffect(() => {
-        if (city && listing.surface) {
-            const result = calculateRentControl(listing, city);
-            setRentControlData(result);
-        }
+        const fetchRentControl = async () => {
+            if (city && listing.surface && listing.latitude && listing.longitude) {
+                setIsLoading(true);
+                try {
+                    // Use API route for accurate calculation
+                    const response = await axios.post('/api/rent-control', {
+                        lat: listing.latitude,
+                        lon: listing.longitude,
+                        roomCount: listing.roomCount,
+                        buildYear: listing.buildYear,
+                        isFurnished: listing.isFurnished,
+                        surface: listing.surface,
+                        city: city,
+                        listing: listing // Pass full listing for fallback
+                    });
+
+                    setRentControlData(response.data);
+                } catch (error) {
+                    console.error("Failed to fetch rent control", error);
+                    // Fallback handled by API or just keep null
+                } finally {
+                    setIsLoading(false);
+                }
+            } else if (city && listing.surface) {
+                // Fallback if no coordinates (legacy listings?)
+                const result = calculateRentControl(listing, city);
+                setRentControlData(result);
+            }
+        };
+
+        // Debounce slightly or just run once on mount/change
+        const timer = setTimeout(() => {
+            fetchRentControl();
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, [city, listing]);
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
         setIsLoading(true);
 
         axios.put(`/api/listings/${listing.id}`, {
-            price: parseInt(data.price, 10)
+            price: parseInt(data.price, 10),
+            charges: parseInt(data.charges, 10),
+            securityDeposit: parseInt(data.securityDeposit, 10)
         })
             .then(() => {
                 toast.success('Loyer mis à jour !');
@@ -137,6 +174,73 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 </div>
             </div>
 
+            {/* Charges Section */}
+            <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold">Charges mensuelles</h3>
+                <p className="text-neutral-500 font-light">
+                    Estimation des charges locatives mensuelles (provision).
+                </p>
+                <div className="relative flex items-center justify-center py-6 border-2 border-dashed border-neutral-200 rounded-xl hover:border-neutral-400 transition group max-w-[400px]">
+                    <div className="relative flex items-center justify-center">
+                        <input
+                            id="charges"
+                            disabled={isLoading}
+                            {...register('charges', { min: 0 })}
+                            type="number"
+                            className="peer w-full text-center text-3xl font-bold bg-transparent outline-none transition disabled:opacity-70 disabled:cursor-not-allowed placeholder-neutral-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none max-w-[200px]"
+                            placeholder="0"
+                        />
+                        <Euro size={24} className="text-neutral-400 absolute -right-8 top-1/2 -translate-y-1/2 peer-focus:text-black transition" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Security Deposit Section */}
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold">Dépôt de garantie</h3>
+                    <p className="text-neutral-500 font-light text-sm">
+                        {listing.isFurnished
+                            ? "Pour un meublé : max. 2 mois de loyer hors charges."
+                            : "Pour une location nue : max. 1 mois de loyer hors charges."}
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                    {[0, 1, ...(listing.isFurnished ? [2] : [])].map((months) => {
+                        const amount = months * (parseInt(price, 10) || 0);
+                        const currentDeposit = watch('securityDeposit');
+                        const isSelected = currentDeposit == amount;
+
+                        return (
+                            <div
+                                key={months}
+                                onClick={() => setValue('securityDeposit', amount)}
+                                className={`
+                                   cursor-pointer
+                                   rounded-xl
+                                   border-2
+                                   p-4
+                                   flex
+                                   flex-col
+                                   gap-2
+                                   hover:border-black
+                                   transition
+                                   w-[160px]
+                                   ${isSelected ? 'border-black bg-neutral-50' : 'border-neutral-200'}
+                               `}
+                            >
+                                <span className="font-semibold text-lg">{amount} €</span>
+                                <span className="text-sm text-neutral-500">
+                                    {months === 0 ? "Aucun" : `${months} mois`}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+                {/* Hidden input to register the value if not already managed by setValue */}
+            </div>
+
             {/* Rent Control Section */}
             {rentControlData?.isEligible && (
                 <div className="bg-neutral-50 p-6 rounded-xl border border-neutral-200 flex flex-col gap-4">
@@ -145,9 +249,16 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                             <Info size={18} />
                             Encadrement des loyers
                         </h4>
-                        <span className="text-xs font-medium bg-neutral-200 px-2 py-1 rounded">
-                            {rentControlData.zone}
-                        </span>
+                        <div className="flex gap-2">
+                            {rentControlData.source === 'official_api' && (
+                                <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded flex items-center gap-1">
+                                    <CheckCircle size={12} /> Officiel
+                                </span>
+                            )}
+                            <span className="text-xs font-medium bg-neutral-200 px-2 py-1 rounded">
+                                {rentControlData.zone}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -185,7 +296,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                             </span>
                             <span className="opacity-90">
                                 {gaugeStatus === 'red'
-                                    ? `Le loyer dépasse le plafond estimé de ${rentControlData.maxRent} €. Cela peut être illégal sauf complément de loyer justifié.`
+                                    ? `Le loyer dépasse le plafond ${rentControlData.source === 'official_api' ? 'officiel' : 'estimé'} de ${rentControlData.maxRent} €. Cela peut être illégal sauf complément de loyer justifié.`
                                     : `Ce loyer est ${Math.round(((rentControlData.maxRent - price) / rentControlData.maxRent) * 100)}% en dessous du plafond légal.`}
                             </span>
                         </div>

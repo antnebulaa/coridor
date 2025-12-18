@@ -12,11 +12,13 @@ import CategoryInput from '../inputs/CategoryInput';
 import Counter from '../inputs/Counter';
 import SoftInput from '../inputs/SoftInput'; // Assuming we can reuse Input or create a simple one
 import { categories } from '../navbar/Categories';
+import ListingCommuteStep from './ListingCommuteStep';
 
 enum STEPS {
     LOCATION = 0,
     CATEGORY = 1,
     FILTERS = 2,
+    COMMUTE = 3
 }
 
 const SearchModal = () => {
@@ -35,6 +37,12 @@ const SearchModal = () => {
     const [maxSurface, setMaxSurface] = useState<string>('');
     const [roomCount, setRoomCount] = useState(1);
     const [bathroomCount, setBathroomCount] = useState(1);
+
+    // Commute State
+    const [commuteCoords, setCommuteCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
+    const [commuteMode, setCommuteMode] = useState<string>('driving');
+    const [commuteTime, setCommuteTime] = useState<number>(30);
+
 
     useEffect(() => {
         if (params) {
@@ -84,7 +92,10 @@ const SearchModal = () => {
     }, [searchModal.isOpen, searchModal.step, searchModal.section]);
 
     const onBack = useCallback(() => {
-        setStep((value) => value - 1);
+        setStep((value) => {
+            if (value === STEPS.COMMUTE) return STEPS.LOCATION;
+            return value - 1;
+        });
     }, []);
 
     const onNext = useCallback(() => {
@@ -92,7 +103,7 @@ const SearchModal = () => {
     }, []);
 
     const onSubmit = useCallback(async () => {
-        if (step !== STEPS.FILTERS) {
+        if (step !== STEPS.FILTERS && step !== STEPS.COMMUTE) {
             return onNext();
         }
 
@@ -126,12 +137,24 @@ const SearchModal = () => {
         if (minSurface) urlParams.set('minSurface', minSurface);
         if (maxSurface) urlParams.set('maxSurface', maxSurface);
 
+        // Commute Params
+        if (step === STEPS.COMMUTE && commuteCoords) {
+            urlParams.set('commuteLatitude', commuteCoords.lat.toString());
+            urlParams.set('commuteLongitude', commuteCoords.lng.toString());
+            urlParams.set('commuteTransportMode', commuteMode);
+            urlParams.set('commuteMaxTime', commuteTime.toString());
+
+            // Clear locations if engaging commute search to prioritize zone? 
+            // Or keep both? "Listings in Paris AND within 30 min of work". 
+            // Often logic is distinct. Let's keep existing params, user can refine.
+        }
+
         const url = `/?${urlParams.toString()}`;
 
         // Save detailed search info for "Resume Search" feature
         const locationLabel = locations.length > 0
             ? locations.map(l => l.city || l.label.split(',')[0].trim()).join(', ')
-            : 'France';
+            : (step === STEPS.COMMUTE ? 'Zone de trajet' : 'France');
 
         const detailsParts = [];
         if (category) detailsParts.push(category);
@@ -139,6 +162,7 @@ const SearchModal = () => {
         if (bathroomCount > 1) detailsParts.push(`${bathroomCount} sdb`);
         if (minSurface) detailsParts.push(`${minSurface}m² min`);
         if (maxPrice) detailsParts.push(`Max ${maxPrice}€`);
+        if (step === STEPS.COMMUTE) detailsParts.push(`${commuteTime} min ${commuteMode === 'driving' ? 'voiture' : commuteMode}`);
 
         const resumeData = {
             locationLabel,
@@ -163,6 +187,15 @@ const SearchModal = () => {
         category,
         onNext,
         params,
+        commuteCoords,
+        commuteMode,
+        commuteTime,
+        roomCount,
+        bathroomCount,
+        minPrice,
+        maxPrice,
+        minSurface,
+        maxSurface
     ]);
 
     const [listingCount, setListingCount] = useState<number | null>(null);
@@ -188,6 +221,15 @@ const SearchModal = () => {
                 if (minSurface) params.set('minSurface', minSurface);
                 if (maxSurface) params.set('maxSurface', maxSurface);
 
+                // Count API might not support PostGIS logic heavily yet, but we can try passing it if updated.
+                // Or just ignore for now as count is estimated.
+                if (commuteCoords) {
+                    params.set('commuteLatitude', commuteCoords.lat.toString());
+                    params.set('commuteLongitude', commuteCoords.lng.toString());
+                    params.set('commuteTransportMode', commuteMode);
+                    params.set('commuteMaxTime', commuteTime.toString());
+                }
+
                 const response = await axios.get(`/api/listings/count?${params.toString()}`);
                 setListingCount(response.data.count);
             } catch (error) {
@@ -201,10 +243,10 @@ const SearchModal = () => {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [locations, category, roomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface]);
+    }, [locations, category, roomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface, commuteCoords, commuteMode, commuteTime]);
 
     const actionLabel = useMemo(() => {
-        if (step === STEPS.FILTERS) {
+        if (step === STEPS.FILTERS || step === STEPS.COMMUTE) {
             return `Afficher ${listingCount !== null ? listingCount : '...'} annonces`;
         }
 
@@ -281,19 +323,10 @@ const SearchModal = () => {
             <div className="mt-4">
                 <div className="text-sm font-medium text-muted-foreground mb-3">Recherches alternatives</div>
                 <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition">
-                        <div className="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                            </svg>
-                            <span className="font-medium">Recherche par périmètre</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                    </div>
-                    <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition">
+                    <div
+                        onClick={() => setStep(STEPS.COMMUTE)}
+                        className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition"
+                    >
                         <div className="flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
@@ -304,21 +337,40 @@ const SearchModal = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition">
-                        <div className="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                            </svg>
-                            <span className="font-medium">Recherche par dessin sur la carte</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                    </div>
                 </div>
             </div>
         </div>
     );
+
+    // Saved Locations State
+    const [savedLocations, setSavedLocations] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (step === STEPS.COMMUTE) {
+            axios.get('/api/user/commute')
+                .then((response) => {
+                    setSavedLocations(response.data);
+                })
+                .catch((error) => {
+                    console.error("Failed to fetch saved locations", error);
+                });
+        }
+    }, [step]);
+
+
+    if (step === STEPS.COMMUTE) {
+        bodyContent = (
+            <ListingCommuteStep
+                commuteCoords={commuteCoords}
+                setCommuteCoords={setCommuteCoords}
+                commuteMode={commuteMode}
+                setCommuteMode={setCommuteMode}
+                commuteTime={commuteTime}
+                setCommuteTime={setCommuteTime}
+                savedLocations={savedLocations}
+            />
+        );
+    }
 
     if (step === STEPS.CATEGORY) {
         bodyContent = (
@@ -328,16 +380,27 @@ const SearchModal = () => {
                     subtitle="Choisissez une catégorie"
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto">
-                    {categories.map((item) => (
-                        <div key={item.label} className="col-span-1">
-                            <CategoryInput
-                                onClick={(category) => setCategory(category)}
-                                selected={category === item.label}
-                                label={item.label}
-                                icon={item.icon}
-                            />
-                        </div>
-                    ))}
+                    {categories.map((item) => {
+                        const isSelected = category.split(',').includes(item.label);
+                        return (
+                            <div key={item.label} className="col-span-1">
+                                <CategoryInput
+                                    onClick={(label) => {
+                                        let current = category ? category.split(',') : [];
+                                        if (current.includes(label)) {
+                                            current = current.filter(c => c !== label);
+                                        } else {
+                                            current = [...current, label];
+                                        }
+                                        setCategory(current.join(','));
+                                    }}
+                                    selected={isSelected}
+                                    label={item.label}
+                                    icon={item.icon}
+                                />
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         );
@@ -427,7 +490,7 @@ const SearchModal = () => {
             isOpen={searchModal.isOpen}
             onClose={searchModal.onClose}
             onSubmit={onSubmit}
-            title="Filtres"
+            title={step === STEPS.COMMUTE ? "Temps de trajet" : "Filtres"}
             actionLabel={actionLabel}
             secondaryActionLabel={secondaryActionLabel}
             secondaryAction={step === STEPS.LOCATION ? undefined : onBack}

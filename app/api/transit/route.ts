@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         );
     }
 
-    // 1. Check Cache (if listingId provided)
+    // 1. Check Cache
     if (listingId) {
         try {
             const listing = await prisma.listing.findUnique({
@@ -23,104 +23,280 @@ export async function GET(request: Request) {
             });
 
             if (listing?.transitData) {
-                console.log("Returning cached transit data for listing:", listingId);
-                return NextResponse.json(listing.transitData);
+                const data: any = listing.transitData;
+                // Check version to force update
+                const isVersionMatch = data.algorithmVersion === "v3.0"; // Bump to V3
+                const isMainConnectionValid = !data.mainConnection || (data.mainConnection.name && data.mainConnection.name.trim() !== "" && data.mainConnection.name !== "Station Inconnue");
+
+                if ((data.mainConnection || data.nearby) && isMainConnectionValid && isVersionMatch) {
+                    return NextResponse.json(data);
+                }
             }
         } catch (error) {
             console.error("Cache check failed:", error);
-            // Continue to fetch fresh data if cache check fails
         }
     }
 
     const apiKey = process.env.HERE_API_KEY;
-
     if (!apiKey) {
-        return NextResponse.json(
-            { error: "HERE API key is missing" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "HERE API key is missing" }, { status: 500 });
     }
 
     try {
-        // HERE Public Transit API v8 - Stations endpoint
-        // https://developer.here.com/documentation/public-transit/dev_guide/index.html
-
-        // Construct URL manually to avoid ANY encoding issues
-        // HERE API sometimes rejects encoded colons/commas in the 'in' parameter
         const baseUrl = "https://transit.router.hereapi.com/v8/stations";
-
-        // Round coordinates to 6 decimal places
         const cleanLat = Number(lat).toFixed(6);
         const cleanLng = Number(lng).toFixed(6);
 
-        // Use 'maxPlaces' instead of 'max'
-        // Remove 'circle:' prefix as per documentation examples
-        const url = `${baseUrl}?apiKey=${apiKey}&in=${cleanLat},${cleanLng};r=1000&return=transport&maxPlaces=20`;
+        // --- Helpers ---
+        const fetchStations = async (radius: number, max: number = 50) => {
+            const url = `${baseUrl}?apiKey=${apiKey}&in=${cleanLat},${cleanLng};r=${radius}&return=transport&maxPlaces=${max}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("HERE API Error");
+            return res.json();
+        };
 
-        console.log("Calling HERE API:", url.replace(apiKey, "HIDDEN_KEY"));
+        const isHeavy = (mode: string) => {
+            const m = mode?.toLowerCase() || "";
+            return m.includes('subway') || m.includes('metro') || m.includes('rail') || m.includes('train') || m.includes('regional') || m.includes('tram') || m.includes('rer') || m.includes('lightrail');
+        };
 
-        const response = await fetch(url);
-        const data = await response.json();
+        const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ1) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // meters
+        };
 
-        if (!response.ok) {
-            console.error("HERE API Error Body:", JSON.stringify(data, null, 2));
-            throw new Error(data.title || data.cause || "Unknown HERE API error");
+        // --- Step 1: Champion Selection with SCORING (V3 Strategy) ---
+
+        let championObs: any = null;
+        let mainConnection = null;
+
+        let stationsA = (await fetchStations(1200, 50)).stations || [];
+        let heavyA = stationsA.filter((s: any) => s.transports?.some((t: any) => isHeavy(t.mode)));
+
+        // NEW: Scoring Logic
+        const getScore = (station: any) => {
+            const dist = getDistance(Number(lat), Number(lng), station.place.location.lat, station.place.location.lng);
+            const walkTime = Math.ceil(dist / 80) + 2;
+
+            let bonus = 0;
+            const modes = station.transports || [];
+
+            // Check Modes
+            // Metro > Tram > Train
+            const hasMetro = modes.some((m: any) => m.mode.includes('subway') || m.mode.includes('metro'));
+            const hasTram = modes.some((m: any) => m.mode.includes('tram') || m.mode.includes('lightrail'));
+            const hasTrain = modes.some((m: any) => isHeavy(m.mode) && !m.mode.includes('subway') && !m.mode.includes('metro') && !m.mode.includes('tram') && !m.mode.includes('lightrail'));
+
+            if (hasMetro) bonus = 4;        // Huge preference
+            else if (hasTram) bonus = 1;    // Slight preference over train
+            else if (hasTrain) bonus = 0;
+
+            return { score: walkTime - bonus, walkTime, dist };
+        };
+
+        // Sort A by Score
+        heavyA.sort((a: any, b: any) => {
+            const mA = getScore(a);
+            const mB = getScore(b);
+
+            if (mA.score !== mB.score) return mA.score - mB.score;
+            return mA.dist - mB.dist;
+        });
+
+        if (heavyA.length > 0) {
+            championObs = heavyA[0];
+        } else {
+            let stationsB = (await fetchStations(5000, 10)).stations || [];
+            let heavyB = stationsB.filter((s: any) => s.transports?.some((t: any) => isHeavy(t.mode)));
+            if (heavyB.length > 0) {
+                championObs = heavyB[0];
+            } else {
+                let stationsC = (await fetchStations(400, 20)).stations || [];
+                if (stationsC.length > 0) {
+                    championObs = stationsC[0];
+                }
+            }
         }
 
-        const stations = data.stations;
-        const lines: any[] = [];
-        const seenLines = new Set();
+        if (championObs) {
+            const distMeters = getDistance(Number(lat), Number(lng), championObs.place.location.lat, championObs.place.location.lng);
 
-        stations.forEach((station: any) => {
-            if (station.transports) {
-                station.transports.forEach((transport: any) => {
-                    // Create a unique key for the line to avoid duplicates
-                    const lineKey = `${transport.name}-${transport.headsign}`;
+            const allModes = championObs.transports || [];
+            const heavyModes = allModes.filter((t: any) => isHeavy(t.mode));
+            const modesToConsider = heavyModes.length > 0 ? heavyModes : allModes;
 
-                    if (!seenLines.has(lineKey)) {
-                        seenLines.add(lineKey);
-                        lines.push({
-                            name: transport.name,
-                            category: transport.mode, // Correct field is 'mode', not 'category'
-                            color: transport.color,
-                            textColor: transport.textColor,
-                            headsign: transport.headsign,
-                            operator: transport.operator
-                        });
-                    }
+            modesToConsider.sort((a: any, b: any) => {
+                const score = (mode: string) => {
+                    if (mode.includes('subway') || mode.includes('metro')) return 1;
+                    if (mode.includes('rer')) return 2;
+                    if (mode.includes('train') || mode.includes('rail')) return 3;
+                    if (mode.includes('tram')) return 4;
+                    return 5;
+                };
+                return score(a.mode) - score(b.mode);
+            });
+
+            if (modesToConsider.length > 0) {
+                const championMode = modesToConsider[0];
+                const sameLineModes = modesToConsider.filter((m: any) => m.name === championMode.name && m.mode === championMode.mode);
+                const uniqueHeadsigns = Array.from(new Set(sameLineModes.map((m: any) => m.headsign)));
+                const combinedHeadsign = uniqueHeadsigns.slice(0, 3).join(" / ");
+                let walkTime = Math.ceil(distMeters / 80) + 2;
+
+                mainConnection = {
+                    name: championObs.name || championObs.place?.name || "Station Inconnue",
+                    line: championMode.name,
+                    headsign: combinedHeadsign,
+                    type: championMode.mode,
+                    color: championMode.color,
+                    textColor: championMode.textColor,
+                    distance: Math.round(distMeters),
+                    walkTime: walkTime
+                };
+            }
+        }
+
+        // --- Step 2: Proximity List ---
+
+        let stationsProximity = (await fetchStations(800, 50)).stations || [];
+        const nearbyMap = new Map();
+
+        stationsProximity.forEach((station: any) => {
+            const sName = station.name || station.place?.name || "Arrêt Inconnu";
+            if (mainConnection && sName === mainConnection.name) return;
+
+            const dist = getDistance(Number(lat), Number(lng), station.place.location.lat, station.place.location.lng);
+            const walkTime = Math.ceil(dist / 80) + 2;
+
+            if (!nearbyMap.has(sName)) {
+                nearbyMap.set(sName, {
+                    stationName: sName,
+                    distance: Math.round(dist),
+                    walkTime: walkTime,
+                    lines: [],
+                    types: new Set(),
+                    hasHeavy: false
                 });
             }
+
+            const entry = nearbyMap.get(sName);
+
+            station.transports?.forEach((t: any) => {
+                const isTHeavy = isHeavy(t.mode);
+                if (isTHeavy) entry.hasHeavy = true;
+                if (!entry.lines.some((l: any) => l.name === t.name && l.type === t.mode)) {
+                    entry.lines.push({
+                        name: t.name,
+                        color: t.color,
+                        textColor: t.textColor,
+                        type: t.mode,
+                        isHeavy: isTHeavy
+                    });
+                    entry.types.add(t.mode);
+                }
+            });
         });
 
-        // Sort lines by category and name
-        lines.sort((a, b) => {
-            if (a.category !== b.category) {
-                return a.category.localeCompare(b.category);
+        let nearbyList = Array.from(nearbyMap.values()).map((item: any) => ({
+            ...item,
+            types: Array.from(item.types)
+        }));
+
+        nearbyList.forEach((item: any) => {
+            if (item.hasHeavy) {
+                item.lines = item.lines.filter((l: any) => l.isHeavy);
+                item.types = item.types.filter((t: string) => isHeavy(t));
             }
-            return a.name.localeCompare(b.name);
         });
 
-        // 2. Save to Cache (if listingId provided and we have data)
-        if (listingId && lines.length > 0) {
+        nearbyList.sort((a, b) => {
+            if (a.hasHeavy && !b.hasHeavy) return -1;
+            if (!a.hasHeavy && b.hasHeavy) return 1;
+            return a.distance - b.distance;
+        });
+
+        // The Guillotine (V2 Logic)
+        const hasHeavyInList = nearbyList.some((item: any) => item.hasHeavy);
+        if (hasHeavyInList) {
+            nearbyList = nearbyList.filter((item: any) => item.hasHeavy);
+        } else {
+            nearbyList = nearbyList.slice(0, 3);
+        }
+
+        // --- NEW: Smart Deduplication (V2.5) ---
+        // Filter out stations that don't add new lines (defined by mode+name)
+
+        const seenLines = new Set<string>();
+
+        // Init with Champion
+        if (championObs && championObs.transports) {
+            championObs.transports.forEach((t: any) => {
+                const isTHeavy = isHeavy(t.mode);
+                if (hasHeavyInList && !isTHeavy) return; // Ignore Bus lines of Heavy Champion IF there are other heaviest in list?
+                // Wait, simplifying: IF champion is heavy, we mark its HEAVY lines as seen.
+                seenLines.add(`${t.mode}_${t.name}`);
+            });
+        }
+
+        const dedupedList: any[] = [];
+
+        for (const station of nearbyList) {
+            let contributesNew = false;
+
+            for (const line of station.lines) {
+                const id = `${line.type}_${line.name}`;
+                if (hasHeavyInList && !line.isHeavy) continue;
+
+                if (!seenLines.has(id)) {
+                    contributesNew = true;
+                }
+            }
+
+            if (contributesNew) {
+                dedupedList.push(station);
+                for (const line of station.lines) {
+                    const id = `${line.type}_${line.name}`;
+                    if (hasHeavyInList && !line.isHeavy) continue;
+                    seenLines.add(id);
+                }
+            }
+        }
+
+        // Use the deduped list
+        const finalList = dedupedList;
+
+        const result = {
+            algorithmVersion: "v3.0",
+            mainConnection,
+            nearby: finalList
+        };
+
+        // 2. Save to Cache
+        if (listingId) {
             try {
                 await prisma.listing.update({
                     where: { id: listingId },
-                    data: { transitData: lines }
+                    data: { transitData: result }
                 });
-                console.log("Cached transit data for listing:", listingId);
             } catch (error) {
                 console.error("Failed to cache transit data:", error);
             }
         }
 
-        return NextResponse.json(lines);
+        return NextResponse.json(result);
+
     } catch (error: any) {
         console.error("HERE API Error:", error.message);
         return NextResponse.json(
-            {
-                error: "Failed to fetch transit data",
-                details: error.message
-            },
+            { error: "Failed to fetch transit data" },
             { status: 500 }
         );
     }

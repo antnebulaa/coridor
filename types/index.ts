@@ -1,4 +1,4 @@
-import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMode, Conversation, Message, Wishlist, Plan, RentalApplication, TenantCandidateScope, ApplicationStatus } from "@prisma/client";
+import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMode, Conversation, Message, Wishlist, Plan, RentalApplication, TenantCandidateScope, ApplicationStatus, CommuteLocation } from "@prisma/client";
 
 export type SafePropertyImage = PropertyImage;
 
@@ -25,7 +25,14 @@ export type SafeListing = Omit<
     floor: number | null;
     totalFloors: number | null;
     dpe?: string | null;
+    energy_cost_min?: number | null;
+    energy_cost_max?: number | null;
+    dpe_year?: number | null;
     ges?: string | null;
+    heatingSystem?: string | null;
+    glazingType?: string | null;
+    charges?: any;
+    securityDeposit?: number | null;
     buildYear: number | null;
     city: string | null;
     district: string | null;
@@ -103,7 +110,15 @@ export type SafeUser = Omit<
     tenantProfile: TenantProfile | null;
     wishlists: SafeWishlist[] | null;
     measurementSystem: string | null;
-    uniqueCode: string | null;
+    commuteLocations: SafeCommuteLocation[] | null;
+};
+
+export type SafeCommuteLocation = Omit<
+    CommuteLocation,
+    "createdAt" | "updatedAt"
+> & {
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type FullMessageType = Message & {

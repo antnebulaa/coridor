@@ -18,10 +18,10 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
 
     return (
         <div
-            className={`fixed w-full bg-background z-[9999] ${!isHomePage ? 'hidden md:block' : ''}`}
+            className={`fixed w-full z-[9999] transition-colors duration-200 ${isHomePage ? 'bg-transparent md:bg-background' : 'bg-background'} ${!isHomePage ? 'hidden md:block' : ''}`}
             suppressHydrationWarning
         >
-            <div className="py-2 md:py-4 border-b border-border">
+            <div className={`py-2 md:py-4 ${isHomePage ? 'border-none md:border-b' : 'border-b'} border-border`}>
                 <Container>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         {/* Top Row: Logo, Badges, Mobile Menu - HIDDEN on Mobile Home */}
@@ -33,12 +33,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
                                 <Logo />
                                 {currentUser?.plan === 'PLUS' && (
                                     <div className="
-                                        bg-primary 
-                                        text-white 
-                                        text-[10px] 
-                                        font-bold 
-                                        px-2 
-                                        py-0.5 
                                         bg-primary
                                         text-white
                                         text-[10px]

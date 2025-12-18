@@ -69,7 +69,7 @@ const Search = () => {
             {/* Location Search */}
             <div
                 onClick={() => searchModal.onOpen({ step: 0 })}
-                className="border border-border w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer"
+                className="border border-border w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer bg-background shadow-md md:shadow-none"
             >
                 <div className="flex flex-row items-center justify-between px-2 gap-3">
                     <div className="p-2 bg-primary rounded-full text-primary-foreground">

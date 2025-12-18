@@ -42,8 +42,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             totalFloors: listing.totalFloors,
             floor: listing.floor,
             buildYear: listing.buildYear,
+            heatingSystem: listing.heatingSystem || 'IND_ELEC',
+            glazingType: listing.glazingType || 'DOUBLE',
             dpe: listing.dpe || 'C',
-            ges: listing.ges || 'A'
+            ges: listing.ges || 'A',
+            energy_cost_min: listing.energy_cost_min,
+            energy_cost_max: listing.energy_cost_max,
+            dpe_year: listing.dpe_year
         }
     });
 
@@ -56,8 +61,17 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
     const bathroomCount = watch('bathroomCount');
     const totalFloors = watch('totalFloors');
     const floor = watch('floor');
+    const heatingSystem = watch('heatingSystem');
+    const glazingType = watch('glazingType');
     const dpe = watch('dpe');
     const ges = watch('ges');
+
+    // Explicit watchers for SoftInput fields to ensure controlled updates
+    const surface = watch('surface');
+    const buildYear = watch('buildYear');
+    const energy_cost_min = watch('energy_cost_min');
+    const energy_cost_max = watch('energy_cost_max');
+    const dpe_year = watch('dpe_year');
 
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
@@ -126,7 +140,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
                         label={`Surface du logement (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})`}
                         type="number"
                         disabled={isLoading}
-                        register={register}
+                        value={surface ?? ''}
+                        onChange={(e) => setCustomValue('surface', e.target.value)}
                         errors={errors}
                         required
                     />
@@ -221,14 +236,54 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             <hr />
 
             {/* Année construction */}
+            {/* Année construction */}
             <SoftInput
                 id="buildYear"
                 label="Année de construction"
                 type="number"
                 disabled={isLoading}
-                register={register}
+                value={buildYear ?? ''}
+                onChange={(e) => setCustomValue('buildYear', e.target.value)}
                 errors={errors}
             />
+
+            <hr />
+
+            {/* Heating System */}
+            <div className="flex flex-col gap-2">
+                <SoftSelect
+                    id="heatingSystem"
+                    label="Système de chauffage"
+                    value={heatingSystem || 'IND_ELEC'}
+                    onChange={(e) => setCustomValue('heatingSystem', e.target.value)}
+                    disabled={isLoading}
+                    options={[
+                        { value: "IND_ELEC", label: "Individuel Électrique" },
+                        { value: "IND_GAS", label: "Individuel Gaz" },
+                        { value: "COL_GAS", label: "Collectif Gaz" },
+                        { value: "COL_URB", label: "Collectif Urbain" },
+                        { value: "PAC", label: "Pompe à Chaleur" },
+                        { value: "WOOD", label: "Bois / Granulés" },
+                        { value: "REV_AC", label: "Clim. Réversible" }
+                    ]}
+                />
+            </div>
+
+            {/* Glazing Type */}
+            <div className="flex flex-col gap-2">
+                <SoftSelect
+                    id="glazingType"
+                    label="Type de vitrage"
+                    value={glazingType || 'DOUBLE'}
+                    onChange={(e) => setCustomValue('glazingType', e.target.value)}
+                    disabled={isLoading}
+                    options={[
+                        { value: "SINGLE", label: "Simple vitrage" },
+                        { value: "DOUBLE", label: "Double vitrage" },
+                        { value: "TRIPLE", label: "Triple vitrage" }
+                    ]}
+                />
+            </div>
 
             <hr />
 
@@ -254,6 +309,54 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
                         options={['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(grade => ({ value: grade, label: grade }))}
                     />
                 </div>
+            </div>
+
+            {(dpe === 'F' || dpe === 'G') && (
+                <div className="bg-orange-500/10 border border-orange-500 text-orange-700 p-4 rounded-xl text-sm font-medium">
+                    ⚠️ Attention : Vérifiez que votre logement respecte les critères de décence énergétique en vigueur pour la mise en location.
+                </div>
+            )}
+
+            {/* Energy Costs */}
+            <div className="flex flex-col gap-2">
+                <div className="text-sm font-medium text-neutral-800">
+                    Coûts annuels d'énergie
+                </div>
+                <div className="text-xs text-neutral-500 mb-2">
+                    Ces montants figurent sur la première page de votre diagnostic DPE. Si vous ne les avez pas, laissez vide, nous ferons une estimation automatique.
+                </div>
+                <div className="flex flex-row gap-4">
+                    <SoftInput
+                        id="energy_cost_min"
+                        label="Min (€/an)"
+                        type="number"
+                        disabled={isLoading}
+                        value={energy_cost_min ?? ''}
+                        onChange={(e) => setCustomValue('energy_cost_min', e.target.value)}
+                        errors={errors}
+                    />
+                    <SoftInput
+                        id="energy_cost_max"
+                        label="Max (€/an)"
+                        type="number"
+                        disabled={isLoading}
+                        value={energy_cost_max ?? ''}
+                        onChange={(e) => setCustomValue('energy_cost_max', e.target.value)}
+                        errors={errors}
+                    />
+                </div>
+            </div>
+
+            <div className="w-full">
+                <SoftInput
+                    id="dpe_year"
+                    label="Année de référence du DPE"
+                    type="number"
+                    disabled={isLoading}
+                    value={dpe_year ?? ''}
+                    onChange={(e) => setCustomValue('dpe_year', e.target.value)}
+                    errors={errors}
+                />
             </div>
 
             <div className="

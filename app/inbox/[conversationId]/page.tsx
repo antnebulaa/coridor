@@ -63,7 +63,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                     emailVerified: listing.user.emailVerified?.toISOString() || null,
                     birthDate: null, // Basic fields only
                     tenantProfile: null,
-                    wishlists: null
+                    wishlists: null,
+                    commuteLocations: null
                 }
             } as any;
         }
@@ -96,7 +97,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             guarantors: (otherUser.tenantProfile as any).guarantors,
             additionalIncomes: (otherUser.tenantProfile as any).additionalIncomes
         } : null,
-        wishlists: null
+        wishlists: null,
+        commuteLocations: null
     } as SafeUser : null;
 
     const safeMessages = messages.map((message) => ({
@@ -109,7 +111,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             emailVerified: message.sender?.emailVerified?.toISOString() || null,
             birthDate: message.sender?.birthDate?.toISOString() || null,
             tenantProfile: null,
-            wishlists: null
+            wishlists: null,
+            commuteLocations: null
         },
         seen: (message.seen || []).map((user) => ({
             ...user,
@@ -118,7 +121,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             emailVerified: user.emailVerified?.toISOString() || null,
             birthDate: user.birthDate?.toISOString() || null,
             tenantProfile: null,
-            wishlists: null
+            wishlists: null,
+            commuteLocations: null
         })),
         listing: message.listingId === applicationMessage?.listingId ? safeListing : null
     }));

@@ -21,7 +21,7 @@ const ListingMobileFooter: React.FC<ListingMobileFooterProps> = ({
                 <div className="flex flex-col shrink-0">
                     <div className="flex flex-row items-center gap-1">
                         <div className="font-semibold text-lg">
-                            {listing.price} €
+                            {listing.price + (listing.charges ? (listing.charges as any).amount : 0)} €
                         </div>
                         <div className="font-light text-neutral-500 text-sm">
                             / mois
