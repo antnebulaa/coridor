@@ -14,27 +14,29 @@ enum STEPS {
     COMMUTE = 3
 }
 
+interface CommutePoint {
+    lat: number;
+    lng: number;
+    mode: string;
+    time: number;
+    label: string;
+}
+
 interface ListingCommuteStepProps {
-    commuteCoords?: { lat: number; lng: number };
-    setCommuteCoords: (value: { lat: number; lng: number }) => void;
-    commuteMode: string;
-    setCommuteMode: (value: string) => void;
-    commuteTime: number;
-    setCommuteTime: (value: number) => void;
+    commutePoints: CommutePoint[];
+    setCommutePoints: (value: CommutePoint[]) => void;
     savedLocations?: any[];
 }
 
 const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
-    commuteCoords,
-    setCommuteCoords,
-    commuteMode,
-    setCommuteMode,
-    commuteTime,
-    setCommuteTime,
+    commutePoints,
+    setCommutePoints,
     savedLocations
 }) => {
-    // Local state to hold the "Label" of the selected location for the input
-    const [selectedLocationLabel, setSelectedLocationLabel] = useState<string>('');
+    // Index of the point currently being edited (if any)
+    // If null, we are in "Add Mode" or "Overview Mode"
+    const [editingIndex, setEditingIndex] = useState<number | null>(commutePoints.length > 0 ? 0 : null);
+    const [isAdding, setIsAdding] = useState(false);
 
     const transportModes = [
         { label: 'En voiture', icon: Car, value: 'driving' },
@@ -42,166 +44,283 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
         { label: 'À pied', icon: Footprints, value: 'walking' },
     ];
 
-    return (
-        <div className="flex flex-col gap-8">
-            {/* Address Input Section */}
-            <div className="flex flex-col gap-4">
-                <div className="font-semibold">Votre destination</div>
-                <CommuteAddressSelect
-                    value={commuteCoords ? {
-                        label: selectedLocationLabel || 'Destination sélectionnée', // Use specific label
-                        value: '',
-                        latlng: [commuteCoords.lat, commuteCoords.lng],
-                        region: '', city: '', district: '', neighborhood: '', country: ''
-                    } : undefined}
-                    onChange={(value) => {
-                        setCommuteCoords({ lat: value.latlng[0], lng: value.latlng[1] });
-                        setSelectedLocationLabel(value.label); // Update label on manual select
-                    }}
-                    placeholder="Adresse de travail, école..."
-                />
+    const addPoint = (point: CommutePoint) => {
+        if (commutePoints.length >= 2) return;
+        const newPoints = [...commutePoints, point];
+        setCommutePoints(newPoints);
+        setEditingIndex(newPoints.length - 1); // Switch to editing the new point
+        setIsAdding(false);
+    };
 
-                {/* Saved Locations - Uber Style List */}
-                {savedLocations && (
-                    <div className="flex flex-col gap-2 mt-2">
-                        {savedLocations.length > 0 && savedLocations.map((loc) => (
-                            <div
-                                key={loc.id}
-                                onClick={() => {
-                                    setCommuteCoords({ lat: loc.latitude, lng: loc.longitude });
-                                    setSelectedLocationLabel(loc.name || loc.address); // Set correct label
-                                    if (loc.transportMode) {
-                                        const mode = loc.transportMode.toLowerCase();
-                                        if (['driving', 'cycling', 'walking'].includes(mode)) {
-                                            setCommuteMode(mode);
+    const removePoint = (index: number, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        const newPoints = [...commutePoints];
+        newPoints.splice(index, 1);
+        setCommutePoints(newPoints);
+        if (editingIndex === index) {
+            setEditingIndex(newPoints.length > 0 ? 0 : null);
+        } else if (editingIndex !== null && editingIndex > index) {
+            setEditingIndex(editingIndex - 1);
+        }
+    };
+
+    const updatePoint = (index: number, field: keyof CommutePoint, value: any) => {
+        const newPoints = [...commutePoints];
+        newPoints[index] = { ...newPoints[index], [field]: value };
+        setCommutePoints(newPoints);
+    };
+
+    const currentPoint = editingIndex !== null ? commutePoints[editingIndex] : null;
+
+    return (
+        <div className="flex flex-col gap-6">
+
+            {/* Initial Empty State */}
+            {commutePoints.length === 0 && (
+                <div className="flex flex-col gap-2 w-full animate-in fade-in zoom-in-95 duration-200">
+                    <CommuteAddressSelect
+                        value={undefined}
+                        onChange={(value) => {
+                            addPoint({
+                                lat: value.latlng[0],
+                                lng: value.latlng[1],
+                                mode: 'driving',
+                                time: 30,
+                                label: value.label
+                            });
+                        }}
+                        placeholder="On cherche où ?"
+                        autoFocus={true}
+                    />
+                    {savedLocations && savedLocations.length > 0 && (
+                        <div className="flex flex-col gap-2 mt-2">
+                            <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Favoris</div>
+                            {savedLocations.map((loc) => (
+                                <div
+                                    key={loc.id}
+                                    onClick={() => {
+                                        addPoint({
+                                            lat: loc.latitude,
+                                            lng: loc.longitude,
+                                            mode: loc.transportMode?.toLowerCase() || 'driving',
+                                            time: 30,
+                                            label: loc.name || loc.address
+                                        });
+                                    }}
+                                    className="flex items-center gap-4 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-black dark:hover:border-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer transition active:scale-95"
+                                >
+                                    <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-full">
+                                        {loc.name?.toLowerCase().includes('travail') || loc.name?.toLowerCase().includes('bureau')
+                                            ? <Clock size={16} />
+                                            : <Star size={16} />
                                         }
-                                    }
-                                }}
-                                className="
-                                    flex 
-                                    items-center 
-                                    gap-4 
-                                    p-3 
-                                    rounded-xl 
-                                    border
-                                    border-neutral-200
-                                    dark:border-neutral-800
-                                    hover:border-black
-                                    dark:hover:border-neutral-400
-                                    hover:bg-neutral-50 
-                                    dark:hover:bg-neutral-900 
-                                    cursor-pointer 
-                                    transition
-                                "
-                            >
-                                <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-full">
-                                    {loc.name?.toLowerCase().includes('travail') || loc.name?.toLowerCase().includes('bureau')
-                                        ? <Clock size={16} />
-                                        : <Star size={16} />
-                                    }
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-semibold text-sm">{loc.name || "Lieu enregistré"}</span>
+                                        <span className="text-xs text-neutral-500 line-clamp-1">{loc.address}</span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="font-semibold text-sm">
-                                        {loc.name || "Lieu enregistré"}
-                                    </span>
-                                    <span className="text-xs text-neutral-500 line-clamp-1">
-                                        {loc.address}
-                                    </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* 1. Header showing Selected Points blocks */}
+            {commutePoints.length > 0 && (
+                <div className="flex flex-col gap-2">
+                    <div className="font-semibold text-sm text-neutral-500">
+                        {commutePoints.length === 1 ? 'Lieu sélectionné' : 'Lieux à croiser'}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        {commutePoints.map((point, index) => (
+                            <div key={index} className="flex flex-col gap-2 w-full">
+                                <div
+                                    onClick={() => setEditingIndex(index)}
+                                    className={`
+                                        relative
+                                        flex-1
+                                        flex items-center gap-3 p-3 rounded-xl cursor-pointer transition
+                                        ${editingIndex === index ? 'bg-neutral-200 dark:bg-neutral-700' : 'bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700'}
+                                    `}
+                                >
+                                    <div className={`
+                                        w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs
+                                        ${index === 0 ? 'bg-black' : 'bg-green-500'}
+                                    `}>
+                                        {index + 1}
+                                    </div>
+                                    <div className="flex flex-col flex-1">
+                                        <div className="font-semibold text-sm">{point.label}</div>
+                                        <div className="text-xs text-neutral-500">
+                                            {point.time} min • {point.mode === 'driving' ? 'Voiture' : point.mode === 'cycling' ? 'Vélo' : 'Marche'}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={(e) => removePoint(index, e)}
+                                        className="p-2 hover:bg-neutral-200 rounded-full"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-neutral-500">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
                                 </div>
+
+                                {/* Compact "+" Button Trigger OUTSIDE the card */}
+                                {commutePoints.length < 2 && index === 0 && (
+                                    !isAdding ? (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsAdding(true);
+                                                setEditingIndex(null);
+                                            }}
+                                            className="
+                                                w-14 h-[60px] rounded-xl bg-neutral-100 hover:bg-neutral-200 
+                                                flex items-center justify-center shrink-0
+                                                transition
+                                            "
+                                            title="Ajouter un lieu"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-black">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                        </button>
+                                    ) : (
+                                        <div className="flex flex-col gap-2 w-full animate-in fade-in zoom-in-95 duration-200">
+                                            <CommuteAddressSelect
+                                                value={undefined}
+                                                onChange={(value) => {
+                                                    addPoint({
+                                                        lat: value.latlng[0],
+                                                        lng: value.latlng[1],
+                                                        mode: 'driving',
+                                                        time: 30,
+                                                        label: value.label
+                                                    });
+                                                }}
+                                                placeholder="On cherche où ?"
+                                                autoFocus={true}
+                                            />
+                                            <div
+                                                onClick={(e) => { e.stopPropagation(); setIsAdding(false); }}
+                                                className="self-end text-xs font-semibold underline cursor-pointer hover:text-neutral-500"
+                                            >
+                                                Annuler
+                                            </div>
+                                            {savedLocations && savedLocations.length > 0 && (
+                                                <div className="flex flex-col gap-2 mt-2">
+                                                    <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Favoris</div>
+                                                    {savedLocations.map((loc) => {
+                                                        const isSelected = commutePoints.some(p => p.lat === loc.latitude && p.lng === loc.longitude);
+                                                        if (isSelected) return null;
+                                                        return (
+                                                            <div
+                                                                key={loc.id}
+                                                                onClick={() => {
+                                                                    addPoint({
+                                                                        lat: loc.latitude,
+                                                                        lng: loc.longitude,
+                                                                        mode: loc.transportMode?.toLowerCase() || 'driving',
+                                                                        time: 30,
+                                                                        label: loc.name || loc.address
+                                                                    });
+                                                                }}
+                                                                className="flex items-center gap-4 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-black dark:hover:border-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer transition active:scale-95"
+                                                            >
+                                                                <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-full">
+                                                                    {loc.name?.toLowerCase().includes('travail') || loc.name?.toLowerCase().includes('bureau')
+                                                                        ? <Clock size={16} />
+                                                                        : <Star size={16} />
+                                                                    }
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-semibold text-sm">{loc.name || "Lieu enregistré"}</span>
+                                                                    <span className="text-xs text-neutral-500 line-clamp-1">{loc.address}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                )}
                             </div>
                         ))}
-
-                        {/* Add Favorite Button - Styled as requested */}
-                        <a
-                            href="/account/preferences"
-                            className="
-                                flex 
-                                items-center 
-                                justify-between
-                                p-3 
-                                rounded-xl 
-                                border
-                                border-neutral-200
-                                dark:border-neutral-800
-                                hover:border-black
-                                dark:hover:border-neutral-400
-                                hover:bg-neutral-50 
-                                dark:hover:bg-neutral-900 
-                                cursor-pointer 
-                                transition
-                                no-underline
-                                group
-                            "
-                        >
-                            <div className="flex flex-col">
-                                <span className="font-semibold text-sm">
-                                    Ajouter une adresse en favoris
-                                </span>
-                                <span className="text-xs text-neutral-500">
-                                    Trouvez des locations dans son périmètre
-                                </span>
-                            </div>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-neutral-400 group-hover:text-black dark:group-hover:text-white">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                            </svg>
-                        </a>
                     </div>
-                )}
-            </div>
-            {/* Transport Mode */}
-            <div className="flex flex-col gap-4">
-                <div className="font-semibold">Moyen de transport</div>
-                <div className="grid grid-cols-3 gap-3">
-                    {transportModes.map((item) => (
-                        <div
-                            key={item.label}
-                            onClick={() => setCommuteMode(item.value)}
-                            className={`
-                                rounded-xl
-                                border-2
-                                p-4
-                                flex
-                                flex-col
-                                gap-3
-                                hover:border-black
-                                transition
-                                cursor-pointer
-                                ${commuteMode === item.value ? 'border-black bg-neutral-50' : 'border-neutral-200'}
-                            `}
-                        >
-                            <item.icon size={24} />
-                            <div className="font-semibold text-sm">
-                                {item.label}
-                            </div>
+                </div>
+            )}
+
+
+
+            {/* Settings for the ACTIVE point */}
+            {editingIndex !== null && currentPoint && (
+                <div className="bg-neutral-100 rounded-xl p-4 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="flex items-center gap-2 font-semibold text-lg">
+                        <span className="text-neutral-500 text-sm font-normal">Paramètres pour</span>
+                        <span>{currentPoint.label}</span>
+                    </div>
+
+                    {/* Transport Mode */}
+                    <div className="flex flex-col gap-3">
+                        <div className="font-semibold text-sm text-neutral-500">Moyen de transport</div>
+                        <div className="grid grid-cols-3 gap-3">
+                            {transportModes.map((item) => (
+                                <div
+                                    key={item.label}
+                                    onClick={() => updatePoint(editingIndex, 'mode', item.value)}
+                                    className={`
+                                            rounded-xl
+                                            border-2
+                                            p-3
+                                            flex
+                                            flex-col
+                                            items-center
+                                            justify-center
+                                            gap-2
+                                            hover:border-black
+                                            transition
+                                            cursor-pointer
+                                            ${currentPoint.mode === item.value ? 'border-black bg-neutral-50' : 'border-neutral-200'}
+                                        `}
+                                >
+                                    <item.icon size={20} />
+                                    <div className="font-semibold text-xs text-center">
+                                        {item.label}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </div>
+                    </div>
 
-            {/* Max Time Slider */}
-            <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                    <div className="font-semibold">Durée maximum</div>
-                    <div className="font-bold text-lg">{commuteTime} min</div>
-                </div>
+                    {/* Max Time Slider */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                            <div className="font-semibold text-sm text-neutral-500">Durée maximum</div>
+                            <div className="font-bold text-lg">{currentPoint.time} min</div>
+                        </div>
 
-                <input
-                    type="range"
-                    min="15"
-                    max="60"
-                    step="15"
-                    value={commuteTime}
-                    onChange={(e) => setCommuteTime(parseInt(e.target.value))}
-                    className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-black"
-                />
-                <div className="flex justify-between text-xs text-neutral-500">
-                    <span>15 min</span>
-                    <span>30 min</span>
-                    <span>45 min</span>
-                    <span>60 min</span>
+                        <input
+                            type="range"
+                            min="15"
+                            max="60"
+                            step="15"
+                            value={currentPoint.time}
+                            onChange={(e) => updatePoint(editingIndex, 'time', parseInt(e.target.value))}
+                            className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-black"
+                        />
+                        <div className="flex justify-between text-xs text-neutral-500">
+                            <span>15 min</span>
+                            <span>30 min</span>
+                            <span>45 min</span>
+                            <span>60 min</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </div >
     );
 };
 

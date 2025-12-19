@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import axios from 'axios';
+import { Briefcase, Star, MoreHorizontal, Search, Pencil, Trash } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Modal from './Modal';
 import useSearchModal from '@/hooks/useSearchModal';
@@ -38,11 +39,33 @@ const SearchModal = () => {
     const [roomCount, setRoomCount] = useState(1);
     const [bathroomCount, setBathroomCount] = useState(1);
 
-    // Commute State
-    const [commuteCoords, setCommuteCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
-    const [commuteMode, setCommuteMode] = useState<string>('driving');
-    const [commuteTime, setCommuteTime] = useState<number>(30);
+    // UI State
+    const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
+    // Saved Locations State
+    const [savedLocations, setSavedLocations] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (searchModal.isOpen) {
+            axios.get('/api/user/commute')
+                .then((response) => {
+                    setSavedLocations(response.data);
+                })
+                .catch((error) => {
+                    // console.error("Failed to fetch saved locations", error);
+                });
+        }
+    }, [searchModal.isOpen]);
+
+    // Commute State
+    interface CommutePoint {
+        lat: number;
+        lng: number;
+        mode: string;
+        time: number;
+        label: string;
+    }
+    const [commutePoints, setCommutePoints] = useState<CommutePoint[]>([]);
 
     useEffect(() => {
         if (params) {
@@ -69,6 +92,34 @@ const SearchModal = () => {
                     city: cityParam,
                     country: ''
                 }]);
+            }
+
+            // Rehydrate Commute Params if "commute" JSON exists
+            const commuteParam = params.get('commute');
+            if (commuteParam) {
+                try {
+                    const parsed = JSON.parse(commuteParam);
+                    if (Array.isArray(parsed)) {
+                        setCommutePoints(parsed);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse commute params", e);
+                }
+            } else {
+                // Backward compatibility or legacy single params
+                const lat = params.get('commuteLatitude');
+                const lng = params.get('commuteLongitude');
+                const mode = params.get('commuteTransportMode');
+                const time = params.get('commuteMaxTime');
+                if (lat && lng && mode && time) {
+                    setCommutePoints([{
+                        lat: parseFloat(lat),
+                        lng: parseFloat(lng),
+                        mode: mode,
+                        time: parseInt(time),
+                        label: 'Destination'
+                    }]);
+                }
             }
         }
     }, [params]);
@@ -138,16 +189,10 @@ const SearchModal = () => {
         if (maxSurface) urlParams.set('maxSurface', maxSurface);
 
         // Commute Params
-        if (step === STEPS.COMMUTE && commuteCoords) {
-            urlParams.set('commuteLatitude', commuteCoords.lat.toString());
-            urlParams.set('commuteLongitude', commuteCoords.lng.toString());
-            urlParams.set('commuteTransportMode', commuteMode);
-            urlParams.set('commuteMaxTime', commuteTime.toString());
-
-            // Clear locations if engaging commute search to prioritize zone? 
-            // Or keep both? "Listings in Paris AND within 30 min of work". 
-            // Often logic is distinct. Let's keep existing params, user can refine.
+        if (step === STEPS.COMMUTE && commutePoints.length > 0) {
+            urlParams.set('commute', JSON.stringify(commutePoints));
         }
+
 
         const url = `/?${urlParams.toString()}`;
 
@@ -162,7 +207,9 @@ const SearchModal = () => {
         if (bathroomCount > 1) detailsParts.push(`${bathroomCount} sdb`);
         if (minSurface) detailsParts.push(`${minSurface}m² min`);
         if (maxPrice) detailsParts.push(`Max ${maxPrice}€`);
-        if (step === STEPS.COMMUTE) detailsParts.push(`${commuteTime} min ${commuteMode === 'driving' ? 'voiture' : commuteMode}`);
+        if (step === STEPS.COMMUTE && commutePoints.length > 0) {
+            detailsParts.push(`${commutePoints.length} trajet${commutePoints.length > 1 ? 's' : ''}`);
+        }
 
         const resumeData = {
             locationLabel,
@@ -187,9 +234,7 @@ const SearchModal = () => {
         category,
         onNext,
         params,
-        commuteCoords,
-        commuteMode,
-        commuteTime,
+        commutePoints,
         roomCount,
         bathroomCount,
         minPrice,
@@ -221,13 +266,9 @@ const SearchModal = () => {
                 if (minSurface) params.set('minSurface', minSurface);
                 if (maxSurface) params.set('maxSurface', maxSurface);
 
-                // Count API might not support PostGIS logic heavily yet, but we can try passing it if updated.
-                // Or just ignore for now as count is estimated.
-                if (commuteCoords) {
-                    params.set('commuteLatitude', commuteCoords.lat.toString());
-                    params.set('commuteLongitude', commuteCoords.lng.toString());
-                    params.set('commuteTransportMode', commuteMode);
-                    params.set('commuteMaxTime', commuteTime.toString());
+                // Count API currently might NOT support complex commute JSON, but let's pass it anyway if we update API
+                if (commutePoints.length > 0) {
+                    params.set('commute', JSON.stringify(commutePoints));
                 }
 
                 const response = await axios.get(`/api/listings/count?${params.toString()}`);
@@ -243,7 +284,7 @@ const SearchModal = () => {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [locations, category, roomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface, commuteCoords, commuteMode, commuteTime]);
+    }, [locations, category, roomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface, commutePoints]);
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.FILTERS || step === STEPS.COMMUTE) {
@@ -280,6 +321,18 @@ const SearchModal = () => {
         setLocations(locations.filter(l => l.value !== valueToRemove));
     };
 
+    const handleFavoriteSelect = (loc: any) => {
+        setLocations([]);
+        setCommutePoints([{
+            lat: loc.latitude,
+            lng: loc.longitude,
+            mode: loc.transportMode?.toLowerCase() || 'driving',
+            time: 30,
+            label: loc.name || loc.address
+        }]);
+        setStep(STEPS.COMMUTE);
+    };
+
     let bodyContent = (
         <div className="flex flex-col gap-6">
 
@@ -290,6 +343,7 @@ const SearchModal = () => {
                 placeholder="Rechercher un lieu"
                 searchTypes="place,district,locality,neighborhood" // Prioritize cities and districts
                 limitCountry="fr"
+                autoFocus
             />
 
             {/* Selected Locations List */}
@@ -323,9 +377,94 @@ const SearchModal = () => {
             <div className="mt-4">
                 <div className="text-sm font-medium text-muted-foreground mb-3">Recherches alternatives</div>
                 <div className="flex flex-col gap-3">
+                    {savedLocations.map((loc) => (
+                        <div
+                            key={loc.id}
+                            className="relative flex items-center justify-between px-4 h-[60px] border border-border rounded-xl hover:shadow-sm cursor-pointer transition group active:scale-95"
+                            onClick={() => handleFavoriteSelect(loc)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Star size={24} className="text-foreground" strokeWidth={1.5} />
+                                <div className="flex flex-col text-left">
+                                    <span className="font-medium">{loc.name || "Favori"}</span>
+                                    <span className="text-xs text-muted-foreground truncate max-w-[200px]">{loc.address}</span>
+                                </div>
+                            </div>
+
+                            {/* Menu Trigger */}
+                            <div className="relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveMenuId(activeMenuId === loc.id ? null : loc.id);
+                                    }}
+                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition"
+                                >
+                                    <MoreHorizontal size={20} className="text-muted-foreground" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {activeMenuId === loc.id && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-40"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveMenuId(null);
+                                            }}
+                                        />
+                                        <div
+                                            className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <div className="flex flex-col">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleFavoriteSelect(loc);
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition text-sm text-left"
+                                                >
+                                                    <Search size={16} />
+                                                    Rechercher autour
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.push('/account/preferences');
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition text-sm text-left"
+                                                >
+                                                    <Pencil size={16} />
+                                                    Modifier le favori
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        axios.delete(`/api/user/commute?id=${loc.id}`)
+                                                            .then(() => {
+                                                                setSavedLocations(prev => prev.filter(l => l.id !== loc.id));
+                                                                // toast.success("Favori supprimé");
+                                                            })
+                                                            .catch(() => {
+                                                                // toast.error("Erreur");
+                                                            });
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/10 text-red-500 transition text-sm text-left border-t border-border"
+                                                >
+                                                    <Trash size={16} />
+                                                    Supprimer ce lieu
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ))}
                     <div
                         onClick={() => setStep(STEPS.COMMUTE)}
-                        className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition"
+                        className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95"
                     >
                         <div className="flex items-center gap-3">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -337,36 +476,35 @@ const SearchModal = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
+
+                    <div
+                        onClick={() => {
+                            searchModal.onClose();
+                            router.push('/account/preferences');
+                        }}
+                        className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Briefcase size={24} className="text-foreground" strokeWidth={1.5} />
+                            <span className="font-medium">Ajouter un lieu de travail</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
     );
 
-    // Saved Locations State
-    const [savedLocations, setSavedLocations] = useState<any[]>([]);
 
-    useEffect(() => {
-        if (step === STEPS.COMMUTE) {
-            axios.get('/api/user/commute')
-                .then((response) => {
-                    setSavedLocations(response.data);
-                })
-                .catch((error) => {
-                    console.error("Failed to fetch saved locations", error);
-                });
-        }
-    }, [step]);
 
 
     if (step === STEPS.COMMUTE) {
         bodyContent = (
             <ListingCommuteStep
-                commuteCoords={commuteCoords}
-                setCommuteCoords={setCommuteCoords}
-                commuteMode={commuteMode}
-                setCommuteMode={setCommuteMode}
-                commuteTime={commuteTime}
-                setCommuteTime={setCommuteTime}
+                commutePoints={commutePoints}
+                setCommutePoints={setCommutePoints}
                 savedLocations={savedLocations}
             />
         );
@@ -490,11 +628,12 @@ const SearchModal = () => {
             isOpen={searchModal.isOpen}
             onClose={searchModal.onClose}
             onSubmit={onSubmit}
-            title={step === STEPS.COMMUTE ? "Temps de trajet" : "Filtres"}
+            title={step === STEPS.COMMUTE ? "Temps de trajet (BETA)" : "Filtres"}
             actionLabel={actionLabel}
             secondaryActionLabel={secondaryActionLabel}
             secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
             body={bodyContent}
+            hideHeader={true}
         />
     );
 };

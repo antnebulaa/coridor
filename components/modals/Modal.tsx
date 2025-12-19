@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -19,6 +19,7 @@ interface ModalProps {
     transparentHeader?: boolean;
     noBodyPadding?: boolean;
     widthClass?: string;
+    hideHeader?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -35,16 +36,32 @@ const Modal: React.FC<ModalProps> = ({
     className,
     widthClass,
     transparentHeader,
-    noBodyPadding
+    noBodyPadding,
+    hideHeader
 }) => {
     const [showModal, setShowModal] = useState(false);
+
+    // Pull-to-close state
+    const [isDragging, setIsDragging] = useState(false);
+    const [translateY, setTranslateY] = useState(0);
+    const startY = useRef<number>(0);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null); // To check scrollTop
 
     useEffect(() => {
         setShowModal(!!isOpen);
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            // Reset drag state on open
+            setTranslateY(0);
+            setIsDragging(false);
         } else {
             document.body.style.overflow = 'unset';
+            // Reset drag state on close
+            setTimeout(() => {
+                setTranslateY(0);
+                setIsDragging(false);
+            }, 300);
         }
 
         return () => {
@@ -62,6 +79,45 @@ const Modal: React.FC<ModalProps> = ({
             onClose();
         }, 300);
     }, [disabled, onClose]);
+
+    // Touch Handlers
+    const onTouchStart = (e: React.TouchEvent) => {
+        // Only allow if we are at the top of the scroll content
+        if (scrollRef.current && scrollRef.current.scrollTop > 0) return;
+
+        startY.current = e.touches[0].clientY;
+        setIsDragging(true);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging) return;
+
+        // Check scroll again just in case
+        if (scrollRef.current && scrollRef.current.scrollTop > 0) {
+            setTranslateY(0);
+            return;
+        }
+
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - startY.current;
+
+        // Only allow dragging down (positive diff)
+        if (diff > 0) {
+            // Add resistance/damping
+            setTranslateY(diff * 0.6);
+            // Optional: Prevent default to stop native scroll bouncing? 
+            // e.preventDefault() might break scroll if not careful, better to let it be for now since we check scrollTop
+        }
+    };
+
+    const onTouchEnd = () => {
+        setIsDragging(false);
+        if (translateY > 150) { // Threshold to close
+            handleClose();
+        } else {
+            setTranslateY(0); // Snap back
+        }
+    };
 
     const handleSubmit = useCallback(() => {
         if (disabled) {
@@ -83,6 +139,9 @@ const Modal: React.FC<ModalProps> = ({
         return null;
     }
 
+    // Opacity calculation for "FERMER"
+    const fermerOpacity = Math.min(translateY / 150, 1);
+
     return (
         <>
             <div
@@ -96,7 +155,7 @@ const Modal: React.FC<ModalProps> = ({
                     md:overflow-y-auto 
                     fixed
                     inset-0 
-                    z-[10000] 
+                    z-10000 
                     outline-none 
                     focus:outline-none
                     transition
@@ -105,6 +164,26 @@ const Modal: React.FC<ModalProps> = ({
                     ${className}
                 `}
             >
+                {/* FERMER Indicator (Mobile Only) */}
+                <div
+                    className="
+                        md:hidden 
+                        fixed 
+                        inset-0 
+                        flex 
+                        items-start 
+                        justify-center 
+                        pt-10
+                        pointer-events-none 
+                        z-0
+                    "
+                    style={{ opacity: fermerOpacity }}
+                >
+                    <span className="bg-white/90 dark:bg-neutral-800/90 text-black dark:text-white px-6 py-2 rounded-full font-bold text-sm tracking-widest shadow-lg border border-black/5">
+                        FERMER
+                    </span>
+                </div>
+
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className={`
@@ -120,27 +199,38 @@ const Modal: React.FC<ModalProps> = ({
                 >
                     {/* CONTENT */}
                     <div
+                        style={{ transform: `translateY(${translateY}px)` }}
                         className={`
-            translate
-            duration-300
-            h-full
-            ${showModal ? 'translate-y-0' : 'translate-y-full'}
-            ${showModal ? 'opacity-100' : 'opacity-0'}
-          `}
+                            translate
+                            duration-300
+                            h-full
+                            ${showModal ? 'translate-y-0' : 'translate-y-full'}
+                            ${showModal ? 'opacity-100' : 'opacity-0'}
+                            ${isDragging ? 'transition-none' : 'transition-transform'} 
+                        `}
                     >
                         <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-background outline-none focus:outline-none">
                             {/* HEADER */}
-                            <div className={`
+                            {!hideHeader && (
+                                <div
+                                    // Attach Touch Handlers to Header area specifically? 
+                                    // Or mainly the body? The user wants "draggant vers le bas", usually from top or list top.
+                                    // Attaching to the main container wrapper inside content might be best.
+                                    // Let's attach to this Header div for ease of pulling from top.
+                                    onTouchStart={onTouchStart}
+                                    onTouchMove={onTouchMove}
+                                    onTouchEnd={onTouchEnd}
+                                    className={`
                                 flex items-center justify-center 
                                 ${title ? 'border-b border-border' : ''}
                                 ${transparentHeader
-                                    ? 'absolute top-0 left-0 right-0 z-50 bg-transparent border-none pointer-events-none p-6'
-                                    : 'relative p-6 rounded-t'
-                                }
+                                            ? 'absolute top-0 left-0 right-0 z-50 bg-transparent border-none pointer-events-none p-6'
+                                            : 'relative p-6 rounded-t'
+                                        }
                             `}>
-                                <button
-                                    onClick={handleClose}
-                                    className={`
+                                    <button
+                                        onClick={handleClose}
+                                        className={`
                                         w-10 
                                         h-10 
                                         rounded-full 
@@ -157,22 +247,33 @@ const Modal: React.FC<ModalProps> = ({
                                         ${transparentHeader ? 'bg-white text-black shadow-md' : ''}
                                         pointer-events-auto z-50
                                     `}
-                                >
-                                    <X size={18} />
-                                </button>
-                                <div className="text-lg font-medium">{title}</div>
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                    <div className="text-lg font-medium">{title}</div>
+                                </div>
+                            )}
+
+                            {/* BODY with Scroll Ref */}
+                            <div
+                                ref={scrollRef}
+                                onTouchStart={onTouchStart}
+                                onTouchMove={onTouchMove}
+                                onTouchEnd={onTouchEnd}
+                                className={`relative flex-auto overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}
+                            >
+                                {body}
                             </div>
-                            {/* BODY */}
-                            <div className={`relative flex-auto overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}>{body}</div>
+
                             {/* FOOTER */}
                             <div className="flex flex-col gap-2 p-6 md:p-6 mb-12 md:mb-0">
-                                <div className="flex flex-row items-center gap-4 w-full">
+                                <div className="flex flex-col md:flex-row items-center gap-4 w-full">
                                     {secondaryAction && secondaryActionLabel && (
                                         <Button
                                             variant="outline"
                                             disabled={disabled}
                                             onClick={handleSecondaryAction}
-                                            className="w-full rounded-full"
+                                            className="w-full rounded-full h-[50px]"
                                         >
                                             {secondaryActionLabel}
                                         </Button>
@@ -181,7 +282,7 @@ const Modal: React.FC<ModalProps> = ({
                                         <Button
                                             disabled={disabled}
                                             onClick={handleSubmit}
-                                            className="w-full rounded-full"
+                                            className="w-full rounded-full h-[50px]"
                                         >
                                             {actionLabel}
                                         </Button>

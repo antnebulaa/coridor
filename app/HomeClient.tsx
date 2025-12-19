@@ -36,7 +36,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
     const [isOverlayMinimized, setIsOverlayMinimized] = useState(false);
     const [mounted, setMounted] = useState(false);
     const searchParams = useSearchParams();
-    const [isochrone, setIsochrone] = useState<any>(null);
+    const [isochrones, setIsochrones] = useState<any[]>([]);
 
     useEffect(() => {
         setMounted(true);
@@ -51,22 +51,59 @@ const HomeClient: React.FC<HomeClientProps> = ({
     // Fetch Isochrone Clientside for Visualization
     useEffect(() => {
         const fetchIsochrone = async () => {
+            const commuteParam = searchParams?.get('commute');
             const lat = searchParams?.get('commuteLatitude');
             const lng = searchParams?.get('commuteLongitude');
             const mode = searchParams?.get('commuteTransportMode');
             const time = searchParams?.get('commuteMaxTime');
 
-            if (lat && lng && mode && time) {
+            let pointsToFetch: any[] = [];
+
+            if (commuteParam) {
                 try {
-                    const data = await getIsochrone([+lng, +lat], mode, +time);
-                    if (data) {
-                        setIsochrone(data);
-                    }
+                    const parsed = JSON.parse(commuteParam);
+                    if (Array.isArray(parsed)) pointsToFetch = parsed;
+                } catch (e) {
+                    console.error("Failed to parse commute param in HomeClient", e);
+                }
+            } else if (lat && lng && mode && time) {
+                pointsToFetch.push({ lat, lng, mode, time });
+            }
+
+            if (pointsToFetch.length > 0) {
+                try {
+                    // Use Promise.all to fetch in parallel but map results to index to preserve order
+                    // We want [Result1, Result2] even if Result2 finishes first.
+                    const results = await Promise.all(pointsToFetch.map(async (point) => {
+                        try {
+                            const data = await getIsochrone([+point.lng, +point.lat], point.mode, +point.time);
+                            if (data && data.features) {
+                                return {
+                                    type: 'FeatureCollection',
+                                    features: data.features
+                                };
+                            }
+                            return null;
+                        } catch (err) {
+                            console.error("Failed to fetch isochrone for point", point, err);
+                            return null;
+                        }
+                    }));
+
+                    // Filter out nulls but we should try to keep index if possible for coloring? 
+                    // Actually if one fails, we just show what we have. 
+                    // But to align with badges (1, 2), we ideally want isochrones[0] to be point[0].
+                    // If point[0] fails, maybe we shouldn't show point[1] as "2" if "1" is missing? 
+                    // Or just filter valid. Simple approach: Valid results.
+                    const validIsochrones = results.filter(res => res !== null);
+                    setIsochrones(validIsochrones);
+
                 } catch (error) {
                     console.error("Failed to fetch visual isochrone", error);
+                    setIsochrones([]);
                 }
             } else {
-                setIsochrone(null);
+                setIsochrones([]);
             }
         }
 
@@ -167,7 +204,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                             selectedListingId={selectedListingId}
                             onSelect={(id) => setSelectedListingId(id)}
                             currentUser={currentUser}
-                            isochrone={isochrone} // Pass isochrone
+                            isochrones={isochrones} // Pass isochrones array
                         />
 
 

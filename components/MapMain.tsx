@@ -25,7 +25,7 @@ interface MapMainProps {
     selectedListingId?: string;
     onSelect?: (id: string) => void;
     currentUser?: SafeUser | null;
-    isochrone?: any; // Add isochrone prop
+    isochrones?: any[]; // Array of feature collections
 }
 
 const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean }) => {
@@ -160,7 +160,7 @@ const ResizeHandler = () => {
     return null;
 }
 
-const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect, currentUser, isochrone }) => {
+const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect, currentUser, isochrones }) => {
     const { theme } = useTheme();
     const [center, setCenter] = useState<number[]>([48.8566, 2.3522]); // Default Paris
 
@@ -279,20 +279,25 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
             />
             <ZoomControl position="topright" />
 
-            {/* Isochrone Polygon */}
-            {isochrone && (
-                <GeoJSON
-                    key={JSON.stringify(isochrone)} // Force re-render on change
-                    data={isochrone}
-                    style={{
-                        color: "#22c55e", // Green-500
-                        weight: 2,
-                        opacity: 0.6,
-                        fillColor: "#22c55e",
-                        fillOpacity: 0.2
-                    }}
-                />
-            )}
+            {/* Isochrone Polygons */}
+            {isochrones && isochrones.map((geoJson, index) => {
+                // Color Palette: Index 0 = Black, Index 1 = Green-500 (#22c55e)
+                const color = index === 0 ? "#000000" : "#22c55e";
+
+                return (
+                    <GeoJSON
+                        key={`iso-${index}-${JSON.stringify(geoJson)}`}
+                        data={geoJson}
+                        style={{
+                            color: color,
+                            weight: 2,
+                            opacity: 0.8, // Stronger border
+                            fillColor: color,
+                            fillOpacity: 0.2 // Transparency allows "fusion" effect at intersection
+                        }}
+                    />
+                );
+            })}
 
             {listings.map((listing) => {
                 if (!listing.latitude || !listing.longitude) return null;

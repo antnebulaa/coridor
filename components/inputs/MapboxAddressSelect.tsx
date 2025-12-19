@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import usePlacesAutocomplete from "use-places-autocomplete"; // We might not need this anymore if we do custom fetch
 import axios from 'axios';
 import { toast } from "react-hot-toast";
+import { MapPin, Star, X } from "lucide-react";
+import Link from "next/link";
 
 export type AddressSelectValue = {
     label: string;
@@ -45,6 +47,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     const [currentPlaceholder, setCurrentPlaceholder] = useState(defaultPlaceholder);
 
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Sync input with value prop
     useEffect(() => {
@@ -185,23 +188,18 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     return (
         <div ref={wrapperRef} className="relative">
             <input
+                ref={inputRef}
                 value={inputValue}
                 onChange={handleInput}
-                placeholder={currentPlaceholder}
-                onFocus={() => setCurrentPlaceholder('')}
-                onBlur={() => setCurrentPlaceholder(defaultPlaceholder)}
+                placeholder={defaultPlaceholder}
                 autoFocus={autoFocus}
                 className="
                     w-full
                     p-4
                     font-medium
                     text-lg
-                    text-center
+                    text-left
                     bg-background
-                    border-2
-                    border-border
-                    focus:border-primary
-                    dark:border-0
                     dark:bg-[#282828]
                     dark:focus:bg-[#323232]
                     rounded-full
@@ -213,38 +211,88 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     focus:ring-0
                 "
             />
+            {inputValue && (
+                <button
+                    onClick={() => {
+                        setInputValue('');
+                        setSuggestions([]);
+                        inputRef.current?.focus();
+                    }}
+                    className="
+                        absolute 
+                        top-1/2 
+                        -translate-y-1/2 
+                        right-4 
+                        p-2 
+                        hover:bg-neutral-100 
+                        dark:hover:bg-neutral-800 
+                        rounded-full 
+                        transition 
+                        text-neutral-400 
+                        hover:text-foreground
+                    "
+                >
+                    <X size={20} />
+                </button>
+            )}
             {showSuggestions && suggestions.length > 0 && (
                 <ul className="
                     absolute 
-                    z-[9999] 
+                    z-9999 
                     w-full 
-                    bg-popover 
+                    bg-white
+                    dark:bg-neutral-900 
                     border 
-                    border-border 
-                    rounded-md 
-                    mt-1 
-                    shadow-lg 
-                    max-h-60 
-                    overflow-auto
-                    text-popover-foreground
+                    border-neutral-200
+                    dark:border-neutral-800 
+                    rounded-xl 
+                    mt-2
+                    shadow-xl 
+                    max-h-[300px] 
+                    overflow-y-auto
                 ">
-                    {suggestions.map((feature, index) => (
-                        <li
-                            key={`${feature.id}-${index}`}
-                            onClick={() => handleSelect(feature)}
-                            className="
-                                p-3 
-                                hover:bg-secondary
-                                cursor-pointer 
-                                transition
-                                border-b
-                                border-border
-                                last:border-none
-                            "
-                        >
-                            <div className="font-medium text-sm">{feature.place_name}</div>
-                        </li>
-                    ))}
+                    {suggestions.map((feature, index) => {
+                        // Extract secondary text (everything after the main text)
+                        const mainText = feature.text || feature.place_name.split(',')[0];
+                        const secondaryText = feature.place_name.replace(mainText, '').replace(/^,\s*/, '');
+
+                        return (
+                            <li
+                                key={`${feature.id}-${index}`}
+                                onClick={() => handleSelect(feature)}
+                                className="
+                                    flex items-center gap-3
+                                    p-4
+                                    border-b border-neutral-100 dark:border-neutral-800 last:border-0
+                                    hover:bg-neutral-50
+                                    dark:hover:bg-neutral-800
+                                    cursor-pointer 
+                                    transition
+                                "
+                            >
+                                {/* Left Icon */}
+                                <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-full shrink-0 text-neutral-500">
+                                    <MapPin size={20} />
+                                </div>
+
+                                {/* Text Content */}
+                                <div className="flex flex-col flex-1 overflow-hidden">
+                                    <span className="font-semibold text-sm truncate text-left">{mainText}</span>
+                                    <span className="text-xs text-neutral-500 truncate text-left">{secondaryText}</span>
+                                </div>
+
+                                {/* Right Action (Star) */}
+                                <Link
+                                    href="/account/preferences"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-full transition text-neutral-400 hover:text-yellow-500"
+                                    title="Ajouter aux favoris"
+                                >
+                                    <Star size={18} />
+                                </Link>
+                            </li>
+                        )
+                    })}
                 </ul>
             )}
         </div>

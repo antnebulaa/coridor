@@ -1,20 +1,38 @@
 'use client';
 
-import { Search as SearchIcon, MapPin } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Plus } from 'lucide-react';
 import useSearchModal from '@/hooks/useSearchModal';
 import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
+import Link from 'next/link';
 
 const Search = () => {
     const searchModal = useSearchModal();
     const params = useSearchParams();
     const city = params?.get('city');
     const citiesParam = params?.get('cities');
+    const commuteParam = params?.get('commute');
 
-    let label = "Rechercher une location";
+    let label = "On cherche où ?";
     let hasLocation = false;
 
-    if (citiesParam) {
+    if (commuteParam) {
+        try {
+            const points = JSON.parse(commuteParam);
+            if (Array.isArray(points) && points.length > 0) {
+                hasLocation = true;
+                if (points.length === 1) {
+                    // Truncate label to keep it short (e.g. "Paris" instead of "Paris, France")
+                    const shortLabel = points[0].label.split(',')[0];
+                    label = `${points[0].time} min • ${shortLabel}`;
+                } else {
+                    label = `Recherche croisée (${points.length} lieux)`;
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing commute param", e);
+        }
+    } else if (citiesParam) {
         const cities = citiesParam.split(',');
         if (cities.length > 0) {
             hasLocation = true;
@@ -68,19 +86,36 @@ const Search = () => {
         <div className="flex flex-row items-center gap-2 overflow-x-auto md:overflow-visible w-full md:w-auto pb-2 scrollbar-hide">
             {/* Location Search */}
             <div
-                onClick={() => searchModal.onOpen({ step: 0 })}
+                onClick={() => searchModal.onOpen({ step: commuteParam ? 3 : 0 })}
                 className="border border-border w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer bg-background shadow-md md:shadow-none"
             >
                 <div className="flex flex-row items-center justify-between px-2 gap-3">
                     <div className="p-2 bg-primary rounded-full text-primary-foreground">
                         <SearchIcon size={18} strokeWidth={2.5} />
                     </div>
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium truncate flex-1 text-left pl-2">
                         {label}
                     </div>
-                    {/* Ghost element for centering balance */}
-                    <div className="p-2 bg-transparent rounded-full text-transparent invisible">
-                        <SearchIcon size={18} />
+
+                    {/* Vertical Divider & Add Favorite Button */}
+                    <div className="flex items-center gap-3 pr-2">
+                        <div className="w-px h-6 bg-neutral-300 dark:bg-neutral-700"></div>
+                        <Link
+                            href="/account/preferences"
+                            onClick={(e) => e.stopPropagation()}
+                            className="
+                                p-1.5 
+                                bg-secondary 
+                                hover:bg-neutral-200
+                                dark:hover:bg-neutral-700 
+                                rounded-full 
+                                transition 
+                                flex items-center justify-center
+                            "
+                            title="Ajouter un favori"
+                        >
+                            <Plus size={16} className="text-foreground" />
+                        </Link>
                     </div>
                 </div>
             </div>

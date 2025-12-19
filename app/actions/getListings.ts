@@ -23,6 +23,7 @@ export interface IListingsParams {
     commuteLongitude?: number;
     commuteTransportMode?: string;
     commuteMaxTime?: number;
+    commute?: string; // JSON Array of CommutePoint
 }
 
 export default async function getListings(
@@ -45,54 +46,96 @@ export default async function getListings(
             commuteLatitude,
             commuteLongitude,
             commuteTransportMode,
-            commuteMaxTime
+            commuteMaxTime,
+            commute
         } = params;
 
         let query: any = {};
         let commuteIds: string[] | null = null;
-        let isochronePolygon = null;
+
+        // Prepare Commute Points
+        let commutePoints: any[] = [];
+
+        if (commute) {
+            try {
+                const parsed = JSON.parse(commute);
+                if (Array.isArray(parsed)) {
+                    commutePoints = parsed;
+                }
+            } catch (e) {
+                console.error("Failed to parse commute params", e);
+            }
+        } else if (commuteLatitude && commuteLongitude && commuteTransportMode && commuteMaxTime) {
+            // Legacy / Single point fallback
+            commutePoints = [{
+                lat: commuteLatitude,
+                lng: commuteLongitude,
+                mode: commuteTransportMode,
+                time: commuteMaxTime
+            }];
+        }
 
         // Commute Filtering Logic
-        if (commuteLatitude && commuteLongitude && commuteTransportMode && commuteMaxTime) {
-            console.log("Fetching Isochrone...");
-            const isochrone = await getIsochrone(
-                [+commuteLongitude, +commuteLatitude],
-                commuteTransportMode,
-                +commuteMaxTime
-            );
+        if (commutePoints.length > 0) {
+            console.log(`Processing ${commutePoints.length} commute points...`);
 
-            if (isochrone && isochrone.features && isochrone.features.length > 0) {
-                // Get the geometry of the isochrone
-                const geometry = isochrone.features[0].geometry;
-                isochronePolygon = geometry;
+            // To perform intersection, we need to track IDs valid for EACH point.
+            // We start with null, and for first point we set it. For subsequent, we intersect.
+            let validIds: Set<string> | null = null;
 
-                // Perform Geospatial Query using PostGIS
-                // We need to find listings where (longitude, latitude) is WITHIN the polygon
-                // Prisma doesn't support PostGIS natively in 'findMany' nicely yet for this specific 'geoWithin' raw logic without extensions or raw query.
-                // Best approach: Get IDs of listings within polygon via raw query, then filter main query by these IDs.
+            for (const point of commutePoints) {
+                const { lat, lng, mode, time } = point;
 
-                // Construct GeoJSON string for PostGIS
-                const geoJsonString = JSON.stringify(geometry);
+                const isochrone = await getIsochrone(
+                    [+lng, +lat],
+                    mode,
+                    +time
+                );
 
-                // Use ST_GeomFromGeoJSON to interpret the polygon
-                const rawListings = await prisma.$queryRaw<{ id: string }[]>`
-                    SELECT id 
-                    FROM "Listing"
-                    WHERE "latitude" IS NOT NULL 
-                    AND "longitude" IS NOT NULL
-                    AND ST_Within(
-                        ST_SetSRID(ST_MakePoint("longitude", "latitude"), 4326),
-                        ST_SetSRID(ST_GeomFromGeoJSON(${geoJsonString}), 4326)
-                    )
-                `;
+                let currentPointIds: string[] = [];
 
-                commuteIds = rawListings.map((l) => l.id);
-                console.log(`Found ${commuteIds.length} listings in commute zone.`);
+                if (isochrone && isochrone.features && isochrone.features.length > 0) {
+                    const geometry = isochrone.features[0].geometry;
+                    const geoJsonString = JSON.stringify(geometry);
+
+                    // PostGIS Query for this point
+                    const rawListings = await prisma.$queryRaw<{ id: string }[]>`
+                        SELECT id 
+                        FROM "Listing"
+                        WHERE "latitude" IS NOT NULL 
+                        AND "longitude" IS NOT NULL
+                        AND ST_Within(
+                            ST_SetSRID(ST_MakePoint("longitude", "latitude"), 4326),
+                            ST_SetSRID(ST_GeomFromGeoJSON(${geoJsonString}), 4326)
+                        )
+                    `;
+                    currentPointIds = rawListings.map((l) => l.id);
+                }
+
+                // Intersection Logic
+                const currentSet = new Set(currentPointIds);
+                if (validIds === null) {
+                    validIds = currentSet;
+                } else {
+                    // Intersect validIds with currentSet
+                    // Explicitly cast validIds to avoid inference issues if any
+                    const previousIds: string[] = Array.from(validIds as Set<string>);
+                    const intersected: string[] = previousIds.filter((id: string) => currentSet.has(id));
+                    validIds = new Set(intersected);
+                }
+
+                // Optimization: if validIds becomes empty, we can stop early
+                if (validIds && validIds.size === 0) {
+                    break;
+                }
+            }
+
+            if (validIds) {
+                commuteIds = Array.from(validIds);
+                console.log(`Found ${commuteIds.length} listings verifying ALL commute criteria.`);
 
                 if (commuteIds.length === 0) {
-                    // optimization: if no listings found in zone, return empty immediately or let query handle empty IN clause
-                    // but query.OR / AND logic might get complex. Let's just strict filter.
-                    query.id = { in: [] };
+                    query.id = { in: [] }; // Force empty result
                 } else {
                     query.id = { in: commuteIds };
                 }
