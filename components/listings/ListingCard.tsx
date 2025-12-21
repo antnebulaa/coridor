@@ -6,9 +6,12 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
 import { LayoutGrid } from 'lucide-react';
+import { TbElevator } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
 import ListingCardCarousel from "./ListingCardCarousel";
+
+
 
 interface ListingCardProps {
     data: SafeListing;
@@ -128,7 +131,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         </div>
 
                         {isNew && (
-                            <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-[8px] text-[10px] font-bold shadow-sm z-10 uppercase tracking-wide">
+                            <div className="absolute top-3 left-3 bg-card px-2 py-1 rounded-[8px] text-[10px] font-bold shadow-sm z-10 uppercase tracking-wide text-card-foreground">
                                 Nouveau
                             </div>
                         )}
@@ -157,7 +160,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                 </div>
                                 <div className="text-right flex flex-col items-end whitespace-nowrap pl-1">
-                                    <div className="font-semibold text-lg md:text-[22px] text-foreground leading-tight">
+                                    <div className="font-semibold text-[26px] md:text-[22px] text-foreground leading-tight">
                                         {price}€<span className="md:hidden text-muted-foreground font-semibold"> CC</span>
                                     </div>
                                     <div className="hidden md:block text-muted-foreground text-xs font-normal">
@@ -174,29 +177,45 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {data.neighborhood && (
                                 <div className="text-neutral-500 text-xs md:text-sm flex items-center gap-1 -mt-0.5 md:-mt-1">
                                     <LayoutGrid size={14} className="w-3 h-3 md:w-[14px] md:h-[14px]" />
-                                    <span className="line-clamp-1">Quartier {data.neighborhood}</span>
+                                    <span className="line-clamp-1">
+                                        {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                                    </span>
                                 </div>
                             )}
 
                             {/* Details Row */}
-                            <div className="flex flex-row items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">
-                                <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
-                                    <span className="font-medium text-foreground">{data.roomCount}</span> {data.roomCount > 1 ? 'pièces' : 'pièce'}
-                                </div>
-                                <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
-                                    <span className="font-medium text-foreground">{data.roomCount - 1}</span> {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'}
-                                </div>
-                                {/* Mobile-only compact bedroom count if space is tight? Or just hide/show based on width. 
-                                    Let's keep it simple for now, maybe hide 'chambres' text on very small screens if needed.
-                                    For now, I'll keep it as is but with tighter padding above.
-                                */}
-                                <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
-                                    <span className="font-medium text-foreground">{data.roomCount - 1}</span> ch.
-                                </div>
+                            <div className="flex flex-row items-center gap-2 md:gap-3 text-[18px] text-muted-foreground mt-1 md:mt-2">
+                                {data.roomCount === 1 ? (
+                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                        <span className="font-medium text-foreground">Studio</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                            <span className="font-medium text-foreground">{data.roomCount}</span> {data.roomCount > 1 ? 'pièces' : 'pièce'}
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
+                                            <span className="font-medium text-foreground">{data.roomCount - 1}</span> {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'}
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
+                                            <span className="font-medium text-foreground">{data.roomCount - 1}</span> ch.
+                                        </div>
+                                    </>
+                                )}
 
                                 {surfaceDisplay && (
                                     <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
                                         <span className="font-medium text-foreground">{surfaceDisplay}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                    <span className="font-medium text-[#282828]">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                                </div>
+                                {data.hasElevator && (
+                                    <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-white" title="Ascenseur">
+                                        <TbElevator size={18} />
+                                        <span className="invisible w-0 overflow-hidden font-medium">A</span>
                                     </div>
                                 )}
                             </div>
@@ -253,7 +272,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-1 mt-2">
-                    <div className="font-semibold text-xl">
+                    <div className="font-semibold text-[26px]">
                         {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
                     </div>
 
@@ -263,12 +282,26 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     {data.neighborhood && (
                         <div className="text-muted-foreground text-sm flex items-center gap-1">
                             <LayoutGrid size={14} />
-                            <span>Quartier {data.neighborhood}</span>
+                            <span>
+                                {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                            </span>
                         </div>
                     )}
 
-                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-sm">
-                        {data.roomCount} {data.roomCount > 1 ? 'pièces' : 'pièce'} • {data.roomCount - 1} {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'} • {surfaceDisplay}
+                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
+                        {data.roomCount === 1
+                            ? `Studio • ${surfaceDisplay}`
+                            : `${data.roomCount} ${data.roomCount > 1 ? 'pièces' : 'pièce'} • ${data.roomCount - 1} ${(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
+                        }
+                        <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md ml-2">
+                            <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                        </div>
+                        {data.hasElevator && (
+                            <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-white ml-2" title="Ascenseur">
+                                <TbElevator size={18} />
+                                <span className="invisible w-0 overflow-hidden font-medium">A</span>
+                            </div>
+                        )}
                     </div>
 
 
@@ -308,6 +341,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 )}
             </div>
         </div>
+
     );
 };
 

@@ -69,16 +69,16 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             <div className="flex flex-col gap-4">
                 <div className="flex flex-row justify-between items-start">
                     <div className="flex flex-col gap-1">
-                        <div className="text-lg font-medium">
+                        <div className="text-lg font-medium dark:text-white">
                             Legal name
                         </div>
-                        <div className="text-neutral-500 font-light">
+                        <div className="text-neutral-500 dark:text-neutral-400 font-light">
                             {isEditingName ? 'This is the name on your travel document, which could be a license or a passport.' : currentUser?.name}
                         </div>
                     </div>
                     <div
                         onClick={() => setIsEditingName(!isEditingName)}
-                        className="text-black underline font-medium cursor-pointer hover:text-neutral-800"
+                        className="text-black dark:text-white underline font-medium cursor-pointer hover:text-neutral-800 dark:hover:text-neutral-300"
                     >
                         {isEditingName ? 'Cancel' : 'Edit'}
                     </div>
@@ -108,16 +108,16 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             <div className="flex flex-col gap-4">
                 <div className="flex flex-row justify-between items-start">
                     <div className="flex flex-col gap-1">
-                        <div className="text-lg font-medium">
+                        <div className="text-lg font-medium dark:text-white">
                             Email address
                         </div>
-                        <div className="text-neutral-500 font-light">
+                        <div className="text-neutral-500 dark:text-neutral-400 font-light">
                             {isEditingEmail ? 'Use an address you’ll always have access to.' : currentUser?.email}
                         </div>
                     </div>
                     <div
                         onClick={() => setIsEditingEmail(!isEditingEmail)}
-                        className="text-black underline font-medium cursor-pointer hover:text-neutral-800"
+                        className="text-black dark:text-white underline font-medium cursor-pointer hover:text-neutral-800 dark:hover:text-neutral-300"
                     >
                         {isEditingEmail ? 'Cancel' : 'Edit'}
                     </div>

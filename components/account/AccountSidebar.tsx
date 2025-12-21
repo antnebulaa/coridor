@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, CreditCard, Globe, Briefcase, Building, Wrench, ChevronRight, Home, Repeat, Settings } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -57,18 +57,6 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             active: pathname === '/account/security'
         },
         {
-            label: 'Payments & payouts',
-            icon: CreditCard,
-            href: '/account/payments',
-            active: pathname === '/account/payments'
-        },
-        {
-            label: 'Taxes',
-            icon: FileText,
-            href: '/account/taxes',
-            active: pathname === '/account/taxes'
-        },
-        {
             label: 'Notifications',
             icon: Bell,
             href: '/account/notifications',
@@ -91,24 +79,6 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             icon: Settings,
             href: '/account/settings',
             active: pathname === '/account/settings'
-        },
-        {
-            label: 'Travel for work',
-            icon: Briefcase,
-            href: '/account/travel',
-            active: pathname === '/account/travel'
-        },
-        {
-            label: 'Professional hosting tools',
-            icon: Wrench,
-            href: '/account/pro-tools',
-            active: pathname === '/account/pro-tools'
-        },
-        {
-            label: 'Refer a host',
-            icon: Building,
-            href: '/account/referrals',
-            active: pathname === '/account/referrals'
         },
     ];
 

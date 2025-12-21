@@ -148,7 +148,8 @@ const Modal: React.FC<ModalProps> = ({
                 onClick={handleClose}
                 className={`
                     justify-center 
-                    items-center 
+                    items-end
+                    md:items-center 
                     flex 
                     overflow-x-hidden 
                     overflow-hidden 
@@ -199,14 +200,17 @@ const Modal: React.FC<ModalProps> = ({
                 >
                     {/* CONTENT */}
                     <div
-                        style={{ transform: `translateY(${translateY}px)` }}
+                        style={isDragging || translateY !== 0 ? { transform: `translateY(${translateY}px)` } : undefined}
                         className={`
-                            translate
+                            transform
+                            transition
                             duration-300
-                            h-full
+                            ease-out
+                            h-[100dvh]
+                            md:h-auto
                             ${showModal ? 'translate-y-0' : 'translate-y-full'}
                             ${showModal ? 'opacity-100' : 'opacity-0'}
-                            ${isDragging ? 'transition-none' : 'transition-transform'} 
+                            ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
                         <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-background outline-none focus:outline-none">

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { name, address, latitude, longitude, transportMode } = body;
+        const { name, address, latitude, longitude, transportMode, icon } = body;
 
         if (!name || !address || !latitude || !longitude) {
             return new NextResponse("Missing Info", { status: 400 });
@@ -24,14 +24,15 @@ export async function POST(request: Request) {
                 address,
                 latitude,
                 longitude,
-                transportMode: transportMode || 'TRANSIT'
+                transportMode: transportMode || 'TRANSIT',
+                icon
             }
         });
 
         return NextResponse.json(commuteLocation);
-    } catch (error) {
+    } catch (error: any) {
         console.log('[COMMUTE_POST]', error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ message: error?.message || "Internal Error" }, { status: 500 });
     }
 }
 
@@ -84,6 +85,43 @@ export async function DELETE(request: Request) {
         return NextResponse.json(deletedLocation);
     } catch (error) {
         console.log('[COMMUTE_DELETE]', error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
+
+export async function PUT(request: Request) {
+    try {
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+            return NextResponse.error();
+        }
+
+        const body = await request.json();
+        const { id, name, address, latitude, longitude, transportMode, icon } = body;
+
+        if (!id || !name || !address || !latitude || !longitude) {
+            return new NextResponse("Missing Info", { status: 400 });
+        }
+
+        const updatedLocation = await prisma.commuteLocation.updateMany({
+            where: {
+                id: id,
+                userId: currentUser.id
+            },
+            data: {
+                name,
+                address,
+                latitude,
+                longitude,
+                transportMode: transportMode || 'TRANSIT',
+                icon
+            }
+        });
+
+        return NextResponse.json(updatedLocation);
+    } catch (error) {
+        console.log('[COMMUTE_PUT]', error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

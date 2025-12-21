@@ -166,16 +166,16 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
                 {/* Content - Hidden on mobile if content is NOT shown */}
                 <div className={`col-span-3 ${!showContent ? 'hidden md:block' : 'block'}`}>
-                    <div className="md:border-[1px] md:rounded-xl md:shadow-sm relative bg-white min-h-[50vh] -mx-4 md:mx-0">
+                    <div className="md:border-[1px] md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
                         {/* Mobile Header: Back Button (Sticky) */}
                         <div className="
                             md:hidden 
                             sticky 
                             h-16
                             z-50 
-                            bg-white 
+                            bg-white dark:bg-neutral-900
                             px-6
-                            border-b
+                            border-b dark:border-neutral-800
                             flex
                             items-center
                             justify-between
@@ -183,7 +183,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                             <button
                                 onClick={handleBack}
                                 className="
-                                    w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition
+                                    w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center justify-center transition
                                 "
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -204,12 +204,12 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                                             setActiveRoomId(null);
                                             setIsAllPhotosOpen(true);
                                         }}
-                                        className="h-10 px-4 text-xs bg-neutral-100 hover:bg-neutral-200"
+                                        className="h-10 px-4 text-xs bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                                     />
                                     <CircleButton
                                         icon={Plus}
                                         onClick={() => setIsAddRoomModalOpen(true)}
-                                        className="w-10 h-10 bg-neutral-100 hover:bg-neutral-200"
+                                        className="w-10 h-10 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                                     />
                                 </div>
                             )}

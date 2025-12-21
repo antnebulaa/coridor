@@ -32,11 +32,11 @@ const Header: React.FC<HeaderProps> = ({
     return (
         <>
             <div className="
-        bg-white 
+        bg-white dark:bg-neutral-900
         w-full 
         flex 
         border-b 
-        border-gray-200
+        border-gray-200 dark:border-neutral-800
         sm:px-4 
         py-3 
         px-4 
@@ -62,10 +62,10 @@ const Header: React.FC<HeaderProps> = ({
                     </Link>
                     <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} size={48} />
                     <div className="flex flex-col">
-                        <div className="text-2xl font-medium text-neutral-800">
+                        <div className="text-2xl font-medium text-neutral-800 dark:text-white">
                             {conversation.name || otherUser?.name}
                         </div>
-                        <div className="text-sm font-light text-neutral-500">
+                        <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
                             {statusText}
                         </div>
                     </div>

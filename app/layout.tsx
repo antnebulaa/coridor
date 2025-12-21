@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import MobileMenu from "@/components/navbar/MobileMenu";
@@ -21,8 +21,39 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { Suspense } from "react";
 
-const font = Inter({
-  subsets: ["latin"],
+const font = localFont({
+  src: [
+    {
+      path: '../public/fonts/Matter-Light.ttf',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Matter-Regular.ttf',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Matter-Medium.ttf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Matter-SemiBold.ttf',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Matter-Bold.ttf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/Matter-Heavy.ttf',
+      weight: '800',
+      style: 'normal',
+    },
+  ],
 });
 
 export const metadata: Metadata = {

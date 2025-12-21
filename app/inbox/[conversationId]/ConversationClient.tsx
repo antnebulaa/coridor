@@ -91,14 +91,14 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
     return (
         <div className="h-full flex flex-row">
-            <div className="h-full flex flex-col flex-1 min-w-0 border-r border-gray-200">
+            <div className="h-full flex flex-col flex-1 min-w-0 border-r border-gray-200 dark:border-neutral-800">
                 <div className="flex-none">
                     <Header conversation={conversation} onToggleDossier={toggleDossier} />
                 </div>
                 <div className="flex-1 overflow-y-auto min-h-0">
                     <Body initialMessages={messages} onOpenVisitSlots={handleOpenVisitSelection} />
                 </div>
-                <div className="flex-none bg-white">
+                <div className="flex-none bg-white dark:bg-neutral-900">
                     <Form
                         onOptimisticMessage={handleOptimisticMessage}
                         currentUser={currentUser}
@@ -107,20 +107,20 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             </div>
             {/* Dossier Sidebar - Desktop Only for now or Drawer? keeping simple for existing logic */}
             {showDossier && otherUser && otherUser.id !== currentUser?.id && otherUser.tenantProfile && (
-                <div className="hidden xl:flex flex-col w-[410px] h-full bg-white border-l border-gray-200">
+                <div className="hidden xl:flex flex-col w-[410px] h-full bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-neutral-800">
                     <div className="
                         flex-none
-                        bg-white 
+                        bg-white dark:bg-neutral-900
                         w-full 
                         flex 
                         border-b 
-                        border-gray-200
+                        border-gray-200 dark:border-neutral-800
                         py-3 
                         px-6 
                         items-center
                         h-[73px]
                     ">
-                        <h2 className="text-2xl font-medium text-neutral-800">Dossier candidat</h2>
+                        <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6">
@@ -133,9 +133,9 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     </div>
                     <div className="
                         flex-none
-                        bg-white
+                        bg-white dark:bg-neutral-900
                         border-t
-                        border-gray-200
+                        border-gray-200 dark:border-neutral-800
                         p-4
                     ">
                         <Button
@@ -161,32 +161,32 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             {/* Right Sidebar (Visit Selection or Listing Recap) */}
             {!showDossier && rent && (
                 <div className={clsx(`
-                    flex flex-col h-full bg-white border-l border-gray-200
+                    flex flex-col h-full bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-neutral-800
                     xl:w-[410px]
                     `,
                     isVisitSelectionOpen ? "fixed inset-0 z-50 w-full xl:static xl:z-auto" : "hidden xl:flex w-[410px]"
                 )}>
                     <div className="
                         flex-none
-                        bg-white 
+                        bg-white dark:bg-neutral-900
                         w-full 
                         flex 
                         border-b 
-                        border-gray-200
+                        border-gray-200 dark:border-neutral-800
                         py-3 
                         px-6 
                         items-center
                         justify-between
                         h-[73px]
                     ">
-                        <h2 className="text-2xl font-medium text-neutral-800">
+                        <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">
                             {isVisitSelectionOpen ? 'Visites' : 'Récapitulatif'}
                         </h2>
                         {/* Mobile Close Button */}
                         {isVisitSelectionOpen && (
                             <button
                                 onClick={() => setIsVisitSelectionOpen(false)}
-                                className="p-2 -mr-2 text-gray-500 hover:text-black xl:hidden"
+                                className="p-2 -mr-2 text-gray-500 hover:text-black dark:text-neutral-400 dark:hover:text-white xl:hidden"
                             >
                                 <span className="sr-only">Fermer</span>
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -216,23 +216,23 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     <div className="flex flex-col gap-1">
-                                        <div className="text-xl font-bold">
-                                            {rent} € <span className="font-light text-neutral-500 text-sm">/ mois</span>
+                                        <div className="text-xl font-bold dark:text-white">
+                                            {rent} € <span className="font-light text-neutral-500 dark:text-neutral-400 text-sm">/ mois</span>
                                         </div>
-                                        <div className="text-sm font-medium text-neutral-500">
+                                        <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
                                             {listing?.category || "Appartement"} - {listing?.city}
                                         </div>
-                                        <div className="text-sm text-neutral-500">
+                                        <div className="text-sm text-neutral-500 dark:text-neutral-400">
                                             Propriétaire : {listing?.user?.name}
                                         </div>
-                                        <div className="text-sm text-neutral-500 mt-1">
+                                        <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                                             {listing?.roomCount} pièces • {listing?.guestCount} chambres • {displaySurface} {unit}
                                         </div>
                                         <div className="mt-4">
-                                            <div className="font-bold text-sm text-neutral-900">
+                                            <div className="font-bold text-sm text-neutral-900 dark:text-white">
                                                 Vous avez envoyé une candidature
                                             </div>
-                                            <div className="text-sm text-neutral-500 mt-1">
+                                            <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                                                 {listing?.user?.name} a bien reçu votre résumé et dossier et va maintenant étudier votre profil.
                                             </div>
                                         </div>

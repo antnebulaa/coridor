@@ -96,12 +96,12 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
 
     if (isBooked) {
         return (
-            <div className="bg-green-50 p-6 rounded-lg border border-green-200 text-center h-full flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg border border-green-200 dark:border-green-800 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mb-4">
                     <span className="text-2xl">✅</span>
                 </div>
-                <h3 className="text-xl font-bold text-green-800 mb-2">Visite Confirmée</h3>
-                <p className="text-green-700">
+                <h3 className="text-xl font-bold text-green-800 dark:text-green-400 mb-2">Visite Confirmée</h3>
+                <p className="text-green-700 dark:text-green-300">
                     Votre demande a bien été prise en compte.
                 </p>
             </div>
@@ -109,18 +109,18 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
     }
 
     if (isLoading) {
-        return <div className="p-8 text-center text-gray-500">Chargement des disponibilités...</div>;
+        return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Chargement des disponibilités...</div>;
     }
 
     if (slots.length === 0) {
-        return <div className="p-8 text-center text-gray-500">Aucun créneau disponible pour le moment.</div>;
+        return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Aucun créneau disponible pour le moment.</div>;
     }
 
     return (
-        <div className="flex flex-col h-full bg-white">
-            <div className="p-6 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-neutral-800">Choisissez la date de consultation</h3>
-                <p className="text-sm text-gray-500 mt-1">
+        <div className="flex flex-col h-full bg-white dark:bg-neutral-900">
+            <div className="p-6 border-b border-gray-200 dark:border-neutral-800">
+                <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Choisissez la date de consultation</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Ces créneaux correspondent à des visites groupées (2 candidats maximum).
                 </p>
             </div>
@@ -132,58 +132,37 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                     const daySlots = slots.filter(s => s.date === dateStr);
 
                     return (
-                        <div key={dateStr} className="border border-gray-200 rounded-lg overflow-hidden mb-3">
+                        <div key={dateStr} className="border border-gray-200 dark:border-neutral-800 rounded-lg overflow-hidden mb-3">
                             <button
                                 onClick={() => setOpenDate(isOpen ? null : dateStr)}
-                                className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition"
+                                className="w-full flex items-center justify-between p-4 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 transition"
                             >
-                                <span className="font-semibold text-neutral-800 capitalize">
+                                <span className="font-semibold text-neutral-800 dark:text-white capitalize">
                                     {format(dateObj, 'EEEE d MMMM yyyy', { locale: fr })}
                                 </span>
-                                {isOpen ? <ChevronUp size={20} className="text-blue-600" /> : <ChevronDown size={20} className="text-gray-400" />}
+                                {isOpen ? <ChevronUp size={20} className="text-blue-600 dark:text-blue-400" /> : <ChevronDown size={20} className="text-gray-400" />}
                             </button>
 
                             {isOpen && (
                                 <div
-                                    className="p-4 bg-blue-50 border-t border-gray-100"
+                                    className="p-4 bg-blue-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800"
                                     style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}
                                 >
                                     {daySlots.map((slot, idx) => {
                                         const isSelected = selectedSlot?.date === slot.date && selectedSlot?.startTime === slot.startTime;
-                                        const isHovered = hoveredSlotKey === `${slot.date}-${slot.startTime}`;
-
-                                        // Colors:
-                                        // Selected: bg-blue-600 (#2563EB), text-white
-                                        // Hover: bg-blue-300 (#93C5FD), text-blue-900 (#1E3A8A)
-                                        // Default: bg-blue-100 (#DBEAFE), text-blue-700 (#1D4ED8)
-
-                                        let bg = '#DBEAFE';
-                                        let color = '#1D4ED8';
-
-                                        if (isSelected) {
-                                            bg = '#2563EB';
-                                            color = '#FFFFFF';
-                                        } else if (isHovered && !isBooking) {
-                                            bg = '#93C5FD';
-                                            color = '#1E3A8A';
-                                        }
 
                                         return (
                                             <button
                                                 key={idx}
                                                 disabled={isBooking}
                                                 onClick={() => handleSelectSlot(slot)}
-                                                onMouseEnter={() => setHoveredSlotKey(`${slot.date}-${slot.startTime}`)}
-                                                onMouseLeave={() => setHoveredSlotKey(null)}
-                                                style={{
-                                                    backgroundColor: bg,
-                                                    color: color,
-                                                }}
                                                 className={`
                                                     w-full
                                                     px-2 py-2 rounded-md font-semibold text-sm
                                                     transition text-center truncate
-                                                    ${isSelected ? 'shadow-md ring-2 ring-blue-600 ring-offset-1' : ''}
+                                                    ${isSelected
+                                                        ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-600 ring-offset-1 dark:ring-offset-neutral-900'
+                                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-800/50'}
                                                 `}
                                             >
                                                 {slot.startTime}
@@ -197,21 +176,21 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                 })}
             </div>
 
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900">
                 {selectedSlot ? (
                     <div className="mb-6 text-left">
-                        <div className="font-normal text-gray-900">
+                        <div className="font-normal text-gray-900 dark:text-white">
                             Vous avez sélectionné :
                         </div>
-                        <div className="font-medium text-gray-900 mb-4 capitalize">
+                        <div className="font-medium text-gray-900 dark:text-white mb-4 capitalize">
                             le {format(parseISO(selectedSlot.date), 'EEEE d MMMM yyyy', { locale: fr })} à {selectedSlot.startTime}
                         </div>
-                        <div className="font-normal text-sm text-gray-500">
+                        <div className="font-normal text-sm text-gray-500 dark:text-gray-400">
                             Veuillez prévoir {getDuration(selectedSlot.startTime, selectedSlot.endTime)} min pour ce rendez-vous
                         </div>
                     </div>
                 ) : (
-                    <div className="mb-6 text-center text-sm text-gray-400 h-[88px] flex items-center justify-center">
+                    <div className="mb-6 text-center text-sm text-gray-400 dark:text-gray-500 h-[88px] flex items-center justify-center">
                         Sélectionnez un créneau ci-dessus
                     </div>
                 )}

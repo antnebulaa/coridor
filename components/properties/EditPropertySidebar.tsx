@@ -20,7 +20,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
     return (
         <div className="flex flex-col gap-6">
             {/* Tabs */}
-            <div className="flex flex-row items-center justify-between bg-neutral-100 p-1 rounded-full">
+            <div className="flex flex-row items-center justify-between bg-neutral-100 dark:bg-neutral-800 p-1 rounded-full">
                 {sidebarTabs.map((tab) => (
                     <div
                         key={tab.id}
@@ -34,7 +34,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                             cursor-pointer 
                             transition 
                             w-full
-                            ${activeTab === tab.id ? 'bg-white shadow-sm text-black' : 'text-neutral-500 hover:text-black'}
+                            ${activeTab === tab.id ? 'bg-white dark:bg-neutral-700 shadow-sm text-black dark:text-white' : 'text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white'}
                         `}
                     >
                         {tab.id === 'preferences' ? (
@@ -58,7 +58,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                             cursor-pointer 
                             transition
                             font-medium
-                            ${activeSection === link.id ? 'bg-neutral-100 text-black' : 'text-neutral-500 hover:bg-neutral-50 hover:text-black'}
+                            ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white' : 'text-neutral-500 hover:bg-neutral-50 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-white'}
                         `}
                     >
                         {link.label}

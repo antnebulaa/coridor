@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react";
-import usePlacesAutocomplete from "use-places-autocomplete"; // We might not need this anymore if we do custom fetch
 import axios from 'axios';
-import { toast } from "react-hot-toast";
-import { MapPin, Star, X } from "lucide-react";
+import { MapPin, Star, X, TramFront } from "lucide-react";
 import Link from "next/link";
 
 export type AddressSelectValue = {
@@ -23,8 +21,10 @@ interface MapboxAddressSelectProps {
     onChange: (value: AddressSelectValue) => void;
     placeholder?: string;
     autoFocus?: boolean;
-    searchTypes?: string; // e.g. "address,poi" or "place,district,locality"
-    limitCountry?: string; // e.g. "fr"
+    searchTypes?: string;
+    limitCountry?: string;
+    clearOnSelect?: boolean;
+    renderAsList?: boolean;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -34,17 +34,17 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     onChange,
     placeholder,
     autoFocus,
-    searchTypes = "address,poi", // Default to address search
-    limitCountry = "fr" // Default to France
+    searchTypes, // Now optional/nullable in usage
+    limitCountry = "fr",
+    clearOnSelect = false,
+    renderAsList = false
 }) => {
     const [inputValue, setInputValue] = useState(value?.label || '');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
 
     // Manage placeholder state to clear on focus
     const defaultPlaceholder = placeholder || "Entrez une adresse...";
-    const [currentPlaceholder, setCurrentPlaceholder] = useState(defaultPlaceholder);
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -75,11 +75,22 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
         if (!query || query.length < 3) return;
 
         try {
+            // Construct URL parameters
+            const params = new URLSearchParams({
+                access_token: MAPBOX_TOKEN!,
+                country: limitCountry,
+                language: 'fr',
+                limit: '5' // Back to 5 as requested
+            });
+
+            // Only append types if searchTypes is provided and not empty
+            if (searchTypes) {
+                params.append('types', searchTypes);
+            }
+
             // Mapbox Geocoding API
-            // types configurable via props
-            // country configurable via props
             const response = await axios.get(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&types=${searchTypes}&country=${limitCountry}&language=fr`
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?${params.toString()}`
             );
 
             if (response.data && response.data.features) {
@@ -120,29 +131,25 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
         let district = '';
         let neighborhood = '';
 
-        // Context parsing
-        // Mapbox context is an array of objects { id, text, ... }
-        // e.g. [{id: 'neighborhood...', text: 'Batignolles'}, {id: 'postcode...', text: '75017'}, {id: 'place...', text: 'Paris'}, ...]
         if (feature.context) {
             feature.context.forEach((ctx: any) => {
                 if (ctx.id.startsWith('place')) {
                     city = ctx.text;
-                } else if (ctx.id.startsWith('region')) { // Usually "Île-de-France"
+                } else if (ctx.id.startsWith('region')) {
                     region = ctx.text;
                 } else if (ctx.id.startsWith('country')) {
                     country = ctx.text;
                 } else if (ctx.id.startsWith('neighborhood')) {
                     neighborhood = ctx.text;
-                } else if (ctx.id.startsWith('district')) { // Sometimes district is returned
+                } else if (ctx.id.startsWith('district')) {
                     district = ctx.text;
                 } else if (ctx.id.startsWith('locality')) {
-                    // Sometimes locality is used for city/village
                     if (!city) city = ctx.text;
                 }
             });
         }
 
-        // If city is Paris/Lyon/Marseille, try to infer district from postcode if not explicitly "district" type
+        // Infer district logic
         if (!district) {
             const postcodeCtx = feature.context?.find((c: any) => c.id.startsWith('postcode'));
             if (postcodeCtx && city) {
@@ -162,22 +169,20 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
             }
         }
 
-        // If 'neighborhood' was not found in context, verify if the feature itself is a neighborhood (if we allowed searching for it)
-        // But we restricted types to address,poi. 
-
         const selectedValue: AddressSelectValue = {
             label: address,
             value: feature.id, // Mapbox ID
             latlng: [lat, lng],
-            region: region || country, // Fallback
+            region: region || country,
             city: city,
             district: district,
             neighborhood: neighborhood,
             country: country
         };
 
-        setInputValue(address);
+        setInputValue(clearOnSelect ? '' : address);
         setShowSuggestions(false);
+        setSuggestions([]);
         onChange(selectedValue);
     };
 
@@ -187,74 +192,86 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
 
     return (
         <div ref={wrapperRef} className="relative">
-            <input
-                ref={inputRef}
-                value={inputValue}
-                onChange={handleInput}
-                placeholder={defaultPlaceholder}
-                autoFocus={autoFocus}
-                className="
-                    w-full
-                    p-4
-                    font-medium
-                    text-lg
-                    text-left
-                    bg-background
-                    dark:bg-[#282828]
-                    dark:focus:bg-[#323232]
-                    rounded-full
-                    outline-none
-                    transition
-                    disabled:opacity-70
-                    disabled:cursor-not-allowed
-                    ring-0
-                    focus:ring-0
-                "
-            />
-            {inputValue && (
-                <button
-                    onClick={() => {
-                        setInputValue('');
-                        setSuggestions([]);
-                        inputRef.current?.focus();
-                    }}
+            <div className="relative">
+                <input
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={handleInput}
+                    placeholder={defaultPlaceholder}
+                    autoFocus={autoFocus}
                     className="
-                        absolute 
-                        top-1/2 
-                        -translate-y-1/2 
-                        right-4 
-                        p-2 
-                        hover:bg-neutral-100 
-                        dark:hover:bg-neutral-800 
-                        rounded-full 
-                        transition 
-                        text-neutral-400 
-                        hover:text-foreground
+                        w-full
+                        p-4
+                        font-medium
+                        text-lg
+                        text-left
+                        bg-background
+                        dark:bg-[#282828]
+                        dark:focus:bg-[#323232]
+                        rounded-full
+                        outline-none
+                        transition
+                        disabled:opacity-70
+                        disabled:cursor-not-allowed
+                        ring-0
+                        focus:ring-0
                     "
-                >
-                    <X size={20} />
-                </button>
-            )}
+                />
+                {inputValue && (
+                    <button
+                        onClick={() => {
+                            setInputValue('');
+                            setSuggestions([]);
+                            inputRef.current?.focus();
+                        }}
+                        className="
+                            absolute 
+                            top-1/2 
+                            -translate-y-1/2 
+                            right-4 
+                            p-2 
+                            hover:bg-neutral-100 
+                            dark:hover:bg-neutral-800 
+                            rounded-full 
+                            transition 
+                            text-neutral-400 
+                            hover:text-foreground
+                        "
+                    >
+                        <X size={20} />
+                    </button>
+                )}
+            </div>
             {showSuggestions && suggestions.length > 0 && (
-                <ul className="
-                    absolute 
-                    z-9999 
-                    w-full 
-                    bg-white
-                    dark:bg-neutral-900 
-                    border 
-                    border-neutral-200
-                    dark:border-neutral-800 
-                    rounded-xl 
-                    mt-2
-                    shadow-xl 
-                    max-h-[300px] 
-                    overflow-y-auto
-                ">
+                <ul className={`
+                    ${renderAsList ? 'relative mt-4 border-0 shadow-none bg-transparent w-full' : 'absolute z-50 w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl mt-2 shadow-xl'}
+                    ${!renderAsList && 'max-h-[300px] overflow-y-auto'}
+                `}>
                     {suggestions.map((feature, index) => {
-                        // Extract secondary text (everything after the main text)
                         const mainText = feature.text || feature.place_name.split(',')[0];
                         const secondaryText = feature.place_name.replace(mainText, '').replace(/^,\s*/, '');
+
+                        const getIcon = (feature: any) => {
+                            const categories = (feature.properties?.category || '').toLowerCase();
+                            const maki = (feature.properties?.maki || '').toLowerCase();
+                            const name = feature.text?.toLowerCase() || '';
+                            const types = feature.place_type || [];
+
+                            // Check for official Maki icons (Mapbox standard)
+                            if (maki === 'rail' || maki === 'rail-metro' || maki === 'rail-light' || maki === 'metro') return <TramFront size={20} />;
+
+                            // Check categories && name && types
+                            if (
+                                categories.includes('tram') || name.includes('tramway') ||
+                                categories.includes('metro') || categories.includes('subway') || name.includes('métro') ||
+                                categories.includes('railway') || categories.includes('train') || name.includes('gare') || name.includes('rer') ||
+                                (types.includes('poi') && (name.includes('station') || name.includes('gare'))) // Fallback for generic station POIs
+                            ) {
+                                return <TramFront size={20} />;
+                            }
+
+                            return <MapPin size={20} />;
+                        };
 
                         return (
                             <li
@@ -272,7 +289,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                             >
                                 {/* Left Icon */}
                                 <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-full shrink-0 text-neutral-500">
-                                    <MapPin size={20} />
+                                    {getIcon(feature)}
                                 </div>
 
                                 {/* Text Content */}

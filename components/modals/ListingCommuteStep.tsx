@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import Heading from "../Heading";
-import CommuteAddressSelect from "../inputs/CommuteAddressSelect";
-import { Train, Car, Bike, Footprints, Clock, Star } from "lucide-react"; // Import Clock, Star
+import MapboxAddressSelect, { AddressSelectValue } from "../inputs/MapboxAddressSelect";
+import { Train, Car, Bike, Footprints, Clock, Star, Briefcase, Home, GraduationCap, Heart } from "lucide-react"; // Added imports
 import { Button } from "../ui/Button";
 
 enum STEPS {
@@ -44,6 +44,14 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
         { label: 'À pied', icon: Footprints, value: 'walking' },
     ];
 
+    const iconList = [
+        { id: 'briefcase', icon: Briefcase, label: 'Travail' },
+        { id: 'home', icon: Home, label: 'Bureaux' },
+        { id: 'school', icon: GraduationCap, label: 'École' },
+        { id: 'favorite', icon: Star, label: 'Favori' },
+        { id: 'partner', icon: Heart, label: 'Partenaire' }
+    ];
+
     const addPoint = (point: CommutePoint) => {
         if (commutePoints.length >= 2) return;
         const newPoints = [...commutePoints, point];
@@ -78,7 +86,7 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
             {/* Initial Empty State */}
             {commutePoints.length === 0 && (
                 <div className="flex flex-col gap-2 w-full animate-in fade-in zoom-in-95 duration-200">
-                    <CommuteAddressSelect
+                    <MapboxAddressSelect
                         value={undefined}
                         onChange={(value) => {
                             addPoint({
@@ -91,36 +99,41 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
                         }}
                         placeholder="On cherche où ?"
                         autoFocus={true}
+                        renderAsList={true}
+                        clearOnSelect
                     />
                     {savedLocations && savedLocations.length > 0 && (
                         <div className="flex flex-col gap-2 mt-2">
                             <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Favoris</div>
-                            {savedLocations.map((loc) => (
-                                <div
-                                    key={loc.id}
-                                    onClick={() => {
-                                        addPoint({
-                                            lat: loc.latitude,
-                                            lng: loc.longitude,
-                                            mode: loc.transportMode?.toLowerCase() || 'driving',
-                                            time: 30,
-                                            label: loc.name || loc.address
-                                        });
-                                    }}
-                                    className="flex items-center gap-4 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-black dark:hover:border-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer transition active:scale-95"
-                                >
-                                    <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-full">
-                                        {loc.name?.toLowerCase().includes('travail') || loc.name?.toLowerCase().includes('bureau')
-                                            ? <Clock size={16} />
-                                            : <Star size={16} />
-                                        }
+                            {savedLocations.map((loc) => {
+                                // Logic to match icon
+                                const matchedIcon = iconList.find(i => i.id === loc.icon);
+                                const Icon = matchedIcon ? matchedIcon.icon : Star;
+
+                                return (
+                                    <div
+                                        key={loc.id}
+                                        onClick={() => {
+                                            addPoint({
+                                                lat: loc.latitude,
+                                                lng: loc.longitude,
+                                                mode: loc.transportMode?.toLowerCase() || 'driving',
+                                                time: 30,
+                                                label: loc.name || loc.address
+                                            });
+                                        }}
+                                        className="flex items-center gap-4 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-black dark:hover:border-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer transition active:scale-95"
+                                    >
+                                        <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-full">
+                                            <Icon size={16} />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-sm">{loc.name || "Lieu enregistré"}</span>
+                                            <span className="text-xs text-neutral-500 line-clamp-1">{loc.address}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <span className="font-semibold text-sm">{loc.name || "Lieu enregistré"}</span>
-                                        <span className="text-xs text-neutral-500 line-clamp-1">{loc.address}</span>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -189,7 +202,7 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
                                         </button>
                                     ) : (
                                         <div className="flex flex-col gap-2 w-full animate-in fade-in zoom-in-95 duration-200">
-                                            <CommuteAddressSelect
+                                            <MapboxAddressSelect
                                                 value={undefined}
                                                 onChange={(value) => {
                                                     addPoint({
@@ -202,6 +215,8 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
                                                 }}
                                                 placeholder="On cherche où ?"
                                                 autoFocus={true}
+                                                renderAsList={true}
+                                                clearOnSelect
                                             />
                                             <div
                                                 onClick={(e) => { e.stopPropagation(); setIsAdding(false); }}
@@ -215,6 +230,11 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
                                                     {savedLocations.map((loc) => {
                                                         const isSelected = commutePoints.some(p => p.lat === loc.latitude && p.lng === loc.longitude);
                                                         if (isSelected) return null;
+
+                                                        // Logic to match icon
+                                                        const matchedIcon = iconList.find(i => i.id === loc.icon);
+                                                        const Icon = matchedIcon ? matchedIcon.icon : Star;
+
                                                         return (
                                                             <div
                                                                 key={loc.id}
@@ -230,10 +250,7 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
                                                                 className="flex items-center gap-4 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-black dark:hover:border-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer transition active:scale-95"
                                                             >
                                                                 <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-full">
-                                                                    {loc.name?.toLowerCase().includes('travail') || loc.name?.toLowerCase().includes('bureau')
-                                                                        ? <Clock size={16} />
-                                                                        : <Star size={16} />
-                                                                    }
+                                                                    <Icon size={16} />
                                                                 </div>
                                                                 <div className="flex flex-col">
                                                                     <span className="font-semibold text-sm">{loc.name || "Lieu enregistré"}</span>

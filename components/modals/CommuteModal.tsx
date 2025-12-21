@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Car, Bike, Footprints, Train, X } from 'lucide-react';
 
 import useCommuteModal from '@/hooks/useCommuteModal';
-import GoogleAddressSelect, { AddressSelectValue } from '../inputs/GoogleAddressSelect';
+import MapboxAddressSelect, { AddressSelectValue } from '../inputs/MapboxAddressSelect'; // Changed import
 import dynamic from 'next/dynamic';
 import { Button } from '../ui/Button';
 
@@ -35,7 +35,7 @@ const CommuteModal = () => {
     }
 
     return (
-        <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-[70] outline-none focus:outline-none bg-neutral-800/70">
+        <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-[70] outline-none focus:outline-none bg-neutral-800/70 h-[100dvh]">
             <div className="relative w-full md:w-5/6 lg:w-4/6 xl:w-3/5 my-6 mx-auto h-full lg:h-auto md:h-auto">
                 {/* CONTENT */}
                 <div className="translate h-full lg:h-auto md:h-auto border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
@@ -63,10 +63,12 @@ const CommuteModal = () => {
                                 {/* Location */}
                                 <div className="flex flex-col gap-2">
                                     <label className="font-semibold">Localisation</label>
-                                    <GoogleAddressSelect
+                                    <MapboxAddressSelect
                                         value={location || undefined}
                                         onChange={(value) => setLocation(value)}
                                         placeholder="Saisir une adresse (lieu de travail, école...)"
+                                        renderAsList={true}
+                                        clearOnSelect
                                     />
                                 </div>
 

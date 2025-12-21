@@ -8,6 +8,60 @@ interface ListingCardCarouselProps {
     images: { url: string; label?: string }[];
 }
 
+interface CarouselImageProps {
+    image: { url: string; label?: string };
+    priority: boolean;
+}
+
+const CarouselImage: React.FC<CarouselImageProps> = ({ image, priority }) => {
+    const [isLoading, setIsLoading] = useState(true);
+
+    return (
+        <div className="min-w-full h-full relative snap-center bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+            {isLoading && (
+                <div className="absolute inset-0 animate-pulse bg-neutral-300/50 dark:bg-neutral-700/50 z-0" />
+            )}
+            <Image
+                fill
+                alt="Listing"
+                src={image.url}
+                className={`
+                    object-cover 
+                    h-full 
+                    w-full 
+                    transition-opacity 
+                    duration-500 
+                    ease-in-out
+                    ${isLoading ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}
+                `}
+                draggable={false}
+                priority={priority}
+                onLoad={() => setIsLoading(false)}
+            />
+            {image.label && (
+                <div className="
+                     absolute 
+                     bottom-3 
+                     left-3 
+                     bg-white/90 
+                     backdrop-blur-md
+                     text-neutral-900 
+                     px-3 
+                     py-1.5 
+                     rounded-lg 
+                     text-xs 
+                     font-semibold
+                     z-10
+                     shadow-sm
+                     pointer-events-none
+                 ">
+                    {image.label}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
     images
 }) => {
@@ -84,44 +138,11 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {images.map((image, index) => (
-                    <div
+                    <CarouselImage
                         key={image.url}
-                        className="
-                            min-w-full 
-                            h-full 
-                            relative 
-                            snap-center
-                        "
-                    >
-                        <Image
-                            fill
-                            alt="Listing"
-                            src={image.url}
-                            className="object-cover h-full w-full"
-                            draggable={false}
-                            priority={index === 0}
-                        />
-                        {image.label && (
-                            <div className="
-                                 absolute 
-                                 bottom-3 
-                                 left-3 
-                                 bg-white/90 
-                                 backdrop-blur-md
-                                 text-neutral-900 
-                                 px-3 
-                                 py-1.5 
-                                 rounded-lg 
-                                 text-xs 
-                                 font-semibold
-                                 z-10
-                                 shadow-sm
-                                 pointer-events-none
-                             ">
-                                {image.label}
-                            </div>
-                        )}
-                    </div>
+                        image={image}
+                        priority={index === 0}
+                    />
                 ))}
             </div>
 
