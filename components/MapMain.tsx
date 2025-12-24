@@ -304,16 +304,94 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
 
                 const isSelected = listing.id === selectedListingId;
 
+                // Calculate price including charges
+                const charges = (listing.charges as any)?.amount || 0;
+                const totalPrice = listing.price + charges;
+
                 return (
                     <Marker
                         key={listing.id}
                         position={[listing.latitude, listing.longitude]}
-                        icon={getIcon(listing.price, isSelected, listing.id)}
+                        icon={getIcon(totalPrice, isSelected, listing.id)}
                         eventHandlers={{
                             click: () => onSelect && onSelect(listing.id)
                         }}
                     />
                 )
+            })}
+
+
+            {/* Commute Locations Markers */}
+            {currentUser?.commuteLocations?.filter(loc => loc.isShowOnMap).map((loc) => {
+                if (!loc.latitude || !loc.longitude) return null;
+
+                // Select SVG based on icon or transport mode fallback
+                let iconSvg = '';
+                const iconType = loc.icon;
+                const mode = loc.transportMode || 'TRANSIT';
+
+                if (iconType === 'briefcase') {
+                    // Briefcase
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+                } else if (iconType === 'home') {
+                    // Home
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+                } else if (iconType === 'school') {
+                    // GraduationCap
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>`;
+                } else if (iconType === 'favorite') {
+                    // Star
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+                } else if (iconType === 'partner') {
+                    // Heart
+                    iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+                } else {
+                    // Fallback to Transport Mode
+                    if (mode === 'DRIVING') {
+                        // Car
+                        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>`;
+                    } else if (mode === 'CYCLING') {
+                        // Bike
+                        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>`;
+                    } else if (mode === 'WALKING') {
+                        // Footprints
+                        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8.75A8.6 8.6 0 0 1 7 1c2.25 0 4-1.35 4-2.38V16.25c0 .85.47 1.63.85 2.25l3.11 5.31A1 1 0 0 1 14.1 25a1 1 0 0 1-.9.59H5.5A2.5 2.5 0 0 1 3 23.09v-7.09Z"/><path d="M20 7h-7"/></svg>`;
+                    } else {
+                        // Default TRANSIT (Train/Tram)
+                        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h0"/><path d="M16 15h0"/></svg>`;
+                    }
+                }
+
+                const iconHtml = `
+                    <div style="
+                        background-color: #000000;
+                        color: #ffffff;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                        border: 2px solid white;
+                    ">
+                        ${iconSvg}
+                    </div>
+                `;
+
+                return (
+                    <Marker
+                        key={`commute-${loc.id}`}
+                        position={[loc.latitude, loc.longitude]}
+                        icon={L.divIcon({
+                            className: 'custom-commute-icon',
+                            html: iconHtml,
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16] // Center
+                        })}
+                    // No click handler needed for now, just visual
+                    />
+                );
             })}
             <Recenter center={center} useOffset={!!selectedListingId} />
             <ResizeHandler />

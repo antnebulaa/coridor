@@ -2,8 +2,10 @@
 
 import Container from "@/components/Container";
 import StatsCard from "./components/StatsCard";
+import Link from "next/link";
 import RecentActivity from "./components/RecentActivity";
 import { HiOutlineBanknotes, HiOutlineHome, HiOutlineTicket } from "react-icons/hi2";
+import { AlertTriangle } from "lucide-react";
 
 interface DashboardClientProps {
     stats: {
@@ -11,6 +13,7 @@ interface DashboardClientProps {
         totalRevenue: number;
         totalBookings: number;
         recentReservations: any[];
+        listingsWithoutSlots?: any[];
     }
 }
 
@@ -24,6 +27,25 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                     <h1 className="text-2xl font-medium">Dashboard</h1>
                     <p className="text-muted-foreground mt-2">Overview of your rental business</p>
                 </div>
+
+                {stats.listingsWithoutSlots && stats.listingsWithoutSlots.length > 0 && (
+                    <div className="mb-8 bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-4 items-start">
+                        <AlertTriangle className="text-orange-500 shrink-0 mt-1" />
+                        <div className="flex flex-col gap-2">
+                            <h3 className="font-medium text-orange-800">Configuration des visites requise</h3>
+                            <p className="text-sm text-orange-700">
+                                Vous devez définir vos disponibilités pour les annonces suivantes afin de recevoir des demandes de visite :
+                            </p>
+                            <div className="flex flex-col gap-1 mt-1">
+                                {stats.listingsWithoutSlots.map((l: any) => (
+                                    <Link key={l.id} href={`/properties/${l.id}/edit?section=visits`} className="text-sm font-medium text-orange-900 underline hover:no-underline">
+                                        {l.title}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <StatsCard

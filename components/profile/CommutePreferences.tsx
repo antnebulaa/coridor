@@ -1,10 +1,8 @@
-'use client';
-
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Trash2, MapPin, Plus, Train, Car, Bike, Footprints } from "lucide-react";
+import { Trash2, MapPin, Plus, Train, Car, Bike, Footprints, Briefcase, Home, GraduationCap, Star, Heart } from "lucide-react";
 
 import { SafeUser } from "@/types";
 import { Button } from "@/components/ui/Button";
@@ -27,6 +25,15 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
     const [name, setName] = useState('');
     const [address, setAddress] = useState<AddressSelectValue | null>(null);
     const [transportMode, setTransportMode] = useState('TRANSIT');
+    const [icon, setIcon] = useState('briefcase');
+
+    const iconList = [
+        { id: 'briefcase', icon: Briefcase, label: 'Travail' },
+        { id: 'home', icon: Home, label: 'Domicile' },
+        { id: 'school', icon: GraduationCap, label: 'École' },
+        { id: 'favorite', icon: Star, label: 'Favori' },
+        { id: 'partner', icon: Heart, label: 'Partenaire' }
+    ];
 
     const onDelete = (id: string) => {
         setIsLoading(true);
@@ -43,6 +50,22 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
             });
     }
 
+    const onToggleMap = (id: string, newState: boolean) => {
+        // Optimistic update could be complex here without context, let's just trigger loading
+        // Or just fire and forget sort of, but loading is safer.
+        // Actually for a toggle, better to NOT block UI but show toast on error.
+        // Or use router.refresh() which might take a sec.
+
+        axios.patch('/api/user/commute', { id, isShowOnMap: newState })
+            .then(() => {
+                toast.success(newState ? 'Affiché sur la carte' : 'Masqué de la carte');
+                router.refresh();
+            })
+            .catch(() => {
+                toast.error("Impossible de modifier la visibilité");
+            });
+    }
+
     const onSubmit = () => {
         if (!name || !address) {
             toast.error('Veuillez remplir tous les champs');
@@ -56,7 +79,8 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
             address: address.label,
             latitude: address.latlng[0],
             longitude: address.latlng[1],
-            transportMode
+            transportMode,
+            icon
         })
             .then(() => {
                 toast.success('Lieu ajouté !');
@@ -65,6 +89,7 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                 setName('');
                 setAddress(null);
                 setTransportMode('TRANSIT');
+                setIcon('briefcase');
             })
             .catch(() => {
                 toast.error("Erreur lors de l'ajout");
@@ -84,10 +109,36 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
             </div>
 
             <div className="flex flex-col gap-3">
-                {currentUser.commuteLocations?.map((location) => (
-                    <div key={location.id} className="group flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-border/50 hover:border-border transition">
-                        <div className="flex items-center gap-4">
-                            <div className="
+                {currentUser.commuteLocations?.map((location) => {
+                    // Determine Icon
+                    const matchedIcon = iconList.find(i => i.id === location.icon);
+                    const DisplayIcon = matchedIcon ? matchedIcon.icon : (
+                        location.transportMode === 'd' ? Star : Star // Fallback? 
+                        // Actually let's use transport icon if no specialized icon? 
+                        // User request: "afficher sur la map le même icon que celui qui est associé au favoris"
+                        // Implies logic priority: Icon > Transport ?
+                        // Current list implementation used transport icons only. 
+                        // I will switch to showing the Semantic Icon in the list too.
+                    );
+
+                    // But wait, list currently shows Transport Mode icon to indicate "How I go there".
+                    // Maybe we should show BOTH? Or Semantic Icon replaces Transport Icon?
+                    // In Google Maps: "Home" has Home icon. "Work" has Briefcase.
+                    // Let's use Semantic Icon primarily.
+
+                    const ListIcon = matchedIcon ? matchedIcon.icon : Star; // Default fallback
+
+                    // Wait, listing transport mode is important for "Commute Type".
+                    // Maybe render semantic icon circle, and small badge for transport? 
+                    // Let's stick to Semantic Icon for the main circle as requested implicitly.
+
+                    // Actually, if I look at line 114 in original, it rendered Transport Icon.
+                    // I will change it to Semantic Icon if available.
+
+                    return (
+                        <div key={location.id} className="group flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-border/50 hover:border-border transition">
+                            <div className="flex items-center gap-4">
+                                <div className="
                                 flex items-center justify-center 
                                 w-10 h-10 
                                 rounded-full 
@@ -95,27 +146,53 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                                 border border-neutral-100 dark:border-neutral-800
                                 shadow-sm
                             ">
-                                {location.transportMode === 'TRANSIT' && <Train size={18} className="text-neutral-700 dark:text-neutral-300" />}
-                                {location.transportMode === 'DRIVING' && <Car size={18} className="text-neutral-700 dark:text-neutral-300" />}
-                                {location.transportMode === 'CYCLING' && <Bike size={18} className="text-neutral-700 dark:text-neutral-300" />}
-                                {location.transportMode === 'WALKING' && <Footprints size={18} className="text-neutral-700 dark:text-neutral-300" />}
+                                    {matchedIcon ? (
+                                        <matchedIcon.icon size={18} className="text-neutral-700 dark:text-neutral-300" />
+                                    ) : (
+                                        <>
+                                            {location.transportMode === 'TRANSIT' && <Train size={18} className="text-neutral-700 dark:text-neutral-300" />}
+                                            {location.transportMode === 'DRIVING' && <Car size={18} className="text-neutral-700 dark:text-neutral-300" />}
+                                            {location.transportMode === 'CYCLING' && <Bike size={18} className="text-neutral-700 dark:text-neutral-300" />}
+                                            {location.transportMode === 'WALKING' && <Footprints size={18} className="text-neutral-700 dark:text-neutral-300" />}
+                                        </>
+                                    )}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-medium text-sm">{location.name}</span>
+                                    <span className="text-xs text-muted-foreground truncate max-w-[200px] md:max-w-md">
+                                        {location.address}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex flex-col">
-                                <span className="font-medium text-sm">{location.name}</span>
-                                <span className="text-xs text-muted-foreground truncate max-w-[200px] md:max-w-md">
-                                    {location.address}
-                                </span>
+                            <div className="flex items-center gap-3">
+                                <div className="flex flex-col items-end gap-1">
+                                    <div className="text-[10px] uppercase font-bold text-neutral-400">Carte</div>
+                                    <div
+                                        onClick={() => onToggleMap(location.id, !location.isShowOnMap)}
+                                        className={`
+                                        w-9 h-5 rounded-full relative transition cursor-pointer 
+                                        ${location.isShowOnMap ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-700'}
+                                    `}
+                                        title={location.isShowOnMap ? "Masquer de la carte" : "Afficher sur la carte"}
+                                    >
+                                        <div className={`
+                                        absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-black transition-transform shadow-sm
+                                        ${location.isShowOnMap ? 'translate-x-4' : 'translate-x-0'}
+                                    `} />
+                                    </div>
+                                </div>
+                                <div className="h-8 w-px bg-neutral-200 dark:bg-neutral-800 mx-1"></div>
+                                <button
+                                    onClick={() => onDelete(location.id)}
+                                    disabled={isLoading}
+                                    className="flex items-center justify-center bg-transparent border-none text-neutral-400 hover:text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 w-8 h-8 p-0 min-w-0 rounded-full transition"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         </div>
-                        <button
-                            onClick={() => onDelete(location.id)}
-                            disabled={isLoading}
-                            className="flex items-center justify-center bg-transparent border-none text-neutral-400 hover:text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 w-8 h-8 p-0 min-w-0 rounded-full transition"
-                        >
-                            <Trash2 size={16} />
-                        </button>
-                    </div>
-                ))}
+                    )
+                })}
 
                 {currentUser.commuteLocations?.length === 0 && !isAdding && (
                     <div className="text-center py-8 text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 text-sm">
@@ -159,25 +236,44 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label className="text-xs font-semibold text-neutral-500">Mode de transport</label>
-                            <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
-                                {['TRANSIT', 'DRIVING', 'CYCLING', 'WALKING'].map((mode) => (
+                            <label className="text-xs font-semibold text-neutral-500">Type de lieu</label>
+                            <div className="flex gap-2">
+                                {iconList.map((item) => (
                                     <div
-                                        key={mode}
-                                        onClick={() => setTransportMode(mode)}
+                                        key={item.id}
+                                        onClick={() => setIcon(item.id)}
                                         className={`
-                                            flex-1 flex items-center justify-center p-2 rounded-md cursor-pointer transition
-                                            ${transportMode === mode ? 'bg-white dark:bg-black shadow-sm text-black dark:text-white' : 'text-neutral-400 hover:text-neutral-600'}
+                                            w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition border
+                                            ${icon === item.id ? 'bg-black text-white border-black dark:bg-white dark:text-black' : 'bg-white dark:bg-neutral-800 text-neutral-500 border-neutral-200 dark:border-neutral-700 hover:border-neutral-400'}
                                         `}
-                                        title={mode}
+                                        title={item.label}
                                     >
-                                        {mode === 'TRANSIT' && <Train size={16} />}
-                                        {mode === 'DRIVING' && <Car size={16} />}
-                                        {mode === 'CYCLING' && <Bike size={16} />}
-                                        {mode === 'WALKING' && <Footprints size={16} />}
+                                        <item.icon size={18} />
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-semibold text-neutral-500">Mode de transport</label>
+                        <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
+                            {['TRANSIT', 'DRIVING', 'CYCLING', 'WALKING'].map((mode) => (
+                                <div
+                                    key={mode}
+                                    onClick={() => setTransportMode(mode)}
+                                    className={`
+                                        flex-1 flex items-center justify-center p-2 rounded-md cursor-pointer transition
+                                        ${transportMode === mode ? 'bg-white dark:bg-black shadow-sm text-black dark:text-white' : 'text-neutral-400 hover:text-neutral-600'}
+                                    `}
+                                    title={mode}
+                                >
+                                    {mode === 'TRANSIT' && <Train size={16} />}
+                                    {mode === 'DRIVING' && <Car size={16} />}
+                                    {mode === 'CYCLING' && <Bike size={16} />}
+                                    {mode === 'WALKING' && <Footprints size={16} />}
+                                </div>
+                            ))}
                         </div>
                     </div>
 

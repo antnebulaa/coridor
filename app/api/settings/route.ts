@@ -15,9 +15,21 @@ export async function POST(
     const body = await request.json();
     const {
         name,
+        firstName,
+        lastName,
         email,
+        phoneNumber,
+        address,
+        addressLine1,
+        building,
+        apartment,
+        city,
+        zipCode,
+        country,
         userMode,
-        measurementSystem
+        measurementSystem,
+        birthDate,
+        birthPlace
     } = body;
 
     const updatedUser = await prisma.user.update({
@@ -26,9 +38,21 @@ export async function POST(
         },
         data: {
             name,
+            firstName,
+            lastName,
             email,
+            phoneNumber,
+            address,
+            addressLine1,
+            building,
+            apartment,
+            city,
+            zipCode,
+            country,
             userMode,
-            measurementSystem
+            measurementSystem,
+            birthDate,
+            birthPlace
         }
     });
 

@@ -48,11 +48,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             ges: listing.ges || 'A',
             energy_cost_min: listing.energy_cost_min,
             energy_cost_max: listing.energy_cost_max,
-            dpe_year: listing.dpe_year
+            dpe_year: listing.dpe_year,
+            propertyAdjective: listing.propertyAdjective
         }
     });
 
     const category = watch('category');
+    const propertyAdjective = watch('propertyAdjective');
     const isFurnished = watch('isFurnished');
     const surfaceUnit = watch('surfaceUnit');
     const kitchenType = watch('kitchenType');
@@ -113,6 +115,48 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
                         { value: "Maison", label: "Une maison" },
                         { value: "Appartement", label: "Un appartement" },
                         { value: "Bateau", label: "Un bateau" }
+                    ]}
+                />
+            </div>
+
+            {/* Adjectif du bien */}
+            <div className="flex flex-col gap-2">
+                <div className="text-sm font-medium text-neutral-800">
+                    Comment décririez-vous votre bien ? (Optionnel)
+                </div>
+                <div className="text-xs text-neutral-500 mb-2">
+                    Cet adjectif apparaîtra après le type de bien sur l'annonce (ex: "Maison calme").
+                </div>
+                <SoftSelect
+                    id="propertyAdjective"
+                    label="Choisir un adjectif"
+                    value={propertyAdjective || ""}
+                    onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
+                    disabled={isLoading}
+                    options={[
+                        { value: "", label: "Aucun" },
+                        // Lumière/Espace
+                        { value: "Lumineux", label: "Lumineux" },
+                        { value: "Spacieux", label: "Spacieux" },
+                        { value: "Traversant", label: "Traversant" },
+                        { value: "Ensoleillé", label: "Ensoleillé" },
+                        // Style/Architecture
+                        { value: "Haussmannien", label: "Haussmannien" },
+                        { value: "Atypique", label: "Atypique" },
+                        { value: "Loft", label: "Loft" },
+                        { value: "Ancien", label: "Ancien" },
+                        { value: "Moderne", label: "Moderne" },
+                        { value: "Neuf", label: "Neuf" },
+                        { value: "Rénové", label: "Rénové" },
+                        // Ambiance
+                        { value: "Calme", label: "Calme" },
+                        { value: "Cosy", label: "Cosy" },
+                        { value: "De charme", label: "De charme" },
+                        { value: "Familial", label: "Familial" },
+                        { value: "Étudiant", label: "Étudiant" },
+                        // Standing
+                        { value: "De standing", label: "De standing" },
+                        { value: "De prestige", label: "De prestige" },
                     ]}
                 />
             </div>

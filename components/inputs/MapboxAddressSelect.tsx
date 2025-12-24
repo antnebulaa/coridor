@@ -14,6 +14,8 @@ export type AddressSelectValue = {
     district?: string;
     neighborhood?: string;
     country?: string;
+    zipCode?: string;
+    street?: string;
 }
 
 interface MapboxAddressSelectProps {
@@ -25,6 +27,8 @@ interface MapboxAddressSelectProps {
     limitCountry?: string;
     clearOnSelect?: boolean;
     renderAsList?: boolean;
+    customInputClass?: string;
+    label?: string;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -37,7 +41,9 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     searchTypes, // Now optional/nullable in usage
     limitCountry = "fr",
     clearOnSelect = false,
-    renderAsList = false
+    renderAsList = false,
+    customInputClass,
+    label
 }) => {
     const [inputValue, setInputValue] = useState(value?.label || '');
     const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -130,6 +136,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
         let country = '';
         let district = '';
         let neighborhood = '';
+        let postcode = '';
 
         if (feature.context) {
             feature.context.forEach((ctx: any) => {
@@ -145,6 +152,8 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     district = ctx.text;
                 } else if (ctx.id.startsWith('locality')) {
                     if (!city) city = ctx.text;
+                } else if (ctx.id.startsWith('postcode')) {
+                    postcode = ctx.text;
                 }
             });
         }
@@ -177,7 +186,9 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
             city: city,
             district: district,
             neighborhood: neighborhood,
-            country: country
+            country: country,
+            zipCode: postcode,
+            street: feature.place_name.split(',')[0].trim()
         };
 
         setInputValue(clearOnSelect ? '' : address);
@@ -197,9 +208,10 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     ref={inputRef}
                     value={inputValue}
                     onChange={handleInput}
-                    placeholder={defaultPlaceholder}
+                    placeholder={label ? " " : defaultPlaceholder}
                     autoFocus={autoFocus}
-                    className="
+                    className={`
+                        peer
                         w-full
                         p-4
                         font-medium
@@ -215,8 +227,33 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                         disabled:cursor-not-allowed
                         ring-0
                         focus:ring-0
-                    "
+                        ${customInputClass || ''}
+                    `}
                 />
+                {label && (
+                    <label
+                        className={`
+                            absolute
+                            text-base
+                            duration-150
+                            transform
+                            -translate-y-3
+                            top-5
+                            z-10
+                            origin-top-left
+                            left-4
+                            scale-75
+                            peer-placeholder-shown:scale-100
+                            peer-placeholder-shown:translate-y-0
+                            peer-focus:scale-75
+                            peer-focus:-translate-y-3
+                            text-muted-foreground
+                            pointer-events-none
+                        `}
+                    >
+                        {label}
+                    </label>
+                )}
                 {inputValue && (
                     <button
                         onClick={() => {
@@ -279,7 +316,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                                 onClick={() => handleSelect(feature)}
                                 className="
                                     flex items-center gap-3
-                                    p-4
+                                    px-2 py-3
                                     border-b border-neutral-100 dark:border-neutral-800 last:border-0
                                     hover:bg-neutral-50
                                     dark:hover:bg-neutral-800
@@ -294,8 +331,8 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
 
                                 {/* Text Content */}
                                 <div className="flex flex-col flex-1 overflow-hidden">
-                                    <span className="font-semibold text-sm truncate text-left">{mainText}</span>
-                                    <span className="text-xs text-neutral-500 truncate text-left">{secondaryText}</span>
+                                    <span className="font-semibold text-lg truncate text-left">{mainText}</span>
+                                    <span className="text-base text-neutral-500 truncate text-left">{secondaryText}</span>
                                 </div>
 
                                 {/* Right Action (Star) */}

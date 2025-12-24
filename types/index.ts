@@ -38,6 +38,10 @@ export type SafeListing = Omit<
     district: string | null;
     neighborhood: string | null;
     country: string | null;
+    addressLine1: string | null;
+    building: string | null;
+    apartment: string | null;
+    zipCode: string | null;
     latitude: number | null;
     longitude: number | null;
     // New Amenities
@@ -73,8 +77,10 @@ export type SafeListing = Omit<
     isQuietArea: boolean;
     isNearGreenSpace: boolean;
     isNearSchools: boolean;
-    isNearShops: boolean;
     isNearHospital: boolean;
+    transitData?: any;
+    propertyAdjective?: string | null;
+    visitSlots?: any[];
 };
 
 export type SafeReservation = Omit<
@@ -105,8 +111,17 @@ export type SafeUser = Omit<
     emailVerified: string | null;
     userMode: UserMode;
     plan: Plan;
+    firstName: string | null;
+    lastName: string | null;
+    addressLine1: string | null;
+    building: string | null;
+    apartment: string | null;
+    zipCode: string | null;
+    city: string | null;
+    country: string | null;
     phoneNumber: string | null;
     birthDate: string | null;
+    birthPlace: string | null;
     tenantProfile: TenantProfile | null;
     wishlists: SafeWishlist[] | null;
     measurementSystem: string | null;
@@ -119,6 +134,7 @@ export type SafeCommuteLocation = Omit<
 > & {
     createdAt: string;
     updatedAt: string;
+    isShowOnMap: boolean;
 };
 
 export type FullMessageType = Message & {
@@ -133,7 +149,8 @@ export type FullConversationType = Conversation & {
             applications: RentalApplication[]
         })[]
     })[],
-    messages: FullMessageType[]
+    messages: FullMessageType[],
+    listing?: Listing | null
 };
 
 export type SafeMessage = Omit<

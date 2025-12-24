@@ -8,7 +8,7 @@
   --foreground: #171717;
 
   /* Airbnb Brand Colors - Custom Green */
-  --primary: #F73A08;
+  --primary: #1B1D23;
   --primary-foreground: #ffffff;
   --primary-hover: #F7623A;
 
@@ -84,17 +84,30 @@
 }
 
 
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
 body {
+  height: 100%;
+  height: -webkit-fill-available;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow: hidden;
+  /* Prevent bouncing/scrolling of the strict body root */
 }
 
 button {
   cursor: pointer;
+}
+
+hr {
+  border-color: #EBEBEB;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -109,6 +122,50 @@ button {
 @layer utilities {
   .container-custom {
     @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;
+  }
+
+  .animated-underline {
+    position: relative;
+    text-decoration: none;
+    display: inline-block;
+    /* Required for width calc */
+  }
+
+  /* Base Gray Line */
+  .animated-underline::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #D1D5DB;
+    /* neutral-300 */
+    transform-origin: right;
+    transition: transform 0.3s ease-out;
+  }
+
+  /* Dark mode adjust for gray line if needed, but neutral-300 is okay usually, or opacity */
+  .dark .animated-underline::before {
+    background-color: #525252;
+  }
+
+  /* Animated Fill Line */
+  .animated-underline::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .animated-underline:hover::after {
+    transform: scaleX(1);
   }
 }
 

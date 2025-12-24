@@ -30,6 +30,13 @@ const getConversationById = async (
                             }
                         }
                     }
+                },
+                listing: {
+                    include: {
+                        images: true,
+                        user: true,
+                        visitSlots: true
+                    }
                 }
             }
         });

@@ -45,18 +45,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         paddingTop = 'pt-0 md:pt-20'; // Match Navbar height (approx 80px)
     } else {
         // Not Home
-        paddingTop = 'md:pt-24'; // Hidden on mobile, block on desktop
+        paddingTop = 'md:pt-20'; // Hidden on mobile, block on desktop
     }
 
-    // Inbox might need specific tuning if it wants full height?
-    // Inbox Layout has h-screen logic. If we add padding to MainLayout, it pushes Inbox down?
-    // Inbox Layout is children of MainLayout.
-    // If Inbox Layout sets height, padding will shift it.
-    // But Inbox usually wants to be under the header on Desktop.
-    // On Mobile Inbox, header is hidden, so pt-0 is correct.
-
     return (
-        <div className={`${paddingBottom} ${paddingTop}`}>
+        <div className={`${paddingBottom} ${paddingTop} ${isInbox ? 'h-full w-full bg-background overflow-hidden relative' : ''}`}>
             {children}
         </div>
     );

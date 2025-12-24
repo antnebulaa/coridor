@@ -34,7 +34,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
 
         axios.delete(`/api/listings/${id}`)
             .then(() => {
-                toast.success('Listing deleted');
+                toast.success('Bien supprimé');
                 router.refresh();
             })
             .catch((error) => {
@@ -48,9 +48,10 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
     return (
         <Container>
             <PageHeader
-                title="Properties"
-                subtitle="List of your properties"
-                actionLabel="Add Property"
+                title="Mes Propriétés"
+                titleClassName="font-medium"
+                subtitle="Gérez l'ensemble de vos biens immobiliers."
+                actionLabel="Ajouter un bien"
                 onAction={() => rentModal.onOpen()}
                 actionControls={
                     <div className="flex items-center bg-neutral-100 rounded-full p-1 gap-1">
@@ -79,8 +80,8 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
             <div className="mt-10">
                 {listings.length === 0 ? (
                     <EmptyState
-                        title="No properties found"
-                        subtitle="Looks like you have no properties."
+                        title="Aucune propriété trouvée"
+                        subtitle="Vous n'avez pas encore ajouté de propriété."
                     />
                 ) : (
                     viewMode === 'list' ? (

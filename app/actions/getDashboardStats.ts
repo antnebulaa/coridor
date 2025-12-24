@@ -18,7 +18,8 @@ export default async function getDashboardStats() {
                     include: {
                         user: true
                     }
-                }
+                },
+                visitSlots: true
             }
         });
 
@@ -27,8 +28,16 @@ export default async function getDashboardStats() {
         let totalRevenue = 0;
         let totalBookings = 0;
         let recentReservations: any[] = [];
+        let listingsWithoutSlots: any[] = [];
 
         listings.forEach((listing: any) => {
+            if (!listing.visitSlots || listing.visitSlots.length === 0) {
+                listingsWithoutSlots.push({
+                    id: listing.id,
+                    title: listing.title
+                });
+            }
+
             listing.reservations.forEach((reservation: any) => {
                 totalRevenue += reservation.totalPrice;
                 totalBookings += 1;
@@ -48,7 +57,8 @@ export default async function getDashboardStats() {
             totalListings,
             totalRevenue,
             totalBookings,
-            recentReservations
+            recentReservations,
+            listingsWithoutSlots
         };
     } catch (error: any) {
         throw new Error(error);

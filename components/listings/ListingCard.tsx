@@ -5,7 +5,7 @@ import { SafeListing, SafeReservation, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Bus, Train, TramFront } from 'lucide-react';
 import { TbElevator } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
@@ -110,6 +110,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
         }
     }, [onSelect, router, data.id]);
 
+
+
     if (variant === 'horizontal') {
         return (
             <div
@@ -147,19 +149,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                     {/* Content Section */}
                     <div className="flex flex-col justify-between py-1 md:py-2 flex-1 pr-1 md:pr-2">
-                        <div className="flex flex-col gap-0.5 md:gap-1">
+                        <div className="flex flex-col gap-0 md:gap-1">
                             {/* Title / Location */}
-                            {/* Title / Location */}
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1 min-w-0 pr-1">
-                                    <div className="font-medium text-base md:text-lg text-foreground line-clamp-1">
-                                        {data.category}
-                                    </div>
-                                    <div className="hidden md:block font-medium text-muted-foreground text-sm md:text-base line-clamp-2">
-                                        {data.city || location?.label}{data.district ? `, ${data.district}` : ''}
-                                    </div>
-                                </div>
-                                <div className="text-right flex flex-col items-end whitespace-nowrap pl-1">
+                            {/* Title / Location - Modified to Stack Price on Top */}
+                            <div className="flex flex-col gap-1">
+                                <div className="flex flex-col items-start whitespace-nowrap">
                                     <div className="font-semibold text-[26px] md:text-[22px] text-foreground leading-tight">
                                         {price}€<span className="md:hidden text-muted-foreground font-semibold"> CC</span>
                                     </div>
@@ -167,20 +161,69 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         charges comprises
                                     </div>
                                 </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-base md:text-lg text-foreground line-clamp-1">
+                                        {data.category} {data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground">{data.propertyAdjective}</span>}
+                                    </div>
+                                    <div className="hidden md:block font-medium text-muted-foreground text-sm md:text-base line-clamp-2">
+                                        {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
+                                        {data.neighborhood && (
+                                            <span className="font-normal text-xs md:text-sm text-neutral-500">
+                                                , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Mobile City Display - Full Width */}
-                            <div className="md:hidden font-medium text-neutral-500 text-sm line-clamp-1 -mt-0.5">
-                                {data.city || location?.label}{data.district ? `, ${data.district}` : ''}
+                            <div className="md:hidden font-medium text-neutral-500 text-sm line-clamp-1 -mt-1">
+                                {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
+                                {data.neighborhood && (
+                                    <span className="font-normal text-xs text-neutral-500">
+                                        , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                                    </span>
+                                )}
                             </div>
 
-                            {data.neighborhood && (
-                                <div className="text-neutral-500 text-xs md:text-sm flex items-center gap-1 -mt-0.5 md:-mt-1">
-                                    <LayoutGrid size={14} className="w-3 h-3 md:w-[14px] md:h-[14px]" />
-                                    <span className="line-clamp-1">
-                                        {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
-                                    </span>
+                            {data.transitData?.mainConnection ? (
+                                <div className="text-neutral-700 dark:text-neutral-300 text-sm md:text-base flex items-center gap-2 -mt-0.5 md:-mt-1 py-[5px]">
+                                    <div className="flex items-center gap-1">
+                                        {/* Dynamic Transport Icon */}
+                                        {(() => {
+                                            const type = (data.transitData.mainConnection.type || "").toLowerCase();
+                                            if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                            if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                            if (type.includes('tram')) return (
+                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
+                                                </div>
+                                            );
+                                            // Default to Metro
+                                            return (
+                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* Line Badge */}
+                                        <div
+                                            className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
+                                            style={{
+                                                backgroundColor: data.transitData.mainConnection.color || '#000',
+                                                color: data.transitData.mainConnection.textColor || '#FFF'
+                                            }}
+                                        >
+                                            <span className="text-xs font-bold leading-none pt-[1px]">
+                                                {data.transitData.mainConnection.line}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span className="line-clamp-1">à {data.transitData.mainConnection.walkTime} min</span>
                                 </div>
+                            ) : data.neighborhood && (
+                                <div className="h-4 md:h-[14px]" />
                             )}
 
                             {/* Details Row */}
@@ -277,18 +320,53 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     </div>
 
                     <div className="font-medium text-foreground">
-                        {data.category} à {data.city || location?.label}{data.district ? ` ${data.district}` : ''}
-                    </div>
-                    {data.neighborhood && (
-                        <div className="text-muted-foreground text-sm flex items-center gap-1">
-                            <LayoutGrid size={14} />
-                            <span>
+                        {data.category} {data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground">{data.propertyAdjective}</span>} à {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
+                        {data.neighborhood && (
+                            <span className="font-normal text-base text-muted-foreground ml-1">
                                 {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
                             </span>
+                        )}
+                    </div>
+                    {data.transitData?.mainConnection ? (
+                        <div className="text-neutral-700 dark:text-neutral-300 text-base flex items-center gap-2 py-[5px]">
+                            <div className="flex items-center gap-1">
+                                {/* Dynamic Transport Icon */}
+                                {(() => {
+                                    const type = (data.transitData.mainConnection.type || "").toLowerCase();
+                                    if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                    if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                    if (type.includes('tram')) return (
+                                        <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                            <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
+                                        </div>
+                                    );
+                                    // Default to Metro
+                                    return (
+                                        <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                            <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
+                                        </div>
+                                    );
+                                })()}
+                                {/* Line Badge */}
+                                <div
+                                    className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
+                                    style={{
+                                        backgroundColor: data.transitData.mainConnection.color || '#000',
+                                        color: data.transitData.mainConnection.textColor || '#FFF'
+                                    }}
+                                >
+                                    <span className="text-xs font-bold leading-none pt-[1px]">
+                                        {data.transitData.mainConnection.line}
+                                    </span>
+                                </div>
+                            </div>
+                            <span>à {data.transitData.mainConnection.walkTime} min</span>
                         </div>
+                    ) : (
+                        <div className="h-5" />
                     )}
 
-                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
+                    < div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
                         {data.roomCount === 1
                             ? `Studio • ${surfaceDisplay}`
                             : `${data.roomCount} ${data.roomCount > 1 ? 'pièces' : 'pièce'} • ${data.roomCount - 1} ${(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
@@ -340,7 +418,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     />
                 )}
             </div>
-        </div>
+        </div >
 
     );
 };

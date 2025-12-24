@@ -8,13 +8,15 @@ interface EditPropertySidebarProps {
     activeSection: SectionType;
     onChangeTab: (tab: TabType) => void;
     onChangeSection: (section: SectionType) => void;
+    subtitles?: Record<string, string>;
 }
 
 const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
     activeTab,
     activeSection,
     onChangeTab,
-    onChangeSection
+    onChangeSection,
+    subtitles
 }) => {
 
     return (
@@ -57,11 +59,23 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                             rounded-xl 
                             cursor-pointer 
                             transition
-                            font-medium
-                            ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white' : 'text-neutral-500 hover:bg-neutral-50 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-white'}
+                            flex flex-col
+                            ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}
                         `}
                     >
-                        {link.label}
+                        <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                            {link.label}
+                        </span>
+                        {subtitles?.[link.id] && (
+                            <span className={`
+                                truncate mt-0.5
+                                ${link.id === 'title'
+                                    ? 'text-[20px] font-medium text-neutral-500 dark:text-neutral-400 leading-tight'
+                                    : 'text-xs text-neutral-500 dark:text-neutral-400 font-normal'}
+                            `}>
+                                {subtitles[link.id]}
+                            </span>
+                        )}
                     </div>
                 ))}
             </div>

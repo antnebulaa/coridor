@@ -12,7 +12,8 @@ export async function POST(
             userId,
             isGroup,
             members,
-            name
+            name,
+            listingId
         } = body;
 
         if (!currentUser?.id || !currentUser?.email) {
@@ -47,6 +48,9 @@ export async function POST(
             return NextResponse.json(newConversation);
         }
 
+        // Find existing conversation between these two users
+        // If listingId is provided, strict match on that listing.
+        // If not provided, strict match on listingId being null (general conversation).
         const existingConversations = await prisma.conversation.findMany({
             where: {
                 OR: [
@@ -65,7 +69,8 @@ export async function POST(
                                         id: userId
                                     }
                                 }
-                            }
+                            },
+                            listingId ? { listingId } : { listingId: null }
                         ]
                     }
                 ]
@@ -89,7 +94,12 @@ export async function POST(
                             id: userId
                         }
                     ]
-                }
+                },
+                ...(listingId && {
+                    listing: {
+                        connect: { id: listingId }
+                    }
+                })
             },
             include: {
                 users: true

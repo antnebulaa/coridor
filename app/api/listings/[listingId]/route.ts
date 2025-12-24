@@ -83,7 +83,12 @@ export async function PUT(
         imageSrcs,
         energy_cost_min,
         energy_cost_max,
-        dpe_year
+        dpe_year,
+        propertyAdjective, // NEW
+        addressLine1,
+        building,
+        apartment,
+        zipCode
     } = body;
 
     try {
@@ -114,10 +119,15 @@ export async function PUT(
                 floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
                 totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
                 buildYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
+                propertyAdjective, // NEW
                 // DPE Energy Costs
                 energy_cost_min: energy_cost_min ? parseInt(String(energy_cost_min), 10) : null,
                 energy_cost_max: energy_cost_max ? parseInt(String(energy_cost_max), 10) : null,
                 dpe_year: dpe_year ? parseInt(String(dpe_year), 10) : null,
+                addressLine1: addressLine1 || (location ? (location.street || (location.label?.split(',')[0].trim())) : undefined),
+                building: building,
+                apartment: apartment,
+                zipCode: zipCode || location?.zipCode,
                 city: city || location?.city,
                 district: body.district || location?.district,
                 neighborhood: body.neighborhood || location?.neighborhood,

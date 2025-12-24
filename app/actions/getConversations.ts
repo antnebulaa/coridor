@@ -30,6 +30,7 @@ const getConversations = async () => {
                         }
                     }
                 },
+                listing: true,
                 messages: {
                     include: {
                         sender: true,

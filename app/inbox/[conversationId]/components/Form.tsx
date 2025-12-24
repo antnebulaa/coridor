@@ -103,8 +103,7 @@ const Form: React.FC<FormProps> = ({
 
     return (
         <div className="
-      py-2 
-      px-4 
+       p-4 
       bg-white 
       border-t 
       border-gray-200 

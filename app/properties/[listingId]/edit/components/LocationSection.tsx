@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
 import Heading from "@/components/Heading";
+import SoftInput from "@/components/inputs/SoftInput";
 
 interface LocationSectionProps {
     listing: SafeListing;
@@ -19,44 +21,66 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
-    // Initialize location from listing data
-    const [location, setLocation] = useState<AddressSelectValue | null>(() => {
-        if (!listing.locationValue && !listing.city) return null;
-        return {
-            label: listing.locationValue || [listing.city, listing.district, listing.country].filter(Boolean).join(', '), // Use stored address string or construct fallback
-            value: listing.locationValue,
-            latlng: [listing.latitude || 0, listing.longitude || 0],
-            region: listing.country || '',
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        formState: {
+            errors,
+        }
+    } = useForm<FieldValues>({
+        defaultValues: {
+            addressLine1: listing.addressLine1 || '',
+            building: listing.building || '',
+            apartment: listing.apartment || '',
+            zipCode: listing.zipCode || '',
             city: listing.city || '',
-            district: listing.district || '',
-            neighborhood: listing.neighborhood || '',
-            country: listing.country || ''
-        };
+            country: listing.country || '',
+            latitude: listing.latitude || 0,
+            longitude: listing.longitude || 0,
+            locationValue: listing.locationValue || '',
+        }
     });
+
+    const latitude = watch('latitude');
+    const longitude = watch('longitude');
+    const city = watch('city');
+    const district = listing.district; // Keeping original district if not provided by autocomplete
+    const country = watch('country');
+    const addressLine1 = watch('addressLine1');
+
+    const latlng = useMemo(() => [latitude, longitude], [latitude, longitude]);
+
+    const onLocationSelect = (val: AddressSelectValue) => {
+        const street = val.street || val.label.split(',')[0].trim();
+        setValue('addressLine1', street);
+        setValue('zipCode', val.zipCode);
+        setValue('city', val.city);
+        setValue('country', val.country);
+        setValue('latitude', val.latlng[0]);
+        setValue('longitude', val.latlng[1]);
+        setValue('locationValue', val.label);
+    };
 
     // Map needs to be dynamic to avoid SSR issues
     const Map = useMemo(() => dynamic(() => import('@/components/Map'), {
         ssr: false
     }), []);
 
-    const onLocationSelect = (value: AddressSelectValue) => {
-        setLocation(value);
-    };
-
-    const onSubmit = () => {
-        if (!location) return;
-
+    const onSubmit: SubmitHandler<FieldValues> = (data) => {
         setIsLoading(true);
 
         axios.put(`/api/listings/${listing.id}`, {
+            ...data,
             location: {
-                ...location,
-                value: location.label // Save the full address string into locationValue instead of the Mapbox ID
-            },
-            city: location.city,
-            district: location.district,
-            neighborhood: location.neighborhood,
-            country: location.country
+                label: data.locationValue,
+                value: data.locationValue,
+                latlng: [data.latitude, data.longitude],
+                city: data.city,
+                zipCode: data.zipCode,
+                country: data.country
+            }
         })
             .then(() => {
                 toast.success('Emplacement enregistré !');
@@ -78,18 +102,66 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                 subtitle="Aidez les voyageurs à vous trouver !"
             />
 
-            <MapboxAddressSelect
-                value={location || undefined}
-                onChange={onLocationSelect}
-            />
+            <div className="relative z-20">
+                <MapboxAddressSelect
+                    value={{
+                        label: addressLine1 || '',
+                        value: '',
+                        latlng: [latitude, longitude],
+                        region: '',
+                        city: city,
+                        country: country
+                    }}
+                    onChange={onLocationSelect}
+                    label="Adresse postale"
+                    customInputClass="px-3 pb-2 pt-6 rounded-xl border-input border-[1px] font-normal bg-background focus:border-foreground"
+                />
+            </div>
 
-            <Map center={location?.latlng} />
+            <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <SoftInput
+                        id="apartment"
+                        label="N° Appartement"
+                        register={register}
+                        errors={errors}
+                        disabled={isLoading}
+                    />
+                    <SoftInput
+                        id="building"
+                        label="Bâtiment / Escalier"
+                        register={register}
+                        errors={errors}
+                        disabled={isLoading}
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <SoftInput
+                        id="zipCode"
+                        label="Code postal"
+                        register={register}
+                        errors={errors}
+                        disabled={isLoading}
+                    />
+                    <SoftInput
+                        id="city"
+                        label="Ville"
+                        register={register}
+                        errors={errors}
+                        disabled={isLoading}
+                    />
+                </div>
+            </div>
+
+            <div className="z-10 relative">
+                <Map center={latlng as number[]} />
+            </div>
 
             <div className="flex flex-row justify-end">
                 <Button
-                    disabled={isLoading || !location}
+                    disabled={isLoading}
                     label="Enregistrer"
-                    onClick={onSubmit}
+                    onClick={handleSubmit(onSubmit)}
                 />
             </div>
         </div>

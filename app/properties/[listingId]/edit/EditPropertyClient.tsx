@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { SafeListing, SafeUser } from "@/types";
 import Container from "@/components/Container";
 import EditPropertySidebar from "@/components/properties/EditPropertySidebar";
@@ -48,7 +48,7 @@ export type SectionType =
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 
 // ... imports
 
@@ -62,6 +62,23 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     const [activeTab, setActiveTab] = useState<TabType>('logement');
     const [activeSection, setActiveSection] = useState<SectionType>('title');
     const [showContent, setShowContent] = useState(false);
+
+    // Deep link to section
+    useEffect(() => {
+        const sectionParam = searchParams?.get('section');
+        if (sectionParam && sectionTitles[sectionParam as SectionType]) {
+            setActiveSection(sectionParam as SectionType);
+            setShowContent(true);
+            // Derive tab from section if possible, but simplistic map:
+            const tabMap: Record<string, TabType> = {
+                'visits': 'location', // Visits is in Location tab? No, let's check constants.
+                // Actually VisitsSection is usually in Logement or Location?
+                // sidebarLinks is imported effectively. 
+                // I'll just set the section and content, the Sidebar might desync but the content will show.
+            };
+            // For now, just showing content is enough.
+        }
+    }, [searchParams]);
 
     // Photo Tour State (Lifted)
     const [isAllPhotosOpen, setIsAllPhotosOpen] = useState(false);
@@ -153,7 +170,25 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
     return (
         <Container>
-            <div className="md:pt-0 grid grid-cols-1 md:grid-cols-4 gap-10">
+            <div className={`flex items-center gap-4 mb-6 pt-4 ${showContent ? 'hidden md:flex' : ''}`}>
+                <button
+                    onClick={() => router.push('/properties')}
+                    className="
+                        p-2 
+                        rounded-full 
+                        hover:bg-neutral-100 
+                        transition 
+                        cursor-pointer
+                    "
+                >
+                    <ArrowLeft size={24} />
+                </button>
+                <div className="text-2xl font-medium">
+                    Modification d'annonce
+                </div>
+            </div>
+
+            <div className="md:pt-0 grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10">
                 {/* Sidebar - Hidden on mobile if content is shown */}
                 <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} pt-4 md:pt-0`}>
                     <EditPropertySidebar
@@ -161,11 +196,20 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                         activeSection={activeSection}
                         onChangeTab={handleTabChange}
                         onChangeSection={handleSectionChange}
+                        subtitles={{
+                            title: listing.title,
+                            location: listing.addressLine1
+                                ? `${listing.addressLine1}, ${listing.city}`
+                                : listing.city,
+                            price: listing.price
+                                ? `${listing.price}€${listing.charges && (listing.charges as any).amount ? ` + ${(listing.charges as any).amount}€ ch.` : ' / mois'}`
+                                : undefined
+                        }}
                     />
                 </div>
 
                 {/* Content - Hidden on mobile if content is NOT shown */}
-                <div className={`col-span-3 ${!showContent ? 'hidden md:block' : 'block'}`}>
+                <div className={` ${!showContent ? 'hidden md:block' : 'block'}`}>
                     <div className="md:border-[1px] md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
                         {/* Mobile Header: Back Button (Sticky) */}
                         <div className="

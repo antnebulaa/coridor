@@ -119,9 +119,40 @@ export async function PUT(request: Request) {
             }
         });
 
-        return NextResponse.json(updatedLocation);
     } catch (error) {
         console.log('[COMMUTE_PUT]', error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
+
+export async function PATCH(request: Request) {
+    try {
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+            return NextResponse.error();
+        }
+
+        const body = await request.json();
+        const { id, isShowOnMap } = body;
+
+        if (!id || typeof isShowOnMap !== 'boolean') {
+            return new NextResponse("Missing Info", { status: 400 });
+        }
+
+        const updatedLocation = await prisma.commuteLocation.updateMany({
+            where: {
+                id: id,
+                userId: currentUser.id
+            },
+            data: {
+                isShowOnMap
+            }
+        });
+
+        return NextResponse.json(updatedLocation);
+    } catch (error) {
+        console.log('[COMMUTE_PATCH]', error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

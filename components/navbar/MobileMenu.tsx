@@ -12,9 +12,10 @@ import useConversation from "@/hooks/useConversation";
 interface MobileMenuProps {
     currentUser?: SafeUser | null;
     unreadCount?: number;
+    hasPendingAlert?: boolean;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount, hasPendingAlert }) => {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -120,6 +121,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount }) => 
                                             <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
                                                 {unreadCount > 99 ? '99+' : unreadCount}
                                             </div>
+                                        )}
+                                        {route.label === 'Dashboard' && hasPendingAlert && (
+                                            <div className="absolute top-0 -right-1 bg-red-500 w-2.5 h-2.5 rounded-full border border-background" />
                                         )}
                                     </div>
                                     <div className="text-[0.68rem] font-medium">

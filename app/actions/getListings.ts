@@ -24,6 +24,7 @@ export interface IListingsParams {
     commuteTransportMode?: string;
     commuteMaxTime?: number;
     commute?: string; // JSON Array of CommutePoint
+    sort?: string;
 }
 
 export default async function getListings(
@@ -47,7 +48,8 @@ export default async function getListings(
             commuteLongitude,
             commuteTransportMode,
             commuteMaxTime,
-            commute
+            commute,
+            sort
         } = params;
 
         let query: any = {};
@@ -238,6 +240,14 @@ export default async function getListings(
 
         console.log("FINAL QUERY:", JSON.stringify(query, null, 2));
 
+        let orderBy: any = { createdAt: 'desc' };
+
+        if (sort === 'price_asc') {
+            orderBy = { price: 'asc' };
+        } else if (sort === 'price_desc') {
+            orderBy = { price: 'desc' };
+        }
+
         const listings = await prisma.listing.findMany({
             where: query,
             include: {
@@ -249,9 +259,7 @@ export default async function getListings(
                     }
                 }
             },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            orderBy: orderBy
         });
 
         const safeListings = listings.map((listing: any) => ({

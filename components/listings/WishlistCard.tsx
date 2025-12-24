@@ -33,14 +33,14 @@ const WishlistCard: React.FC<WishlistCardProps> = ({
             onClick={() => router.push(`/favorites/${data.id}`)}
             className="col-span-1 cursor-pointer group"
         >
-            <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-col gap-0.5 w-full">
                 <div
                     className="
             aspect-square 
             w-full 
             relative 
             overflow-hidden 
-            rounded-xl
+            rounded-[14px]
           "
                 >
                     <Image
@@ -84,11 +84,11 @@ const WishlistCard: React.FC<WishlistCardProps> = ({
                         </div>
                     )}
                 </div>
-                <div className="font-medium text-lg">
+                <div className="font-medium text-base md:text-lg leading-tight mt-1">
                     {data.name}
                 </div>
-                <div className="font-normal text-neutral-500">
-                    {data._count.listings} items
+                <div className="font-normal text-sm text-neutral-500 leading-none">
+                    {data._count.listings} annonces
                 </div>
             </div>
         </div>

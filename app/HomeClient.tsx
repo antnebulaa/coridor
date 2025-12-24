@@ -18,6 +18,7 @@ import { Minimize2 } from 'lucide-react';
 import MobileBottomSheet from "@/components/MobileBottomSheet";
 import Modal from "@/components/modals/Modal";
 import ResumeSearch from "@/components/listings/ResumeSearch";
+import ListingSort from "@/components/listings/ListingSort";
 import { useSearchParams } from "next/navigation";
 import { getIsochrone } from "./libs/mapbox"; // Import utility
 
@@ -165,6 +166,13 @@ const HomeClient: React.FC<HomeClientProps> = ({
                         {!isSearchActive && (
                             <ResumeSearch />
                         )}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                {listings.length} {listings.length > 1 ? 'annonces' : 'annonce'}
+                            </div>
+                            <ListingSort />
+                        </div>
+
                         <div className="
                             grid 
                             grid-cols-1 
@@ -236,7 +244,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             hover:scale-105
                                         "
                                     >
-                                        <div className="font-bold">{selectedListing.price} €</div>
+                                        <div className="font-bold">{selectedListing.price + ((selectedListing.charges as any)?.amount || 0)} €</div>
                                         <div className="h-4 w-px bg-neutral-300 mx-1"></div>
                                         <div>Afficher l'annonce</div>
                                     </button>
@@ -308,10 +316,10 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                 <div className="flex flex-col">
                                                     <div className="flex flex-row items-center gap-1">
                                                         <div className="font-semibold text-lg">
-                                                            {selectedListing.price} €
+                                                            {selectedListing.price + ((selectedListing.charges as any)?.amount || 0)} €
                                                         </div>
                                                         <div className="font-light text-neutral-500 text-sm">
-                                                            / mois
+                                                            / mois CC
                                                         </div>
                                                     </div>
                                                 </div>

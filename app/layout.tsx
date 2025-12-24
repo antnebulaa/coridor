@@ -15,6 +15,7 @@ import MyCodeModal from "@/components/modals/MyCodeModal";
 import { Toaster } from "react-hot-toast";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getUnreadMessageCount from "@/app/actions/getUnreadMessageCount";
+import getDashboardAlerts from "@/app/actions/getDashboardAlerts";
 import AuthProvider from "@/providers/AuthProvider";
 import MainLayout from "@/components/MainLayout";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -57,8 +58,8 @@ const font = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Airbnb Clone",
-  description: "Airbnb Clone built with Next.js 15",
+  title: "Coridor",
+  description: "Location sharing app",
 };
 
 export const viewport = {
@@ -66,6 +67,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  interactiveWidget: 'resizes-content',
 };
 
 export default async function RootLayout({
@@ -75,6 +77,7 @@ export default async function RootLayout({
 }>) {
   const currentUser = await getCurrentUser();
   const unreadCount = await getUnreadMessageCount();
+  const dashboardAlerts = await getDashboardAlerts();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -100,7 +103,7 @@ export default async function RootLayout({
             </MainLayout>
             <ClientFooter />
             <Suspense fallback={<div></div>}>
-              <MobileMenu currentUser={currentUser} unreadCount={unreadCount} />
+              <MobileMenu currentUser={currentUser} unreadCount={unreadCount} hasPendingAlert={dashboardAlerts.hasPendingConfig} />
             </Suspense>
           </ThemeProvider>
         </AuthProvider>

@@ -10,11 +10,15 @@ import MessageBox from "./MessageBox";
 interface BodyProps {
     initialMessages: SafeMessage[];
     onOpenVisitSlots?: () => void;
+    onToggleDossier?: () => void;
+    onOpenListingRecap?: () => void;
 }
 
 const Body: React.FC<BodyProps> = ({
     initialMessages,
-    onOpenVisitSlots
+    onOpenVisitSlots,
+    onToggleDossier,
+    onOpenListingRecap
 }) => {
     const [messages, setMessages] = useState(initialMessages);
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -45,6 +49,8 @@ const Body: React.FC<BodyProps> = ({
                     key={message.id}
                     data={message}
                     onOpenVisitSlots={onOpenVisitSlots}
+                    onToggleDossier={onToggleDossier}
+                    onOpenListingRecap={onOpenListingRecap}
                     isMenuOpen={activeMessageId === message.id}
                     onOpenMenu={() => setActiveMessageId(message.id)}
                     onCloseMenu={() => setActiveMessageId(null)}

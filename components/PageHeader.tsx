@@ -1,15 +1,18 @@
 'use client';
 
 import { Button } from './ui/Button';
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
-    title: string;
+    title: React.ReactNode;
     subtitle?: string;
     actionLabel?: string;
     onAction?: () => void;
     secondaryActionLabel?: string;
     secondaryAction?: () => void;
     actionControls?: React.ReactNode;
+    titleClassName?: string;
+    hideSeparator?: boolean;
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
@@ -19,13 +22,15 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     onAction,
     secondaryActionLabel,
     secondaryAction,
-    actionControls
+    actionControls,
+    titleClassName,
+    hideSeparator
 }) => {
     return (
         <div className="flex flex-col gap-6 pt-4 md:pt-0">
-            <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
-                    <div className="text-2xl font-bold">
+                    <div className={cn("text-2xl font-bold", titleClassName)}>
                         {title}
                     </div>
                     {subtitle && (
@@ -53,7 +58,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                     )}
                 </div>
             </div>
-            <hr />
+            {!hideSeparator && <hr />}
         </div>
     );
 };

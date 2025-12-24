@@ -13,12 +13,19 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { lat, lon, roomCount, buildYear, isFurnished, surface, city, listing } = body;
 
-        // 1. Check eligibility for Paris API (Based generally on coordinates or explicit city check)
-        // For strictness, if we have lat/lon, we use them.
-        const isParis = (city && city.toLowerCase().includes('paris')) || (lat && lat > 48.81 && lat < 48.91 && lon > 2.22 && lon < 2.47);
+        // 1. Check eligibility for Paris API (Strict check: City name or Zip logic)
+        // Levallois is NOT Paris for rent caps, despite getting "Zone Tendue" tax status.
+        // We only want to trigger the Paris API (Plafond) for Paris proper.
+        const normalizedCity = city?.toLowerCase().trim() || '';
+        // Check for 'paris' exact match or 'paris ' prefix, OR zip code 75
+        const isParis = normalizedCity === 'paris' ||
+            normalizedCity.startsWith('paris ') ||
+            (listing && listing.zipCode && listing.zipCode.startsWith('75')) ||
+            // Fallback: if we have "arrondissement" in city name
+            normalizedCity.includes('arrondissement');
 
         if (!isParis) {
-            // Use local fallback
+            // Use local fallback (Will handle Levallois as "Not Eligible" or generic zone if supported)
             const localResult = calculateRentControl({ ...listing, surface, roomCount, buildYear, isFurnished }, city || 'proville');
             return NextResponse.json(localResult);
         }
@@ -33,23 +40,15 @@ export async function POST(request: Request) {
         // 3. Map Furnished
         const meuble_txt = isFurnished ? "meublé" : "non meublé";
 
-        // 4. Query API
-        // Filter by geofilter.distance to find the zone containing the point.
-        // We actually want the reference rent for this specific set of criteria at this location.
-        // The dataset records are "zones" with reference prices for specific types.
-        // We filter by location AND criteria.
-
-        const whereClause = `piece=${roomCount === 0 ? 1 : Math.min(roomCount, 4)} AND epoque="${epoque}" AND meuble_txt="${meuble_txt}"`;
-
-        // We use 'geofilter.distance(geo_shape, <lat>, <lon>, <dist>)' or just rely on the fact that if we use geofilter.distance
-        // with a small radius (e.g. 10m) we land in the polygon.
-        // However, the Paris API often works best with `geofilter.distance=lat,lon,distance`
+        // 4. Query API (V2.1 uses SQL-like WHERE clause for spatial filtering)
+        // We Use `intersects` to find the precise zone (Quarter) containing the point.
+        // Syntax: intersects(geo_shape, geom'POINT(lon lat)')
+        const whereClause = `piece=${roomCount === 0 ? 1 : Math.min(roomCount, 4)} AND epoque="${epoque}" AND meuble_txt="${meuble_txt}" AND intersects(geo_shape, geom'POINT(${lon} ${lat})')`;
 
         const response = await axios.get(PARIS_API_URL, {
             params: {
                 where: whereClause,
-                limit: 1,
-                "geofilter.distance": `${lat},${lon},100` // 100 meters tolerance to find the zone
+                limit: 1
             }
         });
 

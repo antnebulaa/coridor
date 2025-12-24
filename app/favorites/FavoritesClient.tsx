@@ -47,22 +47,23 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
     return (
         <Container>
             <PageHeader
-                title="My Wishlists"
-                subtitle="Your saved collections"
+                title="Favoris"
+                titleClassName="font-medium"
                 actionLabel={isEditing ? "Terminer" : "Modifier"}
                 onAction={toggleEdit}
+                hideSeparator
             />
             <div
                 className="
-          mt-10
+          mt-6
           grid 
-          grid-cols-1 
-          sm:grid-cols-2 
+          grid-cols-2
           md:grid-cols-3 
           lg:grid-cols-4
           xl:grid-cols-5
           2xl:grid-cols-6
-          gap-8
+          gap-4
+          md:gap-8
         "
             >
                 {wishlists.map((wishlist) => (

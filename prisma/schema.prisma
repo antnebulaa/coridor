@@ -62,13 +62,24 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   favoriteIds    String[]
+  
+  // Explicit Identity
+  firstName      String?
+  lastName       String?
 
   // Coridor Fields
   userMode          UserMode  @default(TENANT)
   plan              Plan      @default(FREE)
   phoneNumber       String?
   birthDate         DateTime?
+  birthPlace        String?
   address           String?
+  addressLine1      String?
+  building          String?
+  apartment         String?
+  city              String?
+  zipCode           String?
+  country           String?
   measurementSystem String?   @default("metric") // "metric" or "imperial"
 
   accounts     Account[]
@@ -180,6 +191,10 @@ model Listing {
   neighborhood  String?
   latitude      Float?
   longitude     Float?
+  addressLine1  String?
+  building      String?
+  apartment     String?
+  zipCode       String?
 
   // Coridor Fields
   leaseType LeaseType?
@@ -240,6 +255,8 @@ model Listing {
   hasAirConditioning Boolean @default(false)
   isStudentFriendly  Boolean @default(false)
   hasConcierge       Boolean @default(false)
+  
+  propertyAdjective  String? // NEW: Adjective for listing (e.g. "Lumineux", "Calme")
 
   // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -262,6 +279,7 @@ model Listing {
   applicationMessages Message[]
 
   applications RentalApplication[]
+  conversations Conversation[]
 
   furniture Furniture?
 }
@@ -382,6 +400,9 @@ model Conversation {
   messages    Message[]
 
   users User[]
+
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id])
 }
 
 model Message {
@@ -463,6 +484,12 @@ enum ApplicationStatus {
   ACCEPTED
 }
 
+enum LeaseStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  SIGNED
+}
+
 enum SpecificLeaseRequest {
   DEFAULT
   STUDENT
@@ -476,6 +503,12 @@ model RentalApplication {
   status               ApplicationStatus    @default(SENT)
   specificLeaseRequest SpecificLeaseRequest @default(DEFAULT)
   appliedAt            DateTime             @default(now())
+
+  // Lease & Signature
+  leaseStatus            LeaseStatus @default(DRAFT)
+  yousignSignatureId     String? // Signature Request ID
+  signedLeaseUrl         String? // URL of final signed PDF
+
 
   property       Listing              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
@@ -492,6 +525,7 @@ model CommuteLocation {
   longitude     Float
   transportMode String   @default("TRANSIT") // TRANSIT, DRIVING, CYCLING, WALKING
   icon          String?  // NEW: Icon name (e.g., 'briefcase', 'home')
+  isShowOnMap   Boolean  @default(true) // NEW: Toggle visibility on map
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

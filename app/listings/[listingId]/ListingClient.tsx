@@ -48,7 +48,8 @@ const ListingClient: React.FC<ListingClientProps> = ({
         setIsLoading(true);
 
         axios.post('/api/conversations', {
-            userId: listing.user.id
+            userId: listing.user.id,
+            listingId: listing.id
         })
             .then((data) => {
                 router.push(`/inbox/${data.data.id}`);

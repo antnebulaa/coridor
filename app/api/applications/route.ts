@@ -12,6 +12,7 @@ export async function POST(
             listingId,
             message
         } = body;
+        console.log('API_APP_START', { listingId, message, userId: currentUser?.id });
 
         if (!currentUser?.id || !currentUser?.email) {
             return new NextResponse('Unauthorized', { status: 401 });
@@ -35,9 +36,9 @@ export async function POST(
         const ownerId = listing.userId;
 
         // Prevent applying to own listing
-        if (ownerId === currentUser.id) {
-            return new NextResponse('Cannot apply to own listing', { status: 400 });
-        }
+        // if (ownerId === currentUser.id) {
+        //    return new NextResponse('Cannot apply to own listing', { status: 400 });
+        // }
 
         // Find existing conversation
         const existingConversations = await prisma.conversation.findMany({
@@ -58,6 +59,9 @@ export async function POST(
                                         id: ownerId
                                     }
                                 }
+                            },
+                            {
+                                listingId: listingId
                             }
                         ]
                     }
@@ -79,7 +83,16 @@ export async function POST(
                             {
                                 id: ownerId
                             }
-                        ]
+                        ].filter((user, index, self) =>
+                            index === self.findIndex((t) => (
+                                t.id === user.id
+                            ))
+                        )
+                    },
+                    listing: {
+                        connect: {
+                            id: listingId
+                        }
                     }
                 }
             });
@@ -156,7 +169,7 @@ export async function POST(
 
         return NextResponse.json(conversation);
     } catch (error: any) {
-        console.log(error, 'APPLICATION_ERROR');
+        console.error('APPLICATION_ERROR_DETAILS:', error);
         return new NextResponse('Internal Error', { status: 500 });
     }
 }

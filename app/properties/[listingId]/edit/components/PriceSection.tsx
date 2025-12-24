@@ -247,7 +247,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                     <div className="flex flex-row items-center justify-between">
                         <h4 className="font-semibold flex items-center gap-2">
                             <Info size={18} />
-                            Encadrement des loyers
+                            Zone Tendue / Encadrement
                         </h4>
                         <div className="flex gap-2">
                             {rentControlData.source === 'official_api' && (

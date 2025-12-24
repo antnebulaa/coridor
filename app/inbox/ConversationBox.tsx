@@ -66,7 +66,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     // Application Status Logic
     const { applicationStatus, applicationColor, applicationLabel } = useMemo(() => {
         // 1. Find the listing ID discussed in this conversation
-        const listingId = data.messages.find(m => m.listingId)?.listingId;
+        const listingId = data.listingId || data.messages.find(m => m.listingId)?.listingId;
 
         if (!listingId) {
             return { applicationStatus: null, applicationColor: null, applicationLabel: null };
@@ -159,7 +159,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 <div className="focus:outline-none">
                     <div className="flex justify-between items-center">
                         <p className="text-md font-medium text-foreground">
-                            {data.name || otherUser?.name || 'Unknown User'}
+                            {data.listing?.title || data.name || otherUser?.name || 'Unknown User'}
                         </p>
                         {lastMessage?.createdAt && (
                             <p className="text-xs text-muted-foreground font-light">

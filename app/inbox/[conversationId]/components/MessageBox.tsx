@@ -18,6 +18,8 @@ interface MessageBoxProps {
     data: SafeMessage | FullMessageType;
     isLast?: boolean;
     onOpenVisitSlots?: () => void;
+    onToggleDossier?: () => void;
+    onOpenListingRecap?: () => void;
     isMenuOpen: boolean;
     onOpenMenu: () => void;
     onCloseMenu: () => void;
@@ -27,6 +29,8 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     data,
     isLast,
     onOpenVisitSlots,
+    onToggleDossier,
+    onOpenListingRecap,
     isMenuOpen,
     onOpenMenu,
     onCloseMenu
@@ -85,7 +89,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     );
 
     const message = clsx(
-        "text-sm w-fit transition select-none !ring-0 !outline-none !border-none", // Select none to prevent text selection on long press
+        "text-[15px] w-fit transition select-none !ring-0 !outline-none !border-none", // Select none to prevent text selection on long press
         // isMenuOpen && "scale-95 brightness-95", // Removed as per user feedback
         data.body === 'INVITATION_VISITE' ? "p-0" :
             (data.image || data.listing) ? "rounded-md p-0 overflow-hidden" :
@@ -223,27 +227,55 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     </button>
                                 </div>
                             ) : data.listing && (data.listing as any).images ? (
-                                <div className="flex flex-col">
+                                <div className="flex flex-col gap-2">
                                     {data.body && (
-                                        <div className="mb-2">{data.body}</div>
+                                        <div className={clsx(
+                                            "box-border w-fit overflow-hidden py-2 px-3",
+                                            isOwn ? "bg-primary text-white rounded-2xl rounded-br-none ml-auto" : "bg-gray-100 rounded-2xl rounded-bl-none"
+                                        )}>
+                                            {data.body}
+                                        </div>
                                     )}
-                                    <div className="flex flex-col gap-2 w-64 max-w-full bg-white rounded-lg overflow-hidden shadow-sm border border-neutral-200">
-                                        <div className="relative w-full h-32">
-                                            <Image
-                                                fill
-                                                src={(data.listing as any).images[0]?.url || '/images/placeholder.jpg'}
-                                                alt="Listing"
-                                                className="object-cover"
-                                            />
+                                    <div className="flex flex-col gap-2 w-[calc(100vw-80px)] sm:w-80 max-w-full">
+                                        <div className="text-sm text-neutral-500 ml-1">
+                                            a candidaté pour
                                         </div>
-                                        <div className="p-3">
-                                            <div className="font-semibold text-gray-900 truncate">
-                                                {data.listing.title}
+                                        {/* Compact Listing Card */}
+                                        <div
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onOpenListingRecap && onOpenListingRecap();
+                                            }}
+                                            className="flex items-center gap-3 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-[19px] cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+                                        >
+                                            <div className="relative w-[50px] h-[50px] shrink-0 rounded-[12px] overflow-hidden">
+                                                <Image
+                                                    fill
+                                                    src={(data.listing as any).images[0]?.url || '/images/placeholder.jpg'}
+                                                    alt="Listing"
+                                                    className="object-cover"
+                                                />
                                             </div>
-                                            <div className="text-sm text-gray-500">
-                                                {data.listing.price}€ / month
+                                            <div className="flex flex-col overflow-hidden">
+                                                <div className="font-medium text-base text-neutral-900 dark:text-white truncate">
+                                                    {data.listing.title}
+                                                </div>
+                                                <div className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
+                                                    {data.listing.city || 'Localisation inconnue'}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Dossier Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onToggleDossier && onToggleDossier();
+                                            }}
+                                            className="w-fit ml-auto px-8 py-3 bg-neutral-100 dark:bg-neutral-800 rounded-[19px] text-center font-medium text-sm text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+                                        >
+                                            Voir le dossier de candidature
+                                        </button>
                                     </div>
                                 </div>
                             ) : (

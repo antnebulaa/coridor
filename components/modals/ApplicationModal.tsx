@@ -58,8 +58,8 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
                 onClose();
                 router.push(`/inbox/${response.data.id}`);
             })
-            .catch(() => {
-                toast.error('Une erreur est survenue.');
+            .catch((error) => {
+                toast.error(error?.response?.data || 'Une erreur est survenue.');
             })
             .finally(() => {
                 setIsLoading(false);

@@ -1,16 +1,17 @@
 'use client';
 
-import { Conversation, User } from "@prisma/client";
+import { Conversation, User, Listing } from "@prisma/client";
 import useOtherUser from "@/hooks/useOtherUser";
 import { useMemo } from "react";
 import Link from "next/link";
 import { HiChevronLeft } from "react-icons/hi";
 import Avatar from "@/components/Avatar";
-import { HiEllipsisHorizontal } from "react-icons/hi2";
+import { HiEllipsisHorizontal, HiInformationCircle } from "react-icons/hi2";
 
 interface HeaderProps {
     conversation: Conversation & {
-        users: User[]
+        users: User[],
+        listing?: Listing | null
     };
     onToggleDossier: () => void;
 };
@@ -60,18 +61,59 @@ const Header: React.FC<HeaderProps> = ({
                     >
                         <HiChevronLeft size={32} />
                     </Link>
-                    <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} size={48} />
-                    <div className="flex flex-col">
-                        <div className="text-2xl font-medium text-neutral-800 dark:text-white">
-                            {conversation.name || otherUser?.name}
-                        </div>
-                        <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
-                            {statusText}
-                        </div>
-                    </div>
+                    {conversation.listing ? (
+                        <>
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
+                                {/* Ideally we use Image component or Avatar with listing image */}
+                                <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} size={40} />
+                                {/* Actually let's just stick to user avatar for now but change title */}
+                            </div>
+                            <div className="flex flex-col overflow-hidden">
+                                <div className="text-sm font-semibold text-neutral-800 dark:text-white truncate max-w-[150px] sm:max-w-xs">
+                                    {conversation.listing.title}
+                                </div>
+                                <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
+                                    {otherUser?.name}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} size={40} />
+                            <div className="flex flex-col">
+                                <div className="text-base font-semibold text-neutral-800 dark:text-white">
+                                    {conversation.name || otherUser?.name}
+                                </div>
+                                <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
+                                    {statusText}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-            </div>
+
+                <div
+                    onClick={onToggleDossier}
+                    className="
+                        py-1.5
+                        px-3
+                        bg-neutral-100 dark:bg-neutral-800 
+                        hover:bg-neutral-200 dark:hover:bg-neutral-700
+                        rounded-full 
+                        cursor-pointer 
+                        transition
+                        xl:hidden
+                        flex
+                        items-center
+                        justify-center
+                    "
+                >
+                    <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                        Voir dossier
+                    </span>
+                </div>
+            </div >
         </>
     );
 }

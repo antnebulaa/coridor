@@ -20,6 +20,8 @@ import Image from "next/image";
 import { Button } from "../ui/Button";
 import { Info, AlertTriangle, CheckCircle } from "lucide-react";
 import { calculateRentControl } from "@/app/properties/[listingId]/edit/components/rentControlUtils";
+import VisitsSection from "@/app/properties/[listingId]/edit/components/VisitsSection";
+import { SafeListing } from "@/types";
 
 import { LeaseType } from "@prisma/client";
 
@@ -30,6 +32,7 @@ enum STEPS {
     AMENITIES = 3,
     IMAGES = 4,
     PRICE = 5,
+    AVAILABILITY = 6,
 }
 
 const RentModal = () => {
@@ -43,6 +46,7 @@ const RentModal = () => {
     const [step, setStep] = useState(STEPS.CATEGORY);
     const [isLoading, setIsLoading] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
+    const [createdListing, setCreatedListing] = useState<any>(null);
 
     const {
         register,
@@ -56,6 +60,7 @@ const RentModal = () => {
     } = useForm<FieldValues>({
         defaultValues: {
             category: '',
+            propertyAdjective: '',
             location: null,
             guestCount: 1,
             roomCount: 1,
@@ -221,12 +226,12 @@ const RentModal = () => {
                 })
         } else {
             axios.post('/api/listings', finalData)
-                .then(() => {
+                .then((response) => {
                     toast.success('Annonce créée !');
                     router.refresh();
                     reset();
-                    setStep(STEPS.CATEGORY);
-                    rentModal.onClose();
+                    setCreatedListing(response.data);
+                    setStep(STEPS.AVAILABILITY);
                 })
                 .catch(() => {
                     toast.error("Une erreur s'est produite.");
@@ -238,6 +243,9 @@ const RentModal = () => {
     }
 
     const actionLabel = useMemo(() => {
+        if (step === STEPS.AVAILABILITY) {
+            return 'Terminer';
+        }
         if (step === STEPS.PRICE) {
             return 'Créer';
         }
@@ -246,7 +254,7 @@ const RentModal = () => {
     }, [step]);
 
     const secondaryActionLabel = useMemo(() => {
-        if (step === STEPS.CATEGORY) {
+        if (step === STEPS.CATEGORY || step === STEPS.AVAILABILITY) {
             return undefined;
         }
 
@@ -306,6 +314,8 @@ const RentModal = () => {
     const dpe = watch('dpe');
     const ges = watch('ges');
 
+    const propertyAdjective = watch('propertyAdjective');
+
     if (step === STEPS.INFO) {
         bodyContent = (
             <div className="flex flex-col gap-8">
@@ -313,6 +323,50 @@ const RentModal = () => {
                     title="Informations de base"
                     subtitle="Quelles sont les caractéristiques ?"
                 />
+
+                {/* Adjectif du bien - Added here for consistency with CategorySection */}
+                <div className="flex flex-col gap-2">
+                    <label className="font-medium">Comment décririez-vous votre bien ? (Optionnel)</label>
+                    <div className="text-xs text-neutral-500 mb-1">
+                        Cet adjectif apparaîtra après le type de bien (ex: "Maison calme").
+                    </div>
+                    <select
+                        value={propertyAdjective || ""}
+                        onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
+                        className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
+                    >
+                        <option value="">Aucun</option>
+                        <optgroup label="Lumière/Espace">
+                            <option value="Lumineux">Lumineux</option>
+                            <option value="Spacieux">Spacieux</option>
+                            <option value="Traversant">Traversant</option>
+                            <option value="Ensoleillé">Ensoleillé</option>
+                        </optgroup>
+                        <optgroup label="Style/Architecture">
+                            <option value="Haussmannien">Haussmannien</option>
+                            <option value="Atypique">Atypique</option>
+                            <option value="Loft">Loft</option>
+                            <option value="Ancien">Ancien</option>
+                            <option value="Moderne">Moderne</option>
+                            <option value="Neuf">Neuf</option>
+                            <option value="Rénové">Rénové</option>
+                        </optgroup>
+                        <optgroup label="Ambiance">
+                            <option value="Calme">Calme</option>
+                            <option value="Cosy">Cosy</option>
+                            <option value="De charme">De charme</option>
+                            <option value="Familial">Familial</option>
+                            <option value="Étudiant">Étudiant</option>
+                        </optgroup>
+                        <optgroup label="Standing">
+                            <option value="De standing">De standing</option>
+                            <option value="De prestige">De prestige</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <hr />
+
                 <Counter
                     title="Voyageurs"
                     subtitle="Capacité d'accueil"
@@ -535,15 +589,40 @@ const RentModal = () => {
         )
     }
 
+    if (step === STEPS.AVAILABILITY && createdListing) {
+        // Mock SafeListing from createdListing
+        const safeListing: SafeListing = {
+            ...createdListing,
+            createdAt: createdListing.createdAt?.toString(),
+            statusUpdatedAt: createdListing.statusUpdatedAt?.toString(),
+            images: [],
+            // Ensure other props if strictly needed by types, but VisitsSection mostly needs ID and visitSlots
+            visitSlots: [],
+            visitDuration: 20
+        };
+
+        bodyContent = (
+            <div className="flex flex-col gap-4">
+                <Heading
+                    title="Définissez vos disponibilités de visite"
+                    subtitle="Indiquez quand vous êtes disponible pour faire visiter ce bien."
+                />
+                <div className="h-[500px] overflow-hidden rounded-xl border border-neutral-200">
+                    <VisitsSection listing={safeListing as any} />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <Modal
             isOpen={rentModal.isOpen}
             onClose={rentModal.onClose}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={step === STEPS.AVAILABILITY ? rentModal.onClose : handleSubmit(onSubmit)}
             actionLabel={actionLabel}
             secondaryActionLabel={secondaryActionLabel}
-            secondaryAction={step === STEPS.CATEGORY ? undefined : onBack}
-            title={rentModal.editingListing ? "Modifier mon annonce" : undefined}
+            secondaryAction={step === STEPS.CATEGORY || step === STEPS.AVAILABILITY ? undefined : onBack}
+            title={rentModal.editingListing ? "Modifier mon annonce" : "Louer mon bien"}
             body={bodyContent}
         />
     );

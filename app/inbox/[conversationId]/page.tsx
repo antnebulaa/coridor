@@ -3,7 +3,7 @@ import getConversationById from "@/app/actions/getConversationById";
 import getMessages from "@/app/actions/getMessages";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import EmptyState from "@/components/EmptyState";
-import { SafeUser, FullMessageType } from "@/types";
+import { SafeUser, FullMessageType, SafeListing } from "@/types";
 import ConversationClient from "./ConversationClient";
 
 interface IParams {
@@ -29,45 +29,31 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     // Find other user using ID comparison for safety
     const otherUser = conversation.users.find((user) => user.id !== currentUser?.id);
 
-    // Check if other user has a tenant profile to show
-    // const showDossier = otherUser?.tenantProfile; // Old logic
+    // Extract listing directly from conversation relation (added in getConversationById)
+    const listing = (conversation as any).listing;
 
-    // Find listing rent from messages
-    // Look for a message that has a listingId attached
-    const applicationMessage = messages.find(m => m.listingId);
+    let safeListing = null;
     let rent = undefined;
     let listingUserId = undefined;
 
-    let safeListing = null;
-
-    if (applicationMessage?.listingId) {
-        const listing = await prisma.listing.findUnique({
-            where: {
-                id: applicationMessage.listingId
-            },
-            include: {
-                images: true,
-                user: true
+    if (listing) {
+        rent = listing.price;
+        listingUserId = listing.userId;
+        safeListing = {
+            ...listing,
+            createdAt: listing.createdAt.toISOString(),
+            statusUpdatedAt: listing.statusUpdatedAt ? listing.statusUpdatedAt.toISOString() : new Date().toISOString(),
+            user: {
+                ...listing.user,
+                createdAt: listing.user.createdAt.toISOString(),
+                updatedAt: listing.user.updatedAt.toISOString(),
+                emailVerified: listing.user.emailVerified?.toISOString() || null,
+                birthDate: null, // Basic fields only
+                tenantProfile: null,
+                wishlists: null,
+                commuteLocations: null
             }
-        });
-        if (listing) {
-            rent = listing.price;
-            listingUserId = listing.userId;
-            safeListing = {
-                ...listing,
-                createdAt: listing.createdAt.toISOString(),
-                user: {
-                    ...listing.user,
-                    createdAt: listing.user.createdAt.toISOString(),
-                    updatedAt: listing.user.updatedAt.toISOString(),
-                    emailVerified: listing.user.emailVerified?.toISOString() || null,
-                    birthDate: null, // Basic fields only
-                    tenantProfile: null,
-                    wishlists: null,
-                    commuteLocations: null
-                }
-            } as any;
-        }
+        } as SafeListing;
     }
 
     const hasTenantProfile = !!otherUser?.tenantProfile;
@@ -124,8 +110,24 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             wishlists: null,
             commuteLocations: null
         })),
-        listing: message.listingId === applicationMessage?.listingId ? safeListing : null
+        listing: message.listingId === listing?.id ? safeListing : null
     }));
+
+    // Fetch Status and Application ID
+    let applicationId = null;
+    if (safeListing && otherUser) {
+        // We need to find the application linking this user (via scope) and this property
+        const application = await prisma.rentalApplication.findFirst({
+            where: {
+                propertyId: safeListing.id,
+                candidateScope: {
+                    creatorUserId: otherUser.id
+                }
+            },
+            select: { id: true }
+        });
+        applicationId = application?.id || null;
+    }
 
     return (
         <div className="h-full">
@@ -138,6 +140,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 showDossier={showDossier}
                 listing={safeListing}
                 candidateScope={safeScope}
+                applicationId={applicationId}
             />
         </div>
     );

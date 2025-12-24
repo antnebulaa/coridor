@@ -38,7 +38,8 @@ export async function POST(
         floor,
         totalFloors,
         buildYear,
-        imageSrcs
+        imageSrcs,
+        propertyAdjective
     } = body;
 
     // Validate essential fields
@@ -76,6 +77,7 @@ export async function POST(
                 floor: floor ? parseInt(floor, 10) : null,
                 totalFloors: totalFloors ? parseInt(totalFloors, 10) : null,
                 buildYear: buildYear ? parseInt(buildYear, 10) : null,
+                propertyAdjective, // NEW
                 // Amenities
                 ...(amenities || []).reduce((acc: any, key: string) => {
                     acc[key] = true;
