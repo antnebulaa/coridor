@@ -581,6 +581,13 @@ const RentModal = () => {
                                 </div>
                             </div>
                         </div>
+                        <SoftInput
+                            id="description"
+                            label="Description (ex: coté jardin, étage, etc.)"
+                            disabled={isLoading}
+                            register={register}
+                            errors={errors}
+                        />
                         <hr />
                     </>
                 )}

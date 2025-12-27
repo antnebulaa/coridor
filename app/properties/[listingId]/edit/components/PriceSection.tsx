@@ -19,34 +19,66 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [rentControlData, setRentControlData] = useState<any>(null);
 
+    // Logic for Colocation / Rooms
+    const property = listing.rentalUnit?.property;
     // Use stored city directly
     const city = listing.city || '';
 
+    const rooms = property?.rentalUnits?.filter((unit: any) => unit.type === 'PRIVATE_ROOM') || [];
+    const isColocation = rooms.length > 0;
+
+    // Form logic with support for multiple rooms
     const {
         register,
         handleSubmit,
-        setValue, // NEW
-        formState: {
-            errors,
-        },
-        watch
+        setValue,
+        watch,
+        control,
+        formState: { errors },
     } = useForm<FieldValues>({
         defaultValues: {
             price: listing.price,
             charges: listing.charges ? (listing.charges as any).amount : '',
-            securityDeposit: listing.securityDeposit
+            securityDeposit: listing.securityDeposit,
+            // Map rooms to a form array structure
+            roomPrices: rooms.map((room: any) => {
+                const roomListing = room.listings?.[0]; // Assume 1st listing is the active one for now
+                return {
+                    listingId: roomListing?.id,
+                    name: room.name,
+                    price: roomListing?.price || 0,
+                    charges: roomListing?.charges?.amount || 0,
+                    securityDeposit: roomListing?.securityDeposit || 0
+                };
+            })
         }
     });
 
     const price = watch('price');
+    const roomPrices = watch('roomPrices');
 
-    // Calculate Rent Control
+    // Calculate Total for Colocation
+    const totalColocationPrice = isColocation
+        ? roomPrices?.reduce((acc: number, curr: any) => acc + (parseInt(curr.price) || 0), 0)
+        : 0;
+
+    const totalColocationCharges = isColocation
+        ? roomPrices?.reduce((acc: number, curr: any) => acc + (parseInt(curr.charges) || 0), 0)
+        : 0;
+
+    // Calculate Rent Control (Classic implementation)
+    // For colocation, rent control usually applies per room or on the whole?
+    // Usually per contract. If individual leases => per room.
+    // For now, we keep the Rent Control gauge on the "Main" listing logic if not colocation,
+    // OR we try to show it per room (too complex for now).
+    // Let's hide Rent Control gauge for Colocation "Global" view for now to avoid confusion, or rely on individual checks later.
     useEffect(() => {
+        if (isColocation) return; // Skip for colocation main view for now
+
         const fetchRentControl = async () => {
-            if (city && listing.surface && listing.latitude && listing.longitude) {
+            if (city && listing.surface) {
                 setIsLoading(true);
                 try {
-                    // Use API route for accurate calculation
                     const response = await axios.post('/api/rent-control', {
                         lat: listing.latitude,
                         lon: listing.longitude,
@@ -55,61 +87,176 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                         isFurnished: listing.isFurnished,
                         surface: listing.surface,
                         city: city,
-                        listing: listing // Pass full listing for fallback
+                        listing: listing
                     });
-
                     setRentControlData(response.data);
                 } catch (error) {
                     console.error("Failed to fetch rent control", error);
-                    // Fallback handled by API or just keep null
                 } finally {
                     setIsLoading(false);
                 }
             } else if (city && listing.surface) {
-                // Fallback if no coordinates (legacy listings?)
                 const result = calculateRentControl(listing, city);
                 setRentControlData(result);
             }
         };
 
-        // Debounce slightly or just run once on mount/change
         const timer = setTimeout(() => {
             fetchRentControl();
         }, 500);
-
         return () => clearTimeout(timer);
-    }, [city, listing]);
+    }, [city, listing, isColocation]);
 
-    const onSubmit: SubmitHandler<FieldValues> = (data) => {
+    const onSubmit: SubmitHandler<FieldValues> = async (data) => {
         setIsLoading(true);
 
-        axios.put(`/api/listings/${listing.id}`, {
-            price: parseInt(data.price, 10),
-            charges: parseInt(data.charges, 10),
-            securityDeposit: parseInt(data.securityDeposit, 10)
-        })
-            .then(() => {
+        try {
+            if (isColocation) {
+                // Batch update all room listings
+                const updates = data.roomPrices.map((rp: any) => {
+                    if (!rp.listingId) return Promise.resolve(); // No listing to update
+                    return axios.put(`/api/listings/${rp.listingId}`, {
+                        price: parseInt(rp.price, 10),
+                        charges: parseInt(rp.charges, 10),
+                        securityDeposit: parseInt(rp.securityDeposit, 10)
+                    });
+                });
+
+                await Promise.all(updates);
+                toast.success('Loyers des chambres mis à jour !');
+            } else {
+                // Standard single update
+                await axios.put(`/api/listings/${listing.id}`, {
+                    price: parseInt(data.price, 10),
+                    charges: parseInt(data.charges, 10),
+                    securityDeposit: parseInt(data.securityDeposit, 10)
+                });
                 toast.success('Loyer mis à jour !');
-                router.refresh();
-            })
-            .catch(() => {
-                toast.error('Une erreur est survenue.');
-            })
-            .finally(() => {
-                setIsLoading(false);
-            })
+            }
+            router.refresh();
+        } catch (error) {
+            toast.error('Une erreur est survenue.');
+        } finally {
+            setIsLoading(false);
+        }
     }
 
-    // Gauge Logic
+    // Gauge Logic (Only for Single Listing)
     const getGaugeStatus = () => {
         if (!rentControlData?.isEligible || !price) return 'neutral';
         if (price > rentControlData.maxRent) return 'red';
         if (price >= rentControlData.maxRent * 0.95) return 'orange';
         return 'green';
     };
-
     const gaugeStatus = getGaugeStatus();
     const percentage = rentControlData?.maxRent ? Math.min((price / (rentControlData.maxRent * 1.2)) * 100, 100) : 0;
+
+    if (isColocation) {
+        return (
+            <div className="flex flex-col gap-8 pb-28 md:pb-0">
+                <div className="flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold">Loyer par chambre (Colocation)</h3>
+                    <p className="text-neutral-500 font-light">
+                        Définissez le loyer et les charges pour chaque chambre individuellement.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-6">
+                    {roomPrices.map((roomPrice: any, index: number) => (
+                        <div key={index} className="p-4 border border-neutral-200 rounded-xl bg-neutral-50 flex flex-col gap-4">
+                            <h4 className="font-semibold text-md border-b pb-2">{roomPrice.name || `Chambre ${index + 1}`}</h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Price */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs font-medium text-neutral-500">Loyer HC</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            disabled={isLoading}
+                                            {...register(`roomPrices.${index}.price`, { required: true, min: 0 })}
+                                            className="w-full p-2 pl-3 pr-8 rounded-md border border-neutral-300 focus:border-black outline-none transition"
+                                        />
+                                        <Euro size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                                    </div>
+                                </div>
+
+                                {/* Charges */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs font-medium text-neutral-500">Charges</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            disabled={isLoading}
+                                            {...register(`roomPrices.${index}.charges`, { min: 0 })}
+                                            className="w-full p-2 pl-3 pr-8 rounded-md border border-neutral-300 focus:border-black outline-none transition"
+                                        />
+                                        <Euro size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                                    </div>
+                                </div>
+
+                                {/* Deposit */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs font-medium text-neutral-500">Dépôt g.</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            disabled={isLoading}
+                                            {...register(`roomPrices.${index}.securityDeposit`, { min: 0 })}
+                                            className="w-full p-2 pl-3 pr-8 rounded-md border border-neutral-300 focus:border-black outline-none transition"
+                                        />
+                                        <Euro size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Total Summary */}
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-primary">Revenu Total Estimé</span>
+                        <span className="text-sm text-neutral-500">Somme des loyers + charges</span>
+                    </div>
+                    <div className="text-2xl font-bold text-primary">
+                        {totalColocationPrice + totalColocationCharges} € <span className="text-sm font-normal text-neutral-600">/ mois</span>
+                    </div>
+                </div>
+
+
+                <div className="
+                    fixed 
+                    bottom-0 
+                    left-0 
+                    w-full 
+                    bg-white 
+                    border-t
+                    border-neutral-200 
+                    p-4 
+                    z-50 
+                    md:relative 
+                    md:bottom-auto 
+                    md:left-auto 
+                    md:w-auto 
+                    md:bg-transparent 
+                    md:border-none 
+                    md:p-0 
+                    md:mt-4 
+                    md:flex 
+                    md:justify-end
+                ">
+                    <div className="w-full md:w-auto">
+                        <Button
+                            disabled={isLoading}
+                            label="Enregistrer tout"
+                            onClick={handleSubmit(onSubmit)}
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-8 pb-28 md:pb-0">
