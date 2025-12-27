@@ -126,33 +126,40 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
 
             {/* Column 2: Location - Increased width */}
             <div className="hidden md:block flex-[3] text-sm text-neutral-600 min-w-0">
-                {data.addressLine1 ? (
-                    <div className="flex flex-col justify-center h-full">
-                        <div className="font-medium text-neutral-900 truncate" title={[
-                            data.addressLine1,
-                            data.zipCode && data.city ? `${data.zipCode} ${data.city}` : (data.city || location?.label),
-                            data.apartment && `Appt ${data.apartment}`,
-                            data.building && `Bat ${data.building}`
-                        ].filter(Boolean).join(', ')}>
-                            {[
+                {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
+                    <div className="font-medium text-neutral-900 truncate">
+                        {data.rentalUnit.name || 'Chambre'}
+                        {data.description ? ` - ${data.description}` : ''}
+                    </div>
+                ) : (
+                    data.addressLine1 ? (
+                        <div className="flex flex-col justify-center h-full">
+                            <div className="font-medium text-neutral-900 truncate" title={[
                                 data.addressLine1,
                                 data.zipCode && data.city ? `${data.zipCode} ${data.city}` : (data.city || location?.label),
                                 data.apartment && `Appt ${data.apartment}`,
                                 data.building && `Bat ${data.building}`
-                            ].filter(Boolean).join(', ')}
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        <div className="font-medium text-neutral-900 truncate">
-                            {data.city || location?.label}
-                        </div>
-                        {data.district && (
-                            <div className="text-neutral-500 truncate">
-                                {data.district}
+                            ].filter(Boolean).join(', ')}>
+                                {[
+                                    data.addressLine1,
+                                    data.zipCode && data.city ? `${data.zipCode} ${data.city}` : (data.city || location?.label),
+                                    data.apartment && `Appt ${data.apartment}`,
+                                    data.building && `Bat ${data.building}`
+                                ].filter(Boolean).join(', ')}
                             </div>
-                        )}
-                    </>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="font-medium text-neutral-900 truncate">
+                                {data.city || location?.label}
+                            </div>
+                            {data.district && (
+                                <div className="text-neutral-500 truncate">
+                                    {data.district}
+                                </div>
+                            )}
+                        </>
+                    )
                 )}
             </div>
 

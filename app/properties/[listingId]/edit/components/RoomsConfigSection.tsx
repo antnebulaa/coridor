@@ -110,7 +110,10 @@ const RoomsConfigSection: React.FC<RoomsConfigSectionProps> = ({
                             </div>
 
                             <div>
-                                <div className="font-semibold">{room.rentalUnit?.name || "Chambre"}</div>
+                                <div className="font-semibold">
+                                    {room.rentalUnit?.name || "Chambre"}
+                                    {room.description && <span className="font-normal text-neutral-500 ml-2">- {room.description}</span>}
+                                </div>
                                 <div className="text-sm text-neutral-500 flex items-center gap-2">
                                     <span className="flex items-center gap-1"><Ruler size={12} /> {room.rentalUnit?.surface || '-'} m²</span>
                                     <span>•</span>

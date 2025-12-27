@@ -46,6 +46,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 return {
                     listingId: roomListing?.id,
                     name: room.name,
+                    description: roomListing?.description,
                     price: roomListing?.price || 0,
                     charges: roomListing?.charges?.amount || 0,
                     securityDeposit: roomListing?.securityDeposit || 0
@@ -164,7 +165,10 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 <div className="flex flex-col gap-6">
                     {roomPrices.map((roomPrice: any, index: number) => (
                         <div key={index} className="p-4 border border-neutral-200 rounded-xl bg-neutral-50 flex flex-col gap-4">
-                            <h4 className="font-semibold text-md border-b pb-2">{roomPrice.name || `Chambre ${index + 1}`}</h4>
+                            <h4 className="font-semibold text-md border-b pb-2">
+                                {roomPrice.name || `Chambre ${index + 1}`}
+                                {roomPrice.description && <span className="font-normal text-neutral-500 ml-2">- {roomPrice.description}</span>}
+                            </h4>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* Price */}
@@ -461,7 +465,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 left-0 
                 w-full 
                 bg-white 
-                border-t-[1px] 
+                border-t 
                 border-neutral-200 
                 p-4 
                 z-50 
