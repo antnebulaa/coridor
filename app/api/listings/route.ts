@@ -176,6 +176,10 @@ export async function POST(
                     securityDeposit: 0,
                     propertyAdjective,
 
+                    // Constraints
+                    petsAllowed: amenities?.includes('petsAllowed') || false,
+                    isStudentFriendly: amenities?.includes('isStudentFriendly') || false,
+
                     // locationValue: location ? location.value : 'Unknown', // FIXED: Removed (Moved to Property)
                 }
             });

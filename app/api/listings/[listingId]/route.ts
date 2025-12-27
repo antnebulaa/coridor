@@ -195,21 +195,20 @@ export async function PUT(
                 propertyUpdate.isNearHospital = amenities.includes('isNearHospital');
 
                 // Rental Unit Amenities
-                rentalUnitUpdate.isTraversant = amenities.includes('isTraversant');
-                rentalUnitUpdate.hasGarden = amenities.includes('hasGarden');
-                rentalUnitUpdate.isRefurbished = amenities.includes('isRefurbished');
-                rentalUnitUpdate.isSouthFacing = amenities.includes('isSouthFacing');
-                rentalUnitUpdate.isBright = amenities.includes('isBright');
-                rentalUnitUpdate.hasNoOpposite = amenities.includes('hasNoOpposite');
-                rentalUnitUpdate.hasView = amenities.includes('hasView');
-                rentalUnitUpdate.isQuiet = amenities.includes('isQuiet');
-                rentalUnitUpdate.hasBathtub = amenities.includes('hasBathtub');
-                rentalUnitUpdate.hasAirConditioning = amenities.includes('hasAirConditioning');
+                propertyUpdate.isTraversant = amenities.includes('isTraversant');
+                propertyUpdate.hasGarden = amenities.includes('hasGarden');
+                propertyUpdate.isRefurbished = amenities.includes('isRefurbished');
+                propertyUpdate.isSouthFacing = amenities.includes('isSouthFacing');
+                propertyUpdate.isBright = amenities.includes('isBright');
+                propertyUpdate.hasNoOpposite = amenities.includes('hasNoOpposite');
+                propertyUpdate.hasView = amenities.includes('hasView');
+                propertyUpdate.isQuiet = amenities.includes('isQuiet');
+                propertyUpdate.hasBathtub = amenities.includes('hasBathtub');
+                propertyUpdate.hasAirConditioning = amenities.includes('hasAirConditioning');
 
-                // Listing Amenities (if any left, currently Listing model has few booleans mainly constraints)
+                // Listing Amenities
                 listingUpdate.petsAllowed = amenities.includes('petsAllowed');
                 listingUpdate.isStudentFriendly = amenities.includes('isStudentFriendly');
-                listingUpdate.hasConcierge = amenities.includes('hasConcierge');
             }
 
             // Execute Updates
