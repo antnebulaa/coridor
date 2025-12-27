@@ -36,8 +36,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 )}
                 {Icon && !loading && (
                     <Icon
-                        size={24}
-                        className="absolute left-4 top-3"
+                        size={18}
                     />
                 )}
                 {label || children}

@@ -34,6 +34,7 @@ interface VisitsSectionProps {
         visitSlots?: any[];
         visitDuration?: number | null;
     };
+    className?: string; // Allow overriding height/layout
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -45,7 +46,7 @@ const RECOMMENDATIONS = {
     HOUSE: 40
 };
 
-const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
+const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => {
     const router = useRouter();
     const [selectedDates, setSelectedDates] = useState<Date[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -205,7 +206,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-[calc(100vh-140px)] md:h-[600px] rounded-xl overflow-hidden relative">
+        <div className={`flex flex-col md:flex-row rounded-xl overflow-hidden relative ${className || 'h-[calc(100vh-140px)] md:h-[600px]'}`}>
             {/* Calendar Section (Scrollable) */}
             <div className="flex-1 overflow-y-auto pb-48 md:pb-6 px-0 sm:px-2 md:px-6 scroll-smooth">
                 {months.map((monthDate, monthIdx) => {
@@ -278,7 +279,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing }) => {
 
             {/* Sidebar / Bottom Panel */}
             <div className={`
-                fixed bottom-4 left-4 right-4 z-20 pointer-events-none flex flex-col gap-3 justify-end
+                absolute bottom-4 left-4 right-4 z-20 pointer-events-none flex flex-col gap-3 justify-end
                 md:static md:inset-auto md:w-[350px] md:border-l md:pointer-events-auto md:bg-white md:p-6 md:block md:gap-6 overflow-y-auto
             `}>
                 {/* Block 1: Status / Existing Slots */}

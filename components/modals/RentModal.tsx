@@ -18,7 +18,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { Info, AlertTriangle, CheckCircle, Home, X, Check, ChevronDown } from "lucide-react";
 import { calculateRentControl } from "@/app/properties/[listingId]/edit/components/rentControlUtils";
 import VisitsSection from "@/app/properties/[listingId]/edit/components/VisitsSection";
 import { SafeListing } from "@/types";
@@ -38,6 +38,7 @@ enum STEPS {
 const RentModal = () => {
     const router = useRouter();
     const rentModal = useRentModal();
+    const isRoom = !!rentModal.propertyContext || rentModal.editingListing?.rentalUnit?.type === 'PRIVATE_ROOM';
 
     const Map = useMemo(() => dynamic(() => import('../Map'), {
         ssr: false
@@ -47,6 +48,7 @@ const RentModal = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
     const [createdListing, setCreatedListing] = useState<any>(null);
+    const [showRoomSelect, setShowRoomSelect] = useState(false);
 
     const {
         register,
@@ -64,6 +66,7 @@ const RentModal = () => {
             location: null,
             guestCount: 1,
             roomCount: 1,
+            bedroomCount: 1,
             bathroomCount: 1,
             imageSrc: '',
             imageSrcs: [],
@@ -82,12 +85,25 @@ const RentModal = () => {
     useEffect(() => {
         if (rentModal.editingListing) {
             const listing = rentModal.editingListing;
+            const property = listing.rentalUnit?.property || rentModal.propertyContext;
+
             reset({
                 category: listing.category,
-                location: listing.locationValue ? { value: listing.locationValue, label: listing.locationValue, flag: '', latlng: [0, 0], region: '' } : null, // Simplification, ideally we need full location object or fetch it
+                location: listing.city ? {
+                    value: listing.city,
+                    label: property?.address || `${listing.city}, ${listing.zipCode}`,
+                    flag: '',
+                    latlng: [listing.latitude || 0, listing.longitude || 0],
+                    region: ''
+                } : null,
                 guestCount: listing.guestCount || 1,
                 roomCount: listing.roomCount || 1,
+                bedroomCount: 1,
                 bathroomCount: listing.bathroomCount || 1,
+                targetRoomId: listing.rentalUnit?.targetRoom?.id || '',
+                surface: listing.surface || listing.rentalUnit?.surface,
+                bedType: (listing as any).bedType || undefined,
+                hasPrivateBathroom: (listing as any).hasPrivateBathroom || false,
                 imageSrc: '',
                 imageSrcs: listing.images?.map((img: any) => img.url) || [],
                 price: listing.price,
@@ -98,18 +114,56 @@ const RentModal = () => {
                 ges: listing.ges || 'A',
                 charges: typeof listing.charges === 'object' ? (listing.charges as any)?.amount : 0,
                 amenities: Object.keys(listing).filter((key) => (listing as any)[key] === true),
-                rooms: listing.rooms?.map((room: any) => ({
+                rooms: property?.rooms?.map((room: any) => ({
                     name: room.name,
                     images: room.images?.map((img: any) => img.url) || []
                 })) || []
             });
-            setStep(STEPS.CATEGORY);
+
+            if (listing.rentalUnit?.type !== 'ENTIRE_PLACE') {
+                setStep(STEPS.INFO);
+            } else {
+                setStep(STEPS.CATEGORY);
+            }
+        } else if (rentModal.propertyContext) { // Phase 3: Pre-fill from Property
+            const property = rentModal.propertyContext;
+            const amenities = Object.keys(property).filter((key) => (property as any)[key] === true);
+
+            reset({
+                category: property.category,
+                location: {
+                    label: property.address || property.city,
+                    value: property.address || property.city,
+                    latlng: [property.lat || 0, property.lng || 0],
+                    city: property.city,
+                    zipCode: property.zipCode,
+                    country: property.country
+                },
+                guestCount: 1,
+                roomCount: 1,
+                bedroomCount: 1,
+                bathroomCount: 1,
+                imageSrc: '',
+                imageSrcs: [],
+                price: 1, // Default price
+                title: '',
+                description: '',
+                leaseType: LeaseType.LONG_TERM,
+                dpe: property.dpe || 'C',
+                ges: property.ges || 'A',
+                charges: 0,
+                amenities: amenities,
+                rooms: []
+            });
+            setStep(STEPS.INFO); // Skip Category and Location
+            setCreatedListing(null);
         } else {
             reset({
                 category: '',
                 location: null,
                 guestCount: 1,
                 roomCount: 1,
+                bedroomCount: 1,
                 bathroomCount: 1,
                 imageSrc: '',
                 imageSrcs: [],
@@ -124,13 +178,15 @@ const RentModal = () => {
                 rooms: []
             });
             setStep(STEPS.CATEGORY);
+            setCreatedListing(null);
         }
-    }, [rentModal.editingListing, reset]);
+    }, [rentModal.editingListing, rentModal.propertyContext, reset]);
 
     const category = watch('category');
     const location = watch('location');
     const guestCount = watch('guestCount');
     const roomCount = watch('roomCount');
+    const bedroomCount = watch('bedroomCount');
     const bathroomCount = watch('bathroomCount');
     const imageSrc = watch('imageSrc');
     const surface = 50; // MOCK SURFACE since we removed the input? Or maybe we map room count?
@@ -206,7 +262,8 @@ const RentModal = () => {
         const finalData = {
             ...data,
             title: data.title || generatedTitle,
-            description: data.description || generatedDescription
+            description: data.description || generatedDescription,
+            propertyId: rentModal.propertyContext?.id // Phase 3: Add Unit Context
         };
 
         if (rentModal.editingListing) {
@@ -218,8 +275,8 @@ const RentModal = () => {
                     setStep(STEPS.CATEGORY);
                     rentModal.onClose();
                 })
-                .catch(() => {
-                    toast.error("Une erreur s'est produite.");
+                .catch((error) => {
+                    toast.error(error?.response?.data?.error || "Une erreur s'est produite.");
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -231,10 +288,11 @@ const RentModal = () => {
                     router.refresh();
                     reset();
                     setCreatedListing(response.data);
-                    setStep(STEPS.AVAILABILITY);
+                    setStep(STEPS.CATEGORY);
+                    rentModal.onClose();
                 })
-                .catch(() => {
-                    toast.error("Une erreur s'est produite.");
+                .catch((error) => {
+                    toast.error(error?.response?.data?.error || "Une erreur s'est produite.");
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -247,51 +305,60 @@ const RentModal = () => {
             return 'Terminer';
         }
         if (step === STEPS.PRICE) {
-            return 'Créer';
+            return rentModal.editingListing ? 'Enregistrer les modifications' : 'Créer';
         }
 
         return 'Suivant';
-    }, [step]);
+    }, [step, rentModal.editingListing]);
 
     const secondaryActionLabel = useMemo(() => {
-        if (step === STEPS.CATEGORY || step === STEPS.AVAILABILITY) {
+        if (step === STEPS.CATEGORY) {
+            return undefined;
+        }
+
+        // Hide Back button if this is the start of the flow for Room Edit
+        if (rentModal.editingListing?.rentalUnit?.type !== 'ENTIRE_PLACE' && step === STEPS.INFO) {
             return undefined;
         }
 
         return 'Retour';
-    }, [step]);
+    }, [step, rentModal.editingListing]);
 
-    let bodyContent = (
-        <div className="flex flex-col gap-8">
-            <Heading
-                title="Parmi les propositions suivantes, laquelle décrit le mieux votre logement ?"
-                subtitle="Choisissez une catégorie"
-            />
-            <div
-                className="
-          grid 
-          grid-cols-1 
-          md:grid-cols-2 
-          gap-3
-          max-h-[50vh]
-          overflow-y-auto
-        "
-            >
-                {categories.map((item) => (
-                    <div key={item.label} className="col-span-1">
-                        <CategoryInput
-                            onClick={(category) =>
-                                setCustomValue('category', category)}
-                            selected={category === item.label}
-                            label={item.label}
-                            icon={item.icon}
-                            image={item.image}
-                        />
-                    </div>
-                ))}
+    let bodyContent = undefined;
+
+    if (step === STEPS.CATEGORY) {
+        bodyContent = (
+            <div className="flex flex-col gap-8">
+                <Heading
+                    title="Parmi les propositions suivantes, laquelle décrit le mieux votre logement ?"
+                    subtitle="Choisissez une catégorie"
+                />
+                <div
+                    className="
+              grid 
+              grid-cols-1 
+              md:grid-cols-2 
+              gap-3
+              max-h-[50vh]
+              overflow-y-auto
+            "
+                >
+                    {categories.map((item) => (
+                        <div key={item.label} className="col-span-1">
+                            <CategoryInput
+                                onClick={(category) =>
+                                    setCustomValue('category', category)}
+                                selected={category === item.label}
+                                label={item.label}
+                                icon={item.icon}
+                                image={item.image}
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
-    )
+        )
+    }
 
     if (step === STEPS.LOCATION) {
         bodyContent = (
@@ -300,11 +367,14 @@ const RentModal = () => {
                     title="Où est situé votre logement ?"
                     subtitle="Aidez les locataires à vous trouver !"
                 />
-                <MapboxAddressSelect
-                    value={location}
-                    onChange={(value) => setCustomValue('location', value)}
-                    limitCountry="fr"
-                />
+                <div className="relative z-[2000]">
+                    <MapboxAddressSelect
+                        value={location}
+                        onChange={(value) => setCustomValue('location', value)}
+                        limitCountry="fr"
+                        placeholder="Adresse postale"
+                    />
+                </div>
                 <Map center={location?.latlng} />
             </div>
         );
@@ -316,109 +386,303 @@ const RentModal = () => {
 
     const propertyAdjective = watch('propertyAdjective');
 
+    const title = useMemo(() => {
+        if (rentModal.editingListing) return "Modifier mon annonce";
+        if (rentModal.propertyContext) {
+            const contextStart = rentModal.propertyContext;
+            const address = contextStart.address || [contextStart.addressLine1, (contextStart.zipCode ? `${contextStart.zipCode} ${contextStart.city}` : contextStart.city)].filter(Boolean).join(' ');
+            return `Ajouter une chambre à ${address}`;
+        }
+        return "Louer mon bien";
+    }, [rentModal.editingListing, rentModal.propertyContext]);
+
+    // ...
+
     if (step === STEPS.INFO) {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Informations de base"
-                    subtitle="Quelles sont les caractéristiques ?"
+                    title={isRoom ? "Caractéristiques de la chambre" : "Informations de base"}
+                    subtitle={isRoom ? "Dites-nous en plus sur cette chambre" : "Quelles sont les caractéristiques ?"}
                 />
 
-                {/* Adjectif du bien - Added here for consistency with CategorySection */}
-                <div className="flex flex-col gap-2">
-                    <label className="font-medium">Comment décririez-vous votre bien ? (Optionnel)</label>
-                    <div className="text-xs text-neutral-500 mb-1">
-                        Cet adjectif apparaîtra après le type de bien (ex: "Maison calme").
+                {/* Link to Physical Room (Phase 4) */}
+                {rentModal.propertyContext && rentModal.propertyContext.rooms && rentModal.propertyContext.rooms.length > 0 && (
+                    <div className="flex flex-col gap-2 mb-4">
+                        {watch('targetRoomId') ? (
+                            <div className="bg-neutral-50 p-4 rounded-md border border-neutral-200">
+                                <div className="text-xs font-medium text-neutral-500 mb-1 uppercase tracking-wider">Pièce associée</div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 bg-white rounded-full border border-neutral-100">
+                                            <Home size={16} className="text-neutral-600" />
+                                        </div>
+                                        <div className="font-semibold text-neutral-800">
+                                            {rentModal.propertyContext.rooms.find((r: any) => r.id === watch('targetRoomId'))?.name || 'Chambre liée'}
+                                        </div>
+                                    </div>
+                                    <div
+                                        onClick={() => setCustomValue('targetRoomId', '')}
+                                        className="text-sm text-neutral-500 hover:text-black underline cursor-pointer transition select-none"
+                                    >
+                                        Changer
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <label className="font-medium">Lier à une pièce existante (Optionnel)</label>
+                                <div className="text-xs text-neutral-500 mb-1">
+                                    Sélectionnez une chambre créée lors de l'ajout du bien pour récupérer ses photos automatiquement.
+                                </div>
+                                <div className="relative">
+                                    <div
+                                        onClick={() => setShowRoomSelect(!showRoomSelect)}
+                                        className="w-full p-4 border-2 rounded-md transition cursor-pointer bg-background border-input hover:border-neutral-400 flex items-center justify-between"
+                                    >
+                                        <span className={!watch('targetRoomId') ? 'text-neutral-500' : ''}>
+                                            {watch('targetRoomId')
+                                                ? (rentModal.propertyContext.rooms.find((r: any) => r.id === watch('targetRoomId'))?.name)
+                                                : "-- Nouvelle chambre --"
+                                            }
+                                        </span>
+                                        <ChevronDown size={20} className="text-neutral-500" />
+                                    </div>
+
+                                    {showRoomSelect && (
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                                            <div
+                                                onClick={() => {
+                                                    setCustomValue('targetRoomId', "");
+                                                    setShowRoomSelect(false);
+                                                }}
+                                                className="p-3 hover:bg-neutral-100 cursor-pointer text-neutral-500 italic"
+                                            >
+                                                -- Nouvelle chambre --
+                                            </div>
+                                            {rentModal.propertyContext.rooms.map((room: any) => (
+                                                <div
+                                                    key={room.id}
+                                                    onClick={() => {
+                                                        setCustomValue('targetRoomId', room.id);
+
+                                                        // Import images logic
+                                                        if (room.images && room.images.length > 0) {
+                                                            const roomImages = room.images.map((img: any) => img.url);
+                                                            setCustomValue('imageSrcs', roomImages);
+                                                            toast.success('Photos de la chambre importées !');
+                                                        }
+
+                                                        setShowRoomSelect(false);
+                                                    }}
+                                                    className="flex items-center gap-3 p-3 hover:bg-neutral-50 cursor-pointer border-b last:border-0 transition"
+                                                >
+                                                    {/* Room Image */}
+                                                    <div className="w-10 h-10 relative rounded-md overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
+                                                        {room.images && room.images.length > 0 ? (
+                                                            <Image
+                                                                fill
+                                                                src={room.images[0].url}
+                                                                alt={room.name}
+                                                                className="object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <Home size={16} className="text-neutral-400" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {/* Room Name */}
+                                                    <span className="font-medium text-neutral-800">{room.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <select
-                        value={propertyAdjective || ""}
-                        onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
-                        className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
-                    >
-                        <option value="">Aucun</option>
-                        <optgroup label="Lumière/Espace">
-                            <option value="Lumineux">Lumineux</option>
-                            <option value="Spacieux">Spacieux</option>
-                            <option value="Traversant">Traversant</option>
-                            <option value="Ensoleillé">Ensoleillé</option>
-                        </optgroup>
-                        <optgroup label="Style/Architecture">
-                            <option value="Haussmannien">Haussmannien</option>
-                            <option value="Atypique">Atypique</option>
-                            <option value="Loft">Loft</option>
-                            <option value="Ancien">Ancien</option>
-                            <option value="Moderne">Moderne</option>
-                            <option value="Neuf">Neuf</option>
-                            <option value="Rénové">Rénové</option>
-                        </optgroup>
-                        <optgroup label="Ambiance">
-                            <option value="Calme">Calme</option>
-                            <option value="Cosy">Cosy</option>
-                            <option value="De charme">De charme</option>
-                            <option value="Familial">Familial</option>
-                            <option value="Étudiant">Étudiant</option>
-                        </optgroup>
-                        <optgroup label="Standing">
-                            <option value="De standing">De standing</option>
-                            <option value="De prestige">De prestige</option>
-                        </optgroup>
-                    </select>
-                </div>
+                )}
 
-                <hr />
-
-                <Counter
-                    title="Voyageurs"
-                    subtitle="Capacité d'accueil"
-                    value={guestCount}
-                    onChange={(value) => setCustomValue('guestCount', value)}
-                />
-                <hr />
-                <Counter
-                    title="Pièces"
-                    subtitle="Combien de pièces ?"
-                    value={roomCount}
-                    onChange={(value) => setCustomValue('roomCount', value)}
-                />
-                <hr />
-                <Counter
-                    title="Salles de bain"
-                    subtitle="Combien de salles de bain ?"
-                    value={bathroomCount}
-                    onChange={(value) => setCustomValue('bathroomCount', value)}
-                />
-                <hr />
-                {/* Lease Type removed as requested */}
-                <div className="flex flex-row gap-4 w-full">
-                    <div className="flex flex-col gap-2 w-full">
-                        <label className="font-medium">Classe énergie (DPE)</label>
+                {/* Adjective - Only for New Property */}
+                {!isRoom && (
+                    <div className="flex flex-col gap-2">
+                        <label className="font-medium">Comment décririez-vous votre bien ? (Optionnel)</label>
+                        <div className="text-xs text-neutral-500 mb-1">
+                            Cet adjectif apparaîtra après le type de bien (ex: "Maison calme").
+                        </div>
                         <select
-                            value={dpe}
-                            onChange={(e) => setCustomValue('dpe', e.target.value)}
+                            value={propertyAdjective || ""}
+                            onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
                             className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
                         >
-                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
-                                <option key={grade} value={grade}>
-                                    {grade}
-                                </option>
-                            ))}
+                            <option value="">Aucun</option>
+                            <optgroup label="Lumière/Espace">
+                                <option value="Lumineux">Lumineux</option>
+                                <option value="Spacieux">Spacieux</option>
+                                <option value="Traversant">Traversant</option>
+                                <option value="Ensoleillé">Ensoleillé</option>
+                            </optgroup>
+                            {/* ... options ... */}
+                            <optgroup label="Style/Architecture">
+                                <option value="Haussmannien">Haussmannien</option>
+                                <option value="Atypique">Atypique</option>
+                                <option value="Loft">Loft</option>
+                                <option value="Ancien">Ancien</option>
+                                <option value="Moderne">Moderne</option>
+                                <option value="Neuf">Neuf</option>
+                                <option value="Rénové">Rénové</option>
+                            </optgroup>
+                            <optgroup label="Ambiance">
+                                <option value="Calme">Calme</option>
+                                <option value="Cosy">Cosy</option>
+                                <option value="De charme">De charme</option>
+                                <option value="Familial">Familial</option>
+                                <option value="Étudiant">Étudiant</option>
+                            </optgroup>
+                            <optgroup label="Standing">
+                                <option value="De standing">De standing</option>
+                                <option value="De prestige">De prestige</option>
+                            </optgroup>
                         </select>
                     </div>
-                    <div className="flex flex-col gap-2 w-full">
-                        <label className="font-medium">GES</label>
-                        <select
-                            value={ges}
-                            onChange={(e) => setCustomValue('ges', e.target.value)}
-                            className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
-                        >
-                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
-                                <option key={grade} value={grade}>
-                                    {grade}
-                                </option>
-                            ))}
-                        </select>
+                )}
+
+                {/* Surface - Always, or at least for Room */}
+                <SoftInput
+                    id="surface"
+                    label={isRoom ? "Surface de la chambre (m²)" : "Surface du logement (m²)"}
+                    type="number"
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                />
+
+                <hr />
+
+                {/* Guest Count: Only relevant for Room (RentModal.propertyContext exists) */}
+                {isRoom && (
+                    <>
+                        <div className="flex flex-col gap-2">
+                            <label className="font-medium">Type de lit</label>
+                            <div className="flex gap-4">
+                                <div
+                                    onClick={() => setCustomValue('bedType', 'SINGLE')}
+                                    className={`flex-1 p-4 border-2 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-black transition cursor-pointer ${watch('bedType') === 'SINGLE' ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
+                                >
+                                    <div className="font-semibold">Simple</div>
+                                </div>
+                                <div
+                                    onClick={() => setCustomValue('bedType', 'DOUBLE')}
+                                    className={`flex-1 p-4 border-2 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-black transition cursor-pointer ${watch('bedType') === 'DOUBLE' ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
+                                >
+                                    <div className="font-semibold">Double</div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                    </>
+                )}
+
+                {/* Property Counters (Only for New Property) */}
+                {!isRoom && (
+                    <>
+                        {/* 1. Total Rooms (Pièces) */}
+                        <Counter
+                            title="Nombre de pièces"
+                            subtitle="Salon + Salle à manger + Chambres"
+                            value={roomCount}
+                            onChange={(value) => setCustomValue('roomCount', value)}
+                        />
+                        <hr />
+
+                        {/* 2. Bedrooms (Chambres) - Determines physical room creation */}
+                        <Counter
+                            title="Chambres"
+                            subtitle="Nombre de pièces à dormir"
+                            value={bedroomCount}
+                            onChange={(value) => setCustomValue('bedroomCount', value)}
+                        />
+                        <hr />
+                    </>
+                )}
+
+                {isRoom ? (
+                    <div className="flex flex-row items-center justify-between">
+                        <div className="flex flex-col">
+                            <div className="font-medium">Salle de bain privée</div>
+                            <div className="font-light text-gray-600 text-sm">
+                                Y a-t-il une salle de bain exclusive à cette pièce ?
+                            </div>
+                        </div>
+                        <div className="flex flex-row items-center gap-3">
+                            <div
+                                onClick={() => setCustomValue('hasPrivateBathroom', false)}
+                                className={`
+                                    rounded-full w-10 h-10 flex items-center justify-center cursor-pointer transition
+                                    ${watch('hasPrivateBathroom') === false ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}
+                                `}
+                            >
+                                <X size={18} />
+                            </div>
+
+                            <div
+                                onClick={() => setCustomValue('hasPrivateBathroom', true)}
+                                className={`
+                                    rounded-full w-10 h-10 flex items-center justify-center cursor-pointer transition
+                                    ${watch('hasPrivateBathroom') === true ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}
+                                `}
+                            >
+                                <Check size={18} />
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <Counter
+                        title="Salles de bain"
+                        subtitle="Combien de salles de bain ?"
+                        value={bathroomCount}
+                        onChange={(value) => setCustomValue('bathroomCount', value)}
+                    />
+                )}
+
+                {/* DPE/GES - Only for New Property */}
+                {!isRoom && (
+                    <>
+                        <hr />
+                        <div className="flex flex-row gap-4 w-full">
+                            <div className="flex flex-col gap-2 w-full">
+                                <label className="font-medium">Classe énergie (DPE)</label>
+                                <select
+                                    value={dpe}
+                                    onChange={(e) => setCustomValue('dpe', e.target.value)}
+                                    className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
+                                >
+                                    {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
+                                        <option key={grade} value={grade}>
+                                            {grade}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-2 w-full">
+                                <label className="font-medium">GES</label>
+                                <select
+                                    value={ges}
+                                    onChange={(e) => setCustomValue('ges', e.target.value)}
+                                    className="w-full p-4 border-2 rounded-md outline-none transition disabled:opacity-70 disabled:cursor-not-allowed bg-background border-input focus:border-foreground"
+                                >
+                                    {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
+                                        <option key={grade} value={grade}>
+                                            {grade}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         )
     }
@@ -608,7 +872,7 @@ const RentModal = () => {
                     subtitle="Indiquez quand vous êtes disponible pour faire visiter ce bien."
                 />
                 <div className="h-[500px] overflow-hidden rounded-xl border border-neutral-200">
-                    <VisitsSection listing={safeListing as any} />
+                    <VisitsSection listing={safeListing as any} className="h-full" />
                 </div>
             </div>
         )
@@ -622,7 +886,7 @@ const RentModal = () => {
             actionLabel={actionLabel}
             secondaryActionLabel={secondaryActionLabel}
             secondaryAction={step === STEPS.CATEGORY || step === STEPS.AVAILABILITY ? undefined : onBack}
-            title={rentModal.editingListing ? "Modifier mon annonce" : "Louer mon bien"}
+            title={title}
             body={bodyContent}
         />
     );

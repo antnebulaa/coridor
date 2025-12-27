@@ -54,7 +54,7 @@ export async function GET(
 
             if (currentUser) {
                 isSelf = currentUser.id === user.id;
-                isContact = currentUser.contacts.some((contact) => contact.id === user.id);
+                isContact = currentUser.contacts.some((contact: any) => contact.id === user.id);
             }
         }
 

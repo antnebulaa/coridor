@@ -29,7 +29,11 @@ export async function POST(
     const listing = await prisma.listing.findUnique({
         where: {
             id: listingId,
-            userId: currentUser.id
+            rentalUnit: {
+                property: {
+                    ownerId: currentUser.id
+                }
+            }
         }
     });
 

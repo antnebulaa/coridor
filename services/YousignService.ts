@@ -50,7 +50,7 @@ export class YousignService {
             // 2. Upload Document via Fetch (for correct Multipart Boundary)
             console.log("[Yousign] 2. Uploading PDF...");
             const formData = new FormData();
-            const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+            const blob = new Blob([pdfBuffer as any], { type: 'application/pdf' });
             formData.append('file', blob, 'Bail_Location.pdf');
             formData.append('nature', 'signable_document');
             formData.append('parse_anchors', 'true');

@@ -19,6 +19,7 @@ import PriceSection from "./components/PriceSection";
 import PhotosSection from "./components/PhotosSection";
 import VisitsSection from "./components/VisitsSection";
 import StatusSection from "./components/StatusSection";
+import RoomsConfigSection from "./components/RoomsConfigSection";
 import { sidebarLinks } from "./constants";
 
 
@@ -32,7 +33,9 @@ interface EditPropertyClientProps {
 export type TabType = 'logement' | 'location' | 'preferences';
 export type SectionType =
     | 'title'
+    | 'description'
     | 'location'
+    | 'rooms'
     | 'category'
     | 'amenities'
     | 'furniture'
@@ -59,6 +62,12 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+
+    // Determine if this is a Room (not entire place)
+    // Safe check covering nested rentalUnit.type or flattened rentalUnitType
+    const isRoom = (listing.rentalUnit?.type && listing.rentalUnit.type !== 'ENTIRE_PLACE') ||
+        ((listing as any).rentalUnitType && (listing as any).rentalUnitType !== 'ENTIRE_PLACE');
+
     const [activeTab, setActiveTab] = useState<TabType>('logement');
     const [activeSection, setActiveSection] = useState<SectionType>('title');
     const [showContent, setShowContent] = useState(false);
@@ -108,6 +117,8 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
     const sectionTitles: Record<SectionType, string> = {
         title: 'Titre de l\'annonce',
+        description: 'Description détaillée',
+        rooms: 'Configuration des chambres',
         location: 'Emplacement',
         category: 'Type de logement',
         amenities: 'Atouts',
@@ -127,6 +138,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         switch (activeSection) {
             case 'title':
                 return <TitleSection listing={listing} />;
+            case 'description':
+                return <DescriptionSection listing={listing} />;
+            case 'rooms':
+                return <RoomsConfigSection listing={listing} currentUser={currentUser} setIsAddRoomModalOpen={setIsAddRoomModalOpen} />;
             case 'location':
                 return <LocationSection listing={listing} />;
             case 'category':
@@ -196,21 +211,41 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                         activeSection={activeSection}
                         onChangeTab={handleTabChange}
                         onChangeSection={handleSectionChange}
+                        customLinks={(() => {
+                            const hasRooms = (listing.rentalUnit?.property?.rentalUnits || []).some((u: any) => u.type === 'PRIVATE_ROOM');
+                            const isMainUnit = listing.rentalUnitType === 'ENTIRE_PLACE' || (!listing.rentalUnitType && listing.rentalUnit?.type === 'ENTIRE_PLACE');
+
+                            if (isMainUnit && !hasRooms) {
+                                return {
+                                    ...sidebarLinks,
+                                    logement: sidebarLinks.logement.filter(l => l.id !== 'rooms')
+                                };
+                            }
+                            return undefined;
+                        })()}
                         subtitles={{
+                            rooms: (() => {
+                                const rentalUnits = listing.rentalUnit?.property?.rentalUnits || [];
+                                const count = rentalUnits
+                                    .flatMap((unit: any) => (unit.listings || []).map((l: any) => ({ ...l, rentalUnit: unit })))
+                                    .filter((l: any) => l.rentalUnit.type !== 'ENTIRE_PLACE' && l.id !== listing.id)
+                                    .length;
+                                return `${count} chambre${count > 1 ? 's' : ''} créée${count > 1 ? 's' : ''}`;
+                            })(),
                             title: listing.title,
                             location: listing.addressLine1
                                 ? `${listing.addressLine1}, ${listing.city}`
-                                : listing.city,
+                                : listing.city || '',
                             price: listing.price
                                 ? `${listing.price}€${listing.charges && (listing.charges as any).amount ? ` + ${(listing.charges as any).amount}€ ch.` : ' / mois'}`
-                                : undefined
+                                : ''
                         }}
                     />
                 </div>
 
                 {/* Content - Hidden on mobile if content is NOT shown */}
                 <div className={` ${!showContent ? 'hidden md:block' : 'block'}`}>
-                    <div className="md:border-[1px] md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
+                    <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
                         {/* Mobile Header: Back Button (Sticky) */}
                         <div className="
                             md:hidden 
@@ -219,7 +254,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                             z-50 
                             bg-white dark:bg-neutral-900
                             px-6
-                            border-b dark:border-neutral-800
+                            border-b border-neutral-200 dark:border-neutral-800
                             flex
                             items-center
                             justify-between
@@ -269,6 +304,12 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                                     </h2>
                                 </div>
                             )}
+                            {/* DEBUG INFO */}
+                            <div className="bg-red-100 p-2 text-xs font-mono mb-4 text-red-800">
+                                DEBUG: isRoom={isRoom ? 'TRUE' : 'FALSE'} <br />
+                                Type: {listing.rentalUnit?.type || 'N/A'} <br />
+                                FacadeType: {(listing as any).rentalUnitType || 'N/A'}
+                            </div>
                             {renderContent()}
                         </PageBody>
                     </div>

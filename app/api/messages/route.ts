@@ -77,12 +77,12 @@ export async function POST(
         if (message === 'INVITATION_VISITE' && listingId) {
             const application = await prisma.rentalApplication.findFirst({
                 where: {
-                    propertyId: listingId,
+                    listingId: listingId,
                     candidateScope: {
                         creatorUserId: (await prisma.conversation.findUnique({
                             where: { id: conversationId },
                             include: { users: true }
-                        }))?.users.find(u => u.id !== currentUser.id)?.id
+                        }))?.users.find((u: any) => u.id !== currentUser.id)?.id
                     }
                 }
             });

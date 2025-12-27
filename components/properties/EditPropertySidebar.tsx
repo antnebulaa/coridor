@@ -9,6 +9,7 @@ interface EditPropertySidebarProps {
     onChangeTab: (tab: TabType) => void;
     onChangeSection: (section: SectionType) => void;
     subtitles?: Record<string, string>;
+    customLinks?: Record<TabType, { id: string; label: string }[]>;
 }
 
 const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
@@ -16,8 +17,10 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
     activeSection,
     onChangeTab,
     onChangeSection,
-    subtitles
+    subtitles,
+    customLinks
 }) => {
+    const currentLinks = (customLinks || sidebarLinks)[activeTab];
 
     return (
         <div className="flex flex-col gap-6">
@@ -50,7 +53,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
 
             {/* Links */}
             <div className="flex flex-col gap-2">
-                {sidebarLinks[activeTab].map((link) => (
+                {currentLinks.map((link) => (
                     <div
                         key={link.id}
                         onClick={() => onChangeSection(link.id as SectionType)}

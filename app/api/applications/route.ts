@@ -26,6 +26,13 @@ export async function POST(
         const listing = await prisma.listing.findUnique({
             where: {
                 id: listingId
+            },
+            include: {
+                rentalUnit: {
+                    include: {
+                        property: true
+                    }
+                }
             }
         });
 
@@ -33,7 +40,7 @@ export async function POST(
             return new NextResponse('Listing not found', { status: 404 });
         }
 
-        const ownerId = listing.userId;
+        const ownerId = listing.rentalUnit.property.ownerId;
 
         // Prevent applying to own listing
         // if (ownerId === currentUser.id) {
@@ -83,8 +90,8 @@ export async function POST(
                             {
                                 id: ownerId
                             }
-                        ].filter((user, index, self) =>
-                            index === self.findIndex((t) => (
+                        ].filter((user: any, index: number, self: any) =>
+                            index === self.findIndex((t: any) => (
                                 t.id === user.id
                             ))
                         )
@@ -108,7 +115,7 @@ export async function POST(
         if (candidateScope) {
             await prisma.rentalApplication.create({
                 data: {
-                    propertyId: listingId,
+                    listingId: listingId,
                     candidateScopeId: candidateScope.id,
                     status: 'SENT'
                 }

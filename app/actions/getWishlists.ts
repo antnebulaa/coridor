@@ -17,7 +17,16 @@ export default async function getWishlists() {
                 listings: {
                     take: 1,
                     include: {
-                        images: true
+                        rentalUnit: {
+                            include: {
+                                images: true,
+                                property: {
+                                    include: {
+                                        images: true
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 _count: {
@@ -29,12 +38,16 @@ export default async function getWishlists() {
             }
         });
 
-        const safeWishlists = wishlists.map((wishlist) => ({
+        const safeWishlists = wishlists.map((wishlist: any) => ({
             ...wishlist,
             createdAt: wishlist.createdAt.toISOString(),
-            listings: wishlist.listings.map((listing) => ({
-                ...listing,
-                createdAt: listing.createdAt.toISOString()
+            listings: wishlist.listings.map((listing: any) => ({
+                id: listing.id,
+                title: listing.title,
+                imageSrc: listing.rentalUnit?.property?.images?.[0]?.url || listing.rentalUnit?.images?.[0]?.url,
+                category: listing.rentalUnit?.property?.category,
+                locationValue: listing.rentalUnit?.property?.city,
+                price: listing.price
             }))
         }));
 

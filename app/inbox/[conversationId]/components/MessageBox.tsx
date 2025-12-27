@@ -261,7 +261,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     {data.listing.title}
                                                 </div>
                                                 <div className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
-                                                    {data.listing.city || 'Localisation inconnue'}
+                                                    {(data.listing as any).city || 'Localisation inconnue'}
                                                 </div>
                                             </div>
                                         </div>

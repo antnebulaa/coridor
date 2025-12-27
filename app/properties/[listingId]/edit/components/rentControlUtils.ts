@@ -72,9 +72,10 @@ export const calculateRentControl = (listing: SafeListing, city: string): RentCo
     }
 
     // 3. Room Count (Smaller apartments often have higher rent per sqm)
-    if (listing.roomCount === 1) {
+    const roomCount = listing.roomCount || 0;
+    if (roomCount === 1) {
         baseRentPerSqm += 1.5;
-    } else if (listing.roomCount > 3) {
+    } else if (roomCount > 3) {
         baseRentPerSqm -= 0.5;
     }
 
@@ -85,7 +86,7 @@ export const calculateRentControl = (listing: SafeListing, city: string): RentCo
     const maxRent = Math.round(listing.surface * majoratedRentPerSqm);
 
     const typeLabel = listing.isFurnished ? "Meublé" : "Non meublé";
-    const roomLabel = `${listing.roomCount} pièce${listing.roomCount > 1 ? 's' : ''}`;
+    const roomLabel = `${listing.roomCount || 0} pièce${(listing.roomCount || 0) > 1 ? 's' : ''}`;
     const yearLabel = listing.buildYear ? `, Construit en ${listing.buildYear}` : "";
     const cityLabel = matchedCityKey.charAt(0).toUpperCase() + matchedCityKey.slice(1);
 

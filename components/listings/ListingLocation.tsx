@@ -17,7 +17,7 @@ const ListingLocation: React.FC<ListingLocationProps> = ({
     listing
 }) => {
     const { getByValue } = useCountries();
-    const countryCoordinates = getByValue(listing.locationValue)?.latlng;
+    const countryCoordinates = getByValue((listing as any).locationValue)?.latlng;
 
     // Use precise coordinates if available, otherwise fallback to country center
     const coordinates = (listing.latitude && listing.longitude)

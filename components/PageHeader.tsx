@@ -39,24 +39,26 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                         </div>
                     )}
                 </div>
-                <div className="flex flex-row items-center justify-end gap-2 w-full md:w-auto">
-                    {actionControls}
-                    {secondaryAction && secondaryActionLabel && (
-                        <Button
-                            variant="outline"
-                            onClick={secondaryAction}
-                            label={secondaryActionLabel}
-                            className="w-auto rounded-full px-4 border-neutral-300 hover:bg-neutral-50"
-                        />
-                    )}
-                    {onAction && actionLabel && (
-                        <Button
-                            onClick={onAction}
-                            label={actionLabel}
-                            className="w-auto rounded-full px-4"
-                        />
-                    )}
-                </div>
+                {(actionControls || (secondaryAction && secondaryActionLabel) || (onAction && actionLabel)) && (
+                    <div className="flex flex-row items-center justify-end gap-2 w-full md:w-auto">
+                        {actionControls}
+                        {secondaryAction && secondaryActionLabel && (
+                            <Button
+                                variant="outline"
+                                onClick={secondaryAction}
+                                label={secondaryActionLabel}
+                                className="w-auto rounded-full px-4 border-neutral-300 hover:bg-neutral-50"
+                            />
+                        )}
+                        {onAction && actionLabel && (
+                            <Button
+                                onClick={onAction}
+                                label={actionLabel}
+                                className="w-auto rounded-full px-4"
+                            />
+                        )}
+                    </div>
+                )}
             </div>
             {!hideSeparator && <hr />}
         </div>

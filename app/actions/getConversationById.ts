@@ -33,9 +33,22 @@ const getConversationById = async (
                 },
                 listing: {
                     include: {
-                        images: true,
-                        user: true,
-                        visitSlots: true
+                        rentalUnit: {
+                            include: {
+                                property: {
+                                    include: {
+                                        images: true,
+                                        visitSlots: {
+                                            include: {
+                                                property: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        // user: true,
+                        // visitSlots: removed from here
                     }
                 }
             }

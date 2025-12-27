@@ -24,7 +24,16 @@ export default async function getWishlistById(
             include: {
                 listings: {
                     include: {
-                        images: true
+                        rentalUnit: {
+                            include: {
+                                images: true,
+                                property: {
+                                    include: {
+                                        images: true
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -37,7 +46,7 @@ export default async function getWishlistById(
         return {
             ...wishlist,
             createdAt: wishlist.createdAt.toISOString(),
-            listings: wishlist.listings.map((listing) => ({
+            listings: wishlist.listings.map((listing: any) => ({
                 ...listing,
                 createdAt: listing.createdAt.toISOString()
             }))

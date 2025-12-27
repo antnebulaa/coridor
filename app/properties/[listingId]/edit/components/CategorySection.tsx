@@ -5,6 +5,7 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { Check, X } from "lucide-react";
 
 import { SafeListing, SafeUser } from "@/types";
 import { Button } from "@/components/ui/Button";
@@ -15,9 +16,10 @@ import SoftSelect from "@/components/inputs/SoftSelect";
 interface CategorySectionProps {
     listing: SafeListing;
     currentUser: SafeUser;
+    isRoom?: boolean;
 }
 
-const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser }) => {
+const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser, isRoom }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -32,6 +34,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
     } = useForm<FieldValues>({
         defaultValues: {
             category: listing.category,
+            hasPrivateBathroom: (listing as any).hasPrivateBathroom || false,
+            rentalUnitType: listing.rentalUnitType || 'ENTIRE_PLACE', // Default if missing
             isFurnished: listing.isFurnished,
             surface: listing.surface,
             surfaceUnit: listing.surfaceUnit || currentUser.measurementSystem || 'metric',
@@ -54,6 +58,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
     });
 
     const category = watch('category');
+    const rentalUnitType = watch('rentalUnitType');
     const propertyAdjective = watch('propertyAdjective');
     const isFurnished = watch('isFurnished');
     const surfaceUnit = watch('surfaceUnit');
@@ -75,6 +80,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
     const energy_cost_max = watch('energy_cost_max');
     const dpe_year = watch('dpe_year');
 
+    const isRoomMode = rentalUnitType !== 'ENTIRE_PLACE';
+
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
             shouldDirty: true,
@@ -83,7 +90,35 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
         })
     }
 
+    // --- Colocation Logic ---
+    const propertyRentalUnits = (listing.rentalUnit as any)?.property?.rentalUnits || [];
+    // Check if there are active rooms (ignoring the 'ENTIRE_PLACE' one which is active in Standard mode)
+    // We check for PRIVATE_ROOM type specifically
+    const hasActiveRooms = propertyRentalUnits.some((u: any) => u.type === 'PRIVATE_ROOM' && u.isActive);
+    const [mode, setMode] = useState<string>(hasActiveRooms ? 'COLOCATION' : 'STANDARD');
 
+    const handleModeChange = async (newMode: string) => {
+        if (newMode === mode) return;
+        setIsLoading(true);
+        try {
+            const response = await axios.post(`/api/listings/${listing.id}/mode`, { mode: newMode });
+
+            if (response.data?.targetListingId && response.data.targetListingId !== listing.id) {
+                toast.success(newMode === 'COLOCATION' ? 'Mode Colocation activé (Redirection...)' : 'Mode Logement Entier activé (Redirection...)');
+                router.push(`/properties/${response.data.targetListingId}/edit`);
+                return;
+            }
+
+            setMode(newMode);
+            toast.success(newMode === 'COLOCATION' ? 'Mode Colocation activé' : 'Mode Logement Entier activé');
+            router.refresh();
+        } catch (error) {
+            toast.error('Erreur lors du changement de mode');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    // ------------------------
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
         setIsLoading(true);
@@ -104,62 +139,81 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
     return (
         <div className="flex flex-col gap-8 pb-28 md:pb-0">
             {/* Type de bien */}
+            {!isRoom && (
+                <div className="flex flex-col gap-2">
+                    <SoftSelect
+                        id="category"
+                        label="Quel type de bien louez-vous ?"
+                        value={category}
+                        onChange={(e) => setCustomValue('category', e.target.value)}
+                        disabled={isLoading}
+                        options={[
+                            { value: "Maison", label: "Une maison" },
+                            { value: "Appartement", label: "Un appartement" },
+                            { value: "Bateau", label: "Un bateau" }
+                        ]}
+                    />
+                </div>
+            )}
+
+            {/* Mode de location (CUSTOM SWITCH) */}
             <div className="flex flex-col gap-2">
                 <SoftSelect
-                    id="category"
-                    label="Quel type de bien louez-vous ?"
-                    value={category}
-                    onChange={(e) => setCustomValue('category', e.target.value)}
+                    id="rentalUnitType"
+                    label="Mode de location"
+                    value={mode}
+                    onChange={(e) => handleModeChange(e.target.value)}
                     disabled={isLoading}
                     options={[
-                        { value: "Maison", label: "Une maison" },
-                        { value: "Appartement", label: "Un appartement" },
-                        { value: "Bateau", label: "Un bateau" }
+                        { value: "STANDARD", label: "Logement entier" },
+                        { value: "COLOCATION", label: "Colocation (Activation chambres)" }
                     ]}
                 />
             </div>
 
             {/* Adjectif du bien */}
-            <div className="flex flex-col gap-2">
-                <div className="text-sm font-medium text-neutral-800">
-                    Comment décririez-vous votre bien ? (Optionnel)
+            {!isRoom && (
+                <div className="flex flex-col gap-2">
+                    <div className="text-sm font-medium text-neutral-800">
+                        Comment décririez-vous votre bien ? (Optionnel)
+                    </div>
+                    <div className="text-xs text-neutral-500 mb-2">
+                        Cet adjectif apparaîtra après le type de bien sur l'annonce (ex: "Maison calme").
+                    </div>
+                    <SoftSelect
+                        id="propertyAdjective"
+                        label="Choisir un adjectif"
+                        value={propertyAdjective || ""}
+                        onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
+                        disabled={isLoading}
+                        options={[
+                            { value: "", label: "Aucun" },
+                            // Lumière/Espace
+                            { value: "Lumineux", label: "Lumineux" },
+                            { value: "Spacieux", label: "Spacieux" },
+                            { value: "Traversant", label: "Traversant" },
+                            { value: "Ensoleillé", label: "Ensoleillé" },
+                            // Style/Architecture
+                            { value: "Haussmannien", label: "Haussmannien" },
+                            { value: "Atypique", label: "Atypique" },
+                            { value: "Loft", label: "Loft" },
+                            { value: "Ancien", label: "Ancien" },
+                            { value: "Moderne", label: "Moderne" },
+                            { value: "Neuf", label: "Neuf" },
+                            { value: "Rénové", label: "Rénové" },
+                            // Ambiance
+                            { value: "Calme", label: "Calme" },
+                            { value: "Cosy", label: "Cosy" },
+                            { value: "De charme", label: "De charme" },
+                            { value: "Familial", label: "Familial" },
+                            { value: "Étudiant", label: "Étudiant" },
+                            // Standing
+                            { value: "De standing", label: "De standing" },
+                            { value: "De prestige", label: "De prestige" },
+                        ]}
+                    />
                 </div>
-                <div className="text-xs text-neutral-500 mb-2">
-                    Cet adjectif apparaîtra après le type de bien sur l'annonce (ex: "Maison calme").
-                </div>
-                <SoftSelect
-                    id="propertyAdjective"
-                    label="Choisir un adjectif"
-                    value={propertyAdjective || ""}
-                    onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
-                    disabled={isLoading}
-                    options={[
-                        { value: "", label: "Aucun" },
-                        // Lumière/Espace
-                        { value: "Lumineux", label: "Lumineux" },
-                        { value: "Spacieux", label: "Spacieux" },
-                        { value: "Traversant", label: "Traversant" },
-                        { value: "Ensoleillé", label: "Ensoleillé" },
-                        // Style/Architecture
-                        { value: "Haussmannien", label: "Haussmannien" },
-                        { value: "Atypique", label: "Atypique" },
-                        { value: "Loft", label: "Loft" },
-                        { value: "Ancien", label: "Ancien" },
-                        { value: "Moderne", label: "Moderne" },
-                        { value: "Neuf", label: "Neuf" },
-                        { value: "Rénové", label: "Rénové" },
-                        // Ambiance
-                        { value: "Calme", label: "Calme" },
-                        { value: "Cosy", label: "Cosy" },
-                        { value: "De charme", label: "De charme" },
-                        { value: "Familial", label: "Familial" },
-                        { value: "Étudiant", label: "Étudiant" },
-                        // Standing
-                        { value: "De standing", label: "De standing" },
-                        { value: "De prestige", label: "De prestige" },
-                    ]}
-                />
-            </div>
+            )}
 
             {/* Meublé */}
             <div className="flex flex-col gap-2">
@@ -181,7 +235,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
                 <div className="w-full">
                     <SoftInput
                         id="surface"
-                        label={`Surface du logement (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})`}
+                        label={isRoom ? `Surface de la chambre (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})` : `Surface du logement (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})`}
                         type="number"
                         disabled={isLoading}
                         value={surface ?? ''}
@@ -208,33 +262,73 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser 
             <hr />
 
             {/* Pièces */}
-            <Counter
-                title="Nombre de pièces"
-                subtitle="La cuisine, les salles de bain et les toilettes sont à exclure"
-                value={roomCount}
-                onChange={(value) => setCustomValue('roomCount', value)}
-            />
+            {!isRoomMode && (
+                <>
+                    <Counter
+                        title="Nombre de pièces"
+                        subtitle="La cuisine, les salles de bain et les toilettes sont à exclure"
+                        value={roomCount}
+                        onChange={(value) => setCustomValue('roomCount', value)}
+                    />
 
-            <hr />
+                    <hr />
+                </>
+            )}
 
             {/* Chambres */}
-            <Counter
-                title="Nombre de chambres"
-                subtitle="Un studio n’a pas de chambre"
-                value={guestCount}
-                onChange={(value) => setCustomValue('guestCount', value)}
-                min={0}
-            />
+            {!isRoomMode && (
+                <>
+                    <Counter
+                        title="Nombre de chambres"
+                        subtitle="Un studio n’a pas de chambre"
+                        value={guestCount}
+                        onChange={(value) => setCustomValue('guestCount', value)}
+                        min={0}
+                    />
 
-            <hr />
+                    <hr />
+                </>
+            )}
 
             {/* Salles de bain */}
-            <Counter
-                title="Nombre de salles de bain"
-                subtitle=""
-                value={bathroomCount}
-                onChange={(value) => setCustomValue('bathroomCount', value)}
-            />
+            {isRoomMode ? (
+                <div className="flex flex-row items-center justify-between">
+                    <div className="flex flex-col">
+                        <div className="font-medium">Salle de bain privée</div>
+                        <div className="font-light text-gray-600 text-sm">
+                            Y a-t-il une salle de bain exclusive à cette pièce ?
+                        </div>
+                    </div>
+                    <div className="flex flex-row items-center gap-3">
+                        <div
+                            onClick={() => setCustomValue('hasPrivateBathroom', false)}
+                            className={`
+                                rounded-full w-10 h-10 flex items-center justify-center cursor-pointer transition
+                                ${watch('hasPrivateBathroom') === false ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}
+                            `}
+                        >
+                            <X size={18} />
+                        </div>
+
+                        <div
+                            onClick={() => setCustomValue('hasPrivateBathroom', true)}
+                            className={`
+                                rounded-full w-10 h-10 flex items-center justify-center cursor-pointer transition
+                                ${watch('hasPrivateBathroom') === true ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}
+                            `}
+                        >
+                            <Check size={18} />
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <Counter
+                    title="Nombre de salles de bain"
+                    subtitle=""
+                    value={bathroomCount}
+                    onChange={(value) => setCustomValue('bathroomCount', value)}
+                />
+            )}
 
             <hr />
 

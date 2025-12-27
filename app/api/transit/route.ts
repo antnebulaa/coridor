@@ -19,11 +19,24 @@ export async function GET(request: Request) {
         try {
             const listing = await prisma.listing.findUnique({
                 where: { id: listingId },
-                select: { transitData: true }
+                select: {
+                    rentalUnit: {
+                        select: {
+                            property: {
+                                select: {
+                                    transitData: true,
+                                    id: true
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
-            if (listing?.transitData) {
-                const data: any = listing.transitData;
+            const property = listing?.rentalUnit?.property;
+
+            if (property?.transitData) {
+                const data: any = property.transitData;
                 // Check version to force update
                 const isVersionMatch = data.algorithmVersion === "v3.0"; // Bump to V3
                 const isMainConnectionValid = !data.mainConnection || (data.mainConnection.name && data.mainConnection.name.trim() !== "" && data.mainConnection.name !== "Station Inconnue");
@@ -282,10 +295,17 @@ export async function GET(request: Request) {
         // 2. Save to Cache
         if (listingId) {
             try {
-                await prisma.listing.update({
+                const listing = await prisma.listing.findUnique({
                     where: { id: listingId },
-                    data: { transitData: result }
+                    select: { rentalUnit: { select: { propertyId: true } } }
                 });
+
+                if (listing?.rentalUnit?.propertyId) {
+                    await prisma.property.update({
+                        where: { id: listing.rentalUnit.propertyId },
+                        data: { transitData: result }
+                    });
+                }
             } catch (error) {
                 console.error("Failed to cache transit data:", error);
             }

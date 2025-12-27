@@ -111,9 +111,17 @@ export class LeaseService {
         const application = await prisma.rentalApplication.findUnique({
             where: { id: applicationId },
             include: {
-                property: {
+                listing: {
                     include: {
-                        user: true // Fetch landlord details
+                        rentalUnit: {
+                            include: {
+                                property: {
+                                    include: {
+                                        owner: true // Fetch landlord details
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 candidateScope: {
@@ -127,12 +135,14 @@ export class LeaseService {
         });
 
         if (!application) throw new Error("Application not found");
-        if (!application.property) throw new Error("Listing not found");
+        if (!application.listing || !application.listing.rentalUnit || !application.listing.rentalUnit.property) throw new Error("Listing data incomplete");
         if (!application.candidateScope) throw new Error("Candidate Scope not found");
 
-        const listing = application.property;
+        const rentalUnit = application.listing.rentalUnit;
+        const property = rentalUnit.property as any;
+        const landlord = property.owner;
         const scope = application.candidateScope;
-        const landlord = listing.user;
+
 
         // Fetch full profiles of all members
         let members = await prisma.user.findMany({
@@ -146,13 +156,13 @@ export class LeaseService {
         }
 
         // 2. Determine Lease Type (Rule 1)
-        const leaseTemplateId = this.determineLeaseTemplate(listing, application, scope, members);
+        const leaseTemplateId = this.determineLeaseTemplate(rentalUnit as any, application, scope, members);
 
         // 3. Determine Solidarity (Rule 2)
         const isSolidarityActive = this.determineSolidarity(scope);
 
         // 4. Calculate Contract Data (Duration, Deposit)
-        const contractData = this.calculateContractData(leaseTemplateId, listing, application);
+        const contractData = this.calculateContractData(leaseTemplateId, rentalUnit as any, application);
 
         // 5. Select Legal Texts
         const legalTexts = this.getLegalClauses(leaseTemplateId, isSolidarityActive, scope.compositionType);
@@ -178,9 +188,9 @@ export class LeaseService {
 
         // 6. Map Details
         const landlordAddress = landlord.address || "Adresse non renseignée";
-        const propertyAddress = (listing.addressLine1 && listing.zipCode && listing.city)
-            ? formatAddress(listing as any)
-            : (listing.locationValue || (listing as any).city || "Adresse du bien non renseignée");
+        const propertyAddress = (property.addressLine1 && property.zipCode && property.city)
+            ? formatAddress(property as any)
+            : (property.locationValue || (property as any).city || "Adresse du bien non renseignée");
 
         // Helper to map heating codes
         const mapHeating = (code: string | null) => {
@@ -218,13 +228,13 @@ export class LeaseService {
 
             property: {
                 address: propertyAddress,
-                city: listing.city || "",
-                surface: listing.surface || 0,
-                roomCount: listing.roomCount,
-                type: listing.category,
-                description: listing.description,
-                constructionDate: listing.buildYear || undefined,
-                heatingType: mapHeating(listing.heatingSystem),
+                city: property.city || "",
+                surface: rentalUnit.surface || 0,
+                roomCount: property.roomCount,
+                type: property.category,
+                description: property.description,
+                constructionDate: property.buildYear || undefined,
+                heatingType: mapHeating(property.heatingSystem),
                 waterHeatingType: mapHeating("IND_ELEC"), // Fallback if not in model, or assume Individual Electric
 
                 // NEW DEFAULTS
@@ -254,7 +264,7 @@ export class LeaseService {
             },
 
             dynamic_legal_texts: legalTexts,
-            listing_id: listing.id,
+            listing_id: application.listingId,
             application_id: application.id,
             metadata: {
                 status: application.leaseStatus,
@@ -267,14 +277,14 @@ export class LeaseService {
      * RULE 1: Determine Lease Type
      */
     private static determineLeaseTemplate(
-        listing: Listing,
+        rentalUnit: any,
         application: RentalApplication,
         scope: TenantCandidateScope,
         members: (User & { tenantProfile: TenantProfile | null })[]
     ): LeaseTemplateId {
 
         // 1. Unfurnished (Vide) -> Always BAIL_NU_LOI_89
-        if (!listing.isFurnished) {
+        if (!rentalUnit.isFurnished) {
             return "BAIL_NU_LOI_89";
         }
 
@@ -330,7 +340,7 @@ export class LeaseService {
      */
     private static calculateContractData(
         templateId: LeaseTemplateId,
-        listing: Listing,
+        rentalUnit: any,
         application: RentalApplication
     ) {
         let duration = 12; // months
@@ -338,28 +348,28 @@ export class LeaseService {
 
         // --- NEW LOGIC START ---
         // Rent Excluding Charges
-        const rentHC = listing.price;
+        const rentHC = rentalUnit.price;
 
         // Extract Charges
         let chargesAmount = 0;
-        if (listing.charges) {
+        if (rentalUnit.charges) {
             // Check if it's a number directly
-            if (typeof listing.charges === 'number') {
-                chargesAmount = listing.charges;
+            if (typeof rentalUnit.charges === 'number') {
+                chargesAmount = rentalUnit.charges;
             }
             // Check if it looks like a string number
-            else if (typeof listing.charges === 'string' && !isNaN(parseFloat(listing.charges))) {
-                chargesAmount = parseFloat(listing.charges);
+            else if (typeof rentalUnit.charges === 'string' && !isNaN(parseFloat(rentalUnit.charges))) {
+                chargesAmount = parseFloat(rentalUnit.charges);
             }
             // If it's an object, we rely on a convention. 
             // For now, assume if object it might be { amount: number } or similar, 
             // but user said "column charges", implying value. 
             // Let's safe cast if we find simple properties or fallback to 0.
-            else if (typeof listing.charges === 'object') {
+            else if (typeof rentalUnit.charges === 'object') {
                 // @ts-ignore
-                if (listing.charges?.amount) chargesAmount = Number(listing.charges.amount);
+                if (rentalUnit.charges?.amount) chargesAmount = Number(rentalUnit.charges.amount);
                 // @ts-ignore
-                else if (listing.charges?.value) chargesAmount = Number(listing.charges.value);
+                else if (rentalUnit.charges?.value) chargesAmount = Number(rentalUnit.charges.value);
             }
         }
 
@@ -390,11 +400,11 @@ export class LeaseService {
         }
 
         // Adjust deposit if stored in listing explicitly
-        if (listing.securityDeposit !== null && listing.securityDeposit !== undefined) {
+        if (rentalUnit.securityDeposit !== null && rentalUnit.securityDeposit !== undefined) {
             if (templateId === "BAIL_MOBILITE") {
                 deposit = 0;
             } else {
-                deposit = listing.securityDeposit;
+                deposit = rentalUnit.securityDeposit;
             }
         }
 

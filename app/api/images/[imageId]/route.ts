@@ -25,17 +25,35 @@ export async function PUT(
     const body = await request.json();
     const { roomId } = body;
 
-    // Verify ownership via listing
+    // Verify ownership via proper relation traversal
+    // PropertyImage -> RentalUnit -> Property -> Owner
     const image = await prisma.propertyImage.findUnique({
         where: {
             id: imageId
         },
         include: {
-            listing: true
+            rentalUnit: {
+                include: {
+                    property: true
+                }
+            },
+            property: true // Logic might be dual
         }
     });
 
-    if (!image || image.listing.userId !== currentUser.id) {
+    if (!image) {
+        return NextResponse.error();
+    }
+
+    // Check ownership
+    let ownerId = null;
+    if (image.rentalUnit?.property?.ownerId) {
+        ownerId = image.rentalUnit.property.ownerId;
+    } else if (image.property?.ownerId) {
+        ownerId = image.property.ownerId;
+    }
+
+    if (ownerId !== currentUser.id) {
         return NextResponse.error();
     }
 
@@ -44,11 +62,18 @@ export async function PUT(
             id: imageId
         },
         data: {
-            roomId: roomId // Can be null to unassign
+            roomId: roomId
         }
     });
 
     return NextResponse.json(updatedImage);
+}
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<IParams> }
+) {
+    return PUT(request, { params });
 }
 
 export async function DELETE(
@@ -67,17 +92,34 @@ export async function DELETE(
         throw new Error('Invalid ID');
     }
 
-    // Verify ownership via listing
+    // Verify ownership via proper relation traversal
     const image = await prisma.propertyImage.findUnique({
         where: {
             id: imageId
         },
         include: {
-            listing: true
+            rentalUnit: {
+                include: {
+                    property: true
+                }
+            },
+            property: true
         }
     });
 
-    if (!image || image.listing.userId !== currentUser.id) {
+    if (!image) {
+        return NextResponse.error();
+    }
+
+    // Check ownership
+    let ownerId = null;
+    if (image.rentalUnit?.property?.ownerId) {
+        ownerId = image.rentalUnit.property.ownerId;
+    } else if (image.property?.ownerId) {
+        ownerId = image.property.ownerId;
+    }
+
+    if (ownerId !== currentUser.id) {
         return NextResponse.error();
     }
 

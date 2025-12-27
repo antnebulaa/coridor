@@ -31,7 +31,7 @@ export async function POST(
 
         // Check availability again (simple check)
         const dateStr = format(new Date(date), 'yyyy-MM-dd');
-        const bookingsCount = listing.visits.filter(visit =>
+        const bookingsCount = listing.visits.filter((visit: any) =>
             visit.status !== 'CANCELLED' &&
             format(new Date(visit.date), 'yyyy-MM-dd') === dateStr &&
             visit.startTime === startTime
@@ -55,7 +55,7 @@ export async function POST(
         // Update application status
         const application = await prisma.rentalApplication.findFirst({
             where: {
-                propertyId: listingId,
+                listingId: listingId,
                 candidateScope: {
                     creatorUserId: currentUser.id
                 }

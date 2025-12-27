@@ -2,9 +2,11 @@ import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getListings from "@/app/actions/getListings";
+import getProperties from "@/app/actions/getProperties";
 
 import PropertiesClient from "./PropertiesClient";
+
+export const dynamic = 'force-dynamic';
 
 const PropertiesPage = async () => {
     const currentUser = await getCurrentUser();
@@ -20,14 +22,12 @@ const PropertiesPage = async () => {
         )
     }
 
-    const listings = await getListings({ userId: currentUser.id });
-
-
+    const properties = await getProperties();
 
     return (
         <ClientOnly>
             <PropertiesClient
-                listings={listings}
+                properties={properties}
                 currentUser={currentUser}
             />
         </ClientOnly>

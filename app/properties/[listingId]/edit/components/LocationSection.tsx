@@ -39,7 +39,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             country: listing.country || '',
             latitude: listing.latitude || 0,
             longitude: listing.longitude || 0,
-            locationValue: listing.locationValue || '',
+            locationValue: (listing as any).locationValue || '',
         }
     });
 
@@ -49,6 +49,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
     const district = listing.district; // Keeping original district if not provided by autocomplete
     const country = watch('country');
     const addressLine1 = watch('addressLine1');
+    const locationValue = watch('locationValue');
 
     const latlng = useMemo(() => [latitude, longitude], [latitude, longitude]);
 
@@ -105,7 +106,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             <div className="relative z-20">
                 <MapboxAddressSelect
                     value={{
-                        label: addressLine1 || '',
+                        label: locationValue || addressLine1 || '',
                         value: '',
                         latlng: [latitude, longitude],
                         region: '',

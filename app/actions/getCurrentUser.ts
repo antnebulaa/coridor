@@ -38,10 +38,10 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
             return null;
         }
 
-        const safeWishlists = currentUser.wishlists.map((wishlist) => ({
+        const safeWishlists = currentUser.wishlists.map((wishlist: any) => ({
             ...wishlist,
             createdAt: wishlist.createdAt.toISOString(),
-            listings: wishlist.listings.map((listing) => ({ id: listing.id }))
+            listings: wishlist.listings.map((listing: any) => ({ id: listing.id }))
         }));
 
         const safeCommuteLocations = (currentUser as any).commuteLocations.map((location: any) => ({

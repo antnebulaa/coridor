@@ -28,7 +28,7 @@ export async function DELETE(
             id: reservationId,
             OR: [
                 { userId: currentUser.id },
-                { listing: { userId: currentUser.id } }
+                { listing: { rentalUnit: { property: { ownerId: currentUser.id } } } }
             ]
         }
     });

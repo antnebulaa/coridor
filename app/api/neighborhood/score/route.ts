@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         let pharmacyCount = 0;
         let doctorCount = 0;
 
-        amenities.forEach(a => {
+        amenities.forEach((a: any) => {
             if (a.type === 'BAR' && a.distance <= 0.1) barCount++;
             if (a.type === 'BAKERY' && a.distance <= 0.3) bakeryCount++;
             if (a.type === 'SUPERMARKET' && a.distance <= 0.3) supermarketCount++;

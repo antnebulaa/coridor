@@ -12,10 +12,15 @@ export default async function getDashboardAlerts() {
         // Check if there is at least one listing belonging to the user that has NO visit slots
         const listingWithoutSlots = await prisma.listing.findFirst({
             where: {
-                userId: currentUser.id,
-                visitSlots: {
-                    none: {}
-                }
+                rentalUnit: {
+                    property: {
+                        ownerId: currentUser.id,
+                        visitSlots: {
+                            none: {}
+                        }
+                    }
+                },
+                rentalUnitId: { not: undefined }
             },
             select: { id: true }
         });

@@ -1,3 +1,4 @@
+import React from "react";
 import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -9,7 +10,7 @@ import { LeaseConfig } from "@/services/LeaseService";
 
 // Helper to render PDF to Buffer
 const renderToBuffer = async (element: React.ReactElement): Promise<Buffer> => {
-    const stream = await ReactPDF.renderToStream(element);
+    const stream = await ReactPDF.renderToStream(element as any);
     return new Promise((resolve, reject) => {
         const chunks: Uint8Array[] = [];
         stream.on('data', (chunk) => chunks.push(chunk));
@@ -20,9 +21,10 @@ const renderToBuffer = async (element: React.ReactElement): Promise<Buffer> => {
 
 export async function POST(
     request: Request,
-    { params }: { params: { applicationId: string } }
+    props: { params: Promise<{ applicationId: string }> }
 ) {
     try {
+        const params = await props.params;
         const currentUser = await getCurrentUser();
         if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -31,13 +33,23 @@ export async function POST(
         // 1. Fetch Application & Data
         const application = await prisma.rentalApplication.findUnique({
             where: { id: applicationId },
-            include: { property: true }
+            include: {
+                listing: {
+                    include: {
+                        rentalUnit: {
+                            include: {
+                                property: true
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         if (!application) return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
         // Ensure current user is the landlord
-        if (application.property.userId !== currentUser.id) {
+        if (application.listing?.rentalUnit.property.ownerId !== currentUser.id) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -45,11 +57,11 @@ export async function POST(
         const leaseConfig: LeaseConfig = await LeaseService.generateLeaseConfig(applicationId);
 
         // 3. Generate PDF Buffer
-        const pdfBuffer = await renderToBuffer(<LeaseDocument data={ leaseConfig } />);
+        const pdfBuffer = await renderToBuffer(React.createElement(LeaseDocument, { data: leaseConfig }));
 
         // 4. Prepare Signers
         // Tenant(s)
-        const signers = leaseConfig.tenants.map(t => ({
+        const signers = leaseConfig.tenants.map((t: any) => ({
             first_name: t.name.split(' ')[0] || "Locataire",
             last_name: t.name.split(' ').slice(1).join(' ') || "Inconnu",
             email: t.email,

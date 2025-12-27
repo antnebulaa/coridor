@@ -11,21 +11,32 @@ import useCountries from "@/hooks/useCountries";
 interface PropertiesListRowProps {
     data: SafeListing;
     currentUser?: SafeUser | null;
+    isMainProperty?: boolean;
 }
 
 const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
     data,
-    currentUser
+    currentUser,
+    isMainProperty
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
-    const location = getByValue(data.locationValue);
+    const location = getByValue((data as any).locationValue);
 
     const surfaceDisplay = data.surface
         ? (currentUser?.measurementSystem === 'imperial'
             ? `${Math.round(data.surface * 10.764)} sq ft`
             : `${data.surface} m²`)
         : null;
+
+    // Determine Label logic:
+    // 1. If Main Property (Entire Place), use Category (Maison, Appartement, etc)
+    // 2. If Room (Private/Shared), use "Chambre" or Unit Name
+    const categoryLabel = (isMainProperty || data.rentalUnit?.type === 'ENTIRE_PLACE')
+        ? data.category
+        : (data.rentalUnit?.name && data.rentalUnit.name.toLowerCase().includes('chambre'))
+            ? data.rentalUnit.name
+            : 'Chambre';
 
     return (
         <div
@@ -34,7 +45,9 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 flex 
                 items-center 
                 gap-4 
-                p-4 
+                py-2
+                px-0
+                md:px-4 
                 border-b 
                 border-neutral-200
                 bg-white
@@ -44,35 +57,43 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 group
             "
         >
-            {/* Column 1: Annonce (Image + Details) - Mobile: 100%, Desktop: 40% */}
-            <div className="flex-[3] flex gap-4 items-center min-w-0">
+            {/* Column 1: Annonce (Image + Details) - Reduced width to pull address left */}
+            <div className="flex-[1.5] flex gap-4 items-center min-w-0">
                 <div className="
                     relative 
-                    w-24 
-                    h-16 
-                    rounded-lg 
+                    w-20 
+                    h-20 
+                    rounded-[19px] 
                     overflow-hidden 
                     shrink-0
                     bg-neutral-200
                 ">
-                    <Image
-                        fill
-                        src={data.images[0]?.url || '/images/placeholder.jpg'}
-                        alt="Listing"
-                        className="object-cover group-hover:scale-110 transition"
-                    />
+                    {data.images?.[0]?.url && (
+                        <Image
+                            fill
+                            src={data.images[0].url}
+                            alt="Listing"
+                            className="object-cover group-hover:scale-110 transition"
+                        />
+                    )}
                 </div>
                 <div className="flex flex-col min-w-0 gap-0.5">
                     {/* Title: Category */}
-                    <span className="font-medium text-neutral-900 truncate">
-                        {data.category}
+                    <span className={`font-medium text-neutral-900 truncate ${isMainProperty ? 'font-bold text-lg' : ''}`}>
+                        {categoryLabel}
                     </span>
 
                     {/* Desktop Details: Rooms/Surface */}
                     <span className="hidden md:block text-sm text-neutral-500 truncate">
-                        {data.roomCount} pièces
-                        {data.roomCount > 1 ? ` • ${data.roomCount - 1} ch.` : ''}
-                        {surfaceDisplay ? ` • ${surfaceDisplay}` : ''}
+                        {((data as any).rentalUnitType && (data as any).rentalUnitType !== 'ENTIRE_PLACE') ? (
+                            surfaceDisplay || ''
+                        ) : (
+                            <>
+                                {data.roomCount || 0} pièces
+                                {(data.roomCount || 0) > 1 ? ` • ${(data.roomCount || 0) - 1} ch.` : ''}
+                                {surfaceDisplay ? ` • ${surfaceDisplay}` : ''}
+                            </>
+                        )}
                     </span>
 
                     {/* Mobile Address: Replaces Details - Optimized for distinguishing units */}
@@ -103,23 +124,22 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 </div>
             </div>
 
-            {/* Column 2: Location - 30% (Desktop Only) */}
-            <div className="hidden md:block flex-[2] text-sm text-neutral-600 min-w-0">
+            {/* Column 2: Location - Increased width */}
+            <div className="hidden md:block flex-[3] text-sm text-neutral-600 min-w-0">
                 {data.addressLine1 ? (
-                    <div className="flex flex-col">
-                        <div className="font-medium text-neutral-900 truncate" title={data.addressLine1}>
-                            {data.addressLine1}
-                        </div>
-                        {(data.apartment || data.building) && (
-                            <div className="text-xs text-neutral-500 truncate">
-                                {[
-                                    data.apartment ? `Appt ${data.apartment}` : null,
-                                    data.building ? `Bat ${data.building}` : null
-                                ].filter(Boolean).join(', ')}
-                            </div>
-                        )}
-                        <div className="text-neutral-500 truncate">
-                            {data.zipCode} {data.city}
+                    <div className="flex flex-col justify-center h-full">
+                        <div className="font-medium text-neutral-900 truncate" title={[
+                            data.addressLine1,
+                            data.zipCode && data.city ? `${data.zipCode} ${data.city}` : (data.city || location?.label),
+                            data.apartment && `Appt ${data.apartment}`,
+                            data.building && `Bat ${data.building}`
+                        ].filter(Boolean).join(', ')}>
+                            {[
+                                data.addressLine1,
+                                data.zipCode && data.city ? `${data.zipCode} ${data.city}` : (data.city || location?.label),
+                                data.apartment && `Appt ${data.apartment}`,
+                                data.building && `Bat ${data.building}`
+                            ].filter(Boolean).join(', ')}
                         </div>
                     </div>
                 ) : (

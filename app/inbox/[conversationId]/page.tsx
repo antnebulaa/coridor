@@ -27,7 +27,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     }
 
     // Find other user using ID comparison for safety
-    const otherUser = conversation.users.find((user) => user.id !== currentUser?.id);
+    const otherUser = conversation.users.find((user: any) => user.id !== currentUser?.id);
 
     // Extract listing directly from conversation relation (added in getConversationById)
     const listing = (conversation as any).listing;
@@ -119,7 +119,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
         // We need to find the application linking this user (via scope) and this property
         const application = await prisma.rentalApplication.findFirst({
             where: {
-                propertyId: safeListing.id,
+                listingId: safeListing.id,
                 candidateScope: {
                     creatorUserId: otherUser.id
                 }

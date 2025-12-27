@@ -81,7 +81,7 @@ function analyzeTransactions(transactions: any[], recipientName?: string) {
     const candidates: any[] = [];
     const debugLogs: string[] = [];
 
-    transactions.forEach(tx => {
+    transactions.forEach((tx: any) => {
         // Powens: value is negative for debit
         const amount = tx.value;
         if (amount >= 0) return; // Ignore incoming
@@ -122,7 +122,7 @@ function analyzeTransactions(transactions: any[], recipientName?: string) {
     // Group by amount similarity (+/- 10%)
     const groups: Record<string, any[]> = {};
 
-    candidates.forEach(c => {
+    candidates.forEach((c: any) => {
         let added = false;
         for (const key in groups) {
             const groupAmount = parseFloat(key);
@@ -147,7 +147,7 @@ function analyzeTransactions(transactions: any[], recipientName?: string) {
         group.sort((a, b) => b.date.getTime() - a.date.getTime());
 
         // Check recurrence (at least 3 months)
-        const uniqueMonths = new Set(group.map(c => `${c.date.getFullYear()}-${c.date.getMonth()}`));
+        const uniqueMonths = new Set(group.map((c: any) => `${c.date.getFullYear()}-${c.date.getMonth()}`));
 
         if (uniqueMonths.size >= 3) {
             const totalScore = group.reduce((sum, c) => sum + c.score, 0);

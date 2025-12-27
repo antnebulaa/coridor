@@ -81,7 +81,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             if (user.createdScopes) {
                 for (const scope of user.createdScopes) {
                     if (scope.applications) {
-                        const app = scope.applications.find(a => a.propertyId === listingId);
+                        const app = scope.applications.find(a => a.listingId === listingId);
                         if (app) {
                             application = app;
                             break;

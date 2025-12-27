@@ -1,64 +1,108 @@
-import { Listing, Reservation, User, Room, PropertyImage, TenantProfile, UserMode, Conversation, Message, Wishlist, Plan, RentalApplication, TenantCandidateScope, ApplicationStatus, CommuteLocation } from "@prisma/client";
+import {
+    Listing,
+    Reservation,
+    User,
+    Room,
+    PropertyImage,
+    TenantProfile,
+    UserMode,
+    Conversation,
+    Message,
+    Wishlist,
+    Plan,
+    RentalApplication,
+    TenantCandidateScope,
+    ApplicationStatus,
+    CommuteLocation,
+    Property,
+    RentalUnit,
+    VisitSlot,
+    Visit,
+    RentalUnitType
+} from "@prisma/client";
 
 export type SafePropertyImage = PropertyImage;
 
-export type SafeRoom = Omit<
-    Room,
-    "images"
-> & {
+export type SafeRoom = Omit<Room, "images"> & {
     images: SafePropertyImage[];
 };
 
-export type SafeListing = Omit<
-    Listing,
-    "createdAt" | "statusUpdatedAt"
+export type SafeVisitSlot = Omit<VisitSlot, "date"> & {
+    date: string;
+};
+
+// 1. SafeProperty (The Physical Asset)
+export type SafeProperty = Omit<
+    Property,
+    "createdAt" | "updatedAt"
 > & {
     createdAt: string;
-    statusUpdatedAt: string;
-    isPublished: boolean;
+    updatedAt: string;
+    owner: SafeUser;
     images: SafePropertyImage[];
-    rooms?: SafeRoom[];
-    isFurnished: boolean;
-    surface: number | null;
-    surfaceUnit: string | null;
-    kitchenType: string | null;
-    floor: number | null;
-    totalFloors: number | null;
-    dpe?: string | null;
-    energy_cost_min?: number | null;
-    energy_cost_max?: number | null;
-    dpe_year?: number | null;
-    ges?: string | null;
-    heatingSystem?: string | null;
-    glazingType?: string | null;
-    charges?: any;
-    securityDeposit?: number | null;
-    buildYear: number | null;
+    rooms: SafeRoom[];
+    visitSlots: SafeVisitSlot[];
+    rentalUnits: SafeRentalUnit[];
+    lat?: number | null;
+    lng?: number | null;
+};
+
+// 2. SafeRentalUnit (The Logical Unit)
+export type SafeRentalUnit = Omit<RentalUnit, "id"> & {
+    id: string; // Keep ID
+    type: RentalUnitType; // Ensure type is explicitly included
+    property: SafeProperty;
+    images: SafePropertyImage[];
+    targetRoom?: SafeRoom | null;
+    listings: SafeListing[];
+};
+
+// 3. SafeListing (The Commercial Offer - Enriched for UI Facade)
+export type SafeListing = Omit<
+    Listing,
+    "createdAt" | "updatedAt" | "statusUpdatedAt" | "availableFrom"
+> & {
+    createdAt: string;
+    updatedAt: string;
+    statusUpdatedAt: string;
+    availableFrom: string | null;
+
+    rentalUnit: SafeRentalUnit;
+
+    visitSlots?: SafeVisitSlot[];
+    user?: SafeUser;
+
+    // Facade / Flattened Fields for UI Compatibility
     city: string | null;
+    country: string | null;
     district: string | null;
     neighborhood: string | null;
-    country: string | null;
     addressLine1: string | null;
     building: string | null;
     apartment: string | null;
     zipCode: string | null;
     latitude: number | null;
     longitude: number | null;
-    // New Amenities
+
+    category: string;
+
+    surface: number | null;
+    surfaceUnit: string | null;
+    floor: number | null;
+    totalFloors: number | null;
+    isFurnished: boolean;
+    buildYear: number | null;
+
+    // Amenities (Union of Property + Unit + Listing specific)
     hasElevator: boolean;
     isAccessible: boolean;
-    hasAutomaticDoors: boolean;
-    isLastFloor: boolean;
-    isBright: boolean;
-    hasNoOpposite: boolean;
-    hasView: boolean;
-    isQuiet: boolean;
+    hasFiber: boolean;
+    hasBikeRoom: boolean;
     hasPool: boolean;
-    hasBathtub: boolean;
-    hasAirConditioning: boolean;
-    isStudentFriendly: boolean;
-    hasConcierge: boolean;
-    // Existing Amenities
+    transitData?: any;
+    images: SafePropertyImage[];
+
+    // Add back all booleans used in UI
     isTraversant: boolean;
     hasGarden: boolean;
     isRefurbished: boolean;
@@ -66,8 +110,6 @@ export type SafeListing = Omit<
     isKitchenEquipped: boolean;
     isSouthFacing: boolean;
     hasStorage: boolean;
-    hasFiber: boolean;
-    hasBikeRoom: boolean;
     hasLaundry: boolean;
     isNearTransport: boolean;
     hasDigicode: boolean;
@@ -77,10 +119,35 @@ export type SafeListing = Omit<
     isQuietArea: boolean;
     isNearGreenSpace: boolean;
     isNearSchools: boolean;
+    isNearShops: boolean;
     isNearHospital: boolean;
-    transitData?: any;
-    propertyAdjective?: string | null;
-    visitSlots?: any[];
+
+    // New Amenities from older update
+    hasAutomaticDoors: boolean;
+    isLastFloor: boolean;
+    isBright: boolean;
+    hasNoOpposite: boolean;
+    hasView: boolean;
+    isQuiet: boolean;
+    hasBathtub: boolean;
+    hasAirConditioning: boolean;
+    isStudentFriendly: boolean;
+    hasConcierge: boolean;
+
+    // Missing Fields for UI
+    rentalUnitType?: 'ENTIRE_PLACE' | 'PRIVATE_ROOM' | 'SHARED_ROOM'; // or RentalUnitType
+    kitchenType?: string;
+    heatingSystem?: string;
+    glazingType?: string;
+    dpe?: string;
+    ges?: string;
+    energy_cost_min?: number | null;
+    energy_cost_max?: number | null;
+    dpe_year?: number | null;
+
+    // Added for facade compatibility
+    locationValue: string | null;
+    description: string;
 };
 
 export type SafeReservation = Omit<
@@ -126,6 +193,7 @@ export type SafeUser = Omit<
     wishlists: SafeWishlist[] | null;
     measurementSystem: string | null;
     commuteLocations: SafeCommuteLocation[] | null;
+    properties?: SafeProperty[];
 };
 
 export type SafeCommuteLocation = Omit<

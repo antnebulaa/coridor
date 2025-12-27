@@ -54,7 +54,7 @@ export async function POST(
     });
 
     // Now handle nested relations using a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         // 1. Clear existing guarantors and incomes linked to profile
         // Note: Incomes can be linked to Profile OR Guarantor.
         // We need to delete incomes linked to THIS profile.

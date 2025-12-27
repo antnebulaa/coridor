@@ -34,7 +34,11 @@ export async function POST(
     const listing = await prisma.listing.findUnique({
         where: {
             id: listingId,
-            userId: currentUser.id
+            rentalUnit: {
+                property: {
+                    ownerId: currentUser.id
+                }
+            }
         }
     });
 
@@ -47,7 +51,7 @@ export async function POST(
         console.log("Dates to update:", dates);
         console.log("New slots count:", slots.length);
 
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             console.log("Starting transaction...");
 
             // 1. Delete existing slots for the specific dates

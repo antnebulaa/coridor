@@ -23,10 +23,19 @@ export async function DELETE(
         throw new Error('Invalid ID');
     }
 
+    // Ownership check via Property (since userId invalid on Listing)
+    const listingToCheck = await prisma.listing.findUnique({
+        where: { id: listingId },
+        include: { rentalUnit: { include: { property: true } } }
+    });
+
+    if (!listingToCheck || listingToCheck.rentalUnit.property.ownerId !== currentUser.id) {
+        return NextResponse.error();
+    }
+
     const listing = await prisma.listing.deleteMany({
         where: {
-            id: listingId,
-            userId: currentUser.id
+            id: listingId
         }
     });
 
@@ -51,7 +60,22 @@ export async function PUT(
 
     const body = await request.json();
     console.log("PUT BODY:", body);
-    console.log("Listing ID:", listingId);
+
+    // Fetch Listing to get relations
+    const existingListing = await prisma.listing.findUnique({
+        where: { id: listingId },
+        include: { rentalUnit: { include: { property: true } } }
+    });
+
+    if (!existingListing) {
+        return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    }
+
+    // Ownership Check
+    if (existingListing.rentalUnit.property.ownerId !== currentUser.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const {
         title,
         description,
@@ -64,11 +88,11 @@ export async function PUT(
         leaseType,
         dpe,
         ges,
-        heatingSystem, // NEW
-        glazingType, // NEW
+        heatingSystem,
+        glazingType,
         amenities,
         charges,
-        securityDeposit, // NEW
+        securityDeposit,
         rooms,
         // New fields
         isFurnished,
@@ -84,157 +108,155 @@ export async function PUT(
         energy_cost_min,
         energy_cost_max,
         dpe_year,
-        propertyAdjective, // NEW
+        propertyAdjective,
         addressLine1,
         building,
         apartment,
-        zipCode
+        zipCode,
+        rentalUnitType, // NEW: Expecting 'ENTIRE_PLACE' | 'PRIVATE_ROOM'
+        bedType, // NEW
+        hasPrivateBathroom, // NEW
     } = body;
 
     try {
-        // Transaction to ensure atomicity
-        const listing = await prisma.$transaction(async (tx) => {
-            // 1. Update basic listing info
-            const updateData: any = {
-                title,
-                description,
+        const result = await prisma.$transaction(async (tx: any) => {
+            const propertyId = existingListing.rentalUnit.propertyId;
+            const rentalUnitId = existingListing.rentalUnitId;
+
+            // 1. Prepare Property Update
+            const propertyUpdate: any = {
                 category,
-                roomCount,
-                bathroomCount,
-                guestCount,
-                locationValue: location?.value,
-                price: price ? parseInt(String(price), 10) : undefined,
-                leaseType,
-                dpe,
-                ges,
                 heatingSystem,
                 glazingType,
-                charges: charges ? { amount: parseInt(String(charges), 10) } : undefined,
-                securityDeposit: (securityDeposit !== undefined && securityDeposit !== null) ? parseInt(String(securityDeposit), 10) : undefined,
-                // New fields
-                isFurnished,
-                surface: surface ? parseFloat(String(surface)) : undefined,
-                surfaceUnit,
-                kitchenType,
-                floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
-                totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
-                buildYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
-                propertyAdjective, // NEW
-                // DPE Energy Costs
-                energy_cost_min: energy_cost_min ? parseInt(String(energy_cost_min), 10) : null,
-                energy_cost_max: energy_cost_max ? parseInt(String(energy_cost_max), 10) : null,
-                dpe_year: dpe_year ? parseInt(String(dpe_year), 10) : null,
-                addressLine1: addressLine1 || (location ? (location.street || (location.label?.split(',')[0].trim())) : undefined),
-                building: building,
-                apartment: apartment,
-                zipCode: zipCode || location?.zipCode,
+                constructionYear: buildYear ? parseInt(String(buildYear), 10) : undefined,
+                address: location?.label,
                 city: city || location?.city,
                 district: body.district || location?.district,
                 neighborhood: body.neighborhood || location?.neighborhood,
                 country: country || location?.country,
-                latitude: location?.latlng ? location.latlng[0] : undefined,
-                longitude: location?.latlng ? location.latlng[1] : undefined,
+                zipCode: zipCode || location?.zipCode,
+                addressLine1: addressLine1,
+                building: building,
+                apartment: apartment,
+                // DPE
+                dpe,
+                ges,
+                dpe_year: dpe_year ? parseInt(String(dpe_year), 10) : undefined,
+                energy_cost_min: energy_cost_min ? parseInt(String(energy_cost_min), 10) : undefined,
+                energy_cost_max: energy_cost_max ? parseInt(String(energy_cost_max), 10) : undefined,
             };
 
-            // Handle amenities only if provided
-            if (amenities && Array.isArray(amenities)) {
-                updateData.isTraversant = amenities.includes('isTraversant');
-                updateData.hasGarden = amenities.includes('hasGarden');
-                updateData.isRefurbished = amenities.includes('isRefurbished');
-                updateData.petsAllowed = amenities.includes('petsAllowed');
-                updateData.isKitchenEquipped = amenities.includes('isKitchenEquipped');
-                updateData.isSouthFacing = amenities.includes('isSouthFacing');
-                updateData.hasStorage = amenities.includes('hasStorage');
-                updateData.hasFiber = amenities.includes('hasFiber');
-                updateData.hasBikeRoom = amenities.includes('hasBikeRoom');
-                updateData.hasLaundry = amenities.includes('hasLaundry');
-                updateData.isNearTransport = amenities.includes('isNearTransport');
-                updateData.hasDigicode = amenities.includes('hasDigicode');
-                updateData.hasIntercom = amenities.includes('hasIntercom');
-                updateData.hasCaretaker = amenities.includes('hasCaretaker');
-                updateData.hasArmoredDoor = amenities.includes('hasArmoredDoor');
-                updateData.isQuietArea = amenities.includes('isQuietArea');
-                updateData.isNearGreenSpace = amenities.includes('isNearGreenSpace');
-                updateData.isNearSchools = amenities.includes('isNearSchools');
-                updateData.isNearShops = amenities.includes('isNearShops');
-                updateData.isNearHospital = amenities.includes('isNearHospital');
-
-                // New Amenities
-                updateData.hasElevator = amenities.includes('hasElevator');
-                updateData.isAccessible = amenities.includes('isAccessible');
-                updateData.hasAutomaticDoors = amenities.includes('hasAutomaticDoors');
-                updateData.isLastFloor = amenities.includes('isLastFloor');
-                updateData.isBright = amenities.includes('isBright');
-                updateData.hasNoOpposite = amenities.includes('hasNoOpposite');
-                updateData.hasView = amenities.includes('hasView');
-                updateData.isQuiet = amenities.includes('isQuiet');
-                updateData.hasPool = amenities.includes('hasPool');
-                updateData.hasBathtub = amenities.includes('hasBathtub');
-                updateData.hasAirConditioning = amenities.includes('hasAirConditioning');
-                updateData.isStudentFriendly = amenities.includes('isStudentFriendly');
-                updateData.hasConcierge = amenities.includes('hasConcierge');
+            if (location?.latlng) {
+                propertyUpdate.latitude = location.latlng[0];
+                propertyUpdate.longitude = location.latlng[1];
             }
 
-            const updatedListing = await tx.listing.update({
-                where: {
-                    id: listingId,
-                    userId: currentUser.id
-                },
-                data: updateData
+            // 2. Prepare RentalUnit Update
+            const rentalUnitUpdate: any = {
+                surface: surface ? parseFloat(String(surface)) : undefined,
+                floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
+                totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
+                isFurnished,
+                type: rentalUnitType, // Update type if provided
+                bedType,
+                hasPrivateBathroom
+            };
+
+            // 3. Prepare Listing Update
+            const listingUpdate: any = {
+                title,
+                description,
+                price: price ? parseInt(String(price), 10) : undefined,
+                roomCount: roomCount ? parseInt(roomCount, 10) : undefined,
+                bathroomCount: bathroomCount ? parseInt(bathroomCount, 10) : undefined,
+                guestCount: guestCount ? parseInt(guestCount, 10) : undefined,
+                leaseType,
+                charges: charges ? { amount: parseInt(String(charges), 10) } : undefined,
+                securityDeposit: (securityDeposit !== undefined && securityDeposit !== null) ? parseInt(String(securityDeposit), 10) : undefined,
+                propertyAdjective
+            };
+
+            // 4. Distribute Amenities (Boolean Flags)
+            if (amenities && Array.isArray(amenities)) {
+                // Property Amenities
+                propertyUpdate.hasElevator = amenities.includes('hasElevator');
+                propertyUpdate.isAccessible = amenities.includes('isAccessible');
+                propertyUpdate.hasFiber = amenities.includes('hasFiber');
+                propertyUpdate.hasBikeRoom = amenities.includes('hasBikeRoom');
+                propertyUpdate.hasPool = amenities.includes('hasPool');
+                propertyUpdate.isNearTransport = amenities.includes('isNearTransport');
+                propertyUpdate.hasDigicode = amenities.includes('hasDigicode');
+                propertyUpdate.hasIntercom = amenities.includes('hasIntercom');
+                propertyUpdate.hasCaretaker = amenities.includes('hasCaretaker');
+                propertyUpdate.isQuietArea = amenities.includes('isQuietArea');
+                propertyUpdate.isNearGreenSpace = amenities.includes('isNearGreenSpace');
+                propertyUpdate.isNearSchools = amenities.includes('isNearSchools');
+                propertyUpdate.isNearShops = amenities.includes('isNearShops');
+                propertyUpdate.isNearHospital = amenities.includes('isNearHospital');
+
+                // Rental Unit Amenities
+                rentalUnitUpdate.isTraversant = amenities.includes('isTraversant');
+                rentalUnitUpdate.hasGarden = amenities.includes('hasGarden');
+                rentalUnitUpdate.isRefurbished = amenities.includes('isRefurbished');
+                rentalUnitUpdate.isSouthFacing = amenities.includes('isSouthFacing');
+                rentalUnitUpdate.isBright = amenities.includes('isBright');
+                rentalUnitUpdate.hasNoOpposite = amenities.includes('hasNoOpposite');
+                rentalUnitUpdate.hasView = amenities.includes('hasView');
+                rentalUnitUpdate.isQuiet = amenities.includes('isQuiet');
+                rentalUnitUpdate.hasBathtub = amenities.includes('hasBathtub');
+                rentalUnitUpdate.hasAirConditioning = amenities.includes('hasAirConditioning');
+
+                // Listing Amenities (if any left, currently Listing model has few booleans mainly constraints)
+                listingUpdate.petsAllowed = amenities.includes('petsAllowed');
+                listingUpdate.isStudentFriendly = amenities.includes('isStudentFriendly');
+                listingUpdate.hasConcierge = amenities.includes('hasConcierge');
+            }
+
+            // Execute Updates
+            await tx.property.update({
+                where: { id: propertyId },
+                data: propertyUpdate
             });
 
-            // 2. Manage images (both flows)
-            if (rooms || imageSrcs) {
-                // Delete existing rooms and images
-                await tx.room.deleteMany({
-                    where: {
-                        listingId: listingId
-                    }
-                });
+            await tx.rentalUnit.update({
+                where: { id: rentalUnitId },
+                data: rentalUnitUpdate
+            });
 
+            const updatedListing = await tx.listing.update({
+                where: { id: listingId },
+                data: listingUpdate
+            });
+
+            // 5. Handle Images (Assigned to RentalUnit by default for generic)
+            // Note: This logic for images mimics the POST but handles overwrite.
+            if (imageSrcs && imageSrcs.length > 0) {
+                // Delete old PropertyImages linked to this RentalUnit (or listing via relation if we kept it? No, PropertyImage links to keys)
+                // Wait, we need to be careful not to delete Room images if we are only updating global images.
+                // Ideally frontend sends separate payloads. For now, simplistic replace.
+
+                // If imageSrcs is passed, we replace general unit images.
+                // Find images with rentalUnitId = current and roomId = null
                 await tx.propertyImage.deleteMany({
                     where: {
-                        listingId: listingId
+                        rentalUnitId: rentalUnitId,
+                        roomId: null
                     }
                 });
 
-                // Handle top-level images (new flow)
-                if (imageSrcs && imageSrcs.length > 0) {
-                    await tx.propertyImage.createMany({
-                        data: imageSrcs.map((url: string) => ({
-                            url,
-                            listingId: listingId
-                        }))
-                    });
-                }
-
-                // Handle Rooms and Images (legacy/edit flow)
-                if (rooms && rooms.length > 0) {
-                    for (const room of rooms) {
-                        const createdRoom = await tx.room.create({
-                            data: {
-                                name: room.name,
-                                listingId: listingId
-                            }
-                        });
-
-                        if (room.images && room.images.length > 0) {
-                            await tx.propertyImage.createMany({
-                                data: room.images.map((url: string) => ({
-                                    url,
-                                    listingId: listingId,
-                                    roomId: createdRoom.id
-                                }))
-                            });
-                        }
-                    }
-                }
+                await tx.propertyImage.createMany({
+                    data: imageSrcs.map((url: string, index: number) => ({
+                        url,
+                        order: index,
+                        rentalUnitId: rentalUnitId
+                    }))
+                });
             }
 
             return updatedListing;
         });
 
-        return NextResponse.json(listing);
+        return NextResponse.json(result);
     } catch (error) {
         console.error("PUT Listing Error:", error);
         return NextResponse.json({ error: "Internal Server Error", details: error }, { status: 500 });
@@ -260,14 +282,24 @@ export async function PATCH(
     const body = await request.json();
     const { isPublished } = body;
 
+    // Ownership check via fetch
+    const listingToCheck = await prisma.listing.findUnique({
+        where: { id: listingId },
+        include: { rentalUnit: { include: { property: true } } }
+    });
+
+    if (!listingToCheck || listingToCheck.rentalUnit.property.ownerId !== currentUser.id) {
+        return NextResponse.error();
+    }
+
     const listing = await prisma.listing.update({
         where: {
-            id: listingId,
-            userId: currentUser.id
+            id: listingId
         },
         data: {
             isPublished,
-            statusUpdatedAt: new Date()
+            statusUpdatedAt: new Date(),
+            status: isPublished ? 'PUBLISHED' : 'DRAFT'
         }
     });
 

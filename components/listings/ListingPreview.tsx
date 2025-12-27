@@ -50,7 +50,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         setIsApplicationModalOpen(true);
     }, [currentUser, loginModal]);
 
-    const location = getByValue(listing.locationValue);
+    const location = getByValue((listing as any).locationValue);
     const coordinates = listing.latitude && listing.longitude ? [listing.latitude, listing.longitude] : undefined;
 
 
@@ -120,8 +120,8 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
     const listingImages = useMemo(() => {
         // Create a map of room IDs to room names for O(1) lookup
         const roomMap = new Map<string, string>();
-        if (listing.rooms) {
-            listing.rooms.forEach(room => {
+        if ((listing as any).rooms) {
+            (listing as any).rooms.forEach((room: any) => {
                 roomMap.set(room.id, room.name);
             });
         }
@@ -137,7 +137,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 label: label
             };
         });
-    }, [listing.images, listing.rooms]);
+    }, [listing.images, (listing as any).rooms]);
 
     // Reusable Image Component
     const ImageSection = (
@@ -233,13 +233,13 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                     ${isMobileModal ? 'px-6' : ''}
                 `}>
                     <div>
-                        {listing.guestCount} {listing.guestCount > 1 ? 'chambres' : 'chambre'}
+                        {listing.guestCount || 0} {(listing.guestCount || 0) > 1 ? 'chambres' : 'chambre'}
                     </div>
                     <div>
-                        {listing.roomCount} {listing.roomCount > 1 ? 'pièces' : 'pièce'}
+                        {listing.roomCount || 0} {(listing.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
                     </div>
                     <div>
-                        {listing.bathroomCount} {listing.bathroomCount > 1 ? 'salles de bain' : 'salle de bain'}
+                        {listing.bathroomCount || 0} {(listing.bathroomCount || 0) > 1 ? 'salles de bain' : 'salle de bain'}
                     </div>
                     {listing.isFurnished !== undefined && (
                         <div>• {listing.isFurnished ? 'Meublé' : 'Non meublé'}</div>

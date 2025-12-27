@@ -49,7 +49,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
     const router = useRouter();
     const { getByValue } = useCountries();
 
-    const location = getByValue(data.locationValue);
+    const location = getByValue((data as any).locationValue);
 
     const handleCancel = useCallback(
         (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -235,13 +235,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 ) : (
                                     <>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
-                                            <span className="font-medium text-foreground">{data.roomCount}</span> {data.roomCount > 1 ? 'pièces' : 'pièce'}
+                                            <span className="font-medium text-foreground">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
                                         </div>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
-                                            <span className="font-medium text-foreground">{data.roomCount - 1}</span> {(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'}
+                                            <span className="font-medium text-foreground">{(data.roomCount || 0) - 1}</span> {((data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
                                         </div>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
-                                            <span className="font-medium text-foreground">{data.roomCount - 1}</span> ch.
+                                            <span className="font-medium text-foreground">{(data.roomCount || 0) - 1}</span> ch.
                                         </div>
                                     </>
                                 )}
@@ -369,7 +369,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     < div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
                         {data.roomCount === 1
                             ? `Studio • ${surfaceDisplay}`
-                            : `${data.roomCount} ${data.roomCount > 1 ? 'pièces' : 'pièce'} • ${data.roomCount - 1} ${(data.roomCount - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
+                            : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${(data.roomCount || 0) - 1} ${((data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
                         }
                         <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md ml-2">
                             <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>

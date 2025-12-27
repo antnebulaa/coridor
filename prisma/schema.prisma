@@ -83,7 +83,8 @@ model User {
   measurementSystem String?   @default("metric") // "metric" or "imperial"
 
   accounts     Account[]
-  listings     Listing[]
+  // listings     Listing[] // REMOVED in 3-Tier Refactor
+  properties   Property[]
   reservations Reservation[]
   wishlists    Wishlist[]
 
@@ -171,117 +172,165 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-model Listing {
-  id            String   @id @default(uuid())
-  title         String
-  description   String
-  createdAt     DateTime @default(now())
-  statusUpdatedAt DateTime @default(now())
-  isPublished   Boolean  @default(true)
-  category      String
-  roomCount     Int
-  bathroomCount Int
-  guestCount    Int
-  locationValue String
-  userId        String
-  price         Int
-  city          String?
-  country       String?
-  district      String?
-  neighborhood  String?
-  latitude      Float?
-  longitude     Float?
-  addressLine1  String?
-  building      String?
-  apartment     String?
-  zipCode       String?
-
-  // Coridor Fields
-  leaseType LeaseType?
-  dpe       String?
-  ges       String?
-  heatingSystem String? // NEW: Système de chauffage
-  glazingType   String? // NEW: Type de vitrage
-  charges   Json? // Stores tax, insurance, etc.
-  securityDeposit Int? // NEW: Dépôt de garantie
+model Property {
+  id              String   @id @default(uuid())
+  ownerId         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
-  // DPE Energy Costs (New)
-  energy_cost_min Int? // Coût annuel min
-  energy_cost_max Int? // Coût annuel max
-  dpe_year        Int? // Année de référence
-
-  // New Category Fields
-  isFurnished Boolean @default(false)
-  surface     Float?
-  surfaceUnit String? @default("metric") // "metric" (m²) or "imperial" (sq ft)
-  kitchenType String? // "separate", "open"
-  floor       Int?
-  totalFloors Int?
-  buildYear   Int?
-
-  // Amenities (Booleans)
-  isTraversant      Boolean @default(false)
-  hasGarden         Boolean @default(false)
-  isRefurbished     Boolean @default(false)
-  petsAllowed       Boolean @default(false)
-  isKitchenEquipped Boolean @default(false)
-  isSouthFacing     Boolean @default(false)
-  hasStorage        Boolean @default(false)
+  // Physical Characteristics
+  category        String   // Apartment, House, etc.
+  constructionYear Int?
+  totalSurface    Float?   // Surface totale du bien
+  
+  // Location
+  address         String?  // Full address string
+  addressLine1    String?
+  building        String?
+  apartment       String? // Complement d'adresse
+  city            String?
+  zipCode         String?
+  country         String?
+  latitude        Float?
+  longitude       Float?
+  district        String?
+  neighborhood    String?
+  
+  // Global Amenities (Building/Property context)
+  isNearTransport   Boolean @default(false)
+  isNearShops       Boolean @default(false)
+  isNearSchools     Boolean @default(false)
+  isNearGreenSpace  Boolean @default(false)
+  isNearHospital    Boolean @default(false)
+  isQuietArea       Boolean @default(false)
+  
+  hasSofteners      Boolean @default(false) // Adoucisseur
   hasFiber          Boolean @default(false)
   hasBikeRoom       Boolean @default(false)
-  hasLaundry        Boolean @default(false)
-  isNearTransport   Boolean @default(false)
+  hasElevator       Boolean @default(false)
+  isAccessible      Boolean @default(false) // PMR
   hasDigicode       Boolean @default(false)
   hasIntercom       Boolean @default(false)
   hasCaretaker      Boolean @default(false)
-  hasArmoredDoor    Boolean @default(false)
-  isQuietArea       Boolean @default(false)
-  isNearGreenSpace  Boolean @default(false)
-  isNearSchools     Boolean @default(false)
-  isNearShops       Boolean @default(false)
-  isNearHospital    Boolean @default(false)
-
-  // New Amenities from User Request
-  hasElevator        Boolean @default(false)
-  isAccessible       Boolean @default(false)
-  hasAutomaticDoors  Boolean @default(false)
-  isLastFloor        Boolean @default(false)
-  isBright           Boolean @default(false)
-  hasNoOpposite      Boolean @default(false)
-  hasView            Boolean @default(false)
-  isQuiet            Boolean @default(false)
-  hasPool            Boolean @default(false)
-  hasBathtub         Boolean @default(false)
-  hasAirConditioning Boolean @default(false)
-  isStudentFriendly  Boolean @default(false)
-  hasConcierge       Boolean @default(false)
+  hasPool           Boolean @default(false)
   
-  propertyAdjective  String? // NEW: Adjective for listing (e.g. "Lumineux", "Calme")
-
+  // Energy Performance
+  dpe             String?
+  ges             String?
+  dpe_year        Int?
+  energy_cost_min Int?
+  energy_cost_max Int?
+  heatingSystem   String?
+  glazingType     String?
+  
+  // Physical Characteristics (Moved from RentalUnit)
+  totalFloors     Int?
+  floor           Int? // Floor of the property
+  
+  isTraversant      Boolean @default(false)
+  isSouthFacing     Boolean @default(false)
+  isBright          Boolean @default(false)
+  hasGarden         Boolean @default(false)
+  hasBalcony        Boolean @default(false)
+  hasView           Boolean @default(false)
+  hasAirConditioning Boolean @default(false)
+  hasBathtub        Boolean @default(false)
+  isRefurbished     Boolean @default(false)
+  isQuiet           Boolean @default(false)
+  hasNoOpposite     Boolean @default(false)
+  
   // Relations
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reservations Reservation[]
-  wishlists    Wishlist[]
+  owner           User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  rentalUnits     RentalUnit[]
+  rooms           Room[]        // Physical rooms (Salon, Cuisine, etc.)
+  images          PropertyImage[] // Common Area images
+  visitSlots      VisitSlot[]   // Owner availability is linked to Property location
+  
+  // Caching/Transit
+  transitData     Json?
+}
 
-  // New Photo Structure
-  rooms  Room[]
-  images PropertyImage[]
+enum RentalUnitType {
+  ENTIRE_PLACE
+  PRIVATE_ROOM
+  SHARED_ROOM
+}
 
-  // Caching
-  transitData Json?
+model RentalUnit {
+  id          String         @id @default(uuid())
+  propertyId  String
+  name        String         // "Appartement Entier" or "Chambre 1"
+  type        RentalUnitType
+  isActive    Boolean        @default(true)
+  
+  // Specific Characteristics
+  surface     Float?
+  bedType     String? // "SINGLE", "DOUBLE", "NONE"
+  
+  // Amenities specific to this unit
+  isFurnished       Boolean @default(false)
+  hasPrivateBathroom Boolean @default(false)
+  
+  // Room Link (for Colocation/Private Room)
+  targetRoomId      String?  // If this unit corresponds to a specific physical room
+  targetRoom        Room?    @relation(fields: [targetRoomId], references: [id])
+  
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listings    Listing[]
+  images      PropertyImage[] // Unit specific images
+}
 
-  // Visits
-  // Visits
-  visitDuration Int?        @default(20) // Duration in minutes (15, 20, 30, 45)
-  visitSlots    VisitSlot[]
-  visits        Visit[]
-
-  applicationMessages Message[]
-
-  applications RentalApplication[]
+model Listing {
+  id            String   @id @default(uuid())
+  rentalUnitId  String
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  statusUpdatedAt DateTime @default(now())
+  
+  // Commercial Offer
+  price         Int      // Loyer hors charges
+  charges       Json?    // { amount: 100, included: true/false }
+  securityDeposit Int?
+  
+  isPublished   Boolean  @default(false)
+  status        String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  
+  availableFrom DateTime?
+  
+  // Marketing
+  title         String
+  description   String
+  propertyAdjective String? // "Lumineux", "Spacieux"
+  
+  // Target Constraints
+  roomCount     Int?     // Overrides unit room count if necessary
+  bathroomCount Int?
+  guestCount    Int?
+  
+  isStudentFriendly Boolean @default(false)
+  petsAllowed       Boolean @default(false)
+  
+  leaseType     LeaseType?
+  
+  // Relations
+  rentalUnit    RentalUnit @relation(fields: [rentalUnitId], references: [id], onDelete: Cascade)
+  
+  // User Interactions (Commercial Links)
+  reservations  Reservation[]
+  wishlists     Wishlist[]
   conversations Conversation[]
-
-  furniture Furniture?
+  visits        Visit[]
+  applications  RentalApplication[]
+  messages      Message[]
+  
+  // Furniture Inventory (Commercial/Legal)
+  furniture     Furniture?
+  
+  // Legacy User Link (Can be inferred via Property, but useful for fast access/queries)
+  // For now we remove direct userId to force using the Property Owner
+  // userId        String
+  // user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Furniture {
@@ -293,7 +342,7 @@ model Furniture {
   bedding  Boolean @default(false)
   curtains Boolean @default(false)
   hob      Boolean @default(false)
-  oven     Boolean @default(false) // Or microwave
+  oven     Boolean @default(false)
   fridge   Boolean @default(false)
   freezer  Boolean @default(false)
   dishes   Boolean @default(false)
@@ -310,20 +359,20 @@ model Furniture {
   toaster        Boolean @default(false)
   dishwasher     Boolean @default(false)
   hairDryer      Boolean @default(false)
-  mirror         Boolean @default(false) // Often mandatory in bathroom but listed as optional here
+  mirror         Boolean @default(false)
   sheets         Boolean @default(false)
   towels         Boolean @default(false)
-  cloths         Boolean @default(false) // Torchons
+  cloths         Boolean @default(false)
 }
 
 model VisitSlot {
-  id        String   @id @default(uuid())
-  listingId String
-  date      DateTime // Specific date for the visit slot
-  startTime String // Format "HH:mm"
-  endTime   String // Format "HH:mm"
+  id          String   @id @default(uuid())
+  propertyId  String   // MOVED: Availability is linked to Property/Owner
+  date        DateTime
+  startTime   String
+  endTime     String
 
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 enum VisitStatus {
@@ -334,36 +383,43 @@ enum VisitStatus {
 
 model Visit {
   id          String      @id @default(uuid())
-  listingId   String
+  listingId   String      // REMAINS: Candidate visits a specific Listing offer
   candidateId String
   date        DateTime
-  startTime   String // Format "HH:mm"
-  endTime     String // Format "HH:mm"
+  startTime   String
+  endTime     String
   status      VisitStatus @default(PENDING)
   createdAt   DateTime    @default(now())
 
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  candidate User    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  candidate   User    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 }
 
 model Room {
-  id        String @id @default(uuid())
-  name      String
-  listingId String
-
-  listing Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  images  PropertyImage[]
+  id          String   @id @default(uuid())
+  name        String
+  propertyId  String   // CHANGED: Room belongs to Property
+  
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  images      PropertyImage[]
+  
+  // Reverse relation for RentalUnit logic targeting a specific room
+  rentalUnits RentalUnit[]
 }
 
 model PropertyImage {
-  id        String  @id @default(uuid())
-  url       String
-  listingId String
-  roomId    String?
-  order     Int     @default(0)
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  room    Room?   @relation(fields: [roomId], references: [id])
+  id           String  @id @default(uuid())
+  url          String
+  order        Int     @default(0)
+  
+  // Can belong to Property (Common areas) OR RentalUnit (Private areas)
+  propertyId   String?
+  rentalUnitId String?
+  roomId       String?
+  
+  property     Property?   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentalUnit   RentalUnit? @relation(fields: [rentalUnitId], references: [id], onDelete: Cascade)
+  room         Room?       @relation(fields: [roomId], references: [id])
 }
 
 model Reservation {
@@ -424,21 +480,21 @@ model Message {
   listing   Listing? @relation(fields: [listingId], references: [id])
 }
 
-model Amenity {
-  id        String                                @id @default(uuid())
-  type      String
-  latitude  Float
-  longitude Float
-  name      String?
-  city      String?
-  zipCode   String?
-  sourceId  String?                               @unique
-  geom      Unsupported("geometry(Point, 4326)")?
-  createdAt DateTime                              @default(now())
-  updatedAt DateTime                              @updatedAt
-
-  @@index([geom], name: "amenity_geom_idx", type: Gist)
-}
+// model Amenity {
+//   id        String                                @id @default(uuid())
+//   type      String
+//   latitude  Float
+//   longitude Float
+//   name      String?
+//   city      String?
+//   zipCode   String?
+//   sourceId  String?                               @unique
+//   geom      Unsupported("geometry(Point, 4326)")?
+//   createdAt DateTime                              @default(now())
+//   updatedAt DateTime                              @updatedAt
+//
+//   @@index([geom], name: "amenity_geom_idx", type: Gist)
+// }
 
 enum CompositionType {
   SOLO
@@ -498,19 +554,19 @@ enum SpecificLeaseRequest {
 
 model RentalApplication {
   id                   String               @id @default(uuid())
-  propertyId           String
+  listingId            String
   candidateScopeId     String
   status               ApplicationStatus    @default(SENT)
   specificLeaseRequest SpecificLeaseRequest @default(DEFAULT)
   appliedAt            DateTime             @default(now())
 
   // Lease & Signature
-  leaseStatus            LeaseStatus @default(DRAFT)
-  yousignSignatureId     String? // Signature Request ID
-  signedLeaseUrl         String? // URL of final signed PDF
+  leaseStatus        LeaseStatus @default(DRAFT)
+  yousignSignatureId String? // Signature Request ID
+  signedLeaseUrl     String? // URL of final signed PDF
 
 
-  property       Listing              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listing        Listing              @relation(fields: [listingId], references: [id], onDelete: Cascade)
   candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
 }
 

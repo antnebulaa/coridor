@@ -50,7 +50,15 @@ export async function GET(
                     createdAt: 'desc'
                 },
                 include: {
-                    images: true
+                    rentalUnit: {
+                        include: {
+                            property: {
+                                include: {
+                                    images: true
+                                }
+                            }
+                        }
+                    }
                 }
             },
             _count: {

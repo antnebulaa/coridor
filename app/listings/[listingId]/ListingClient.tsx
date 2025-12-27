@@ -81,7 +81,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                     <ListingHead
                         title={listing.title}
                         imageSrc={listing.images?.[0]?.url}
-                        locationValue={listing.locationValue}
+                        locationValue={(listing as any).locationValue}
                         id={listing.id}
                         currentUser={currentUser}
                         listing={listing}
@@ -91,10 +91,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             user={listing.user}
                             category={category}
                             description={listing.description}
-                            roomCount={listing.roomCount}
-                            guestCount={listing.guestCount}
-                            bathroomCount={listing.bathroomCount}
-                            locationValue={listing.locationValue}
+                            roomCount={listing.roomCount || 0}
+                            guestCount={listing.guestCount || 0}
+                            bathroomCount={listing.bathroomCount || 0}
+                            locationValue={(listing as any).locationValue}
                             listing={listing}
                             currentUser={currentUser}
                         />

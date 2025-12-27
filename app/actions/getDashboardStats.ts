@@ -11,7 +11,11 @@ export default async function getDashboardStats() {
 
         const listings = await prisma.listing.findMany({
             where: {
-                userId: currentUser.id
+                rentalUnit: {
+                    property: {
+                        ownerId: currentUser.id
+                    }
+                }
             },
             include: {
                 reservations: {
@@ -19,7 +23,15 @@ export default async function getDashboardStats() {
                         user: true
                     }
                 },
-                visitSlots: true
+                rentalUnit: {
+                    include: {
+                        property: {
+                            include: {
+                                visitSlots: true
+                            }
+                        }
+                    }
+                }
             }
         });
 
@@ -30,12 +42,23 @@ export default async function getDashboardStats() {
         let recentReservations: any[] = [];
         let listingsWithoutSlots: any[] = [];
 
+        const seenPropertyIds = new Set<string>();
+
         listings.forEach((listing: any) => {
-            if (!listing.visitSlots || listing.visitSlots.length === 0) {
-                listingsWithoutSlots.push({
-                    id: listing.id,
-                    title: listing.title
-                });
+            const property = listing.rentalUnit?.property;
+            if (!property) return;
+
+            // Identify property unique constraints for alerts
+            if (!seenPropertyIds.has(property.id)) {
+                const propertySlots = property.visitSlots || [];
+
+                if (propertySlots.length === 0) {
+                    seenPropertyIds.add(property.id);
+                    listingsWithoutSlots.push({
+                        id: listing.id,
+                        title: listing.title
+                    });
+                }
             }
 
             listing.reservations.forEach((reservation: any) => {

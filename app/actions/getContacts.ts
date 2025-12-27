@@ -26,7 +26,7 @@ export default async function getContacts() {
         // For now returning raw user objects but with sensitive fields stripped by UI usage or transform.
         // Ideally map to SafeUser.
 
-        const safeContacts = user.contacts.map((contact) => ({
+        const safeContacts = user.contacts.map((contact: any) => ({
             ...contact,
             createdAt: contact.createdAt.toISOString(),
             updatedAt: contact.updatedAt.toISOString(),

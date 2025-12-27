@@ -16,11 +16,19 @@ export default async function getFavoriteListings() {
                 }
             },
             include: {
-                images: true
+                rentalUnit: {
+                    include: {
+                        property: {
+                            include: {
+                                images: true
+                            }
+                        }
+                    }
+                }
             }
         });
 
-        const safeFavorites = favorites.map((favorite) => ({
+        const safeFavorites = favorites.map((favorite: any) => ({
             ...favorite,
             createdAt: favorite.createdAt.toISOString(),
             statusUpdatedAt: favorite.statusUpdatedAt.toISOString()

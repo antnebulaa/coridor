@@ -34,7 +34,7 @@ const EditPropertyPage = async ({ params }: { params: Promise<IParams> }) => {
         );
     }
 
-    if (listing.userId !== currentUser.id) {
+    if (listing.user?.id !== currentUser.id) {
         return (
             <ClientOnly>
                 <EmptyState

@@ -1,5 +1,4 @@
 import { Listing } from "@prisma/client";
-
 import prisma from "@/libs/prismadb";
 import { getIsochrone } from "@/app/libs/mapbox";
 
@@ -25,6 +24,7 @@ export interface IListingsParams {
     commuteMaxTime?: number;
     commute?: string; // JSON Array of CommutePoint
     sort?: string;
+    isPublished?: boolean; // NEW: Allow filtering by published status
 }
 
 export default async function getListings(
@@ -49,13 +49,14 @@ export default async function getListings(
             commuteTransportMode,
             commuteMaxTime,
             commute,
-            sort
+            sort,
+            isPublished
         } = params;
+
+        // ...
 
         let query: any = {};
         let commuteIds: string[] | null = null;
-
-        // Prepare Commute Points
         let commutePoints: any[] = [];
 
         if (commute) {
@@ -68,7 +69,6 @@ export default async function getListings(
                 console.error("Failed to parse commute params", e);
             }
         } else if (commuteLatitude && commuteLongitude && commuteTransportMode && commuteMaxTime) {
-            // Legacy / Single point fallback
             commutePoints = [{
                 lat: commuteLatitude,
                 lng: commuteLongitude,
@@ -77,12 +77,9 @@ export default async function getListings(
             }];
         }
 
-        // Commute Filtering Logic
+        // Commute Filtering Logic with RAW SQL Join
         if (commutePoints.length > 0) {
             console.log(`Processing ${commutePoints.length} commute points...`);
-
-            // To perform intersection, we need to track IDs valid for EACH point.
-            // We start with null, and for first point we set it. For subsequent, we intersect.
             let validIds: Set<string> | null = null;
 
             for (const point of commutePoints) {
@@ -100,33 +97,30 @@ export default async function getListings(
                     const geometry = isochrone.features[0].geometry;
                     const geoJsonString = JSON.stringify(geometry);
 
-                    // PostGIS Query for this point
-                    const rawListings = await prisma.$queryRaw<{ id: string }[]>`
-                        SELECT id 
-                        FROM "Listing"
-                        WHERE "latitude" IS NOT NULL 
-                        AND "longitude" IS NOT NULL
+                    const rawLists = await prisma.$queryRaw<{ id: string }[]>`
+                        SELECT l.id 
+                        FROM "Listing" l
+                        JOIN "RentalUnit" ru ON l."rentalUnitId" = ru.id
+                        JOIN "Property" p ON ru."propertyId" = p.id
+                        WHERE p."latitude" IS NOT NULL 
+                        AND p."longitude" IS NOT NULL
                         AND ST_Within(
-                            ST_SetSRID(ST_MakePoint("longitude", "latitude"), 4326),
+                            ST_SetSRID(ST_MakePoint(p."longitude", p."latitude"), 4326),
                             ST_SetSRID(ST_GeomFromGeoJSON(${geoJsonString}), 4326)
                         )
                     `;
-                    currentPointIds = rawListings.map((l) => l.id);
+                    currentPointIds = rawLists.map((l: any) => l.id);
                 }
 
-                // Intersection Logic
                 const currentSet = new Set(currentPointIds);
                 if (validIds === null) {
                     validIds = currentSet;
                 } else {
-                    // Intersect validIds with currentSet
-                    // Explicitly cast validIds to avoid inference issues if any
                     const previousIds: string[] = Array.from(validIds as Set<string>);
                     const intersected: string[] = previousIds.filter((id: string) => currentSet.has(id));
                     validIds = new Set(intersected);
                 }
 
-                // Optimization: if validIds becomes empty, we can stop early
                 if (validIds && validIds.size === 0) {
                     break;
                 }
@@ -134,89 +128,36 @@ export default async function getListings(
 
             if (validIds) {
                 commuteIds = Array.from(validIds);
-                console.log(`Found ${commuteIds.length} listings verifying ALL commute criteria.`);
-
                 if (commuteIds.length === 0) {
-                    query.id = { in: [] }; // Force empty result
+                    query.id = { in: [] };
                 } else {
                     query.id = { in: commuteIds };
                 }
             }
         }
 
-        console.log("GET LISTINGS PARAMS:", params);
+        // Handle isPublished filter
+        // Logic:
+        // Default (Public): isPublished = true
+        // Owner Dashboard: want ALL (Draft + Published).
+        // If isPublished is passed explicitly as null, we show ALL (do not filter).
+        // If passed as boolean, we filter.
 
-        if (userId) {
-            query.userId = userId;
+        if (typeof isPublished !== 'undefined') {
+            if (isPublished !== null) {
+                query.isPublished = isPublished;
+            }
+            // If null, we do NOT set query.isPublished, thus returning all.
         } else {
+            // Default to showing only published
             query.isPublished = true;
-        }
-
-        if (category) {
-            const categories = category.split(',');
-            if (categories.length > 0) {
-                query.category = { in: categories };
-            }
-        }
-
-        if (roomCount) {
-            query.roomCount = {
-                gte: +roomCount
-            }
-        }
-
-        if (guestCount) {
-            query.guestCount = {
-                gte: +guestCount
-            }
-        }
-
-        if (bathroomCount) {
-            query.bathroomCount = {
-                gte: +bathroomCount
-            }
-        }
-
-        if (locationValue) {
-            query.locationValue = locationValue;
         }
 
         if (minPrice && maxPrice) {
             query.price = {
                 gte: +minPrice,
                 lte: +maxPrice
-            }
-        }
-
-        if (minSurface && maxSurface) {
-            query.surface = {
-                gte: +minSurface,
-                lte: +maxSurface
-            }
-        }
-
-        if (params.cities) {
-            const cities = params.cities.split(',');
-            if (cities.length > 0) {
-                query.OR = cities.map((city: string) => ({
-                    city: {
-                        contains: city,
-                        mode: 'insensitive'
-                    }
-                }));
-            }
-        } else if (params.city) {
-            query.city = {
-                contains: params.city,
-                mode: 'insensitive'
-            }
-        }
-
-        // Add ID filter if we have one from commute (and it wasn't empty array set above)
-        // If query.id is already set (e.g. empty array), don't overwrite if we want to support multiple ID filters later, 
-        // but currently we only use ID filter here.
-        if (commuteIds && commuteIds.length > 0) {
-            query.id = { in: commuteIds };
+            };
         }
 
         if (startDate && endDate) {
@@ -224,24 +165,65 @@ export default async function getListings(
                 reservations: {
                     some: {
                         OR: [
-                            {
-                                endDate: { gte: startDate },
-                                startDate: { lte: startDate }
-                            },
-                            {
-                                startDate: { lte: endDate },
-                                endDate: { gte: endDate }
-                            }
+                            { endDate: { gte: startDate }, startDate: { lte: startDate } },
+                            { startDate: { lte: endDate }, endDate: { gte: endDate } }
                         ]
                     }
                 }
+            };
+        }
+
+        const rentalUnitQuery: any = {};
+
+        if (roomCount) {
+            query.roomCount = { gte: +roomCount };
+        }
+
+        if (minSurface && maxSurface) {
+            rentalUnitQuery.surface = {
+                gte: +minSurface,
+                lte: +maxSurface
+            };
+        }
+
+        const propertyQuery: any = {};
+
+        if (userId) {
+            propertyQuery.ownerId = userId;
+        }
+
+        if (category) {
+            const categories = category.split(',');
+            if (categories.length > 0) {
+                propertyQuery.category = { in: categories };
             }
         }
 
-        console.log("FINAL QUERY:", JSON.stringify(query, null, 2));
+        if (params.cities) {
+            const cities = params.cities.split(',');
+            if (cities.length > 0) {
+                propertyQuery.OR = cities.map((city: string) => ({
+                    city: { contains: city, mode: 'insensitive' }
+                }));
+            }
+        } else if (params.city) {
+            propertyQuery.city = { contains: params.city, mode: 'insensitive' };
+        }
+
+        if (locationValue) {
+            propertyQuery.country = locationValue;
+        }
+
+        query.rentalUnit = {
+            ...rentalUnitQuery,
+            property: propertyQuery
+        };
+
+        if (commuteIds && commuteIds.length > 0) {
+            query.id = { in: commuteIds };
+        }
 
         let orderBy: any = { createdAt: 'desc' };
-
         if (sort === 'price_asc') {
             orderBy = { price: 'asc' };
         } else if (sort === 'price_desc') {
@@ -251,36 +233,129 @@ export default async function getListings(
         const listings = await prisma.listing.findMany({
             where: query,
             include: {
-                user: true,
-                rooms: true, // Needed for photo badges
-                images: {
-                    orderBy: {
-                        order: 'asc'
+                rentalUnit: {
+                    include: {
+                        property: {
+                            include: {
+                                owner: true,
+                                images: true,
+                                visitSlots: true,
+                            }
+                        },
+                        images: true,
+                        targetRoom: true
                     }
-                }
+                },
             },
             orderBy: orderBy
         });
 
-        const safeListings = listings.map((listing: any) => ({
-            ...listing,
-            createdAt: listing.createdAt.toISOString(),
-            statusUpdatedAt: listing.statusUpdatedAt.toISOString(),
-            // Pass the polygon to the client via a property on the first listing? 
-            // Or ideally getListings should return { listings, meta }. 
-            // But current architecture expects array. 
-            // We can attach it to the first listing as a hack, or rely on Client Component to fetch polygon separately for display?
-            // "You can optimize by fetching polygon client side too for display, but here we do it for filter."
-            // Let's rely on fetching it again client side or passing it? 
-            // Actually, if we want to save API calls, we could pass it. 
-            // But modifying return type might break `Home` component props type.
-            // Let's fetch it on Client for display separately for now to keep it simple, 
-            // OR -- `HomeClient` receives `listings`. 
-            // We might just fetch it on the client side for the visual polygon when the search params change.
-            // Yes, user said: "Affichez le polygone...". Client side fetch is fine for visualization.
-        }));
+        // Mapper to SafeListing with Flattened Facade
+        const safeListings = listings.map((listing: any) => {
+            const unitImages = listing.rentalUnit.images || [];
+            const propertyImages = listing.rentalUnit.property.images || [];
+            const aggregatedImages = [...unitImages, ...propertyImages];
+
+            const property = listing.rentalUnit.property;
+            const unit = listing.rentalUnit;
+
+            return {
+                ...listing,
+                createdAt: listing.createdAt.toISOString(),
+                statusUpdatedAt: listing.statusUpdatedAt.toISOString(),
+                availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
+
+                // Mapped Fields for Facade
+                city: property.city,
+                country: property.country,
+                district: property.district,
+                neighborhood: property.neighborhood,
+                addressLine1: property.addressLine1,
+                building: property.building,
+                apartment: property.apartment,
+                zipCode: property.zipCode,
+                latitude: property.latitude,
+                longitude: property.longitude,
+                category: property.category,
+
+                surface: unit.surface,
+                floor: unit.floor,
+                totalFloors: unit.totalFloors,
+                isFurnished: unit.isFurnished,
+                buildYear: property.constructionYear,
+
+                // New Mapped Fields
+                rentalUnitType: unit.type,
+                heatingSystem: property.heatingSystem,
+                glazingType: property.glazingType,
+                dpe: property.dpe,
+                ges: property.ges,
+                dpe_year: property.dpe_year,
+                energy_cost_min: property.energy_cost_min,
+                energy_cost_max: property.energy_cost_max,
+
+                // Amenities (Union of Property + Unit)
+                hasElevator: property.hasElevator,
+                isAccessible: property.isAccessible,
+                hasFiber: property.hasFiber,
+                hasBikeRoom: property.hasBikeRoom,
+                hasPool: property.hasPool,
+                isNearTransport: property.isNearTransport,
+                hasDigicode: property.hasDigicode,
+                hasIntercom: property.hasIntercom,
+                hasCaretaker: property.hasCaretaker,
+                isQuietArea: property.isQuietArea,
+                isNearGreenSpace: property.isNearGreenSpace,
+                isNearSchools: property.isNearSchools,
+                isNearShops: property.isNearShops,
+                isNearHospital: property.isNearHospital,
+
+                isTraversant: property.isTraversant,
+                hasGarden: property.hasGarden,
+                isRefurbished: property.isRefurbished,
+                isSouthFacing: property.isSouthFacing,
+                isBright: property.isBright,
+                hasNoOpposite: property.hasNoOpposite,
+                hasView: property.hasView,
+                isQuiet: property.isQuiet,
+                hasBathtub: property.hasBathtub,
+                hasAirConditioning: property.hasAirConditioning,
+
+                hasStorage: false,
+                hasLaundry: false,
+                hasArmoredDoor: false,
+                hasConcierge: false,
+                hasAutomaticDoors: false,
+
+                transitData: property.transitData,
+
+                rentalUnit: {
+                    ...listing.rentalUnit,
+                    property: {
+                        ...listing.rentalUnit.property,
+                        createdAt: listing.rentalUnit.property.createdAt.toISOString(),
+                        updatedAt: listing.rentalUnit.property.updatedAt.toISOString(),
+                        owner: {
+                            ...listing.rentalUnit.property.owner,
+                            createdAt: listing.rentalUnit.property.owner.createdAt.toISOString(),
+                            updatedAt: listing.rentalUnit.property.owner.updatedAt.toISOString(),
+                            emailVerified: listing.rentalUnit.property.owner.emailVerified?.toISOString() || null,
+                            birthDate: listing.rentalUnit.property.owner.birthDate?.toISOString() || null
+                        },
+                        visitSlots: listing.rentalUnit.property.visitSlots.map((slot: any) => ({
+                            ...slot,
+                            date: slot.date.toISOString()
+                        }))
+                    },
+                    images: listing.rentalUnit.images
+                },
+                images: aggregatedImages,
+                user: listing.rentalUnit.property.owner
+            };
+        });
 
         return safeListings;
+
     } catch (error: any) {
         throw new Error(error);
     }

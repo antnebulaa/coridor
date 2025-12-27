@@ -73,7 +73,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
         if (listing.images && listing.images.length > 0) {
             return listing.images.map(img => {
-                const room = listing.rooms?.find(r => r.id === img.roomId);
+                const room = (listing as any).rooms?.find((r: any) => r.id === img.roomId);
 
                 // DEBUG: Force label visualization
                 const debugLabel = room?.name || (img.roomId ? `ERR: ROOM NOT FOUND` : `UNASSIGNED`);

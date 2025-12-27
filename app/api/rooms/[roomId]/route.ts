@@ -22,17 +22,17 @@ export async function DELETE(
         throw new Error('Invalid ID');
     }
 
-    // Verify ownership via listing
+    // Verify ownership via Property
     const room = await prisma.room.findUnique({
         where: {
             id: roomId
         },
         include: {
-            listing: true
+            property: true
         }
     });
 
-    if (!room || room.listing.userId !== currentUser.id) {
+    if (!room || room.property.ownerId !== currentUser.id) {
         return NextResponse.error();
     }
 
