@@ -58,14 +58,16 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
 
     // Room Deletion
     const handleDeleteRoom = (roomId: string) => {
-        setIsLoading(true);
-        axios.delete(`/api/rooms/${roomId}`)
-            .then(() => {
-                toast.success('Pièce supprimée');
-                router.refresh();
-            })
-            .catch(() => toast.error('Erreur lors de la suppression'))
-            .finally(() => setIsLoading(false));
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette pièce ? Cela supprimera toutes les photos associées.")) {
+            setIsLoading(true);
+            axios.delete(`/api/rooms/${roomId}`)
+                .then(() => {
+                    toast.success('Pièce supprimée');
+                    router.refresh();
+                })
+                .catch(() => toast.error('Erreur lors de la suppression'))
+                .finally(() => setIsLoading(false));
+        }
     };
 
     // Image Upload (to unassigned)

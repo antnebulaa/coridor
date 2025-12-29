@@ -30,9 +30,7 @@ const RegisterModal = () => {
             name: '',
             email: '',
             password: '',
-            phoneNumber: '',
             birthDate: '',
-            address: ''
         },
     });
 
@@ -90,25 +88,10 @@ const RegisterModal = () => {
                 required
             />
             <SoftInput
-                id="phoneNumber"
-                label="Phone Number"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-            />
-            <SoftInput
                 id="birthDate"
                 label="Date of Birth"
                 type="date"
-                disabled={isLoading}
-                register={register}
-                errors={errors}
-                required
-            />
-            <SoftInput
-                id="address"
-                label="Address"
+                className="appearance-none !min-h-[56px] !h-[56px] !max-h-[56px]"
                 disabled={isLoading}
                 register={register}
                 errors={errors}

@@ -8,11 +8,11 @@ import useRentModal from "@/hooks/useRentModal";
 import { Plus } from 'lucide-react';
 
 import { SafeProperty, SafeUser, SafeRentalUnit } from "@/types";
-import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
 import PropertiesListRow from "./components/PropertiesListRow";
 import EmptyState from "@/components/EmptyState";
 import { Button } from '@/components/ui/Button';
+import PageHeader from "@/components/PageHeader";
 
 interface PropertiesClientProps {
     properties: SafeProperty[];
@@ -53,7 +53,6 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
         <Container>
             <PageHeader
                 title="Mes Propriétés"
-                titleClassName="font-medium"
                 subtitle="Gérez l'ensemble de vos biens et leurs annonces associées."
             />
 
@@ -65,11 +64,11 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                     />
                 ) : (
                     properties.map((property) => (
-                        <div key={property.id} className=" bg-white">
+                        <div key={property.id} className="bg-white mb-12">
                             {(isColocation(property) || getTotalListings(property) === 0) && (
                                 <div className="flex justify-between items-start mb-6 border-b pb-4">
                                     <div>
-                                        <h3 className="text-xl font-bold">
+                                        <h3 className="text-xl font-medium">
                                             {[
                                                 (property.address || [property.addressLine1, (property.zipCode ? `${property.zipCode} ${property.city}` : property.city)].filter(Boolean).join(' ')).replace(', France', ''),
                                                 property.building && `Bât. ${property.building}`,
@@ -149,6 +148,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                                                         data={displayMainListing}
                                                         currentUser={currentUser}
                                                         isMainProperty={subListings.length > 0}
+                                                        isColocation={isColocation(property)}
                                                     />
                                                 </div>
                                             )}
@@ -163,6 +163,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                                                         key={listing.id}
                                                         data={listing}
                                                         currentUser={currentUser}
+                                                        isSmall
                                                     />
                                                 </div>
                                             ))}

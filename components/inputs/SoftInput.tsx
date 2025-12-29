@@ -14,7 +14,9 @@ interface SoftInputProps {
     errors?: FieldErrors;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     value?: string;
+
     inputMode?: "text" | "numeric" | "decimal" | "search" | "email" | "tel" | "url" | "none";
+    className?: string;
 }
 
 const SoftInput: React.FC<SoftInputProps> = ({
@@ -28,7 +30,9 @@ const SoftInput: React.FC<SoftInputProps> = ({
     errors,
     onChange,
     value,
+
     inputMode,
+    className,
 }) => {
     return (
         <div className="w-full relative">
@@ -62,15 +66,17 @@ const SoftInput: React.FC<SoftInputProps> = ({
           pt-6
           font-normal
           bg-background
-          border-[1px]
+          border
           rounded-xl
           outline-none
           transition
           disabled:opacity-70
           disabled:cursor-not-allowed
           ${formatPrice ? 'pl-3 pr-9' : 'pl-3'}
-          ${errors?.[id] ? 'border-primary' : 'border-input'}
-          ${errors?.[id] ? 'focus:border-primary' : 'focus:border-foreground'}
+          ${errors?.[id] ? 'border-red-500' : 'border-input'}
+          ${errors?.[id] ? 'focus:border-red-500' : 'focus:border-foreground'}
+
+          ${className}
         `}
             />
             <label
@@ -89,7 +95,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
           peer-placeholder-shown:translate-y-0
           peer-focus:scale-75
           peer-focus:-translate-y-3
-          ${errors?.[id] ? 'text-primary' : 'text-muted-foreground'}
+          ${errors?.[id] ? 'text-red-500' : 'text-muted-foreground'}
           pointer-events-none
         `}
             >

@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { SafeListing } from "@/types";
 import SoftInput from "@/components/inputs/SoftInput";
-import { Button } from "@/components/ui/Button";
+import EditSectionFooter from "./EditSectionFooter";
 
 interface TitleSectionProps {
     listing: SafeListing;
@@ -56,13 +56,11 @@ const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
                 errors={errors}
                 required
             />
-            <div className="flex flex-row justify-end">
-                <Button
-                    disabled={isLoading}
-                    label="Enregistrer"
-                    onClick={handleSubmit(onSubmit)}
-                />
-            </div>
+            <EditSectionFooter
+                disabled={isLoading}
+                label="Enregistrer"
+                onClick={handleSubmit(onSubmit)}
+            />
         </div>
     );
 }

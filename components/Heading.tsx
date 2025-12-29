@@ -1,7 +1,7 @@
 'use client';
 
 interface HeadingProps {
-    title: string;
+    title: React.ReactNode;
     subtitle?: string;
     center?: boolean;
     subtitleClassName?: string;

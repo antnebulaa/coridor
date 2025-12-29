@@ -31,6 +31,7 @@ export async function POST(
     }
 
     // Verify ownership
+    // Verify ownership and get propertyId
     const listing = await prisma.listing.findUnique({
         where: {
             id: listingId,
@@ -39,6 +40,9 @@ export async function POST(
                     ownerId: currentUser.id
                 }
             }
+        },
+        include: {
+            rentalUnit: true
         }
     });
 
@@ -46,8 +50,11 @@ export async function POST(
         return NextResponse.json({ error: "Listing not found or unauthorized" }, { status: 404 });
     }
 
+    const propertyId = listing.rentalUnit.propertyId;
+
     try {
         console.log("Processing visit slots for listing:", listingId);
+        console.log("Property ID:", propertyId);
         console.log("Dates to update:", dates);
         console.log("New slots count:", slots.length);
 
@@ -62,7 +69,7 @@ export async function POST(
 
                 const deleteResult = await tx.visitSlot.deleteMany({
                     where: {
-                        listingId: listingId,
+                        propertyId: propertyId,
                         date: {
                             in: dateObjects
                         }
@@ -76,7 +83,7 @@ export async function POST(
                 console.log("Creating new slots...");
                 const createResult = await tx.visitSlot.createMany({
                     data: slots.map((slot: any) => ({
-                        listingId: listingId,
+                        propertyId: propertyId,
                         date: new Date(slot.date), // Explicitly convert to Date object
                         startTime: slot.startTime,
                         endTime: slot.endTime
@@ -84,7 +91,9 @@ export async function POST(
                 });
                 console.log("Created count:", createResult.count);
             }
-            // 3. Update visit duration if provided
+
+            // 3. Update visit duration - REMOVED: Field does not exist on Listing model
+            /*
             if (visitDuration) {
                 console.log("Updating visit duration to:", visitDuration);
                 await tx.listing.update({
@@ -92,6 +101,7 @@ export async function POST(
                     data: { visitDuration: parseInt(visitDuration) }
                 });
             }
+            */
         });
 
         console.log("Transaction successful");

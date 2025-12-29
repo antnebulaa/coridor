@@ -84,7 +84,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
 
     return (
         <div className="relative">
-            <div className="flex flex-col gap-2 pt-6 md:pt-0 -mx-1 md:mx-0 pb-24 md:pb-0">
+            <div className="flex flex-col gap-2 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0">
                 {routes.map((route) => (
                     <Link
                         key={route.label}

@@ -80,7 +80,7 @@ const WishlistCard: React.FC<WishlistCardProps> = ({
                     )}
                     {!imageUrl && (
                         <div className="absolute inset-0 flex items-center justify-center bg-neutral-200 text-neutral-500">
-                            No items
+                            Aucune annonce
                         </div>
                     )}
                 </div>

@@ -41,7 +41,7 @@ import {
 } from "react-icons/tb";
 
 import { SafeListing } from "@/types";
-import { Button } from "@/components/ui/Button";
+import EditSectionFooter from "./EditSectionFooter";
 import CategoryInput from "@/components/inputs/CategoryInput";
 
 interface AmenitiesSectionProps {
@@ -187,35 +187,11 @@ const AmenitiesSection: React.FC<AmenitiesSectionProps> = ({ listing }) => {
                 </div>
             ))}
 
-            <div className="
-                fixed 
-                bottom-0 
-                left-0 
-                w-full 
-                bg-white 
-                border-t-[1px] 
-                border-neutral-200 
-                p-4 
-                z-50 
-                md:relative 
-                md:bottom-auto 
-                md:left-auto 
-                md:w-auto 
-                md:bg-transparent 
-                md:border-none 
-                md:p-0 
-                md:mt-4 
-                md:flex 
-                md:justify-end
-            ">
-                <div className="w-full md:w-auto">
-                    <Button
-                        disabled={isLoading}
-                        label="Enregistrer"
-                        onClick={onSubmit}
-                    />
-                </div>
-            </div>
+            <EditSectionFooter
+                disabled={isLoading}
+                label="Enregistrer"
+                onClick={onSubmit}
+            />
         </div>
     );
 }

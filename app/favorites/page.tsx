@@ -13,8 +13,8 @@ const FavoritesPage = async () => {
         return (
             <ClientOnly>
                 <EmptyState
-                    title="No wishlists found"
-                    subtitle="Create a wishlist by clicking the heart icon on any listing."
+                    title="Aucune wishlist trouvée"
+                    subtitle="Créez une wishlist en cliquant sur l'icône marque-page sur une annonce."
                 />
             </ClientOnly>
         );

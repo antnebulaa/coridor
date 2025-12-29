@@ -205,10 +205,20 @@ export async function POST(
                         });
                     }
                 }
-            } else if (!propertyId && bedroomCount > 0) {
-                // Auto-create generic rooms if strictly a new property and no manual rooms
-                // This fulfills Phase 4 requirement: Auto-populate physical rooms
-                const count = typeof bedroomCount === 'string' ? parseInt(bedroomCount, 10) : bedroomCount;
+            } else if (!propertyId) {
+                // Auto-create Standard Rooms + Bedrooms
+                const mandatoryRooms = ["Salon", "Cuisine", "Salle de bain"];
+                for (const name of mandatoryRooms) {
+                    await tx.room.create({
+                        data: { name, propertyId: property.id }
+                    });
+                }
+
+                // Create Bedrooms based on roomCount (which is bedroomCount in our context usually, or we use separate field)
+                // Assuming `roomCount` from body refers to bedrooms as per user context usually, or if `bedroomCount` field exists.
+                // The body destructuring has `bedroomCount`. Let's use that if available, else roomCount.
+                const count = bedroomCount ? (typeof bedroomCount === 'string' ? parseInt(bedroomCount, 10) : bedroomCount) : (roomCount ? parseInt(String(roomCount), 10) : 0);
+
                 for (let i = 1; i <= count; i++) {
                     await tx.room.create({
                         data: {

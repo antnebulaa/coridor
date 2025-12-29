@@ -39,7 +39,6 @@ export type SectionType =
     | 'category'
     | 'amenities'
     | 'furniture'
-    | 'availability'
     | 'photos'
     | 'visits'
     | 'lease'
@@ -123,7 +122,6 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         category: 'Type de logement',
         amenities: 'Atouts',
         furniture: 'Équipements',
-        availability: 'Disponibilité',
         photos: 'Gestion des photos',
         visits: 'Visites',
         lease: 'Bail',
@@ -150,8 +148,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                 return <AmenitiesSection listing={listing} />;
             case 'furniture':
                 return <FurnitureSection listing={listing} />;
-            case 'availability':
-                return <div>Availability Form Placeholder</div>;
+
             case 'photos':
                 return <PhotosSection
                     listing={listing}
@@ -185,27 +182,27 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
     return (
         <Container>
-            <div className={`flex items-center gap-4 mb-6 pt-4 ${showContent ? 'hidden md:flex' : ''}`}>
-                <button
-                    onClick={() => router.push('/properties')}
-                    className="
-                        p-2 
-                        rounded-full 
-                        hover:bg-neutral-100 
-                        transition 
-                        cursor-pointer
-                    "
-                >
-                    <ArrowLeft size={24} />
-                </button>
-                <div className="text-2xl font-medium">
-                    Modification d'annonce
-                </div>
-            </div>
-
-            <div className="md:pt-0 grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10">
+            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10 pt-4">
                 {/* Sidebar - Hidden on mobile if content is shown */}
-                <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} pt-4 md:pt-0`}>
+                <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} md:pt-0`}>
+                    <div className="flex items-center gap-4 mb-6">
+                        <button
+                            onClick={() => router.push('/properties')}
+                            className="
+                                p-2 
+                                rounded-full 
+                                hover:bg-neutral-100 
+                                transition 
+                                cursor-pointer
+                            "
+                        >
+                            <ArrowLeft size={24} />
+                        </button>
+                        <div className="text-2xl font-medium">
+                            Modification d'annonce
+                        </div>
+                    </div>
+
                     <EditPropertySidebar
                         activeTab={activeTab}
                         activeSection={activeSection}
@@ -236,20 +233,39 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                             location: listing.addressLine1
                                 ? `${listing.addressLine1}, ${listing.city}`
                                 : listing.city || '',
-                            price: listing.price
-                                ? `${listing.price}€${listing.charges && (listing.charges as any).amount ? ` + ${(listing.charges as any).amount}€ ch.` : ' / mois'}`
-                                : ''
+                            price: (() => {
+                                const rentalUnits = listing.rentalUnit?.property?.rentalUnits || [];
+                                const roomListings = rentalUnits
+                                    .flatMap((unit: any) => (unit.listings || []).map((l: any) => ({ ...l, rentalUnit: unit })))
+                                    .filter((l: any) => l.rentalUnit.type !== 'ENTIRE_PLACE' && l.id !== listing.id);
+
+                                if (roomListings.length > 0) {
+                                    const totalRent = roomListings.reduce((acc: number, l: any) => acc + (l.price || 0), 0);
+                                    const totalCharges = roomListings.reduce((acc: number, l: any) => acc + ((l.charges as any)?.amount || 0), 0);
+                                    return `${totalRent}€${totalCharges > 0 ? ` + ${totalCharges}€ ch.` : ' / mois'}`;
+                                }
+
+                                return listing.price
+                                    ? `${listing.price}€${listing.charges && (listing.charges as any).amount ? ` + ${(listing.charges as any).amount}€ ch.` : ' / mois'}`
+                                    : '';
+                            })()
                         }}
                     />
                 </div>
 
-                {/* Content - Hidden on mobile if content is NOT shown */}
                 <div className={` ${!showContent ? 'hidden md:block' : 'block'}`}>
+                    <div className="hidden md:flex h-10 items-center mb-6">
+                        <h2 className="text-2xl font-medium">
+                            {sectionTitles[activeSection]}
+                        </h2>
+                    </div>
+
                     <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
                         {/* Mobile Header: Back Button (Sticky) */}
                         <div className="
                             md:hidden 
                             sticky 
+                            top-0
                             h-16
                             z-50 
                             bg-white dark:bg-neutral-900
@@ -295,21 +311,16 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                         </div>
 
                         {/* Content Wrapper with Padding - Standardized via PageBody */}
-                        <PageBody padVertical={false} className="px-6 md:px-8 py-6 md:py-8">
+                        <PageBody padVertical={false} className={`px-6 md:px-8 md:py-8 ${activeSection === 'visits' ? 'pt-0 pb-6' : 'py-6'}`}>
                             {/* Mobile Header: Title (Not Sticky) */}
                             {activeSection !== 'photos' && activeSection !== 'visits' && (
                                 <div className="md:hidden mb-6">
-                                    <h2 className="text-2xl font-bold">
+                                    <h2 className="text-2xl font-medium">
                                         {sectionTitles[activeSection]}
                                     </h2>
                                 </div>
                             )}
-                            {/* DEBUG INFO */}
-                            <div className="bg-red-100 p-2 text-xs font-mono mb-4 text-red-800">
-                                DEBUG: isRoom={isRoom ? 'TRUE' : 'FALSE'} <br />
-                                Type: {listing.rentalUnit?.type || 'N/A'} <br />
-                                FacadeType: {(listing as any).rentalUnitType || 'N/A'}
-                            </div>
+
                             {renderContent()}
                         </PageBody>
                     </div>

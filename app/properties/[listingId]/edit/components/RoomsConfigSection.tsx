@@ -2,11 +2,12 @@
 
 import { SafeListing, SafeRentalUnit } from "@/types";
 import { Button } from "@/components/ui/Button";
-import { Plus, BedDouble, BedSingle, Ruler, Home } from "lucide-react";
+import { Plus, BedDouble, BedSingle, Ruler, Home, Pencil } from "lucide-react";
 import Image from "next/image";
 import useRentModal from "@/hooks/useRentModal";
 import { useCallback, useMemo } from "react";
 import PropertiesListRow from "@/app/properties/components/PropertiesListRow";
+import CircleButton from "@/components/ui/CircleButton";
 // Reuse PropertiesListRow for consistency or create a simpler one?
 // User said "on affiche les chambres en liste, avec pareil un bouton ajouté un chambre (on reprend l'idée de la page properties)"
 // So reusing logic similar to PropertiesClient is good.
@@ -71,13 +72,13 @@ const RoomsConfigSection: React.FC<RoomsConfigSectionProps> = ({
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold">Configuration des chambres</h2>
-                <div className="text-gray-500 text-sm">
+                <h2 className="text-xl font-semibold hidden md:block">Configuration des chambres</h2>
+                <div className="text-gray-500 text-sm hidden md:block">
                     Gérez vos chambres, leurs caractéristiques et liez-les à vos annonces.
                 </div>
             </div>
 
-            <div className="flex flex-col border border-neutral-200 rounded-xl overflow-hidden">
+            <div className="flex flex-col md:border md:border-neutral-200 md:rounded-xl md:overflow-hidden">
                 {roomListings.length === 0 && (
                     <div className="p-8 text-center text-neutral-500 bg-neutral-50">
                         Aucune chambre configurée.
@@ -88,7 +89,7 @@ const RoomsConfigSection: React.FC<RoomsConfigSectionProps> = ({
                     <div
                         key={room.id}
                         className="
-                           border-b border-neutral-200 last:border-b-0 p-4 bg-white hover:bg-neutral-50 transition cursor-pointer
+                           border-b border-neutral-200 last:border-b-0 py-4 px-0 md:p-4 bg-white md:hover:bg-neutral-50 transition cursor-pointer
                            flex items-center justify-between
                         "
                         onClick={() => onEditRoom(room)}
@@ -122,9 +123,11 @@ const RoomsConfigSection: React.FC<RoomsConfigSectionProps> = ({
                             </div>
                         </div>
 
-                        <div className="text-sm text-primary font-medium hover:underline">
-                            Modifier
-                        </div>
+                        <CircleButton
+                            icon={Pencil}
+                            onClick={() => onEditRoom(room)}
+                            className="bg-neutral-100 text-neutral-500 hover:bg-neutral-200 w-10 h-10"
+                        />
                     </div>
                 ))}
             </div>

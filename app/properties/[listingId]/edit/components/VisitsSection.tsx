@@ -208,7 +208,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
     return (
         <div className={`flex flex-col md:flex-row rounded-xl overflow-hidden relative ${className || 'h-[calc(100vh-140px)] md:h-[600px]'}`}>
             {/* Calendar Section (Scrollable) */}
-            <div className="flex-1 overflow-y-auto pb-48 md:pb-6 px-0 sm:px-2 md:px-6 scroll-smooth">
+            <div className="flex-1 overflow-y-auto pb-[300px] md:pb-6 px-2 md:px-6 scroll-smooth">
                 {months.map((monthDate, monthIdx) => {
                     const monthStart = startOfMonth(monthDate);
                     const monthEnd = endOfMonth(monthStart);
@@ -218,17 +218,17 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
 
                     return (
                         <div key={monthIdx} className="mb-8">
-                            <h2 className="text-xl font-bold capitalize mb-4 sticky top-0 bg-white py-2 z-10">
+                            <h2 className="text-lg md:text-xl font-medium capitalize mb-4 sticky top-0 bg-white py-2 z-10 text-neutral-900">
                                 {format(monthDate, 'MMMM yyyy', { locale: fr })}
                             </h2>
 
-                            <div className="grid grid-cols-7 gap-2 mb-2 text-center text-sm text-neutral-500">
-                                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
-                                    <div key={day}>{day}</div>
+                            <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2 text-center text-xs md:text-sm text-neutral-500 font-medium">
+                                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
+                                    <div key={i}>{day}</div>
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-7 gap-2">
+                            <div className="grid grid-cols-7 gap-1 md:gap-2">
                                 {calendarDays.map((day, idx) => {
                                     const isSelected = selectedDates.some(d => isSameDay(d, day));
                                     const daySlots = getSlotsForDate(day);
@@ -236,35 +236,34 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                                     const isCurrentMonth = isSameMonth(day, monthDate);
                                     const isPast = isBefore(day, startOfToday());
 
-                                    if (!isCurrentMonth) return <div key={idx} />; // Don't render days from other months to keep grid clean
+                                    if (!isCurrentMonth) return <div key={idx} />;
 
                                     return (
                                         <div
                                             key={idx}
                                             onClick={() => !isPast && toggleDate(day)}
                                             className={`
-                                                aspect-square rounded-xl border p-1 md:p-2 transition relative
+                                                aspect-square rounded-lg md:rounded-xl border p-0.5 md:p-2 transition relative
                                                 flex flex-col items-center justify-center
-                                                ${isPast ? 'opacity-30 bg-neutral-100 cursor-not-allowed' : 'cursor-pointer'}
+                                                ${isPast ? 'opacity-30 bg-neutral-50 cursor-not-allowed' : 'cursor-pointer'}
                                                 ${isSelected
-                                                    ? 'bg-[#002FA7] text-white border-[#002FA7] z-10'
-                                                    : !isPast && 'border-neutral-200 hover:border-neutral-400'
+                                                    ? 'bg-neutral-900 text-white border-neutral-900 z-10 shadow-md'
+                                                    : !isPast && 'border-neutral-200 hover:border-neutral-400 bg-white'
                                                 }
                                                 ${hasSlots && !isSelected && !isPast ? 'bg-neutral-50' : ''}
                                             `}
                                         >
                                             <span className={`
-                                                text-sm font-medium
-                                                ${isToday(day) && !isSelected ? 'bg-black text-white w-6 h-6 rounded-full flex items-center justify-center' : ''}
-                                                ${isToday(day) && isSelected ? 'font-bold' : ''}
+                                                text-sm md:text-base font-medium
+                                                ${isToday(day) && !isSelected ? 'text-indigo-600 font-bold' : ''}
                                             `}>
                                                 {format(day, 'd')}
                                             </span>
 
                                             {hasSlots && (
-                                                <div className="mt-1 flex gap-0.5">
-                                                    <div className="w-1 h-1 rounded-full bg-green-500" />
-                                                    {daySlots.length > 1 && <div className="w-1 h-1 rounded-full bg-green-500" />}
+                                                <div className="mt-0.5 md:mt-1 flex gap-0.5">
+                                                    <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-green-500'}`} />
+                                                    {daySlots.length > 1 && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-green-500'}`} />}
                                                 </div>
                                             )}
                                         </div>
@@ -279,150 +278,135 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
 
             {/* Sidebar / Bottom Panel */}
             <div className={`
-                absolute bottom-4 left-4 right-4 z-20 pointer-events-none flex flex-col gap-3 justify-end
-                md:static md:inset-auto md:w-[350px] md:border-l md:pointer-events-auto md:bg-white md:p-6 md:block md:gap-6 overflow-y-auto
+                fixed bottom-0 left-0 right-0 z-30 flex flex-col bg-white border-t border-neutral-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]
+                md:static md:w-[350px] md:border-t-0 md:border-l md:shadow-none md:h-full
             `}>
-                {/* Block 1: Status / Existing Slots */}
-                <div className={`
-                    pointer-events-auto bg-neutral-900 text-white rounded-3xl p-4 shadow-xl shrink-0 transition-all
-                    md:bg-transparent md:text-black md:shadow-none md:rounded-none md:p-0
-                    ${selectedDates.length === 0 ? 'w-auto mx-auto' : 'w-full'}
-                `}>
-                    {selectedDates.length === 0 ? (
-                        <div className="flex items-center gap-3 justify-center md:justify-start pt-10">
-                            <CalendarIcon size={20} className="text-neutral-400" />
-                            <span className="font-medium text-sm text-neutral-500">Sélectionnez des dates pour commencer</span>
+                {selectedDates.length === 0 ? (
+                    <div className="p-6 flex flex-col items-center justify-center text-center h-full text-neutral-500 pb-10 md:pb-6">
+                        <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
+                            <CalendarIcon size={24} className="text-neutral-400" />
                         </div>
-                    ) : (
-                        <div className="flex flex-col h-full max-h-[20vh] md:max-h-none overflow-hidden">
-                            <h4 className="font-bold mb-2 md:mb-4 text-sm md:text-lg px-2 text-foreground">
-                                <span className="md:hidden">Créneaux existants ({selectedDates.length} dates)</span>
-                                <span className="hidden md:inline">Créneaux existants</span>
-                            </h4>
-                            <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar px-2 max-h-[200px] mb-6">
-                                {selectedDates.flatMap(date => {
-                                    const daySlots = getSlotsForDate(date);
-                                    if (daySlots.length === 0) return null;
-                                    return daySlots.map((slot, idx) => (
-                                        <div key={`${date.toISOString()}-${idx}`} className="flex items-center justify-between p-3 border border-neutral-700 md:border-neutral-200 rounded-xl text-xs md:text-sm bg-neutral-800 md:bg-white">
-                                            <div>
-                                                <p className="font-semibold">{format(date, 'd MMM', { locale: fr })}</p>
-                                                <p className="text-neutral-400 md:text-neutral-500">{slot.startTime} - {slot.endTime}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => handleDeleteSlot(slot)}
-                                                className="text-red-400 hover:text-red-300 md:text-red-500 md:hover:bg-red-50 p-2 rounded-full transition"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    ));
-                                })}
-                                {selectedDates.every(d => getSlotsForDate(d).length === 0) && (
-                                    <p className="text-sm text-neutral-500 italic py-2">Aucun créneau planifié pour cette sélection</p>
-                                )}
+                        <p className="font-medium text-sm">Sélectionnez des dates pour gérer les créneaux</p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col h-full max-h-[50vh] md:max-h-none">
+
+                        {/* Header: Selected Count + Actions */}
+                        <div className="p-4 md:p-6 border-b border-neutral-100 flex justify-between items-center bg-white sticky top-0 z-20">
+                            <div>
+                                <h3 className="font-bold text-neutral-900">
+                                    {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''}
+                                </h3>
+                                <p className="text-xs text-neutral-500 hidden md:block">Gérez les créneaux pour la sélection</p>
                             </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Block 2: Add Slot Controls (Only if dates selected) */}
-                {selectedDates.length > 0 && (
-                    <div className={`
-                        pointer-events-auto bg-neutral-900 text-white rounded-3xl p-4 shadow-xl shrink-0 w-full mt-auto
-                        md:bg-transparent md:text-black md:shadow-none md:rounded-none md:p-0 md:mt-0 flex flex-col gap-4
-                    `}>
-                        <div className="hidden md:block border-t pt-6">
-                            <h3 className="text-lg font-bold mb-1">
-                                {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''} sélectionnée{selectedDates.length > 1 ? 's' : ''}
-                            </h3>
-                            <p className="text-sm text-neutral-500">
-                                Définissez les horaires pour ces dates.
-                            </p>
+                            <button
+                                onClick={() => setSelectedDates([])}
+                                className="text-xs font-medium text-neutral-500 underline"
+                            >
+                                Tout désélectionner
+                            </button>
                         </div>
 
-                        {/* Mobile Header */}
-                        <div className="md:hidden flex justify-between items-center mb-4 px-2">
-                            <span className="font-semibold text-sm">Ajouter un créneau</span>
-                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
 
-                        {/* Duration Control */}
-                        <div className="bg-neutral-100 p-4 rounded-xl flex flex-col gap-2">
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-neutral-700">Durée visite</span>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
-                                        className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm font-bold hover:bg-neutral-50 transition"
-                                    >-</button>
-                                    <span className="font-bold text-sm min-w-[3rem] text-center">{visitDuration} min</span>
-                                    <button
-                                        onClick={() => setVisitDuration(visitDuration + 5)}
-                                        className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm font-bold hover:bg-neutral-50 transition"
-                                    >+</button>
+                            {/* Existing Slots List */}
+                            {selectedDates.some(d => getSlotsForDate(d).length > 0) && (
+                                <div className="space-y-3">
+                                    <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Créneaux existants</h4>
+                                    <div className="space-y-2">
+                                        {selectedDates.flatMap(date => {
+                                            const daySlots = getSlotsForDate(date);
+                                            return daySlots.map((slot, idx) => (
+                                                <div key={`${date.toISOString()}-${idx}`} className="flex items-center justify-between p-3 border border-neutral-200 rounded-xl bg-neutral-50">
+                                                    <div>
+                                                        <p className="font-medium text-sm text-neutral-900">{format(date, 'd MMM', { locale: fr })}</p>
+                                                        <p className="text-xs text-neutral-500">{slot.startTime} - {slot.endTime}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleDeleteSlot(slot)}
+                                                        className="text-neutral-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            ));
+                                        })}
+                                    </div>
                                 </div>
+                            )}
+
+                            {/* Add Slot Form */}
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Ajouter un créneau</h4>
+
+                                <div className="bg-neutral-50 p-3 rounded-xl flex items-center justify-between">
+                                    <span className="text-sm font-medium text-neutral-700">Durée</span>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
+                                            className="w-7 h-7 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center text-sm font-bold hover:border-neutral-400 transition"
+                                        >-</button>
+                                        <span className="font-bold text-sm min-w-12 text-center text-neutral-900">{visitDuration} min</span>
+                                        <button
+                                            onClick={() => setVisitDuration(visitDuration + 5)}
+                                            className="w-7 h-7 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center text-sm font-bold hover:border-neutral-400 transition"
+                                        >+</button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <SoftSelect
+                                        id="startTime"
+                                        label="Début"
+                                        value={startTime}
+                                        onChange={(e) => setStartTime(e.target.value)}
+                                        options={HOURS.map(h => {
+                                            const hourStr = `${h.toString().padStart(2, '0')}:00`;
+                                            const isOccupied = selectedDates.some(date => {
+                                                const daySlots = getSlotsForDate(date);
+                                                return daySlots.some(slot => {
+                                                    const s = parseInt(slot.startTime.split(':')[0]);
+                                                    const e = parseInt(slot.endTime.split(':')[0]);
+                                                    return h >= s && h < e;
+                                                });
+                                            });
+                                            return {
+                                                value: hourStr,
+                                                label: hourStr,
+                                                disabled: isOccupied
+                                            };
+                                        })}
+                                    />
+
+                                    <SoftSelect
+                                        id="endTime"
+                                        label="Fin"
+                                        value={endTime}
+                                        onChange={(e) => setEndTime(e.target.value)}
+                                        options={HOURS.map(h => {
+                                            const hourStr = `${h.toString().padStart(2, '0')}:00`;
+                                            const startH = parseInt(startTime.split(':')[0]);
+
+                                            // Simple validity check
+                                            const isValid = h > startH;
+
+                                            return {
+                                                value: hourStr,
+                                                label: hourStr,
+                                                disabled: !isValid
+                                            };
+                                        })}
+                                    />
+                                </div>
+
+                                <Button
+                                    label="Ajouter"
+                                    onClick={handleAddSlot}
+                                    disabled={isLoading}
+                                    className="w-full"
+                                />
                             </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <SoftSelect
-                                id="startTime"
-                                label="Début"
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                                options={HOURS.map(h => {
-                                    const hourStr = `${h.toString().padStart(2, '0')}:00`;
-                                    const isOccupied = selectedDates.some(date => {
-                                        const daySlots = getSlotsForDate(date);
-                                        return daySlots.some(slot => {
-                                            const s = parseInt(slot.startTime.split(':')[0]);
-                                            const e = parseInt(slot.endTime.split(':')[0]);
-                                            return h >= s && h < e;
-                                        });
-                                    });
-                                    return {
-                                        value: hourStr,
-                                        label: hourStr,
-                                        disabled: isOccupied
-                                    };
-                                })}
-                            />
-
-                            <SoftSelect
-                                id="endTime"
-                                label="Fin"
-                                value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                                options={HOURS.map(h => {
-                                    const hourStr = `${h.toString().padStart(2, '0')}:00`;
-                                    const startH = parseInt(startTime.split(':')[0]);
-
-                                    const isOccupied = selectedDates.some(date => {
-                                        const daySlots = getSlotsForDate(date);
-                                        return daySlots.some(slot => {
-                                            const s = parseInt(slot.startTime.split(':')[0]);
-                                            const e = parseInt(slot.endTime.split(':')[0]);
-                                            return h > s && h <= e;
-                                        });
-                                    });
-
-                                    const isValid = h > startH;
-
-                                    return {
-                                        value: hourStr,
-                                        label: hourStr,
-                                        disabled: !isValid || isOccupied
-                                    };
-                                })}
-                            />
-                        </div>
-
-                        <Button
-                            label="Ajouter le créneau"
-                            onClick={handleAddSlot}
-                            disabled={isLoading}
-
-                        />
                     </div>
                 )}
             </div>

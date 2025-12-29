@@ -402,7 +402,14 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title={isRoom ? "Caractéristiques de la chambre" : "Informations de base"}
+                    title={isRoom ? (
+                        <>
+                            Caractéristiques de <br />
+                            <span className="text-gray-900">{rentModal.editingListing?.rentalUnit?.name || rentModal.editingListing?.title || "la chambre"}</span>
+                        </>
+                    ) : (
+                        "Informations de base"
+                    )}
                     subtitle={isRoom ? "Dites-nous en plus sur cette chambre" : "Quelles sont les caractéristiques ?"}
                 />
 
@@ -609,7 +616,15 @@ const RentModal = () => {
                             title="Chambres"
                             subtitle="Nombre de pièces à dormir"
                             value={bedroomCount}
-                            onChange={(value) => setCustomValue('bedroomCount', value)}
+                            onChange={(value) => {
+                                if (value < bedroomCount) {
+                                    if (window.confirm("Êtes-vous sûr de vouloir supprimer une chambre ? Cela supprimera automatiquement l'album photo associé et les photos qu'il contient.")) {
+                                        setCustomValue('bedroomCount', value);
+                                    }
+                                } else {
+                                    setCustomValue('bedroomCount', value);
+                                }
+                            }}
                         />
                         <hr />
                     </>

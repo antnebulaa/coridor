@@ -8,9 +8,19 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 import Heading from "@/components/Heading";
+import PageHeader from "@/components/PageHeader";
 import SoftInput from "@/components/inputs/SoftInput";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
 import { Button } from "@/components/ui/Button";
+import { AlertCircle } from "lucide-react";
+
+// Helper for status badges
+const StatusBadge = ({ isComplete }: { isComplete: boolean }) => (
+    <div className={`flex items-center gap-1.5 text-sm font-medium ${isComplete ? 'text-green-600' : 'text-neutral-400'}`}>
+        <div className={`w-2 h-2 rounded-full ${isComplete ? 'bg-green-500' : 'bg-red-500'}`} />
+        {isComplete ? 'Renseigné' : 'Obligatoire'}
+    </div>
+);
 
 interface PersonalInfoClientProps {
     currentUser?: SafeUser | null;
@@ -59,6 +69,12 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
         }
     });
 
+    // Check completion status for badges
+    const isIdentityComplete = !!(currentUser?.firstName && currentUser?.lastName && currentUser?.birthDate && currentUser?.birthPlace);
+    const isEmailComplete = !!currentUser?.email;
+    const isPhoneComplete = !!currentUser?.phoneNumber;
+    const isAddressComplete = !!(currentUser?.address && currentUser?.zipCode && currentUser?.city);
+
     // Watch address for Mapbox
     const addressValue = watch('address');
 
@@ -94,35 +110,37 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
 
     return (
         <div className="flex flex-col gap-8 max-w-4xl mx-auto">
-            <div className="flex flex-row items-center justify-between">
-                <Heading
-                    title="Informations personnelles"
-                    subtitle="Mettez à jour vos informations et comment nous pouvons vous joindre."
-                />
-            </div>
-
-            <hr />
+            <PageHeader
+                title="Informations personnelles"
+                subtitle="Mettez à jour vos informations et comment nous pouvons vous joindre."
+            />
 
             {/* BLOCK 1: IDENTITÉ (Nom, Prénom, Naissance) */}
             <div className="flex flex-col gap-4">
                 <div className="flex flex-row justify-between items-start">
                     <div className="flex flex-col gap-1">
-                        <div className="text-lg font-medium dark:text-white">
-                            Identité
+                        <div className="flex items-center gap-3">
+                            <div className="text-lg font-medium dark:text-white">
+                                Identité
+                            </div>
                         </div>
-                        <div className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                        <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
                             {isEditingIdentity ?
                                 'Ces informations doivent correspondre à votre pièce d\'identité.' :
                                 (
                                     <>
-                                        <div className="font-medium text-neutral-800 dark:text-gray-200">
-                                            {currentUser?.firstName || defaultFirstName} {currentUser?.lastName || defaultLastName}
-                                        </div>
-                                        <div>
-                                            {currentUser?.birthDate ?
-                                                `Né(e) le ${new Date(currentUser.birthDate).toLocaleDateString()} à ${currentUser?.birthPlace || '...'}` :
-                                                'Informations de naissance manquantes'
-                                            }
+                                        <StatusBadge isComplete={isIdentityComplete} />
+                                        <div className="flex flex-col gap-1">
+                                            {(currentUser?.firstName && currentUser?.lastName) && (
+                                                <div className="font-medium text-neutral-800 dark:text-gray-200">
+                                                    {currentUser.firstName} {currentUser.lastName}
+                                                </div>
+                                            )}
+                                            {(currentUser?.birthDate && currentUser?.birthPlace) && (
+                                                <div>
+                                                    Né(e) le {new Date(currentUser.birthDate).toLocaleDateString()} à {currentUser.birthPlace}
+                                                </div>
+                                            )}
                                         </div>
                                     </>
                                 )
@@ -161,12 +179,14 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                             errors={errors}
                             disabled={isLoading}
                         />
-                        <SoftInput
-                            id="birthPlace"
+                        <MapboxAddressSelect
                             label="Lieu de naissance"
-                            register={register}
-                            errors={errors}
-                            disabled={isLoading}
+                            value={{ label: watch('birthPlace'), value: '', latlng: [], region: '' }}
+                            onChange={(val) => {
+                                setValue('birthPlace', val.city || val.label, { shouldValidate: true, shouldDirty: true });
+                            }}
+                            searchTypes="place"
+                            customInputClass="px-3 pb-2 pt-6 rounded-xl border-input border-[1px] font-normal bg-background focus:border-foreground"
                         />
                         <div className="md:col-span-2 mt-2">
                             <Button
@@ -185,11 +205,19 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             <div className="flex flex-col gap-4">
                 <div className="flex flex-row justify-between items-start">
                     <div className="flex flex-col gap-1">
-                        <div className="text-lg font-medium dark:text-white">
-                            Adresse e-mail
+                        <div className="flex items-center gap-3">
+                            <div className="text-lg font-medium dark:text-white">
+                                Adresse e-mail
+                            </div>
                         </div>
-                        <div className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
-                            {isEditingEmail ? 'Utilisez une adresse à laquelle vous avez toujours accès.' : currentUser?.email}
+                        <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                            {isEditingEmail ?
+                                'Utilisez une adresse à laquelle vous avez toujours accès.' :
+                                <>
+                                    <StatusBadge isComplete={isEmailComplete} />
+                                    {currentUser?.email && <div>{currentUser.email}</div>}
+                                </>
+                            }
                         </div>
                     </div>
                     <div
@@ -224,13 +252,18 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             <div className="flex flex-col gap-4">
                 <div className="flex flex-row justify-between items-start">
                     <div className="flex flex-col gap-1">
-                        <div className="text-lg font-medium dark:text-white">
-                            Numéro de téléphone
+                        <div className="flex items-center gap-3">
+                            <div className="text-lg font-medium dark:text-white">
+                                Numéro de téléphone
+                            </div>
                         </div>
-                        <div className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                        <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
                             {isEditingPhone ?
                                 'Pour les notifications importantes concernant vos locations.' :
-                                (currentUser?.phoneNumber || 'Ajoutez un numéro de téléphone')
+                                <>
+                                    <StatusBadge isComplete={isPhoneComplete} />
+                                    {currentUser?.phoneNumber && <div>{currentUser.phoneNumber}</div>}
+                                </>
                             }
                         </div>
                     </div>
@@ -270,13 +303,20 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             <div className="flex flex-col gap-4">
                 <div className="flex flex-row justify-between items-start">
                     <div className="flex flex-col gap-1">
-                        <div className="text-lg font-medium dark:text-white">
-                            Adresse de résidence
+                        <div className="flex items-center gap-3">
+                            <div className="text-lg font-medium dark:text-white">
+                                Adresse de résidence
+                            </div>
                         </div>
-                        <div className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                        <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
                             {isEditingAddress ?
                                 'L\'adresse permanente utilisée pour vos contrats.' :
-                                (currentUser?.address || 'Ajoutez une adresse')
+                                <>
+                                    <StatusBadge isComplete={isAddressComplete} />
+                                    {(currentUser?.address && currentUser?.city && currentUser?.zipCode) && (
+                                        <div>{currentUser.address}, {currentUser.zipCode} {currentUser.city}</div>
+                                    )}
+                                </>
                             }
                         </div>
                     </div>

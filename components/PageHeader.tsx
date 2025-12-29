@@ -27,10 +27,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     hideSeparator
 }) => {
     return (
-        <div className="flex flex-col gap-6 pt-4 md:pt-0">
+        <div className="flex flex-col gap-4 pt-4">
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
-                    <div className={cn("text-2xl font-bold", titleClassName)}>
+                    <div className={cn("text-2xl font-medium", titleClassName)}>
                         {title}
                     </div>
                     {subtitle && (

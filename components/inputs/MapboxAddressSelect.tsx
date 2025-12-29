@@ -58,7 +58,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     // Sync input with value prop
     useEffect(() => {
         if (value) {
-            setInputValue(value.label);
+            setInputValue(value.label || '');
         } else {
             setInputValue('');
         }

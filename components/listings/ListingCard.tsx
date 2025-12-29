@@ -227,7 +227,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             )}
 
                             {/* Details Row */}
-                            <div className="flex flex-row items-center gap-2 md:gap-3 text-[18px] text-muted-foreground mt-1 md:mt-2">
+                            <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2">
                                 {data.roomCount === 1 ? (
                                     <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
                                         <span className="font-medium text-foreground">Studio</span>

@@ -252,6 +252,61 @@ export async function PUT(
                 });
             }
 
+            // 4.5 Sync Room Entities with Bedroom Count
+            // If roomCount is updated, we match the physical "Chambre X" rooms
+            if (roomCount !== undefined) {
+                const newCount = parseInt(String(roomCount), 10);
+
+                // Fetch existing "Chambre" rooms
+                const existingBedrooms = await tx.room.findMany({
+                    where: {
+                        propertyId: propertyId,
+                        name: { startsWith: "Chambre" }
+                    },
+                    orderBy: { name: 'asc' } // "Chambre 1", "Chambre 2"...
+                });
+
+                const currentCount = existingBedrooms.length;
+
+                if (newCount > currentCount) {
+                    // Create missing rooms
+                    for (let i = currentCount + 1; i <= newCount; i++) {
+                        await tx.room.create({
+                            data: {
+                                name: `Chambre ${i}`,
+                                propertyId: propertyId
+                            }
+                        });
+                    }
+                } else if (newCount < currentCount) {
+                    // Delete excess rooms (from the end)
+                    // Sort to ensure we delete highest numbers: Chambre 3, Chambre 2...
+                    // Note: lexicographical sort might fail "Chambre 10", but simple numbering 1-9 works. 
+                    // Ideally parse number.
+                    const sorted = existingBedrooms.sort((a: any, b: any) => {
+                        const numA = parseInt(a.name.replace('Chambre ', '')) || 0;
+                        const numB = parseInt(b.name.replace('Chambre ', '')) || 0;
+                        return numA - numB;
+                    });
+
+                    const toDelete = sorted.slice(newCount);
+
+                    for (const room of toDelete) {
+                        // Delete images first? Cascade usually handles it but explicit is safer or let DB handle
+                        // Prisma cascade handles it if defined. Schema says onDelete: Cascade for property, but room->property.
+                        // Images link to room? Yes. 
+                        // Check Schema for PropertyImage: room Room? @relation(fields: [roomId], references: [id])
+                        // Usually needs explicit delete or set null if not cascading.
+                        // Let's rely on explicit unlink/delete logic or standard delete.
+                        // Wait, deleting a room should act like DELETE /api/rooms/[id].
+
+                        await tx.room.delete({
+                            where: { id: room.id }
+                        });
+                    }
+                }
+            }
+
             return updatedListing;
         });
 

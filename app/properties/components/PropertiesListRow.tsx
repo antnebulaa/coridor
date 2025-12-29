@@ -12,12 +12,16 @@ interface PropertiesListRowProps {
     data: SafeListing;
     currentUser?: SafeUser | null;
     isMainProperty?: boolean;
+    isSmall?: boolean;
+    isColocation?: boolean;
 }
 
 const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
     data,
     currentUser,
-    isMainProperty
+    isMainProperty,
+    isSmall,
+    isColocation
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
@@ -58,16 +62,15 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
             "
         >
             {/* Column 1: Annonce (Image + Details) - Reduced width to pull address left */}
-            <div className="flex-[1.5] flex gap-4 items-center min-w-0">
-                <div className="
+            <div className="flex-1 md:flex-[1.5] flex gap-4 items-center min-w-0">
+                <div className={`
                     relative 
-                    w-20 
-                    h-20 
+                    ${isSmall ? 'w-16 h-16' : 'w-20 h-20'}
                     rounded-[19px] 
                     overflow-hidden 
                     shrink-0
                     bg-neutral-200
-                ">
+                `}>
                     {data.images?.[0]?.url && (
                         <Image
                             fill
@@ -96,29 +99,40 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                         )}
                     </span>
 
-                    {/* Mobile Address: Replaces Details - Optimized for distinguishing units */}
+                    {/* Mobile Address/Description */}
                     <div className="md:hidden flex flex-col mt-0.5 min-w-0">
-                        {data.addressLine1 ? (
-                            <>
-                                {/* Primary Identifier: Appt/Building */}
-                                {(data.apartment || data.building) && (
-                                    <span className="text-xs font-semibold text-gray-900 truncate">
-                                        {[
-                                            data.apartment ? `Appt ${data.apartment}` : null,
-                                            data.building ? `Bat ${data.building}` : null
-                                        ].filter(Boolean).join(' • ')}
-                                    </span>
-                                )}
-                                {/* Secondary Identifier: Street */}
-                                <span className={`${(data.apartment || data.building) ? 'text-neutral-500' : 'text-neutral-700'} text-xs truncate`}>
-                                    {data.addressLine1}, {data.zipCode} {data.city}
-                                </span>
-                            </>
-                        ) : (
-                            // Fallback
+                        {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
                             <span className="text-xs text-neutral-500 truncate">
-                                {data.city || location?.label || ''} {data.district || ''}
+                                {data.description || data.city || ''}
                             </span>
+                        ) : (
+                            data.addressLine1 ? (
+                                <>
+                                    {/* Primary Identifier: Appt/Building */}
+                                    {(data.apartment || data.building) && (
+                                        <span className="text-xs font-semibold text-gray-900 truncate">
+                                            {[
+                                                data.apartment ? `Appt ${data.apartment}` : null,
+                                                data.building ? `Bat ${data.building}` : null
+                                            ].filter(Boolean).join(' • ')}
+                                        </span>
+                                    )}
+                                    {/* Secondary Identifier: Street */}
+                                    <span className={`${(data.apartment || data.building) ? 'text-neutral-500' : 'text-neutral-700'} text-xs`}>
+                                        {data.addressLine1}, {data.zipCode} {data.city}
+                                    </span>
+                                    {isColocation && (
+                                        <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full w-fit mt-1">
+                                            COLOCATION
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                // Fallback
+                                <span className="text-xs text-neutral-500">
+                                    {data.city || location?.label || ''} {data.district || ''}
+                                </span>
+                            )
                         )}
                     </div>
                 </div>
@@ -128,8 +142,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
             <div className="hidden md:block flex-[3] text-sm text-neutral-600 min-w-0">
                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
                     <div className="font-medium text-neutral-900 truncate">
-                        {data.rentalUnit.name || 'Chambre'}
-                        {data.description ? ` - ${data.description}` : ''}
+                        {data.description || data.city || 'Chambre'}
                     </div>
                 ) : (
                     data.addressLine1 ? (
@@ -147,6 +160,11 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                                     data.building && `Bat ${data.building}`
                                 ].filter(Boolean).join(', ')}
                             </div>
+                            {isColocation && (
+                                <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full w-fit mt-1">
+                                    COLOCATION
+                                </span>
+                            )}
                         </div>
                     ) : (
                         <>
@@ -168,21 +186,25 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 {data.price}€ /mois
             </div>
 
-            {/* Column 4: Status - 15% (Desktop) / Visible on Mobile */}
-            <div className="flex flex-1 flex-col items-end pl-2">
-                {data.isPublished ? (
-                    <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Publié
-                    </div>
-                ) : (
-                    <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                        En pause
-                    </div>
-                )}
-                {data.statusUpdatedAt && (
-                    <div className="text-[10px] text-neutral-400 mt-1 whitespace-nowrap hidden md:block">
-                        {formatDistanceToNow(new Date(data.statusUpdatedAt), { addSuffix: true, locale: fr })}
-                    </div>
+            {/* Column 4: Status - 15% (Desktop) / Visible on Mobile - HIDDEN FOR COLOCATION MAIN */}
+            <div className="flex flex-col items-end pl-2 md:flex-1">
+                {!isColocation && (
+                    <>
+                        {data.isPublished ? (
+                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Publié
+                            </div>
+                        ) : (
+                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                                En pause
+                            </div>
+                        )}
+                        {data.statusUpdatedAt && (
+                            <div className="text-[10px] text-neutral-400 mt-1 whitespace-nowrap hidden md:block">
+                                {formatDistanceToNow(new Date(data.statusUpdatedAt), { addSuffix: true, locale: fr })}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

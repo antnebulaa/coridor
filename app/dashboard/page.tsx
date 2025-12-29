@@ -4,9 +4,12 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import getDashboardStats from "@/app/actions/getDashboardStats";
 import DashboardClient from "./DashboardClient";
 
+import Link from "next/link";
+import prisma from "@/libs/prismadb";
+import TenantDashboardClient from "./TenantDashboardClient";
+
 const DashboardPage = async () => {
     const currentUser = await getCurrentUser();
-    const stats = await getDashboardStats();
 
     if (!currentUser) {
         return (
@@ -18,6 +21,33 @@ const DashboardPage = async () => {
             </ClientOnly>
         );
     }
+
+    // TENANT MODE
+    if (currentUser.userMode === 'TENANT') {
+        const existingScope = await prisma.tenantCandidateScope.findFirst({
+            where: {
+                creatorUserId: currentUser.id
+            }
+        });
+
+        const safeScope = existingScope ? {
+            ...existingScope,
+            createdAt: existingScope.createdAt.toISOString(),
+            targetMoveInDate: existingScope.targetMoveInDate ? existingScope.targetMoveInDate.toISOString() : null
+        } : null;
+
+        return (
+            <ClientOnly>
+                <TenantDashboardClient
+                    currentUser={currentUser}
+                    rentalProject={safeScope}
+                />
+            </ClientOnly>
+        )
+    }
+
+    // LANDLORD MODE
+    const stats = await getDashboardStats();
 
     if (!stats) {
         return (

@@ -1,5 +1,6 @@
 'use client';
 
+import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
 import StatsCard from "./components/StatsCard";
 import Link from "next/link";
@@ -23,10 +24,10 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
     return (
         <Container>
             <div className="pb-20">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-medium">Dashboard</h1>
-                    <p className="text-muted-foreground mt-2">Overview of your rental business</p>
-                </div>
+                <PageHeader
+                    title="Dashboard"
+                    subtitle="Overview of your rental business"
+                />
 
                 {stats.listingsWithoutSlots && stats.listingsWithoutSlots.length > 0 && (
                     <div className="mb-8 bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-4 items-start">

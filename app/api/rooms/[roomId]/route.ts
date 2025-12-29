@@ -53,5 +53,22 @@ export async function DELETE(
         }
     });
 
+    // Sync Listing Bedroom Count if a "Chambre" is deleted
+    if (deletedRoom.name.startsWith("Chambre")) {
+        // Find listings for this property and decrement their roomCount
+        await prisma.listing.updateMany({
+            where: {
+                rentalUnit: {
+                    propertyId: room.propertyId
+                }
+            },
+            data: {
+                roomCount: {
+                    decrement: 1
+                }
+            }
+        });
+    }
+
     return NextResponse.json(deletedRoom);
 }

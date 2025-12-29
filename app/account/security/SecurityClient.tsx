@@ -2,6 +2,7 @@
 
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
+import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { signOut } from "next-auth/react";
 import { Shield } from "lucide-react";
@@ -14,8 +15,8 @@ const SecurityClient: React.FC<SecurityClientProps> = ({ currentUser }) => {
     return (
         <Container>
             <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
-                    <Heading
+                <div className="mb-0">
+                    <PageHeader
                         title="Connexion et sécurité"
                         subtitle="Gérez vos paramètres de sécurité et votre connexion."
                     />

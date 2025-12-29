@@ -15,6 +15,7 @@ import Modal from "@/components/modals/Modal";
 
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
+import PageHeader from "@/components/PageHeader";
 import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
 import { Button } from "@/components/ui/Button";
@@ -286,24 +287,28 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
     return (
         <Container>
             <div className="max-w-4xl mx-auto">
-                <div className="flex flex-row items-center justify-between mb-8">
-                    <Heading
-                        title="Mon Dossier Locataire"
-                        subtitle="Complétez votre profil pour postuler aux annonces."
-                    />
-                    <Button
-                        label="Télécharger le dossier"
-                        onClick={handleDownloadDossier}
-                        small
-                        variant="outline"
-                    />
-                </div>
+                <PageHeader
+                    title="Mon Dossier Locataire"
+                    subtitle="Complétez votre profil pour postuler aux annonces."
+                    actionControls={
+                        <Button
+                            label="Télécharger le dossier"
+                            onClick={handleDownloadDossier}
+                            small
+                            variant="outline"
+                        />
+                    }
+                />
 
                 <div className="flex flex-col gap-10">
                     {/* DossierFacile Section */}
                     <div className="flex flex-col items-center text-center gap-4 p-8 border border-border rounded-xl bg-secondary/50">
                         <button
-                            onClick={() => signIn('dossier-facile')}
+                            type="button"
+                            onClick={() => {
+                                console.log('Initiating DossierFacile sign in...');
+                                signIn('dossier-facile');
+                            }}
                             className="hover:opacity-90 transition"
                         >
                             <Image

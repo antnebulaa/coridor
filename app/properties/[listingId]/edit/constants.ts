@@ -16,7 +16,6 @@ export const sidebarLinks: Record<TabType, { id: string; label: string }[]> = {
         { id: 'category', label: 'Type de logement' },
         { id: 'amenities', label: 'Atouts' },
         { id: 'furniture', label: 'Équipements' },
-        { id: 'availability', label: 'Disponibilité' },
         { id: 'photos', label: 'Gestion des photos' },
     ],
     location: [

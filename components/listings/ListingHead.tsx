@@ -72,17 +72,36 @@ const ListingHead: React.FC<ListingHeadProps> = ({
         if (!listing) return [{ url: imageSrc }];
 
         if (listing.images && listing.images.length > 0) {
-            return listing.images.map(img => {
-                const room = (listing as any).rooms?.find((r: any) => r.id === img.roomId);
+            const allRooms = (listing as any).rooms || [];
+            const rentalUnit = listing.rentalUnit;
 
-                // DEBUG: Force label visualization
-                const debugLabel = room?.name || (img.roomId ? `ERR: ROOM NOT FOUND` : `UNASSIGNED`);
+            return listing.images.map(img => {
+                let roomName = null;
+
+                // 1. Direct Room Link (Common Areas) -> Album Name = Room Name
+                if (img.roomId) {
+                    const room = allRooms.find((r: any) => r.id === img.roomId);
+                    if (room) roomName = room.name;
+                }
+
+                // 2. Unit Link (Private Areas) -> Trace to Target Room -> Album Name = Room Name
+                if (!roomName && (img as any).rentalUnitId === rentalUnit?.id) {
+                    const targetRoomId = (rentalUnit as any).targetRoomId;
+                    if (targetRoomId) {
+                        const targetRoom = allRooms.find((r: any) => r.id === targetRoomId);
+                        if (targetRoom) roomName = targetRoom.name;
+                    }
+                    // Fallback to unit name if no specific room target (e.g. Studio)
+                    if (!roomName) {
+                        roomName = rentalUnit?.name;
+                    }
+                }
 
                 return {
                     url: img.url,
-                    label: debugLabel
-                }
-            })
+                    label: roomName
+                };
+            });
         }
 
         return [{ url: imageSrc }];

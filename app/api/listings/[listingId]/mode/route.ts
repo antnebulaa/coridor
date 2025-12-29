@@ -70,47 +70,71 @@ export async function POST(
                 });
             }
 
-            // 2. Wake up Rooms OR Create First Room
-            if (roomUnits.length > 0) {
-                // Wake up all existing rooms
-                await prisma.rentalUnit.updateMany({
+            // 2. SYNC: Fetch Physical Rooms (Albumns)
+            const physicalBedrooms = await prisma.room.findMany({
+                where: {
+                    propertyId: property.id,
+                    name: { startsWith: "Chambre" }
+                },
+                orderBy: { name: 'asc' }
+            });
+
+            if (physicalBedrooms.length === 0) {
+                // Should not happen if created correctly, but fallback: create 1
+                const newRoom = await prisma.room.create({
+                    data: { name: "Chambre 1", propertyId: property.id }
+                });
+                physicalBedrooms.push(newRoom);
+            }
+
+            // 3. Ensure RentalUnit exists for each Room
+            for (const room of physicalBedrooms) {
+                // Check if unit exists linked to this targetRoomId
+                let unit = await prisma.rentalUnit.findFirst({
                     where: {
                         propertyId: property.id,
-                        type: RentalUnitType.PRIVATE_ROOM
-                    },
-                    data: { isActive: true }
+                        targetRoomId: room.id
+                    }
                 });
 
-                // If we were on Main Unit, redirect to first room
-                if (listing.rentalUnit.type === RentalUnitType.ENTIRE_PLACE) {
-                    const firstRoom = roomUnits[0];
-                    if (firstRoom.listings && firstRoom.listings.length > 0) {
-                        targetListingId = firstRoom.listings[0].id;
-                    }
+                if (unit) {
+                    // Activate if exists
+                    await prisma.rentalUnit.update({
+                        where: { id: unit.id },
+                        data: { isActive: true }
+                    });
+                } else {
+                    // Create new Unit linked to Room
+                    unit = await prisma.rentalUnit.create({
+                        data: {
+                            name: room.name,
+                            type: RentalUnitType.PRIVATE_ROOM,
+                            propertyId: property.id,
+                            isActive: true,
+                            targetRoomId: room.id, // Strictly link logic
+                        }
+                    });
+
+                    // Create Listing generic for this unit
+                    await prisma.listing.create({
+                        data: {
+                            title: room.name,
+                            description: "Chambre en colocation",
+                            rentalUnitId: unit.id,
+                            price: 0,
+                            status: "DRAFT",
+                            isPublished: false
+                        }
+                    });
                 }
-            } else {
-                // Create First Room
-                const newUnit = await prisma.rentalUnit.create({
-                    data: {
-                        name: "Chambre 1",
-                        type: RentalUnitType.PRIVATE_ROOM,
-                        propertyId: property.id,
-                        isActive: true,
-                    }
-                });
 
-                // Create Listing for this room
-                const newListing = await prisma.listing.create({
-                    data: {
-                        title: "Chambre 1",
-                        description: "Chambre en colocation",
-                        rentalUnitId: newUnit.id,
-                        price: 0,
-                        status: "DRAFT",
-                        isPublished: false
-                    }
-                });
-                targetListingId = newListing.id;
+                // Set focus to the first one found/created
+                if (targetListingId === listingId) {
+                    const firstListing = await prisma.listing.findFirst({
+                        where: { rentalUnitId: unit.id }
+                    });
+                    if (firstListing) targetListingId = firstListing.id;
+                }
             }
         } else {
             // STANDARD MODE ("Logement Entier")

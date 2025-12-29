@@ -1,66 +1,12 @@
 'use client';
 
 import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ListingCardCarouselProps {
     images: { url: string; label?: string }[];
 }
-
-interface CarouselImageProps {
-    image: { url: string; label?: string };
-    priority: boolean;
-}
-
-const CarouselImage: React.FC<CarouselImageProps> = ({ image, priority }) => {
-    const [isLoading, setIsLoading] = useState(true);
-
-    return (
-        <div className="min-w-full h-full relative snap-center bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-            {isLoading && (
-                <div className="absolute inset-0 animate-pulse bg-neutral-300/50 dark:bg-neutral-700/50 z-0" />
-            )}
-            <Image
-                fill
-                alt="Listing"
-                src={image.url}
-                className={`
-                    object-cover 
-                    h-full 
-                    w-full 
-                    transition-opacity 
-                    duration-500 
-                    ease-in-out
-                    ${isLoading ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}
-                `}
-                draggable={false}
-                priority={priority}
-                onLoad={() => setIsLoading(false)}
-            />
-            {image.label && (
-                <div className="
-                     absolute 
-                     bottom-3 
-                     left-3 
-                     bg-white/90 
-                     backdrop-blur-md
-                     text-neutral-900 
-                     px-3 
-                     py-1.5 
-                     rounded-lg 
-                     text-xs 
-                     font-semibold
-                     z-10
-                     shadow-sm
-                     pointer-events-none
-                 ">
-                    {image.label}
-                </div>
-            )}
-        </div>
-    );
-};
 
 const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
     images
@@ -108,12 +54,12 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
 
     if (!images || images.length === 0) {
         return (
-            <div className="relative w-full h-full bg-neutral-100">
+            <div className="relative w-full h-full bg-neutral-100 dark:bg-neutral-900">
                 <Image
                     fill
                     alt="Listing"
                     src="/images/placeholder.svg"
-                    className="object-cover h-full w-full"
+                    className="object-cover h-full w-full opacity-50"
                 />
             </div>
         );
@@ -125,24 +71,69 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
             <div
                 ref={scrollContainerRef}
                 onScroll={handleScroll}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
                 className="
                     flex 
                     w-full 
                     h-full 
-                    overflow-x-scroll 
+                    overflow-x-auto 
                     snap-x 
                     snap-mandatory 
                     scrollbar-hide 
-                    scroll-smooth
                 "
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {images.map((image, index) => (
-                    <CarouselImage
-                        key={image.url}
-                        image={image}
-                        priority={index === 0}
-                    />
+                    <div
+                        key={`${image.url}-${index}`}
+                        className="
+                            min-w-full 
+                            h-full 
+                            relative 
+                            snap-center 
+                            flex-none
+                            bg-neutral-200 
+                            dark:bg-neutral-800 
+                            overflow-hidden
+                        "
+                    >
+                        <Image
+                            fill
+                            alt={`Instance ${index + 1}`}
+                            src={image.url}
+                            className="
+                                object-cover 
+                                h-full 
+                                w-full
+                            "
+                            priority={index === 0}
+                            draggable={false}
+                        />
+
+                        {/* Label Badge */}
+                        {image.label && (
+                            <div className="
+                                absolute 
+                                bottom-3 
+                                left-3 
+                                bg-white/90 
+                                backdrop-blur-md
+                                text-neutral-900 
+                                px-3 
+                                py-1.5 
+                                rounded-lg 
+                                text-xs 
+                                font-semibold
+                                z-10
+                                shadow-sm
+                                pointer-events-none
+                            ">
+                                {image.label}
+                            </div>
+                        )}
+                    </div>
                 ))}
             </div>
 
@@ -169,6 +160,7 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                                 group-hover:opacity-100 
                                 transition 
                                 z-10
+                                shadow-sm
                             "
                         >
                             <ChevronLeft size={20} />
@@ -194,6 +186,7 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                                 group-hover:opacity-100 
                                 transition 
                                 z-10
+                                shadow-sm
                             "
                         >
                             <ChevronRight size={20} />
@@ -201,7 +194,7 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                     )}
 
                     {/* Dots Indicator */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10 pointer-events-none">
                         {images.slice(0, 5).map((_, index) => (
                             <div
                                 key={index}
@@ -217,8 +210,6 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                     </div>
                 </>
             )}
-
-
         </div>
     );
 };

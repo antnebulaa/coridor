@@ -449,6 +449,7 @@ const SearchModal = () => {
 
 
             <MapboxAddressSelect
+                key={isAddingFavorite ? 'fav' : 'search'}
                 value={undefined} // Always empty to allow new selection
                 onChange={handleLocationSelect}
                 placeholder={isAddingFavorite ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail") : "Rechercher un lieu, une gare..."}
@@ -630,12 +631,6 @@ const SearchModal = () => {
                                         setFavoriteTitle('Travail');
                                         setFavoriteIcon('briefcase');
                                     }
-
-                                    // Focus input by clearing any potential existing state if needed, 
-                                    // but MapboxAddressSelect is already autoFocus when rendered/re-rendered?
-                                    // We might need to force focus or scroll to top.
-                                    const input = document.querySelector('input[placeholder="Saisir l\'adresse de votre travail"]');
-                                    if (input) (input as HTMLElement).focus();
                                 }}
                                 className={`flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95 ${isAddingFavorite ? 'border-primary bg-primary/5' : 'border-border'}`}
                             >

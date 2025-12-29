@@ -22,6 +22,7 @@ import useLoginModal from "@/hooks/useLoginModal";
 import ApplicationModal from "../modals/ApplicationModal";
 import { useCallback } from "react";
 import ListingMobileFooter from "./ListingMobileFooter";
+import IncompleteProfileModal from "../modals/IncompleteProfileModal";
 
 const MapComponent = dynamic(() => import('../Map'), {
     ssr: false
@@ -41,12 +42,21 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
     const { getByValue } = useCountries();
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+    const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
     const loginModal = useLoginModal();
 
     const onApply = useCallback(() => {
         if (!currentUser) {
             return loginModal.onOpen();
         }
+
+        // Check if profile is complete (basic check: jobType OR netSalary)
+        const isProfileComplete = !!(currentUser.tenantProfile?.jobType || currentUser.tenantProfile?.netSalary);
+
+        if (!isProfileComplete) {
+            return setIsIncompleteProfileModalOpen(true);
+        }
+
         setIsApplicationModalOpen(true);
     }, [currentUser, loginModal]);
 
@@ -355,6 +365,11 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 currentUser={currentUser}
             />
 
+            <IncompleteProfileModal
+                isOpen={isIncompleteProfileModalOpen}
+                onClose={() => setIsIncompleteProfileModalOpen(false)}
+            />
+
             <ListingMobileFooter
                 listing={listing}
                 onApply={onApply}
@@ -370,11 +385,20 @@ const ApplyButton: React.FC<{ listing: SafeListing, currentUser?: SafeUser | nul
 }) => {
     const loginModal = useLoginModal();
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+    const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
 
     const onApply = useCallback(() => {
         if (!currentUser) {
             return loginModal.onOpen();
         }
+
+        // Check if profile is complete (basic check: jobType OR netSalary)
+        const isProfileComplete = !!(currentUser.tenantProfile?.jobType || currentUser.tenantProfile?.netSalary);
+
+        if (!isProfileComplete) {
+            return setIsIncompleteProfileModalOpen(true);
+        }
+
         setIsApplicationModalOpen(true);
     }, [currentUser, loginModal]);
 
@@ -389,6 +413,10 @@ const ApplyButton: React.FC<{ listing: SafeListing, currentUser?: SafeUser | nul
                 onClose={() => setIsApplicationModalOpen(false)}
                 listing={listing}
                 currentUser={currentUser}
+            />
+            <IncompleteProfileModal
+                isOpen={isIncompleteProfileModalOpen}
+                onClose={() => setIsIncompleteProfileModalOpen(false)}
             />
         </>
     );

@@ -2,7 +2,7 @@
 
 import { AiOutlineMenu } from "react-icons/ai";
 import { IoSettingsOutline, IoLogOutOutline, IoHeartOutline, IoKeyOutline, IoQrCodeOutline, IoPeopleOutline } from "react-icons/io5";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, LayoutDashboard } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Avatar from "../Avatar";
@@ -180,6 +180,14 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
                                 {/* Menu Items */}
                                 <div className="flex flex-col p-2">
+                                    <div
+                                        onClick={() => router.push('/dashboard')}
+                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                    >
+                                        <LayoutDashboard size={20} className="text-muted-foreground" strokeWidth={2} />
+                                        <span>Tableau de bord</span>
+                                    </div>
+
                                     <div
                                         onClick={() => router.push('/inbox')}
                                         className="flex items-center justify-between px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"

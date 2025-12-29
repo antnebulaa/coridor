@@ -8,7 +8,11 @@ import { useRouter } from "next/navigation";
 import { Euro, Info, AlertTriangle, CheckCircle } from "lucide-react";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
+
 import { calculateRentControl } from "./rentControlUtils";
+import PriceAssistantModal from "./PriceAssistantModal";
+import EditSectionFooter from "./EditSectionFooter";
+import { Wand2 } from "lucide-react";
 
 interface PriceSectionProps {
     listing: SafeListing;
@@ -18,6 +22,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [rentControlData, setRentControlData] = useState<any>(null);
+    const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
     // Logic for Colocation / Rooms
     const property = listing.rentalUnit?.property;
@@ -152,6 +157,13 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const gaugeStatus = getGaugeStatus();
     const percentage = rentControlData?.maxRent ? Math.min((price / (rentControlData.maxRent * 1.2)) * 100, 100) : 0;
 
+    const handleApplyPrices = (newPrices: { index: number; price: number }[]) => {
+        newPrices.forEach(({ index, price }) => {
+            setValue(`roomPrices.${index}.price`, price, { shouldDirty: true });
+        });
+        toast.success("Prix appliqués !");
+    };
+
     if (isColocation) {
         return (
             <div className="flex flex-col gap-8 pb-28 md:pb-0">
@@ -160,6 +172,16 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                     <p className="text-neutral-500 font-light">
                         Définissez le loyer et les charges pour chaque chambre individuellement.
                     </p>
+                </div>
+
+                <div className="flex justify-start">
+                    <Button
+                        disabled={isLoading}
+                        label="Assistant de Prix"
+                        onClick={() => setIsAssistantOpen(true)}
+                        icon={Wand2}
+                        className="rounded-full bg-neutral-900 text-white hover:bg-neutral-800 border-none shadow-md px-6 h-[42px] w-auto text-sm font-medium whitespace-nowrap"
+                    />
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -258,9 +280,24 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                         />
                     </div>
                 </div>
+
+                <PriceAssistantModal
+                    isOpen={isAssistantOpen}
+                    onClose={() => setIsAssistantOpen(false)}
+                    rooms={rooms.map((r: any, i: number) => ({
+                        name: r.name,
+                        surface: r.surface,
+                        currentPrice: roomPrices[i]?.price,
+                        currentCharges: roomPrices[i]?.charges,
+                        description: roomPrices[i]?.description
+                    }))}
+                    onApply={handleApplyPrices}
+                />
             </div>
         );
     }
+
+
 
     return (
         <div className="flex flex-col gap-8 pb-28 md:pb-0">
@@ -459,35 +496,11 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 </div>
             )}
 
-            <div className="
-                fixed 
-                bottom-0 
-                left-0 
-                w-full 
-                bg-white 
-                border-t 
-                border-neutral-200 
-                p-4 
-                z-50 
-                md:relative 
-                md:bottom-auto 
-                md:left-auto 
-                md:w-auto 
-                md:bg-transparent 
-                md:border-none 
-                md:p-0 
-                md:mt-4 
-                md:flex 
-                md:justify-end
-            ">
-                <div className="w-full md:w-auto">
-                    <Button
-                        disabled={isLoading}
-                        label="Enregistrer"
-                        onClick={handleSubmit(onSubmit)}
-                    />
-                </div>
-            </div>
+            <EditSectionFooter
+                disabled={isLoading}
+                label="Enregistrer"
+                onClick={handleSubmit(onSubmit)}
+            />
         </div>
     );
 }

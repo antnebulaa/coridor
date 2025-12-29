@@ -22,68 +22,24 @@ export async function GET(request: Request) {
 
         let query: any = {};
 
-        if (userId) {
-            query.userId = userId;
-        }
-
-        if (category) {
-            const categories = category.split(',');
-            if (categories.length > 0) {
-                query.category = { in: categories };
-            }
-        }
-
+        // 1. Direct Listing Fields
         if (roomCount) {
-            query.roomCount = {
-                gte: +roomCount
-            }
+            query.roomCount = { gte: +roomCount };
         }
 
         if (guestCount) {
-            query.guestCount = {
-                gte: +guestCount
-            }
+            query.guestCount = { gte: +guestCount };
         }
 
         if (bathroomCount) {
-            query.bathroomCount = {
-                gte: +bathroomCount
-            }
-        }
-
-        if (locationValue) {
-            query.locationValue = locationValue;
+            query.bathroomCount = { gte: +bathroomCount };
         }
 
         if (minPrice && maxPrice) {
             query.price = {
                 gte: +minPrice,
                 lte: +maxPrice
-            }
-        }
-
-        if (minSurface && maxSurface) {
-            query.surface = {
-                gte: +minSurface,
-                lte: +maxSurface
-            }
-        }
-
-        if (cities) {
-            const citiesList = cities.split(',');
-            if (citiesList.length > 0) {
-                query.OR = citiesList.map((c: string) => ({
-                    city: {
-                        contains: c,
-                        mode: 'insensitive'
-                    }
-                }));
-            }
-        } else if (city) {
-            query.city = {
-                contains: city,
-                mode: 'insensitive'
-            }
+            };
         }
 
         if (startDate && endDate) {
@@ -91,19 +47,60 @@ export async function GET(request: Request) {
                 reservations: {
                     some: {
                         OR: [
-                            {
-                                endDate: { gte: startDate },
-                                startDate: { lte: startDate }
-                            },
-                            {
-                                startDate: { lte: endDate },
-                                endDate: { gte: endDate }
-                            }
+                            { endDate: { gte: startDate }, startDate: { lte: startDate } },
+                            { startDate: { lte: endDate }, endDate: { gte: endDate } }
                         ]
                     }
                 }
+            };
+        }
+
+        // 2. RentalUnit Fields (Surface)
+        const rentalUnitQuery: any = {
+            isActive: true
+        };
+
+        if (minSurface && maxSurface) {
+            rentalUnitQuery.surface = {
+                gte: +minSurface,
+                lte: +maxSurface
+            };
+        }
+
+        // 3. Property Fields (Location, Category, Owner)
+        const propertyQuery: any = {};
+
+        if (userId) {
+            propertyQuery.ownerId = userId;
+        }
+
+        if (category) {
+            const categories = category.split(',');
+            if (categories.length > 0) {
+                propertyQuery.category = { in: categories };
             }
         }
+
+        if (locationValue) {
+            propertyQuery.country = locationValue;
+        }
+
+        if (cities) {
+            const citiesList = cities.split(',');
+            if (citiesList.length > 0) {
+                propertyQuery.OR = citiesList.map((c: string) => ({
+                    city: { contains: c, mode: 'insensitive' }
+                }));
+            }
+        } else if (city) {
+            propertyQuery.city = { contains: city, mode: 'insensitive' };
+        }
+
+        // Combine Queries
+        query.rentalUnit = {
+            ...rentalUnitQuery,
+            property: propertyQuery
+        };
 
         const count = await prisma.listing.count({
             where: query

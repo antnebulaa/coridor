@@ -4,8 +4,10 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import SoftSelect from "@/components/inputs/SoftSelect"; // Using SoftSelect
+import SoftSelect from "@/components/inputs/SoftSelect";
+import SoftInput from "@/components/inputs/SoftInput";
 import Heading from "@/components/Heading";
+import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
 import Counter from "@/components/inputs/Counter";
 
@@ -80,8 +82,8 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
     return (
         <Container>
             <div className="max-w-5xl mx-auto">
-                <div className="flex flex-col gap-8">
-                    <Heading
+                <div className="flex flex-col">
+                    <PageHeader
                         title="Mon projet de location"
                         subtitle="Dites-nous en plus sur votre recherche"
                     />
@@ -116,53 +118,15 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
                             disabled={isLoading}
                         />
 
-                        <div className="w-full relative">
-                            <input
-                                type="date"
-                                disabled={isLoading}
-                                value={targetMoveInDate}
-                                onChange={(e) => setTargetMoveInDate(e.target.value)}
-                                className="
-                                    peer
-                                    w-full
-                                    p-4
-                                    pt-6
-                                    font-light
-                                    bg-white
-                                    dark:bg-neutral-900
-                                    text-foreground
-                                    border
-                                    border-neutral-300
-                                    dark:border-neutral-700
-                                    rounded-xl
-                                    outline-none
-                                    focus:border-black
-                                    dark:focus:border-neutral-400
-                                    transition
-                                    disabled:opacity-70
-                                    disabled:cursor-not-allowed
-                                    [color-scheme:light] dark:[color-scheme:dark]
-                                "
-                            />
-                            <label className="
-                                absolute
-                                text-sm
-                                duration-150
-                                transform
-                                -translate-y-3
-                                top-5
-                                z-10
-                                origin-left
-                                left-4
-                                peer-placeholder-shown:scale-100
-                                peer-placeholder-shown:translate-y-0
-                                peer-focus:scale-75
-                                peer-focus:-translate-y-4
-                                text-zinc-400
-                            ">
-                                Date d'emménagement souhaitée
-                            </label>
-                        </div>
+                        <SoftInput
+                            id="targetMoveInDate"
+                            label="Date d'emménagement souhaitée"
+                            type="date"
+                            disabled={isLoading}
+                            value={targetMoveInDate}
+                            onChange={(e) => setTargetMoveInDate(e.target.value)}
+                            className="appearance-none !min-h-[56px] !h-[56px] !max-h-[56px]"
+                        />
 
                         <hr />
 
@@ -187,7 +151,7 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
                                 cursor-pointer 
                                 hover:bg-primary-hover 
                                 transition 
-                                font-bold
+                                font-medium
                             "
                         >
                             {isLoading ? 'Enregistrement...' : 'Enregistrer mon projet'}

@@ -7,6 +7,7 @@ import axios from "axios";
 import { SafeUser } from "@/types";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
+import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/Button";
 import CommutePreferences from "@/components/profile/CommutePreferences";
 
@@ -41,8 +42,8 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
 
     return (
         <Container>
-            <div className="max-w-2xl mx-auto pt-24 pb-10">
-                <Heading
+            <div className="max-w-2xl mx-auto pb-10">
+                <PageHeader
                     title="Global Preferences"
                     subtitle="Manage your global settings for the application."
                 />

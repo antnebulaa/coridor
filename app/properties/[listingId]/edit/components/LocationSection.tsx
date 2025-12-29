@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 
 import { SafeListing } from "@/types";
-import { Button } from "@/components/ui/Button";
+import EditSectionFooter from "./EditSectionFooter";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
 import Heading from "@/components/Heading";
 import SoftInput from "@/components/inputs/SoftInput";
@@ -106,7 +106,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             <div className="relative z-20">
                 <MapboxAddressSelect
                     value={{
-                        label: locationValue || addressLine1 || '',
+                        label: addressLine1 || locationValue || '',
                         value: '',
                         latlng: [latitude, longitude],
                         region: '',
@@ -114,7 +114,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                         country: country
                     }}
                     onChange={onLocationSelect}
-                    label="Adresse postale"
+                    label="Adresse"
                     customInputClass="px-3 pb-2 pt-6 rounded-xl border-input border-[1px] font-normal bg-background focus:border-foreground"
                 />
             </div>
@@ -158,13 +158,11 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                 <Map center={latlng as number[]} />
             </div>
 
-            <div className="flex flex-row justify-end">
-                <Button
-                    disabled={isLoading}
-                    label="Enregistrer"
-                    onClick={handleSubmit(onSubmit)}
-                />
-            </div>
+            <EditSectionFooter
+                disabled={isLoading}
+                label="Enregistrer"
+                onClick={handleSubmit(onSubmit)}
+            />
         </div>
     );
 }

@@ -28,15 +28,15 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
     }, []);
 
     const onDelete = useCallback((id: string) => {
-        if (confirm("Are you sure you want to delete this wishlist?")) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette wishlist ?")) {
             setDeletingId(id);
             axios.delete(`/api/wishlists/${id}`)
                 .then(() => {
-                    toast.success('Wishlist deleted');
+                    toast.success('Wishlist supprimée');
                     router.refresh();
                 })
                 .catch((error) => {
-                    toast.error('Something went wrong.');
+                    toast.error('Une erreur s\'est produite.');
                 })
                 .finally(() => {
                     setDeletingId('');

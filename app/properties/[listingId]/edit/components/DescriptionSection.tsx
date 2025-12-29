@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import SoftTextArea from "@/components/inputs/SoftTextArea";
+import EditSectionFooter from "./EditSectionFooter";
 
 interface DescriptionSectionProps {
     listing: SafeListing;
@@ -64,13 +65,11 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ listing }) => {
                 maxLength={1000}
                 watchValue={descriptionValue}
             />
-            <div className="flex flex-row justify-end">
-                <Button
-                    disabled={isLoading}
-                    label="Enregistrer"
-                    onClick={handleSubmit(onSubmit)}
-                />
-            </div>
+            <EditSectionFooter
+                disabled={isLoading}
+                label="Enregistrer"
+                onClick={handleSubmit(onSubmit)}
+            />
         </div>
     );
 }

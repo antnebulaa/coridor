@@ -14,6 +14,7 @@ import ListingHead from "@/components/listings/ListingHead";
 import ListingInfo from "@/components/listings/ListingInfo";
 import { Button } from "@/components/ui/Button";
 import ApplicationModal from "@/components/modals/ApplicationModal";
+import IncompleteProfileModal from "@/components/modals/IncompleteProfileModal";
 import ListingMobileFooter from "@/components/listings/ListingMobileFooter";
 
 interface ListingClientProps {
@@ -39,6 +40,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
 
     const [isLoading, setIsLoading] = useState(false);
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+    const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
 
     const onContactHost = useCallback(() => {
         if (!currentUser) {
@@ -66,6 +68,14 @@ const ListingClient: React.FC<ListingClientProps> = ({
         if (!currentUser) {
             return loginModal.onOpen();
         }
+
+        // Check if profile is complete (basic check: jobType OR netSalary)
+        const isProfileComplete = !!(currentUser.tenantProfile?.jobType || currentUser.tenantProfile?.netSalary);
+
+        if (!isProfileComplete) {
+            return setIsIncompleteProfileModalOpen(true);
+        }
+
         setIsApplicationModalOpen(true);
     }, [currentUser, loginModal]);
 
@@ -132,6 +142,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 onClose={() => setIsApplicationModalOpen(false)}
                 listing={listing}
                 currentUser={currentUser}
+            />
+            <IncompleteProfileModal
+                isOpen={isIncompleteProfileModalOpen}
+                onClose={() => setIsIncompleteProfileModalOpen(false)}
             />
             <ListingMobileFooter
                 listing={listing}

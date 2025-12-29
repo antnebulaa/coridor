@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import Counter from "@/components/inputs/Counter";
 import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
+import EditSectionFooter from "./EditSectionFooter";
 
 interface CategorySectionProps {
     listing: SafeListing;
@@ -137,7 +138,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
     }
 
     return (
-        <div className="flex flex-col gap-8 pb-28 md:pb-0">
+        <div className="flex flex-col gap-8 pb-28 md:pb-24">
             {/* Type de bien */}
             {!isRoom && (
                 <div className="flex flex-col gap-2">
@@ -375,15 +376,29 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
 
             {/* Année construction */}
             {/* Année construction */}
-            <SoftInput
+            <SoftSelect
                 id="buildYear"
                 label="Année de construction"
-                type="number"
-                disabled={isLoading}
-                value={buildYear ?? ''}
+                value={
+                    buildYear
+                        ? buildYear <= 1945 ? "1945"
+                            : buildYear <= 1970 ? "1960"
+                                : buildYear <= 1990 ? "1980"
+                                    : "2000"
+                        : ""
+                }
                 onChange={(e) => setCustomValue('buildYear', e.target.value)}
-                errors={errors}
+                disabled={isLoading}
+                options={[
+                    { value: "1945", label: "Avant 1946" },
+                    { value: "1960", label: "1946 - 1970" },
+                    { value: "1980", label: "1971 - 1990" },
+                    { value: "2000", label: "Après 1990" }
+                ]}
             />
+            <div className="text-xs text-neutral-500 mt-[-24px] mb-4">
+                Si vous ne connaissez pas la période de construction, vous pouvez la trouver <a href="https://gorenove.fr/adresse" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">ici</a>.
+            </div>
 
             <hr />
 
@@ -497,35 +512,11 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 />
             </div>
 
-            <div className="
-                fixed 
-                bottom-0 
-                left-0 
-                w-full 
-                bg-white 
-                border-t-[1px] 
-                border-neutral-200 
-                p-4 
-                z-50 
-                md:relative 
-                md:bottom-auto 
-                md:left-auto 
-                md:w-auto 
-                md:bg-transparent 
-                md:border-none 
-                md:p-0 
-                md:mt-4 
-                md:flex 
-                md:justify-end
-            ">
-                <div className="w-full md:w-auto">
-                    <Button
-                        disabled={isLoading}
-                        label="Enregistrer"
-                        onClick={handleSubmit(onSubmit)}
-                    />
-                </div>
-            </div>
+            <EditSectionFooter
+                disabled={isLoading}
+                label="Enregistrer"
+                onClick={handleSubmit(onSubmit)}
+            />
         </div>
     );
 }

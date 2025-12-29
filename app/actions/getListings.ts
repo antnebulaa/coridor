@@ -173,7 +173,9 @@ export default async function getListings(
             };
         }
 
-        const rentalUnitQuery: any = {};
+        const rentalUnitQuery: any = {
+            isActive: true
+        };
 
         if (roomCount) {
             query.roomCount = { gte: +roomCount };

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Check } from "lucide-react";
+import EditSectionFooter from "./EditSectionFooter";
 
 interface FurnitureSectionProps {
     listing: SafeListing & { furniture?: any };
@@ -185,15 +186,11 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
                 </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t">
-                <div className="w-full md:w-auto">
-                    <Button
-                        label={isLoading ? "Sauvegarde..." : "Enregistrer"}
-                        onClick={onSave}
-                        disabled={isLoading}
-                    />
-                </div>
-            </div>
+            <EditSectionFooter
+                label={isLoading ? "Sauvegarde..." : "Enregistrer"}
+                onClick={onSave}
+                disabled={isLoading}
+            />
         </div>
     );
 }
