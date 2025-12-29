@@ -20,6 +20,7 @@ interface ModalProps {
     noBodyPadding?: boolean;
     widthClass?: string;
     hideHeader?: boolean;
+    skipTranslateAnimation?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -37,7 +38,8 @@ const Modal: React.FC<ModalProps> = ({
     widthClass,
     transparentHeader,
     noBodyPadding,
-    hideHeader
+    hideHeader,
+    skipTranslateAnimation
 }) => {
     const [showModal, setShowModal] = useState(false);
 
@@ -206,9 +208,9 @@ const Modal: React.FC<ModalProps> = ({
                             transition
                             duration-300
                             ease-out
-                            h-[100dvh]
+                            h-full
                             md:h-auto
-                            ${showModal ? 'translate-y-0' : 'translate-y-full'}
+                            ${!skipTranslateAnimation ? (showModal ? 'translate-y-0' : 'translate-y-full') : ''}
                             ${showModal ? 'opacity-100' : 'opacity-0'}
                             ${isDragging ? 'transition-none' : ''} 
                         `}

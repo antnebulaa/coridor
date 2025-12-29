@@ -94,14 +94,7 @@ const SearchModal = () => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
 
     // Responsive autoFocus
-    const [isDesktop, setIsDesktop] = useState(false);
-
-    useEffect(() => {
-        setIsDesktop(window.innerWidth > 768);
-        const handleResize = () => setIsDesktop(window.innerWidth > 768);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    // Responsive check removed as autoFocus is now global per user request
 
 
     useEffect(() => {
@@ -455,9 +448,10 @@ const SearchModal = () => {
                 placeholder={isAddingFavorite ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail") : "Rechercher un lieu, une gare..."}
                 searchTypes={isAddingFavorite ? "address,poi" : undefined}
                 limitCountry="fr"
-                autoFocus={isDesktop}
+                autoFocus={true}
                 clearOnSelect
                 renderAsList={true}
+                customInputClass="!text-3xl !font-medium"
             />
 
             {/* Cancel Button for Add Favorite Mode */}
@@ -795,14 +789,16 @@ const SearchModal = () => {
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
                     <div className="text-xl font-semibold">{tempLocation?.label.split(',')[0]}</div>
-                    <div className="text-muted-foreground text-sm">{tempLocation?.label}</div>
+                    <div className="text-xl font-semibold">
+                        {tempLocation?.label.split(',').slice(1).join(',').trim()}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                     {isEditingTitle ? (
                         <div className="flex items-center gap-2 w-full">
                             <input
-                                className="text-2xl font-bold text-primary bg-transparent border-b border-primary focus:outline-none w-full"
+                                className="text-4xl font-bold text-primary bg-transparent border-b border-primary focus:outline-none w-full"
                                 value={favoriteTitle}
                                 onChange={(e) => setFavoriteTitle(e.target.value)}
                                 onBlur={() => setIsEditingTitle(false)}
@@ -811,7 +807,7 @@ const SearchModal = () => {
                         </div>
                     ) : (
                         <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setIsEditingTitle(true)}>
-                            <span className="text-2xl font-bold text-primary">{favoriteTitle}</span>
+                            <span className="text-4xl font-bold text-primary">{favoriteTitle}</span>
                             <Pencil size={18} className="text-muted-foreground group-hover:text-primary transition" />
                         </div>
                     )}
@@ -862,6 +858,7 @@ const SearchModal = () => {
             secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
             body={bodyContent}
             hideHeader={true}
+            skipTranslateAnimation={true}
         />
     );
 };

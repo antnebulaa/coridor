@@ -19,7 +19,7 @@ const WishlistCard: React.FC<WishlistCardProps> = ({
 }) => {
     const router = useRouter();
     const firstListing = data.listings[0];
-    const imageUrl = firstListing?.images?.[0]?.url;
+    const imageUrl = firstListing?.imageSrc;
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();
