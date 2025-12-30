@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
+import ReactDOM from 'react-dom';
 
 interface ModalProps {
     isOpen?: boolean;
@@ -141,10 +142,13 @@ const Modal: React.FC<ModalProps> = ({
         return null;
     }
 
+    // Portal check for SSR
+    if (typeof window === 'undefined') return null;
+
     // Opacity calculation for "FERMER"
     const fermerOpacity = Math.min(translateY / 150, 1);
 
-    return (
+    const modalContent = (
         <>
             <div
                 onClick={handleClose}
@@ -158,7 +162,7 @@ const Modal: React.FC<ModalProps> = ({
                     md:overflow-y-auto 
                     fixed
                     inset-0 
-                    z-10000 
+                    z-[9999] 
                     outline-none 
                     focus:outline-none
                     transition
@@ -215,7 +219,7 @@ const Modal: React.FC<ModalProps> = ({
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-background outline-none focus:outline-none">
+                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none">
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div
@@ -302,6 +306,8 @@ const Modal: React.FC<ModalProps> = ({
             </div >
         </>
     );
+
+    return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default Modal;

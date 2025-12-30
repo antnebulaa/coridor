@@ -93,8 +93,15 @@ const SearchModal = () => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-    // Responsive autoFocus
-    // Responsive check removed as autoFocus is now global per user request
+    // Responsive check for placeholder
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        setIsMobile(window.innerWidth < 768);
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
 
     useEffect(() => {
@@ -445,7 +452,10 @@ const SearchModal = () => {
                 key={isAddingFavorite ? 'fav' : 'search'}
                 value={undefined} // Always empty to allow new selection
                 onChange={handleLocationSelect}
-                placeholder={isAddingFavorite ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail") : "Rechercher un lieu, une gare..."}
+                placeholder={isAddingFavorite
+                    ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail")
+                    : (locations.length > 0 ? "Saisir un autre lieu" : (isMobile ? "Saisir un lieu" : "Saisir un ou plusieurs lieux"))
+                }
                 searchTypes={isAddingFavorite ? "address,poi" : undefined}
                 limitCountry="fr"
                 autoFocus={true}

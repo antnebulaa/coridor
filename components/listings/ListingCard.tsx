@@ -118,7 +118,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-[20px] p-2 hover:bg-secondary transition border border-transparent hover:border-border">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-[20px] p-2 hover:bg-secondary transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Desktop */}
                     <div className="
                         w-full h-[200px]
@@ -155,10 +155,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <div className="flex flex-col gap-1">
                                 <div className="flex flex-col items-start whitespace-nowrap">
                                     <div className="font-semibold text-[26px] md:text-[22px] text-foreground leading-tight">
-                                        {price}€<span className="md:hidden text-muted-foreground font-semibold"> CC</span>
-                                    </div>
-                                    <div className="hidden md:block text-muted-foreground text-xs font-normal">
-                                        charges comprises
+                                        {price}€<span className="text-muted-foreground font-semibold"> CC</span>
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
