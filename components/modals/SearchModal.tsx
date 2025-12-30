@@ -611,7 +611,7 @@ const SearchModal = () => {
                         <>
                             <div
                                 onClick={() => setStep(STEPS.COMMUTE)}
-                                className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95"
+                                className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95 animate-slide-up"
                             >
                                 <div className="flex items-center gap-3">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -636,7 +636,7 @@ const SearchModal = () => {
                                         setFavoriteIcon('briefcase');
                                     }
                                 }}
-                                className={`flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95 ${isAddingFavorite ? 'border-primary bg-primary/5' : 'border-border'}`}
+                                className={`flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95 animate-slide-up stagger-1 ${isAddingFavorite ? 'border-primary bg-primary/5' : 'border-border'}`}
                             >
                                 <div className="flex items-center gap-3">
                                     {hasWorkplace ? (
