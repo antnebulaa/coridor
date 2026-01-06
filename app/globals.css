@@ -230,10 +230,6 @@ hr {
       transform: translateY(100%) scale(0.9);
     }
 
-    80% {
-      transform: translateY(-8px) scale(1.02);
-    }
-
     100% {
       opacity: 1;
       transform: translateY(0) scale(1);
@@ -253,7 +249,7 @@ hr {
   }
 
   .animate-enter {
-    animation: toast-enter 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: toast-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
   }
 
   .animate-leave {
