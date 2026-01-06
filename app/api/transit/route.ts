@@ -244,6 +244,8 @@ export async function GET(request: Request) {
             nearbyList = nearbyList.slice(0, 3);
         }
 
+        // Sort implies priority, so we just take the top candidates later by deduping
+
         // --- NEW: Smart Deduplication (V2.5) ---
         // Filter out stations that don't add new lines (defined by mode+name)
 

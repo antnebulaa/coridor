@@ -208,7 +208,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     ref={inputRef}
                     value={inputValue}
                     onChange={handleInput}
-                    placeholder={label ? " " : defaultPlaceholder}
+                    placeholder=" "
                     autoFocus={autoFocus}
                     className={`
                         peer
@@ -230,6 +230,26 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                         ${customInputClass || ''}
                     `}
                 />
+
+                {/* Shimmer Placeholder (Only if empty and no floating label) */}
+                {!inputValue && !label && (
+                    <div
+                        className={`
+                            absolute 
+                            inset-0 
+                            p-4 
+                            flex 
+                            items-center 
+                            font-medium 
+                            pointer-events-none 
+                            animate-shimmer
+                            ${customInputClass || ''}
+                        `}
+                    >
+                        {defaultPlaceholder}
+                    </div>
+                )}
+
                 {label && (
                     <label
                         className={`
@@ -331,7 +351,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
 
                                 {/* Text Content */}
                                 <div className="flex flex-col flex-1 overflow-hidden">
-                                    <span className="font-semibold text-lg truncate text-left">{mainText}</span>
+                                    <span className="font-medium text-lg truncate text-left">{mainText}</span>
                                     <span className="text-base text-neutral-500 truncate text-left">{secondaryText}</span>
                                 </div>
 

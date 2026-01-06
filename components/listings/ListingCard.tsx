@@ -116,9 +116,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
         return (
             <div
                 onClick={handleClick}
-                className="col-span-1 cursor-pointer group w-full"
+                className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-[20px] p-2 hover:bg-secondary transition">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-xl p-2 hover:bg-secondary transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Desktop */}
                     <div className="
                         w-full h-[200px]
@@ -142,6 +142,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <HeartButton
                                     listingId={data.id}
                                     currentUser={currentUser}
+                                    listingImage={data.images?.[0]?.url}
                                 />
                             </div>
                         )}
@@ -160,7 +161,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium text-base md:text-lg text-foreground line-clamp-1">
-                                        {data.category} {data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground">{data.propertyAdjective}</span>}
+                                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
+                                            ? 'Colocation'
+                                            : data.category}
+                                        {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground"> {data.propertyAdjective}</span>}
                                     </div>
                                     <div className="hidden md:block font-medium text-muted-foreground text-sm md:text-base line-clamp-2">
                                         {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
@@ -212,7 +216,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                                 color: data.transitData.mainConnection.textColor || '#FFF'
                                             }}
                                         >
-                                            <span className="text-xs font-bold leading-none pt-[1px]">
+                                            <span className="text-xs font-bold leading-none pt-px">
                                                 {data.transitData.mainConnection.line}
                                             </span>
                                         </div>
@@ -225,7 +229,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                             {/* Details Row */}
                             <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2">
-                                {data.roomCount === 1 ? (
+                                {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
+                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                        <span className="font-medium text-foreground">1 chambre</span>
+                                    </div>
+                                ) : data.roomCount === 1 ? (
                                     <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
                                         <span className="font-medium text-foreground">Studio</span>
                                     </div>
@@ -235,10 +243,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                             <span className="font-medium text-foreground">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
                                         </div>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
-                                            <span className="font-medium text-foreground">{(data.roomCount || 0) - 1}</span> {((data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
+                                            <span className="font-medium text-foreground">{Math.max(0, (data.roomCount || 0) - 1)}</span> {Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
                                         </div>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
-                                            <span className="font-medium text-foreground">{(data.roomCount || 0) - 1}</span> ch.
+                                            <span className="font-medium text-foreground">{Math.max(0, (data.roomCount || 0) - 1)}</span> ch.
                                         </div>
                                     </>
                                 )}
@@ -282,7 +290,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
     return (
         <div
             onClick={handleClick}
-            className="col-span-1 cursor-pointer group"
+            className="col-span-1 cursor-pointer group listing-card-container"
         >
             <div className="flex flex-col gap-2 w-full">
                 <div
@@ -291,7 +299,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             w-full
             relative
             overflow-hidden
-            rounded-[20px]
+            rounded-xl
           "
                 >
 
@@ -306,6 +314,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <HeartButton
                                 listingId={data.id}
                                 currentUser={currentUser}
+                                listingImage={data.images?.[0]?.url}
                             />
                         </div>
                     )}
@@ -317,7 +326,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     </div>
 
                     <div className="font-medium text-foreground">
-                        {data.category} {data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground">{data.propertyAdjective}</span>} à {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
+                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
+                            ? 'Colocation'
+                            : data.category}
+                        {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground"> {data.propertyAdjective}</span>}
+                        {' '}à {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                         {data.neighborhood && (
                             <span className="font-normal text-base text-muted-foreground ml-1">
                                 {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
@@ -352,7 +365,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         color: data.transitData.mainConnection.textColor || '#FFF'
                                     }}
                                 >
-                                    <span className="text-xs font-bold leading-none pt-[1px]">
+                                    <span className="text-xs font-bold leading-none pt-px">
                                         {data.transitData.mainConnection.line}
                                     </span>
                                 </div>
@@ -364,9 +377,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     )}
 
                     < div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
-                        {data.roomCount === 1
-                            ? `Studio • ${surfaceDisplay}`
-                            : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${(data.roomCount || 0) - 1} ${((data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
+                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
+                            ? `Colocation • ${surfaceDisplay}`
+                            : data.roomCount === 1
+                                ? `Studio • ${surfaceDisplay}`
+                                : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
                         }
                         <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md ml-2">
                             <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>

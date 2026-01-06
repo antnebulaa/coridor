@@ -168,6 +168,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 <HeartButton
                     listingId={listing.id}
                     currentUser={currentUser}
+                    listingImage={listing.images?.[0]?.url}
                 />
             </div>
 

@@ -62,10 +62,21 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
           lg:grid-cols-4
           xl:grid-cols-5
           2xl:grid-cols-6
-          gap-4
-          md:gap-8
+          gap-8
         "
             >
+                {/* All Saved Card */}
+                <WishlistCard
+                    data={{
+                        id: 'all',
+                        name: 'Tous les favoris',
+                        listings: wishlists.find(w => w.listings.length > 0)?.listings || [],
+                        _count: {
+                            listings: wishlists.reduce((acc, w) => acc + w._count.listings, 0)
+                        }
+                    }}
+                />
+
                 {wishlists.map((wishlist) => (
                     <WishlistCard
                         currentUser={currentUser}

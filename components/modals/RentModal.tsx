@@ -18,7 +18,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, CheckCircle, Home, X, Check, ChevronDown } from "lucide-react";
+import { Info, AlertTriangle, CheckCircle, Home, X, Check, ChevronDown, Images } from "lucide-react";
 import { calculateRentControl } from "@/app/properties/[listingId]/edit/components/rentControlUtils";
 import VisitsSection from "@/app/properties/[listingId]/edit/components/VisitsSection";
 import { SafeListing } from "@/types";
@@ -26,13 +26,14 @@ import { SafeListing } from "@/types";
 import { LeaseType } from "@prisma/client";
 
 enum STEPS {
-    CATEGORY = 0,
-    LOCATION = 1,
-    INFO = 2,
-    AMENITIES = 3,
-    IMAGES = 4,
-    PRICE = 5,
-    AVAILABILITY = 6,
+    INTRO = 0,
+    CATEGORY = 1,
+    LOCATION = 2,
+    INFO = 3,
+    AMENITIES = 4,
+    IMAGES = 5,
+    PRICE = 6,
+    AVAILABILITY = 7,
 }
 
 const RentModal = () => {
@@ -44,7 +45,7 @@ const RentModal = () => {
         ssr: false
     }), []);
 
-    const [step, setStep] = useState(STEPS.CATEGORY);
+    const [step, setStep] = useState(STEPS.INTRO);
     const [isLoading, setIsLoading] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
     const [createdListing, setCreatedListing] = useState<any>(null);
@@ -177,7 +178,7 @@ const RentModal = () => {
                 amenities: [],
                 rooms: []
             });
-            setStep(STEPS.CATEGORY);
+            setStep(STEPS.INTRO);
             setCreatedListing(null);
         }
     }, [rentModal.editingListing, rentModal.propertyContext, reset]);
@@ -304,6 +305,9 @@ const RentModal = () => {
         if (step === STEPS.AVAILABILITY) {
             return 'Terminer';
         }
+        if (step === STEPS.INTRO) {
+            return 'Commencer';
+        }
         if (step === STEPS.PRICE) {
             return rentModal.editingListing ? 'Enregistrer les modifications' : 'Créer';
         }
@@ -317,7 +321,11 @@ const RentModal = () => {
         }
 
         // Hide Back button if this is the start of the flow for Room Edit
-        if (rentModal.editingListing?.rentalUnit?.type !== 'ENTIRE_PLACE' && step === STEPS.INFO) {
+        if (rentModal.editingListing && rentModal.editingListing?.rentalUnit?.type !== 'ENTIRE_PLACE' && step === STEPS.INFO) {
+            return undefined;
+        }
+
+        if (step === STEPS.INTRO) {
             return undefined;
         }
 
@@ -325,6 +333,61 @@ const RentModal = () => {
     }, [step, rentModal.editingListing]);
 
     let bodyContent = undefined;
+
+    if (step === STEPS.INTRO) {
+        bodyContent = (
+            <div className="flex flex-col gap-8">
+                <Heading
+                    title="Commencer sur Coridor, c'est facile"
+                    subtitle=""
+                />
+
+                <div className="flex flex-col gap-6 py-4">
+                    {/* Step 1 */}
+                    <div className="flex items-center gap-4 border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+                        <div className="font-bold text-lg min-w-[20px]">1</div>
+                        <div className="flex flex-col flex-1">
+                            <div className="font-medium text-lg">Parlez-nous de votre logement</div>
+                            <div className="text-neutral-500 font-light">
+                                Donnez-nous quelques informations de base, par exemple où il se trouve et sa configuration.
+                            </div>
+                        </div>
+                        <div className="w-[80px] h-[80px] bg-neutral-100 rounded-xl flex items-center justify-center shrink-0">
+                            <Home size={32} className="text-neutral-400" strokeWidth={1} />
+                        </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex items-center gap-4 border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+                        <div className="font-bold text-lg min-w-[20px]">2</div>
+                        <div className="flex flex-col flex-1">
+                            <div className="font-medium text-lg">Faites en sorte de vous démarquer</div>
+                            <div className="text-neutral-500 font-light">
+                                Ajoutez au moins 5 photos, un titre et une description pour attirer les locataires.
+                            </div>
+                        </div>
+                        <div className="w-[80px] h-[80px] bg-neutral-100 rounded-xl flex items-center justify-center shrink-0">
+                            <Images size={32} className="text-neutral-400" strokeWidth={1} />
+                        </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="flex items-center gap-4">
+                        <div className="font-bold text-lg min-w-[20px]">3</div>
+                        <div className="flex flex-col flex-1">
+                            <div className="font-medium text-lg">Terminez et publiez</div>
+                            <div className="text-neutral-500 font-light">
+                                Choisissez un loyer, vérifiez les détails, puis publiez votre annonce.
+                            </div>
+                        </div>
+                        <div className="w-[80px] h-[80px] bg-neutral-100 rounded-xl flex items-center justify-center shrink-0">
+                            <CheckCircle size={32} className="text-neutral-400" strokeWidth={1} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     if (step === STEPS.CATEGORY) {
         bodyContent = (
@@ -393,7 +456,7 @@ const RentModal = () => {
             const address = contextStart.address || [contextStart.addressLine1, (contextStart.zipCode ? `${contextStart.zipCode} ${contextStart.city}` : contextStart.city)].filter(Boolean).join(' ');
             return `Ajouter une chambre à ${address}`;
         }
-        return "Louer mon bien";
+        return undefined;
     }, [rentModal.editingListing, rentModal.propertyContext]);
 
     // ...
@@ -560,6 +623,7 @@ const RentModal = () => {
                     id="surface"
                     label={isRoom ? "Surface de la chambre (m²)" : "Surface du logement (m²)"}
                     type="number"
+                    inputMode="numeric"
                     disabled={isLoading}
                     register={register}
                     errors={errors}
@@ -797,6 +861,7 @@ const RentModal = () => {
                     label="Loyer mensuel"
                     formatPrice
                     type="number"
+                    inputMode="numeric"
                     disabled={isLoading}
                     register={register}
                     errors={errors}
@@ -808,6 +873,7 @@ const RentModal = () => {
                     label="Charges (mensuel)"
                     type="number"
                     formatPrice
+                    inputMode="numeric"
                     disabled={isLoading}
                     register={register}
                     errors={errors}
@@ -910,6 +976,8 @@ const RentModal = () => {
             secondaryAction={step === STEPS.CATEGORY || step === STEPS.AVAILABILITY ? undefined : onBack}
             title={title}
             body={bodyContent}
+            currentStep={step === STEPS.INTRO ? undefined : step}
+            totalSteps={STEPS.AVAILABILITY}
         />
     );
 };

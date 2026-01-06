@@ -161,7 +161,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
             ">
                 {/* Left Column: List + Footer */}
                 <div className={listColumnClasses}>
-                    <div className="pt-24 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
+                    <div className="pt-20 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
 
                         {!isSearchActive && (
                             <ResumeSearch />
@@ -176,7 +176,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                         <div className="
                             grid 
                             grid-cols-1 
-                            gap-1.5
+                            gap-8
                         ">
                             {listings.length === 0 ? (
                                 <div className="h-[60vh] flex flex-col gap-2 justify-center items-center">
@@ -231,8 +231,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             left-6 
                                             z-1000
                                             bg-white 
+                                            dark:bg-neutral-800
                                             hover:bg-neutral-100
+                                            dark:hover:bg-neutral-700
                                             text-black
+                                            dark:text-white
                                             px-6
                                             py-3
                                             rounded-full 
@@ -275,10 +278,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                     onClick={() => setIsOverlayMinimized(true)}
                                                     className="
                                                         w-9 h-9 flex items-center justify-center
-                                                        bg-white/80
+                                                        bg-white/80 dark:bg-black/40
                                                         backdrop-blur-sm
                                                         rounded-full 
-                                                        hover:bg-white
+                                                        hover:bg-white dark:hover:bg-black/60
+                                                        text-neutral-700 dark:text-neutral-200
                                                         shadow-sm
                                                         transition
                                                     "
@@ -292,10 +296,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                     onClick={() => setSelectedListingId('')}
                                                     className="
                                                         w-9 h-9 flex items-center justify-center
-                                                        bg-white/80
+                                                        bg-white/80 dark:bg-black/40
                                                         backdrop-blur-sm
                                                         rounded-full 
-                                                        hover:bg-white
+                                                        hover:bg-white dark:hover:bg-black/60
+                                                        text-neutral-700 dark:text-neutral-200
                                                         shadow-sm
                                                         transition
                                                     "
@@ -312,13 +317,13 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                 />
                                             </div>
                                             {/* Fixed Bottom Footer for Desktop Overlay */}
-                                            <div className="p-4 border-t bg-white flex items-center justify-between">
+                                            <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-between">
                                                 <div className="flex flex-col">
                                                     <div className="flex flex-row items-center gap-1">
-                                                        <div className="font-semibold text-lg">
+                                                        <div className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
                                                             {selectedListing.price + ((selectedListing.charges as any)?.amount || 0)} €
                                                         </div>
-                                                        <div className="font-light text-neutral-500 text-sm">
+                                                        <div className="font-light text-muted-foreground text-sm">
                                                             / mois CC
                                                         </div>
                                                     </div>

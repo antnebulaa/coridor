@@ -52,6 +52,7 @@ export async function GET(
                 include: {
                     rentalUnit: {
                         include: {
+                            images: true,
                             property: {
                                 include: {
                                     images: true

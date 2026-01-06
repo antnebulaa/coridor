@@ -867,6 +867,8 @@ const SearchModal = () => {
             secondaryActionLabel={secondaryActionLabel}
             secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
             body={bodyContent}
+            currentStep={step + 1}
+            totalSteps={Object.keys(STEPS).length / 2}
             hideHeader={true}
             skipTranslateAnimation={true}
         />

@@ -189,6 +189,37 @@ hr {
   .stagger-1 {
     animation-delay: 0.1s;
   }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(to right, #a3a3a3 0%, #d4d4d4 20%, #a3a3a3 40%, #a3a3a3 100%);
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shimmer 8s linear infinite;
+  }
+
+  .dark .animate-shimmer {
+    background: linear-gradient(to right, #525252 0%, #a3a3a3 20%, #525252 40%, #525252 100%);
+    background-size: 200% auto;
+    background-clip: text;
+    /* standard */
+    -webkit-background-clip: text;
+    /* webkit prefix */
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
 }
 
 /* Leaflet Dark Mode Overrides */

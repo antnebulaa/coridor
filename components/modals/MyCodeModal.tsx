@@ -38,8 +38,43 @@ const MyCodeModal: React.FC<MyCodeModalProps> = ({ currentUser }) => {
 
     const handleCopy = useCallback(() => {
         if (!uniqueCode) return;
-        navigator.clipboard.writeText(uniqueCode);
-        toast.success('Code copié !');
+
+        // Check if the Clipboard API is available (Secure Context)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(uniqueCode)
+                .then(() => toast.success('Code copié !'))
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    toast.error('Erreur lors de la copie');
+                });
+        } else {
+            // Fallback for insecure contexts (e.g. HTTP on standard IP)
+            const textArea = document.createElement("textarea");
+            textArea.value = uniqueCode;
+
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    toast.success('Code copié !');
+                } else {
+                    toast.error('Erreur lors de la copie');
+                }
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                toast.error('Erreur lors de la copie');
+            }
+
+            document.body.removeChild(textArea);
+        }
     }, [uniqueCode]);
 
     const onGenerate = useCallback(() => {

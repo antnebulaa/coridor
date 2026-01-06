@@ -161,10 +161,12 @@ const ResizeHandler = () => {
 }
 
 const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect, currentUser, isochrones }) => {
-    const { theme } = useTheme();
+    const { theme, resolvedTheme } = useTheme();
     const [center, setCenter] = useState<number[]>([48.8566, 2.3522]); // Default Paris
 
-    const tileUrl = theme === 'dark'
+    const isDark = resolvedTheme === 'dark';
+
+    const tileUrl = isDark
         ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
@@ -266,7 +268,7 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
 
     return (
         <MapContainer
-            key={theme} // Force remount on theme change to prevent specific tile layer issues
+            // key={resolvedTheme || theme} removed to prevent reuse error during hydration/switching
             center={center as L.LatLngExpression}
             zoom={12}
             scrollWheelZoom={true}

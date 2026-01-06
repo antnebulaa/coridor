@@ -135,6 +135,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                     <HeartButton
                         listingId={id}
                         currentUser={currentUser}
+                        listingImage={imageSrc}
                     />
                 </div>
                 <div className="absolute bottom-5 right-5 z-10">

@@ -22,6 +22,8 @@ interface ModalProps {
     widthClass?: string;
     hideHeader?: boolean;
     skipTranslateAnimation?: boolean;
+    currentStep?: number;
+    totalSteps?: number;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -40,7 +42,9 @@ const Modal: React.FC<ModalProps> = ({
     transparentHeader,
     noBodyPadding,
     hideHeader,
-    skipTranslateAnimation
+    skipTranslateAnimation,
+    currentStep,
+    totalSteps
 }) => {
     const [showModal, setShowModal] = useState(false);
 
@@ -219,7 +223,7 @@ const Modal: React.FC<ModalProps> = ({
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none">
+                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none md:max-h-[85vh]">
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div
@@ -251,7 +255,7 @@ const Modal: React.FC<ModalProps> = ({
                                         justify-center 
                                         transition 
                                         absolute 
-                                        left-6
+                                        right-6
                                         top-6
                                         border-0
                                         ${transparentHeader ? 'bg-white text-black shadow-md' : ''}
@@ -277,22 +281,37 @@ const Modal: React.FC<ModalProps> = ({
 
                             {/* FOOTER */}
                             <div className="flex flex-col gap-2 p-6 md:p-6 mb-12 md:mb-0">
-                                <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+                                {/* Progress Bar (Moved above buttons) */}
+                                {currentStep && totalSteps && (
+                                    <div className="hidden md:flex w-full justify-center mb-2">
+                                        <div className="h-[6px] w-[120px] shrink-0 bg-neutral-100 rounded-full overflow-hidden relative">
+                                            <div
+                                                className="absolute top-0 left-0 h-full bg-neutral-800 transition-all duration-300"
+                                                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex flex-col md:flex-row items-center gap-4 w-full justify-between">
                                     {secondaryAction && secondaryActionLabel && (
                                         <Button
                                             variant="outline"
                                             disabled={disabled}
                                             onClick={handleSecondaryAction}
-                                            className="w-full rounded-full h-[50px]"
+                                            className="w-full md:w-auto md:flex-1 rounded-full h-[50px] text-[16px] !border-neutral-200 !border-[1px] hover:!border-black"
                                         >
                                             {secondaryActionLabel}
                                         </Button>
                                     )}
+
+                                    {/* Progress Bar (Only if steps provided) */}
+
+
                                     {actionLabel && (
                                         <Button
                                             disabled={disabled}
                                             onClick={handleSubmit}
-                                            className="w-full rounded-full h-[50px]"
+                                            className="w-full md:w-auto md:flex-1 rounded-full h-[50px] text-[16px]"
                                         >
                                             {actionLabel}
                                         </Button>
