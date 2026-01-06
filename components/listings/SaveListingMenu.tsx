@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { Heart, Plus, Check, X, Image as ImageIcon } from 'lucide-react';
+import { Heart, Plus, Check, X, Bookmark } from 'lucide-react';
 import { Drawer } from 'vaul';
 import Image from 'next/image';
 
@@ -290,7 +290,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center w-full h-full bg-neutral-100 dark:bg-neutral-800">
-                                        <ImageIcon size={20} className="text-neutral-500" />
+                                        <Bookmark size={20} className="text-neutral-500" />
                                     </div>
                                 )}
                             </div>
