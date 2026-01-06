@@ -152,6 +152,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
     const toggleWishlist = async (wishlistId: string, hasListing: boolean) => {
         setIsLoading(true);
+        setIsOpen(false); // Close immediately for better UX
         try {
             if (hasListing) {
                 await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
@@ -182,7 +183,6 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     />
                 ));
             }
-            setIsOpen(false);
             fetchWishlists();
             router.refresh();
         } catch (error) {
@@ -209,6 +209,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
     const handleToggleAll = async () => {
         setIsLoading(true);
+        setIsOpen(false); // Close immediately
         try {
             if (isSavedAnywhere) {
                 // 1. Remove from General Favorites (favoriteIds) if present
@@ -260,8 +261,6 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             // Re-fetch wishlists to update local state (for the check icons)
             const res = await axios.get('/api/wishlists');
             setWishlists(res.data);
-
-            setIsOpen(false);
         } catch (error) {
             toast.error('Une erreur est survenue');
         } finally {
