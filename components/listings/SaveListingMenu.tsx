@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { Heart, Plus, Check, X } from 'lucide-react';
+import { Heart, Plus, Check, X, Image as ImageIcon } from 'lucide-react';
 import { Drawer } from 'vaul';
 import Image from 'next/image';
 
@@ -281,12 +281,18 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                                 bg-neutral-100 
                                     shrink-0
                             ">
-                                <Image
-                                    fill
-                                    src={list.listings[0]?.rentalUnit?.property?.images?.[0]?.url || list.listings[0]?.rentalUnit?.images?.[0]?.url || '/images/placeholder.svg'}
-                                    alt={list.name}
-                                    className="object-cover"
-                                />
+                                {(list.listings[0]?.rentalUnit?.property?.images?.[0]?.url || list.listings[0]?.rentalUnit?.images?.[0]?.url) ? (
+                                    <Image
+                                        fill
+                                        src={list.listings[0]?.rentalUnit?.property?.images?.[0]?.url || list.listings[0]?.rentalUnit?.images?.[0]?.url}
+                                        alt={list.name}
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center w-full h-full bg-neutral-100 dark:bg-neutral-800">
+                                        <ImageIcon size={20} className="text-neutral-500" />
+                                    </div>
+                                )}
                             </div>
                             <div className="flex-1 flex items-center justify-between">
                                 <div className="font-medium text-base">{list.name}</div>
