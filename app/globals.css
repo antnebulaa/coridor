@@ -251,7 +251,11 @@ hr {
   @keyframes toast-enter {
     0% {
       opacity: 0;
-      transform: translateY(100%) scale(0.9);
+      transform: translateY(200%) scale(0.5);
+    }
+
+    60% {
+      transform: translateY(-10%) scale(1.05);
     }
 
     100% {
@@ -268,16 +272,16 @@ hr {
 
     100% {
       opacity: 0;
-      transform: translateY(10px) scale(0.9);
+      transform: translateY(200%) scale(0.9);
     }
   }
 
   .animate-enter {
-    animation: toast-enter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+    animation: toast-enter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 
   .animate-leave {
-    animation: toast-leave 0.2s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+    animation: toast-leave 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
   }
 }
 
