@@ -64,13 +64,17 @@ export async function DELETE(
         return NextResponse.error();
     }
 
-    // Try to parse body to see if we are removing a listing or deleting the wishlist
-    let listingId;
-    try {
-        const body = await request.json();
-        listingId = body?.listingId;
-    } catch (error) {
-        // Body is likely empty, meaning we want to delete the wishlist itself
+    // Try to parse body or query params to see if we are removing a listing or deleting the wishlist
+    const { searchParams } = new URL(request.url);
+    let listingId = searchParams.get('listingId');
+
+    if (!listingId) {
+        try {
+            const body = await request.json();
+            listingId = body?.listingId;
+        } catch (error) {
+            // Body is likely empty, meaning we want to delete the wishlist itself
+        }
     }
 
     if (listingId) {

@@ -141,9 +141,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
         setIsLoading(true);
         try {
             if (hasListing) {
-                await axios.delete(`/api/wishlists/${wishlistId}`, {
-                    data: { listingId }
-                });
+                await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
                 toast.success('Retiré de la collection');
             } else {
                 await axios.post(`/api/wishlists/${wishlistId}`, {
@@ -167,13 +165,11 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     // const isSavedInitial = currentUser?.wishlists?.some(w => w.listings.some(l => l.id === listingId)); // Optional initialization
 
     // Use the PROP currentUser for immediate feedback before fetching
-    const isSavedInitial = currentUser?.wishlists?.some(w => w.listings.some((l: any) => l.id === listingId));
-
-    // Dynamic check
-    const isSavedAnywhere = wishlists.some(w => w.listings.some((l: any) => l.id === listingId));
+    const isSavedInGeneral = currentUser?.favoriteIds?.includes(listingId) || false;
+    const isSavedInWishlists = wishlists.some(w => w.listings.some((l: any) => l.id === listingId));
 
     // Combined state for the heart icon
-    const hasSavedState = isSavedInitial || isSavedAnywhere;
+    const isSavedAnywhere = isSavedInGeneral || isSavedInWishlists;
 
     // Most recent image from any wishlist for "All listings" thumbnail, or current listing image?
     // Using current listing image is cleaner for the toggle context.
@@ -182,32 +178,30 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
         setIsLoading(true);
         try {
             if (isSavedAnywhere) {
-                // Remove from ALL lists
+                // 1. Remove from General Favorites (favoriteIds) if present
+                if (isSavedInGeneral) {
+                    await axios.delete(`/api/favorites/${listingId}`);
+                }
+
+                // 2. Remove from ALL lists
                 const listsToRemove = wishlists.filter(w => w.listings.some((l: any) => l.id === listingId));
-                await Promise.all(listsToRemove.map(w => axios.delete(`/api/wishlists/${w.id}`, { data: { listingId } })));
+                if (listsToRemove.length > 0) {
+                    await Promise.all(listsToRemove.map(w => axios.delete(`/api/wishlists/${w.id}?listingId=${listingId}`)));
+                }
+
                 toast.success('Retiré de tous les favoris');
             } else {
-                // Add to "Favoris" (create if needed)
-                const defaultListName = "Favoris";
-                const defaultList = wishlists.find(w => w.name === defaultListName);
-
-                if (defaultList) {
-                    await axios.post(`/api/wishlists/${defaultList.id}`, { listingId });
-                } else {
-                    await axios.post('/api/wishlists', { name: defaultListName, listingId });
-                }
+                // Add to General Favorites ONLY
+                await axios.post(`/api/favorites/${listingId}`);
                 toast.success('Ajouté aux favoris');
             }
+
             // Refresh logic
             router.refresh();
-            // Re-fetch wishlists to update local state
+            // Re-fetch wishlists to update local state (for the check icons)
             const res = await axios.get('/api/wishlists');
             setWishlists(res.data);
 
-            // Should we close? User said "toggle all saved... like Mobbin".
-            // Typically "All Saved" is just another switch. If I turn it OFF, it clears everything.
-            // If I turn it ON, it adds to default. It shouldn't necessarily close unless it's the only interaction.
-            // But previous requirement said "close on selection".
             if (!isSavedAnywhere) { // We just added it
                 setIsOpen(false);
             }
@@ -228,7 +222,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 {/* All Saved / Tous les favoris Toggle */}
                 <div
                     onClick={handleToggleAll}
-                    className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
+                    className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
                 >
                     <div className="
                         w-10 h-10 
@@ -260,8 +254,8 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     </div>
 
                     {isSavedAnywhere && (
-                        <div className="text-primary">
-                            <Check size={20} />
+                        <div className="bg-black text-white rounded-full p-1">
+                            <Check size={14} />
                         </div>
                     )}
                 </div>
@@ -277,7 +271,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         <div
                             key={list.id}
                             onClick={() => toggleWishlist(list.id, hasListing)}
-                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
+                            className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
                         >
                             <div className="
                                 w-10 h-10 
@@ -299,8 +293,8 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                                 <div className="text-sm text-neutral-500">{list.listings.length}</div>
                             </div>
                             {hasListing && (
-                                <div className="text-primary">
-                                    <Check size={20} />
+                                <div className="bg-black text-white rounded-full p-1">
+                                    <Check size={14} />
                                 </div>
                             )}
                         </div>
@@ -310,7 +304,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 {!isCreating ? (
                     <div
                         onClick={() => setIsCreating(true)}
-                        className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
+                        className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
                     >
                         <div className="
                             w-10 h-10 
@@ -324,7 +318,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         <div className="font-medium text-base">Créer une nouvelle liste</div>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 p-3">
+                    <div className="flex items-center gap-2 p-[9px]">
                         <div className="
                             w-10 h-10 
                             rounded-xl 
@@ -375,11 +369,11 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 <Heart
                     size={28}
                     className={`
-                        ${hasSavedState
+                        ${isSavedAnywhere
                             ? 'fill-primary text-primary'
                             : 'fill-black/50 text-white'}
                     `}
-                    strokeWidth={hasSavedState ? 0 : 2}
+                    strokeWidth={isSavedAnywhere ? 0 : 2}
                 />
             </div>
 
@@ -399,7 +393,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                             className="bg-white dark:bg-neutral-900 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-9999 outline-none pb-10"
                         >
                             <Drawer.Title className="sr-only">Enregistrer dans une liste</Drawer.Title>
-                            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-neutral-300 mb-4 mt-6" />
+                            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-neutral-300 mb-2 mt-3" />
                             {MenuContent}
                         </Drawer.Content>
                     </Drawer.Portal>
