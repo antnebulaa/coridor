@@ -202,9 +202,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             const res = await axios.get('/api/wishlists');
             setWishlists(res.data);
 
-            if (!isSavedAnywhere) { // We just added it
-                setIsOpen(false);
-            }
+            setIsOpen(false);
         } catch (error) {
             toast.error('Une erreur est survenue');
         } finally {
