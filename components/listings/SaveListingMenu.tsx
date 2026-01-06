@@ -159,7 +159,11 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     <CustomToast
                         t={t}
                         message="Retiré de la collection"
-                        onUndo={() => toggleWishlist(wishlistId, false)}
+                        onUndo={async () => {
+                            await axios.post(`/api/wishlists/${wishlistId}`, { listingId });
+                            fetchWishlists();
+                            router.refresh();
+                        }}
                     />
                 ));
             } else {
@@ -170,7 +174,11 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     <CustomToast
                         t={t}
                         message="Ajouté à la collection"
-                        onUndo={() => toggleWishlist(wishlistId, true)}
+                        onUndo={async () => {
+                            await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
+                            fetchWishlists();
+                            router.refresh();
+                        }}
                     />
                 ));
             }
