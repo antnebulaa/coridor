@@ -161,7 +161,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
             ">
                 {/* Left Column: List + Footer */}
                 <div className={listColumnClasses}>
-                    <div className="pt-20 md:pt-24 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
+                    <div className="pt-20 md:pt-4 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
 
                         {!isSearchActive && (
                             <ResumeSearch />
