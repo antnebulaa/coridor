@@ -37,7 +37,7 @@ const CustomToast: React.FC<CustomToastProps> = ({
             className={`${t.visible ? 'animate-enter' : 'animate-leave'
                 } max-w-md w-auto bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-full pointer-events-auto flex items-center ring-1 ring-black/5 dark:ring-white/10 p-2 pr-2 gap-3 transition-all duration-300`}
         >
-            <div className="shrink-0 bg-green-500 rounded-full p-1">
+            <div className="shrink-0 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center">
                 <Check size={14} className="text-white" strokeWidth={3} />
             </div>
             <div className="flex-1 pl-1">
