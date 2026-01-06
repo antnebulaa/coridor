@@ -84,7 +84,15 @@ export default async function RootLayout({
       <body className={font.className}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <Toaster toastOptions={{ className: 'z-[100000]' }} containerStyle={{ zIndex: 100000 }} />
+            <Toaster
+              position="bottom-center"
+              toastOptions={{
+                className: 'z-[100000]',
+                duration: 4000
+              }}
+              containerStyle={{ zIndex: 100000 }}
+              containerClassName="mb-20 md:mb-4"
+            />
             <Suspense fallback={<div></div>}>
               <SearchModal />
               <CommuteModal />

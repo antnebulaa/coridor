@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { SafeUser } from '@/types';
 import useLoginModal from '@/hooks/useLoginModal';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import CustomToast from '@/components/ui/CustomToast';
 
 interface SaveListingMenuProps {
     listingId: string;
@@ -121,11 +122,23 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
         if (!newListName.trim()) return;
         setIsLoading(true);
         try {
-            await axios.post('/api/wishlists', {
+            const res = await axios.post('/api/wishlists', {
                 name: newListName,
                 listingId
             });
-            toast.success('Collection créée');
+
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Collection créée"
+                    onUndo={async () => {
+                        await axios.delete(`/api/wishlists/${res.data.id}`);
+                        fetchWishlists();
+                        router.refresh();
+                    }}
+                />
+            ));
+
             setNewListName('');
             setIsCreating(false);
             fetchWishlists();
@@ -142,12 +155,24 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
         try {
             if (hasListing) {
                 await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
-                toast.success('Retiré de la collection');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Retiré de la collection"
+                        onUndo={() => toggleWishlist(wishlistId, false)}
+                    />
+                ));
             } else {
                 await axios.post(`/api/wishlists/${wishlistId}`, {
                     listingId
                 });
-                toast.success('Ajouté à la collection');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Ajouté à la collection"
+                        onUndo={() => toggleWishlist(wishlistId, true)}
+                    />
+                ));
             }
             setIsOpen(false);
             fetchWishlists();
@@ -189,11 +214,37 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     await Promise.all(listsToRemove.map(w => axios.delete(`/api/wishlists/${w.id}?listingId=${listingId}`)));
                 }
 
-                toast.success('Retiré de tous les favoris');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Retiré de tous les favoris"
+                        onUndo={async () => {
+                            if (isSavedInGeneral) {
+                                await axios.post(`/api/favorites/${listingId}`);
+                            }
+                            if (listsToRemove.length > 0) {
+                                await Promise.all(listsToRemove.map(w => axios.post(`/api/wishlists/${w.id}`, { listingId })));
+                            }
+                            fetchWishlists();
+                            router.refresh();
+                        }}
+                    />
+                ));
             } else {
                 // Add to General Favorites ONLY
                 await axios.post(`/api/favorites/${listingId}`);
-                toast.success('Ajouté aux favoris');
+
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Ajouté aux favoris"
+                        onUndo={async () => {
+                            await axios.delete(`/api/favorites/${listingId}`);
+                            fetchWishlists();
+                            router.refresh();
+                        }}
+                    />
+                ));
             }
 
             // Refresh logic
