@@ -176,7 +176,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                         <div className="
                             grid 
                             grid-cols-1 
-                            gap-8
+                            gap-4
                         ">
                             {listings.length === 0 ? (
                                 <div className="h-[60vh] flex flex-col gap-2 justify-center items-center">
@@ -187,7 +187,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                 listings.map((listing: any) => (
                                     <div
                                         key={listing.id}
-                                        className="cursor-pointer border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-4 md:border-none md:pb-0 md:mb-0 last:border-none last:pb-0 last:mb-0"
+                                        className="cursor-pointer border-b border-neutral-200 dark:border-neutral-800 pb-2 mb-2 md:border-none md:pb-0 md:mb-0 last:border-none last:pb-0 last:mb-0"
                                     >
                                         <ListingCard
                                             currentUser={currentUser}
