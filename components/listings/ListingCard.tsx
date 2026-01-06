@@ -309,20 +309,22 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             Nouvelle annonce
                         </div>
                     )}
-                    {showHeart && (
-                        <div className="absolute top-3 right-3">
-                            <HeartButton
-                                listingId={data.id}
-                                currentUser={currentUser}
-                                listingImage={data.images?.[0]?.url}
-                            />
-                        </div>
-                    )}
                 </div>
 
                 <div className="flex flex-col gap-1 mt-2">
-                    <div className="font-semibold text-[26px]">
-                        {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
+                    <div className="flex flex-row justify-between items-start">
+                        <div className="font-semibold text-[26px]">
+                            {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
+                        </div>
+                        {showHeart && (
+                            <div className="-mr-2">
+                                <HeartButton
+                                    listingId={data.id}
+                                    currentUser={currentUser}
+                                    listingImage={data.images?.[0]?.url}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="font-medium text-foreground">
