@@ -275,7 +275,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 {data.hasFiber && (
                                     <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                         <Wifi size={14} />
-                                        <span className="text-sm font-medium">Fibre</span>
+                                        <span className="text-sm font-normal">Fibre</span>
                                     </div>
                                 )}
 
@@ -286,7 +286,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 {data.hasBikeRoom && (
                                     <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                         <Bike size={14} />
-                                        <span className="text-sm font-medium">Local vélo</span>
+                                        <span className="text-sm font-normal">Local vélo</span>
                                     </div>
                                 )}
 
@@ -454,7 +454,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         {data.hasFiber && (
                             <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                 <Wifi size={14} />
-                                <span className="text-sm font-medium">Fibre</span>
+                                <span className="text-sm font-normal">Fibre</span>
                             </div>
                         )}
 
@@ -465,7 +465,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         {data.hasBikeRoom && (
                             <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                 <Bike size={14} />
-                                <span className="text-sm font-medium">Local vélo</span>
+                                <span className="text-sm font-normal">Local vélo</span>
                             </div>
                         )}
 
