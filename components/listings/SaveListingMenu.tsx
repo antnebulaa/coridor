@@ -5,9 +5,10 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { Heart, Plus, Check, X, Bookmark } from 'lucide-react';
+import { Plus, Check, Heart, Bookmark } from 'lucide-react';
 import { Drawer } from 'vaul';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { SafeUser } from '@/types';
 import useLoginModal from '@/hooks/useLoginModal';
@@ -269,7 +270,11 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     };
 
     const MenuContent = (
-        <div className="flex flex-col h-auto bg-white dark:bg-neutral-900 rounded-t-[20px] md:rounded-[24px] overflow-hidden md:shadow-xl w-full md:w-[320px]">
+        <motion.div
+            layout
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="flex flex-col h-auto bg-white dark:bg-neutral-900 rounded-t-[20px] md:rounded-[24px] overflow-hidden md:shadow-xl w-full md:w-[320px]"
+        >
             {/* Header Removed as requested */}
 
             {/* List */}
@@ -363,54 +368,68 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     );
                 })}
                 {/* Create New List Button (Integrated) */}
-                {!isCreating ? (
-                    <div
-                        onClick={() => setIsCreating(true)}
-                        className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
-                    >
-                        <div className="
-                            w-10 h-10 
-                            rounded-xl 
-                            bg-neutral-100 
-                            flex items-center justify-center 
-                            shrink-0
-                        ">
-                            <Plus size={20} className="text-neutral-500" />
-                        </div>
-                        <div className="font-medium text-[18px] md:text-base">Créer une nouvelle liste</div>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2 p-[9px]">
-                        <div className="
-                            w-10 h-10 
-                            rounded-xl 
-                            bg-neutral-100 
-                            flex items-center justify-center 
-                            shrink-0
-                        ">
-                            <Plus size={20} className="text-neutral-500" />
-                        </div>
-                        <div className="flex-1 flex gap-2">
-                            <input
-                                autoFocus
-                                value={newListName}
-                                onChange={(e) => setNewListName(e.target.value)}
-                                placeholder="Nom..."
-                                className="flex-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleCreateWishlist();
-                                }}
-                            />
-                            <button
-                                onClick={handleCreateWishlist}
-                                disabled={!newListName.trim() || isLoading}
-                                className="p-2 bg-black text-white rounded-lg disabled:opacity-50"
-                            >
-                                <Check size={16} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <AnimatePresence mode="wait">
+                    {!isCreating ? (
+                        <motion.div
+                            key="create-button"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => setIsCreating(true)}
+                            className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
+                        >
+                            <div className="
+                                w-10 h-10 
+                                rounded-xl 
+                                bg-neutral-100 
+                                flex items-center justify-center 
+                                shrink-0
+                            ">
+                                <Plus size={20} className="text-neutral-500" />
+                            </div>
+                            <div className="font-medium text-[18px] md:text-base">Créer une nouvelle liste</div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="create-form"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center gap-2 p-[9px]"
+                        >
+                            <div className="
+                                w-10 h-10 
+                                rounded-xl 
+                                bg-neutral-100 
+                                flex items-center justify-center 
+                                shrink-0
+                            ">
+                                <Plus size={20} className="text-neutral-500" />
+                            </div>
+                            <div className="flex-1 flex gap-2">
+                                <input
+                                    autoFocus
+                                    value={newListName}
+                                    onChange={(e) => setNewListName(e.target.value)}
+                                    placeholder="Nom..."
+                                    className="flex-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleCreateWishlist();
+                                    }}
+                                />
+                                <button
+                                    onClick={handleCreateWishlist}
+                                    disabled={!newListName.trim() || isLoading}
+                                    className="p-2 bg-black text-white rounded-lg disabled:opacity-50"
+                                >
+                                    <Check size={16} />
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
