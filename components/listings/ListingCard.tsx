@@ -183,7 +183,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <div className="md:hidden font-normal text-neutral-500 text-sm line-clamp-1 -mt-1">
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
-                                    <span className="font-normal text-xs text-neutral-500">
+                                    <span className="font-normal text-sm text-neutral-500">
                                         , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
                                     </span>
                                 )}
@@ -388,7 +388,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                         {' '}à {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                         {data.neighborhood && (
-                            <span className="font-normal text-base text-muted-foreground ml-1">
+                            <span className="font-normal text-sm md:text-base text-muted-foreground ml-1">
                                 {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
                             </span>
                         )}
