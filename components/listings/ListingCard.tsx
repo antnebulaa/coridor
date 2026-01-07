@@ -151,7 +151,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </div>
                                     </div>
                                     {showHeart && (
-                                        <div className="">
+                                        <div className="ml-auto">
                                             <HeartButton
                                                 listingId={data.id}
                                                 currentUser={currentUser}
@@ -365,12 +365,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-1 mt-2">
-                    <div className="flex flex-row justify-between items-start">
+                    <div className="flex flex-row justify-between items-start w-full">
                         <div className="font-semibold text-[26px]">
                             {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
                         </div>
                         {showHeart && (
-                            <div className="">
+                            <div className="ml-auto">
                                 <HeartButton
                                     listingId={data.id}
                                     currentUser={currentUser}
