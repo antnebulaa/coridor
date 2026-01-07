@@ -118,7 +118,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-xl p-2 hover:bg-secondary transition">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-xl p-0 md:p-2 hover:bg-secondary transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Desktop */}
                     <div className="
                         w-full h-[200px]
