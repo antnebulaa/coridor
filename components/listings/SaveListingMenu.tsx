@@ -303,7 +303,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     </div>
 
                     <div className="flex-1 flex flex-col">
-                        <div className="font-medium text-base">Tous les favoris</div>
+                        <div className="font-medium text-[18px] md:text-base">Tous les favoris</div>
                         <div className="text-sm text-neutral-500">
                             {isSavedAnywhere ? 'Enregistré' : 'Enregistrer'}
                         </div>
@@ -351,7 +351,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                                 )}
                             </div>
                             <div className="flex-1 flex items-center justify-between">
-                                <div className="font-medium text-base">{list.name}</div>
+                                <div className="font-medium text-[18px] md:text-base">{list.name}</div>
                                 <div className="text-sm text-neutral-500">{list.listings.length}</div>
                             </div>
                             {hasListing && (
@@ -377,7 +377,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         ">
                             <Plus size={20} className="text-neutral-500" />
                         </div>
-                        <div className="font-medium text-base">Créer une nouvelle liste</div>
+                        <div className="font-medium text-[18px] md:text-base">Créer une nouvelle liste</div>
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 p-[9px]">
