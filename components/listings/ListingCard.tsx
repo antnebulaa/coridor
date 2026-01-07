@@ -189,7 +189,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {/* Details Row */}
-                            <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2">
+                            <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2 mb-1 md:mb-2">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
                                     <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
                                         <span className="font-medium text-foreground">1 chambre</span>
@@ -270,7 +270,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             )}
                         </div>
                         {(data.hasFiber || data.hasBikeRoom) && (
-                            <div className="flex flex-wrap items-center gap-3 mt-2 text-neutral-600 dark:text-neutral-400">
+                            <div className="flex flex-wrap items-center gap-3 mt-0.5 text-neutral-600 dark:text-neutral-400">
                                 {data.hasFiber && (
                                     <div className="flex items-center gap-1.5">
                                         <Wifi size={14} />
@@ -381,7 +381,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </span>
                         )}
                     </div>
-                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
+                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px] mb-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                             ? `Colocation • ${surfaceDisplay}`
                             : data.roomCount === 1
@@ -439,7 +439,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     )}
                 </div>
                 {(data.hasFiber || data.hasBikeRoom) && (
-                    <div className="flex flex-wrap items-center gap-3 mt-1 text-neutral-600 dark:text-neutral-400">
+                    <div className="flex flex-wrap items-center gap-3 mt-0 text-neutral-600 dark:text-neutral-400">
                         {data.hasFiber && (
                             <div className="flex items-center gap-1.5">
                                 <Wifi size={14} />
