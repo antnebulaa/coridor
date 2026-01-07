@@ -13,6 +13,7 @@ import Modal from './Modal';
 import Heading from '../Heading';
 import SoftInput from '../inputs/SoftInput';
 import { Button } from '../ui/Button';
+import CustomToast from '../ui/CustomToast';
 
 const LoginModal = () => {
     const router = useRouter();
@@ -49,13 +50,25 @@ const LoginModal = () => {
                 setIsLoading(false);
 
                 if (callback?.ok) {
-                    toast.success('Logged in');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Connexion réussie"
+                            type="success"
+                        />
+                    ));
                     router.refresh();
                     loginModal.onClose();
                 }
 
                 if (callback?.error) {
-                    toast.error(callback.error);
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message={callback.error || "Erreur de connexion"}
+                            type="error"
+                        />
+                    ));
                 }
             });
     }

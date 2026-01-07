@@ -13,6 +13,7 @@ import Heading from '../Heading';
 import SoftInput from '../inputs/SoftInput';
 import { Button } from '../ui/Button';
 import { signIn } from 'next-auth/react';
+import CustomToast from '../ui/CustomToast';
 
 const RegisterModal = () => {
     const registerModal = useRegisterModal();
@@ -44,12 +45,24 @@ const RegisterModal = () => {
 
         axios.post('/api/register', data)
             .then(() => {
-                toast.success('Registered!');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Inscription réussie"
+                        type="success"
+                    />
+                ));
                 registerModal.onClose();
                 loginModal.onOpen();
             })
             .catch((error) => {
-                toast.error('Something went wrong');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

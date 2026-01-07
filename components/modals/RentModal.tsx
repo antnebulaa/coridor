@@ -22,6 +22,7 @@ import { Info, AlertTriangle, CheckCircle, Home, X, Check, ChevronDown, Images }
 import { calculateRentControl } from "@/app/properties/[listingId]/edit/components/rentControlUtils";
 import VisitsSection from "@/app/properties/[listingId]/edit/components/VisitsSection";
 import { SafeListing } from "@/types";
+import CustomToast from "../ui/CustomToast";
 
 import { LeaseType } from "@prisma/client";
 
@@ -270,14 +271,27 @@ const RentModal = () => {
         if (rentModal.editingListing) {
             axios.put(`/api/listings/${rentModal.editingListing.id}`, finalData)
                 .then(() => {
-                    toast.success('Annonce mise à jour !');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Annonce mise à jour !"
+                            type="success"
+                        />
+                    ));
                     router.refresh();
                     reset();
                     setStep(STEPS.CATEGORY);
                     rentModal.onClose();
                 })
                 .catch((error) => {
-                    toast.error(error?.response?.data?.error || "Une erreur s'est produite.");
+                    const errorMsg = error?.response?.data?.error || "Une erreur s'est produite.";
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message={errorMsg}
+                            type="error"
+                        />
+                    ));
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -285,7 +299,13 @@ const RentModal = () => {
         } else {
             axios.post('/api/listings', finalData)
                 .then((response) => {
-                    toast.success('Annonce créée !');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Annonce créée !"
+                            type="success"
+                        />
+                    ));
                     router.refresh();
                     reset();
                     setCreatedListing(response.data);
@@ -293,7 +313,14 @@ const RentModal = () => {
                     rentModal.onClose();
                 })
                 .catch((error) => {
-                    toast.error(error?.response?.data?.error || "Une erreur s'est produite.");
+                    const errorMsg = error?.response?.data?.error || "Une erreur s'est produite.";
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message={errorMsg}
+                            type="error"
+                        />
+                    ));
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -540,7 +567,14 @@ const RentModal = () => {
                                                         if (room.images && room.images.length > 0) {
                                                             const roomImages = room.images.map((img: any) => img.url);
                                                             setCustomValue('imageSrcs', roomImages);
-                                                            toast.success('Photos de la chambre importées !');
+                                                            setCustomValue('imageSrcs', roomImages);
+                                                            toast.custom((t) => (
+                                                                <CustomToast
+                                                                    t={t}
+                                                                    message="Photos de la chambre importées !"
+                                                                    type="success"
+                                                                />
+                                                            ));
                                                         }
 
                                                         setShowRoomSelect(false);

@@ -1,11 +1,12 @@
 'use client';
 
 import { toast, Toast } from 'react-hot-toast';
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 interface CustomToastProps {
     t: Toast;
     message: string;
+    type?: 'success' | 'error';
     onUndo?: () => void;
     undoLabel?: string;
     actionLabel?: string;
@@ -15,6 +16,7 @@ interface CustomToastProps {
 const CustomToast: React.FC<CustomToastProps> = ({
     t,
     message,
+    type = 'success',
     onUndo,
     undoLabel = "Annuler",
     actionLabel,
@@ -37,8 +39,13 @@ const CustomToast: React.FC<CustomToastProps> = ({
             className={`${t.visible ? 'animate-enter' : 'animate-leave'
                 } max-w-md w-auto bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-full pointer-events-auto flex items-center ring-1 ring-black/5 dark:ring-white/10 py-2 pl-3 pr-2 gap-3 transition-all duration-300`}
         >
-            <div className="shrink-0 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center">
-                <Check size={14} className="text-white" strokeWidth={3} />
+            <div className={`shrink-0 rounded-full w-6 h-6 flex items-center justify-center ${type === 'error' ? 'bg-rose-500' : 'bg-green-500'
+                }`}>
+                {type === 'error' ? (
+                    <X size={14} className="text-white" strokeWidth={3} />
+                ) : (
+                    <Check size={14} className="text-white" strokeWidth={3} />
+                )}
             </div>
             <div className="flex-1 pl-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">

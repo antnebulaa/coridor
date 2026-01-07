@@ -147,7 +147,13 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             fetchWishlists();
             router.refresh(); // Refresh server data
         } catch (error) {
-            toast.error('Erreur lors de la création');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de la création"
+                    type="error"
+                />
+            ));
         } finally {
             setIsLoading(false);
         }
@@ -189,7 +195,13 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             fetchWishlists();
             router.refresh();
         } catch (error) {
-            toast.error('Une erreur est survenue');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Une erreur est survenue"
+                    type="error"
+                />
+            ));
         } finally {
             setIsLoading(false);
         }
