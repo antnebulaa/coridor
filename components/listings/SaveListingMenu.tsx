@@ -431,7 +431,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     )}
                 </AnimatePresence>
             </div>
-        </div>
+        </motion.div>
     );
 
     return (
