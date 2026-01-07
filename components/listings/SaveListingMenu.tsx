@@ -352,7 +352,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                             </div>
                             <div className="flex-1 flex items-center justify-between">
                                 <div className="font-medium text-[18px] md:text-base">{list.name}</div>
-                                <div className="text-sm text-neutral-500">{list.listings.length}</div>
+
                             </div>
                             {hasListing && (
                                 <div className="bg-black text-white rounded-full p-1">
