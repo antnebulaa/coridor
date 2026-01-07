@@ -247,7 +247,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </FeatureTag>
                                 )}
 
-                                <FeatureTag variant="yellow">
+                                <FeatureTag>
                                     <span className="font-medium">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                                 </FeatureTag>
                                 {data.hasElevator && (
@@ -429,7 +429,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
                         }
                         <div className="ml-2">
-                            <FeatureTag variant="yellow">
+                            <FeatureTag>
                                 <span className="font-medium text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                             </FeatureTag>
                         </div>
