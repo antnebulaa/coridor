@@ -188,46 +188,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
                             </div>
 
-                            {data.transitData?.mainConnection ? (
-                                <div className="text-neutral-700 dark:text-neutral-300 text-sm flex items-center gap-2 -mt-0.5 md:-mt-1 py-[5px]">
-                                    <div className="flex items-center gap-1">
-                                        {/* Dynamic Transport Icon */}
-                                        {(() => {
-                                            const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                            if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                            if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                            if (type.includes('tram')) return (
-                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
-                                                </div>
-                                            );
-                                            // Default to Metro
-                                            return (
-                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
-                                                </div>
-                                            );
-                                        })()}
-
-                                        {/* Line Badge */}
-                                        <div
-                                            className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
-                                            style={{
-                                                backgroundColor: data.transitData.mainConnection.color || '#000',
-                                                color: data.transitData.mainConnection.textColor || '#FFF'
-                                            }}
-                                        >
-                                            <span className="text-xs font-bold leading-none pt-px">
-                                                {data.transitData.mainConnection.line}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span className="line-clamp-1">à {data.transitData.mainConnection.walkTime} min</span>
-                                </div>
-                            ) : data.neighborhood && (
-                                <div className="h-4 md:h-[14px]" />
-                            )}
-
                             {/* Details Row */}
                             <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
@@ -268,6 +228,46 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                 )}
                             </div>
+
+                            {data.transitData?.mainConnection ? (
+                                <div className="text-neutral-700 dark:text-neutral-300 text-sm flex items-center gap-2 -mt-0.5 md:-mt-1 py-[5px]">
+                                    <div className="flex items-center gap-1">
+                                        {/* Dynamic Transport Icon */}
+                                        {(() => {
+                                            const type = (data.transitData.mainConnection.type || "").toLowerCase();
+                                            if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                            if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                            if (type.includes('tram')) return (
+                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
+                                                </div>
+                                            );
+                                            // Default to Metro
+                                            return (
+                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* Line Badge */}
+                                        <div
+                                            className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
+                                            style={{
+                                                backgroundColor: data.transitData.mainConnection.color || '#000',
+                                                color: data.transitData.mainConnection.textColor || '#FFF'
+                                            }}
+                                        >
+                                            <span className="text-xs font-bold leading-none pt-px">
+                                                {data.transitData.mainConnection.line}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span className="line-clamp-1">à {data.transitData.mainConnection.walkTime} min</span>
+                                </div>
+                            ) : data.neighborhood && (
+                                <div className="h-4 md:h-[14px]" />
+                            )}
                         </div>
                         {(data.hasFiber || data.hasBikeRoom) && (
                             <div className="flex flex-wrap items-center gap-3 mt-2 text-neutral-600 dark:text-neutral-400">
@@ -381,6 +381,24 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </span>
                         )}
                     </div>
+                    <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
+                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
+                            ? `Colocation • ${surfaceDisplay}`
+                            : data.roomCount === 1
+                                ? `Studio • ${surfaceDisplay}`
+                                : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
+                        }
+                        <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md ml-2">
+                            <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                        </div>
+                        {data.hasElevator && (
+                            <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-white ml-2" title="Ascenseur">
+                                <TbElevator size={18} />
+                                <span className="invisible w-0 overflow-hidden font-medium">A</span>
+                            </div>
+                        )}
+                    </div>
+
                     {data.transitData?.mainConnection ? (
                         <div className="text-neutral-700 dark:text-neutral-300 text-base flex items-center gap-2 py-[5px]">
                             <div className="flex items-center gap-1">
@@ -419,24 +437,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     ) : (
                         <div className="h-5" />
                     )}
-
-                    < div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px]">
-                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                            ? `Colocation • ${surfaceDisplay}`
-                            : data.roomCount === 1
-                                ? `Studio • ${surfaceDisplay}`
-                                : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
-                        }
-                        <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md ml-2">
-                            <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
-                        </div>
-                        {data.hasElevator && (
-                            <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-white ml-2" title="Ascenseur">
-                                <TbElevator size={18} />
-                                <span className="invisible w-0 overflow-hidden font-medium">A</span>
-                            </div>
-                        )}
-                    </div>
                 </div>
                 {(data.hasFiber || data.hasBikeRoom) && (
                     <div className="flex flex-wrap items-center gap-3 mt-1 text-neutral-600 dark:text-neutral-400">
