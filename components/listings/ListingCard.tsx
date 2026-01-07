@@ -270,7 +270,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
 
                                 {data.transitData?.mainConnection && (data.hasFiber || data.hasBikeRoom) && (
-                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-[10px] text-muted-foreground">•</span>
                                 )}
 
                                 {data.hasFiber && (
@@ -281,7 +281,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
 
                                 {data.hasFiber && data.hasBikeRoom && (
-                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-[10px] text-muted-foreground">•</span>
                                 )}
 
                                 {data.hasBikeRoom && (
@@ -450,7 +450,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
 
                         {data.transitData?.mainConnection && (data.hasFiber || data.hasBikeRoom) && (
-                            <span className="text-muted-foreground">•</span>
+                            <span className="text-[10px] text-muted-foreground">•</span>
                         )}
 
                         {data.hasFiber && (
@@ -461,7 +461,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
 
                         {data.hasFiber && data.hasBikeRoom && (
-                            <span className="text-muted-foreground">•</span>
+                            <span className="text-[10px] text-muted-foreground">•</span>
                         )}
 
                         {data.hasBikeRoom && (
