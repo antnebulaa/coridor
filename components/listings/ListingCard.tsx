@@ -5,7 +5,7 @@ import { SafeListing, SafeReservation, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
-import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike } from 'lucide-react';
+import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront } from 'lucide-react';
 import { TbElevator } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
@@ -237,7 +237,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                             {/* Dynamic Transport Icon */}
                                             {(() => {
                                                 const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                                if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                                if (type.includes('bus')) return <BusFront size={20} className="text-neutral-700 dark:text-neutral-300" />;
                                                 if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
                                                 if (type.includes('tram')) return (
                                                     <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
@@ -418,7 +418,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     {/* Dynamic Transport Icon */}
                                     {(() => {
                                         const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                        if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                        if (type.includes('bus')) return <BusFront size={20} className="text-neutral-700 dark:text-neutral-300" />;
                                         if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
                                         if (type.includes('tram')) return (
                                             <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
