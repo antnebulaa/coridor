@@ -5,7 +5,7 @@ import { SafeListing, SafeReservation, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
-import { LayoutGrid, Bus, Train, TramFront } from 'lucide-react';
+import { LayoutGrid, Bus, Train, TramFront, Wifi } from 'lucide-react';
 import { TbElevator } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
@@ -268,6 +268,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                 )}
                             </div>
+                            {data.hasFiber && (
+                                <div className="flex items-center gap-1.5 mt-2 text-neutral-600 dark:text-neutral-400">
+                                    <Wifi size={14} />
+                                    <span className="text-sm font-medium">Fibre</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Bottom Actions or Status (Optional) */}
@@ -420,6 +426,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
                         )}
                     </div>
+                    {data.hasFiber && (
+                        <div className="flex items-center gap-1.5 mt-1 text-neutral-600 dark:text-neutral-400">
+                            <Wifi size={14} />
+                            <span className="text-sm font-medium">Fibre</span>
+                        </div>
+                    )}
 
 
                 </div>
