@@ -34,7 +34,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
     const [mounted, setMounted] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [wishlists, setWishlists] = useState<any[]>([]);
+    const [wishlists, setWishlists] = useState<any[]>(currentUser?.wishlists || []);
     const [isLoading, setIsLoading] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [newListName, setNewListName] = useState('');

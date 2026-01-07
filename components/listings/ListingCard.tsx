@@ -151,7 +151,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </div>
                                     </div>
                                     {showHeart && (
-                                        <div className="ml-auto">
+                                        <div className="ml-auto shrink-0">
                                             <HeartButton
                                                 listingId={data.id}
                                                 currentUser={currentUser}
@@ -370,7 +370,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
                         </div>
                         {showHeart && (
-                            <div className="ml-auto">
+                            <div className="ml-auto shrink-0">
                                 <HeartButton
                                     listingId={data.id}
                                     currentUser={currentUser}
