@@ -5,7 +5,7 @@ import { SafeListing, SafeReservation, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
-import { LayoutGrid, Bus, Train, TramFront, Wifi } from 'lucide-react';
+import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike } from 'lucide-react';
 import { TbElevator } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
@@ -243,7 +243,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
                                             <span className="font-medium text-foreground">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
                                         </div>
-                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
+                                        <div className="items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
                                             <span className="font-medium text-foreground">{Math.max(0, (data.roomCount || 0) - 1)}</span> {Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
                                         </div>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
@@ -268,52 +268,63 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                 )}
                             </div>
-                            {data.hasFiber && (
-                                <div className="flex items-center gap-1.5 mt-2 text-neutral-600 dark:text-neutral-400">
-                                    <Wifi size={14} />
-                                    <span className="text-sm font-medium">Fibre</span>
-                                </div>
-                            )}
                         </div>
+                        {(data.hasFiber || data.hasBikeRoom) && (
+                            <div className="flex flex-wrap items-center gap-3 mt-2 text-neutral-600 dark:text-neutral-400">
+                                {data.hasFiber && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Wifi size={14} />
+                                        <span className="text-sm font-medium">Fibre</span>
+                                    </div>
+                                )}
+                                {data.hasBikeRoom && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Bike size={14} />
+                                        <span className="text-sm font-medium">Local vélo</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
-                        {/* Bottom Actions or Status (Optional) */}
-                        <div className="flex gap-2 mt-auto">
-                            {onAction && actionLabel && (
-                                <Button
-                                    disabled={disabled}
-                                    small
-                                    label={actionLabel}
-                                    onClick={handleCancel}
-                                />
-                            )}
-                            {secondaryAction && secondaryActionLabel && (
-                                <Button
-                                    disabled={disabled}
-                                    small
-                                    label={secondaryActionLabel}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        secondaryAction();
-                                    }}
-                                    variant="outline"
-                                />
-                            )}
-                            {tertiaryAction && tertiaryActionLabel && (
-                                <Button
-                                    disabled={disabled}
-                                    small
-                                    label={tertiaryActionLabel}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        tertiaryAction();
-                                    }}
-                                    variant="outline"
-                                />
-                            )}
-                        </div>
+                    {/* Bottom Actions or Status (Optional) */}
+                    <div className="flex gap-2 mt-auto">
+                        {onAction && actionLabel && (
+                            <Button
+                                disabled={disabled}
+                                small
+                                label={actionLabel}
+                                onClick={handleCancel}
+                            />
+                        )}
+                        {secondaryAction && secondaryActionLabel && (
+                            <Button
+                                disabled={disabled}
+                                small
+                                label={secondaryActionLabel}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    secondaryAction();
+                                }}
+                                variant="outline"
+                            />
+                        )}
+                        {tertiaryAction && tertiaryActionLabel && (
+                            <Button
+                                disabled={disabled}
+                                small
+                                label={tertiaryActionLabel}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    tertiaryAction();
+                                }}
+                                variant="outline"
+                            />
+                        )}
                     </div>
                 </div>
             </div>
+
         );
     }
 
@@ -426,50 +437,61 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
                         )}
                     </div>
-                    {data.hasFiber && (
-                        <div className="flex items-center gap-1.5 mt-1 text-neutral-600 dark:text-neutral-400">
-                            <Wifi size={14} />
-                            <span className="text-sm font-medium">Fibre</span>
-                        </div>
-                    )}
-
-
                 </div>
+                {(data.hasFiber || data.hasBikeRoom) && (
+                    <div className="flex flex-wrap items-center gap-3 mt-1 text-neutral-600 dark:text-neutral-400">
+                        {data.hasFiber && (
+                            <div className="flex items-center gap-1.5">
+                                <Wifi size={14} />
+                                <span className="text-sm font-medium">Fibre</span>
+                            </div>
+                        )}
+                        {data.hasBikeRoom && (
+                            <div className="flex items-center gap-1.5">
+                                <Bike size={14} />
+                                <span className="text-sm font-medium">Local vélo</span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                {onAction && actionLabel && (
-                    <Button
-                        disabled={disabled}
-                        small
-                        label={actionLabel}
-                        onClick={handleCancel}
-                    />
-                )}
-                {secondaryAction && secondaryActionLabel && (
-                    <Button
-                        disabled={disabled}
-                        small
-                        label={secondaryActionLabel}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            secondaryAction();
-                        }}
-                        variant="outline"
-                    />
-                )}
-                {tertiaryAction && tertiaryActionLabel && (
-                    <Button
-                        disabled={disabled}
-                        small
-                        label={tertiaryActionLabel}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            tertiaryAction();
-                        }}
-                        variant="outline"
-                    />
-                )}
+
             </div>
-        </div >
+
+            {onAction && actionLabel && (
+                <Button
+                    disabled={disabled}
+                    small
+                    label={actionLabel}
+                    onClick={handleCancel}
+                />
+            )}
+            {secondaryAction && secondaryActionLabel && (
+                <Button
+                    disabled={disabled}
+                    small
+                    label={secondaryActionLabel}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        secondaryAction();
+                    }}
+                    variant="outline"
+                />
+            )}
+            {tertiaryAction && tertiaryActionLabel && (
+                <Button
+                    disabled={disabled}
+                    small
+                    label={tertiaryActionLabel}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        tertiaryAction();
+                    }}
+                    variant="outline"
+                />
+            )}
+        </div>
+
 
     );
 };
