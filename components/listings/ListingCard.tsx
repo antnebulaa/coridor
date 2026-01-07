@@ -229,62 +229,72 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
                             </div>
 
-                            {data.transitData?.mainConnection ? (
-                                <div className="text-neutral-700 dark:text-neutral-300 text-sm flex items-center gap-2 -mt-0.5 md:-mt-1 py-[5px]">
-                                    <div className="flex items-center gap-1">
-                                        {/* Dynamic Transport Icon */}
-                                        {(() => {
-                                            const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                            if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                            if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                            if (type.includes('tram')) return (
-                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
-                                                </div>
-                                            );
-                                            // Default to Metro
-                                            return (
-                                                <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
-                                                </div>
-                                            );
-                                        })()}
+                            <div className="flex flex-wrap items-center gap-2 mt-1 py-[5px] text-neutral-700 dark:text-neutral-300 text-sm">
+                                {data.transitData?.mainConnection && (
+                                    <>
+                                        <div className="flex items-center gap-1">
+                                            {/* Dynamic Transport Icon */}
+                                            {(() => {
+                                                const type = (data.transitData.mainConnection.type || "").toLowerCase();
+                                                if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                                if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                                if (type.includes('tram')) return (
+                                                    <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
+                                                    </div>
+                                                );
+                                                // Default to Metro
+                                                return (
+                                                    <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
+                                                    </div>
+                                                );
+                                            })()}
 
-                                        {/* Line Badge */}
-                                        <div
-                                            className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
-                                            style={{
-                                                backgroundColor: data.transitData.mainConnection.color || '#000',
-                                                color: data.transitData.mainConnection.textColor || '#FFF'
-                                            }}
-                                        >
-                                            <span className="text-xs font-bold leading-none pt-px">
-                                                {data.transitData.mainConnection.line}
-                                            </span>
+                                            {/* Line Badge */}
+                                            <div
+                                                className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
+                                                style={{
+                                                    backgroundColor: data.transitData.mainConnection.color || '#000',
+                                                    color: data.transitData.mainConnection.textColor || '#FFF'
+                                                }}
+                                            >
+                                                <span className="text-xs font-bold leading-none pt-px">
+                                                    {data.transitData.mainConnection.line}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <span className="line-clamp-1">à {data.transitData.mainConnection.walkTime} min</span>
-                                </div>
-                            ) : data.neighborhood && (
-                                <div className="h-4 md:h-[14px]" />
-                            )}
-                        </div>
-                        {(data.hasFiber || data.hasBikeRoom) && (
-                            <div className="flex flex-wrap items-center gap-3 mt-0.5 text-neutral-600 dark:text-neutral-400">
+                                        <span className="line-clamp-1">à {data.transitData.mainConnection.walkTime} min</span>
+                                    </>
+                                )}
+
+                                {data.transitData?.mainConnection && (data.hasFiber || data.hasBikeRoom) && (
+                                    <span className="text-muted-foreground">•</span>
+                                )}
+
                                 {data.hasFiber && (
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                         <Wifi size={14} />
                                         <span className="text-sm font-medium">Fibre</span>
                                     </div>
                                 )}
+
+                                {data.hasFiber && data.hasBikeRoom && (
+                                    <span className="text-muted-foreground">•</span>
+                                )}
+
                                 {data.hasBikeRoom && (
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                         <Bike size={14} />
                                         <span className="text-sm font-medium">Local vélo</span>
                                     </div>
                                 )}
+
+                                {!data.transitData?.mainConnection && !data.hasFiber && !data.hasBikeRoom && data.neighborhood && (
+                                    <div className="h-4 md:h-[14px]" />
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
 
                     {/* Bottom Actions or Status (Optional) */}
@@ -399,61 +409,71 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
                     </div>
 
-                    {data.transitData?.mainConnection ? (
-                        <div className="text-neutral-700 dark:text-neutral-300 text-base flex items-center gap-2 py-[5px]">
-                            <div className="flex items-center gap-1">
-                                {/* Dynamic Transport Icon */}
-                                {(() => {
-                                    const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                    if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                    if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                    if (type.includes('tram')) return (
-                                        <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                            <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
-                                        </div>
-                                    );
-                                    // Default to Metro
-                                    return (
-                                        <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                            <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
-                                        </div>
-                                    );
-                                })()}
-                                {/* Line Badge */}
-                                <div
-                                    className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
-                                    style={{
-                                        backgroundColor: data.transitData.mainConnection.color || '#000',
-                                        color: data.transitData.mainConnection.textColor || '#FFF'
-                                    }}
-                                >
-                                    <span className="text-xs font-bold leading-none pt-px">
-                                        {data.transitData.mainConnection.line}
-                                    </span>
+                    <div className="flex flex-wrap items-center gap-2 py-[5px] text-neutral-700 dark:text-neutral-300 text-base">
+                        {data.transitData?.mainConnection && (
+                            <>
+                                <div className="flex items-center gap-1">
+                                    {/* Dynamic Transport Icon */}
+                                    {(() => {
+                                        const type = (data.transitData.mainConnection.type || "").toLowerCase();
+                                        if (type.includes('bus')) return <Bus size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                        if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                        if (type.includes('tram')) return (
+                                            <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
+                                            </div>
+                                        );
+                                        // Default to Metro
+                                        return (
+                                            <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
+                                                <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
+                                            </div>
+                                        );
+                                    })()}
+                                    {/* Line Badge */}
+                                    <div
+                                        className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
+                                        style={{
+                                            backgroundColor: data.transitData.mainConnection.color || '#000',
+                                            color: data.transitData.mainConnection.textColor || '#FFF'
+                                        }}
+                                    >
+                                        <span className="text-xs font-bold leading-none pt-px">
+                                            {data.transitData.mainConnection.line}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                            <span>à {data.transitData.mainConnection.walkTime} min</span>
-                        </div>
-                    ) : (
-                        <div className="h-5" />
-                    )}
-                </div>
-                {(data.hasFiber || data.hasBikeRoom) && (
-                    <div className="flex flex-wrap items-center gap-3 mt-0 text-neutral-600 dark:text-neutral-400">
+                                <span>à {data.transitData.mainConnection.walkTime} min</span>
+                            </>
+                        )}
+
+                        {data.transitData?.mainConnection && (data.hasFiber || data.hasBikeRoom) && (
+                            <span className="text-muted-foreground">•</span>
+                        )}
+
                         {data.hasFiber && (
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                 <Wifi size={14} />
                                 <span className="text-sm font-medium">Fibre</span>
                             </div>
                         )}
+
+                        {data.hasFiber && data.hasBikeRoom && (
+                            <span className="text-muted-foreground">•</span>
+                        )}
+
                         {data.hasBikeRoom && (
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                 <Bike size={14} />
                                 <span className="text-sm font-medium">Local vélo</span>
                             </div>
                         )}
+
+                        {!data.transitData?.mainConnection && !data.hasFiber && !data.hasBikeRoom && (
+                            <div className="h-5" />
+                        )}
                     </div>
-                )}
+                </div>
 
 
             </div>
