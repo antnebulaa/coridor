@@ -192,19 +192,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {/* Details Row */}
                             <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2 mb-1 md:mb-2">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
-                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
                                         <span className="font-medium text-foreground">1 chambre</span>
                                     </div>
                                 ) : data.roomCount === 1 ? (
-                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
                                         <span className="font-medium text-foreground">Studio</span>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
                                             <span className="font-medium text-foreground">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
                                         </div>
-                                        <div className="items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md hidden sm:flex">
+                                        <div className="items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full hidden sm:flex">
                                             <span className="font-medium text-foreground">{Math.max(0, (data.roomCount || 0) - 1)}</span> {Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
                                         </div>
                                         <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
@@ -214,16 +214,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
 
                                 {surfaceDisplay && (
-                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
                                         <span className="font-medium text-foreground">{surfaceDisplay}</span>
                                     </div>
                                 )}
 
-                                <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md">
+                                <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
                                     <span className="font-medium text-[#282828]">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                                 </div>
                                 {data.hasElevator && (
-                                    <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-white" title="Ascenseur">
+                                    <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-white" title="Ascenseur">
                                         <TbElevator size={18} />
                                         <span className="invisible w-0 overflow-hidden font-medium">A</span>
                                     </div>
@@ -400,11 +400,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 ? `Studio • ${surfaceDisplay}`
                                 : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
                         }
-                        <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-md ml-2">
+                        <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-full ml-2">
                             <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                         </div>
                         {data.hasElevator && (
-                            <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-white ml-2" title="Ascenseur">
+                            <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-white ml-2" title="Ascenseur">
                                 <TbElevator size={18} />
                                 <span className="invisible w-0 overflow-hidden font-medium">A</span>
                             </div>
