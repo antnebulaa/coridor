@@ -30,6 +30,29 @@ interface ListingCardProps {
     variant?: 'vertical' | 'horizontal';
 }
 
+const FeatureTag = ({
+    children,
+    variant = 'default',
+    title
+}: {
+    children: React.ReactNode;
+    variant?: 'default' | 'yellow' | 'blue';
+    title?: string;
+}) => {
+    const baseStyles = "flex items-center gap-1 rounded-full px-2.5 py-0.5 md:px-3 md:py-1";
+    const variants = {
+        default: "bg-secondary text-foreground",
+        yellow: "bg-[#FFFE3C] text-[#282828]",
+        blue: "bg-blue-600 text-white justify-center"
+    };
+
+    return (
+        <div className={`${baseStyles} ${variants[variant]}`} title={title}>
+            {children}
+        </div>
+    );
+};
+
 const ListingCard: React.FC<ListingCardProps> = ({
     data,
     reservation,
@@ -192,41 +215,45 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {/* Details Row */}
                             <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2 mb-1 md:mb-2">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
-                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
-                                        <span className="font-medium text-foreground">1 chambre</span>
-                                    </div>
+                                    <FeatureTag>
+                                        <span className="font-medium">1 chambre</span>
+                                    </FeatureTag>
                                 ) : data.roomCount === 1 ? (
-                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
-                                        <span className="font-medium text-foreground">Studio</span>
-                                    </div>
+                                    <FeatureTag>
+                                        <span className="font-medium">Studio</span>
+                                    </FeatureTag>
                                 ) : (
                                     <>
-                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
-                                            <span className="font-medium text-foreground">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
+                                        <FeatureTag>
+                                            <span className="font-medium">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
+                                        </FeatureTag>
+                                        <div className="hidden sm:block">
+                                            <FeatureTag>
+                                                <span className="font-medium">{Math.max(0, (data.roomCount || 0) - 1)}</span> {Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
+                                            </FeatureTag>
                                         </div>
-                                        <div className="items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full hidden sm:flex">
-                                            <span className="font-medium text-foreground">{Math.max(0, (data.roomCount || 0) - 1)}</span> {Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
-                                        </div>
-                                        <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-md sm:hidden">
-                                            <span className="font-medium text-foreground">{Math.max(0, (data.roomCount || 0) - 1)}</span> ch.
+                                        <div className="sm:hidden">
+                                            <FeatureTag>
+                                                <span className="font-medium">{Math.max(0, (data.roomCount || 0) - 1)}</span> ch.
+                                            </FeatureTag>
                                         </div>
                                     </>
                                 )}
 
                                 {surfaceDisplay && (
-                                    <div className="flex items-center gap-1 bg-secondary px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
-                                        <span className="font-medium text-foreground">{surfaceDisplay}</span>
-                                    </div>
+                                    <FeatureTag>
+                                        <span className="font-medium">{surfaceDisplay}</span>
+                                    </FeatureTag>
                                 )}
 
-                                <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-full">
-                                    <span className="font-medium text-[#282828]">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
-                                </div>
+                                <FeatureTag variant="yellow">
+                                    <span className="font-medium">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                                </FeatureTag>
                                 {data.hasElevator && (
-                                    <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-white" title="Ascenseur">
+                                    <FeatureTag variant="blue" title="Ascenseur">
                                         <TbElevator size={18} />
                                         <span className="invisible w-0 overflow-hidden font-medium">A</span>
-                                    </div>
+                                    </FeatureTag>
                                 )}
                             </div>
 
@@ -400,13 +427,17 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 ? `Studio • ${surfaceDisplay}`
                                 : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
                         }
-                        <div className="flex items-center gap-1 bg-[#FFFE3C] px-1.5 py-0.5 md:px-2 md:py-1 rounded-full ml-2">
-                            <span className="font-medium text-[#282828] text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                        <div className="ml-2">
+                            <FeatureTag variant="yellow">
+                                <span className="font-medium text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                            </FeatureTag>
                         </div>
                         {data.hasElevator && (
-                            <div className="flex items-center justify-center bg-blue-600 px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-white ml-2" title="Ascenseur">
-                                <TbElevator size={18} />
-                                <span className="invisible w-0 overflow-hidden font-medium">A</span>
+                            <div className="ml-2">
+                                <FeatureTag variant="blue" title="Ascenseur">
+                                    <TbElevator size={18} />
+                                    <span className="invisible w-0 overflow-hidden font-medium">A</span>
+                                </FeatureTag>
                             </div>
                         )}
                     </div>
