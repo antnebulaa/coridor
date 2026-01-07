@@ -151,11 +151,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </div>
                                     </div>
                                     {showHeart && (
-                                        <div className="-mr-1">
+                                        <div className="">
                                             <HeartButton
                                                 listingId={data.id}
                                                 currentUser={currentUser}
                                                 listingImage={data.images?.[0]?.url}
+                                                variant="button"
                                             />
                                         </div>
                                     )}
@@ -369,11 +370,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             {price}€ <span className="text-muted-foreground font-normal text-base">par mois CC</span>
                         </div>
                         {showHeart && (
-                            <div className="-mr-2">
+                            <div className="">
                                 <HeartButton
                                     listingId={data.id}
                                     currentUser={currentUser}
                                     listingImage={data.images?.[0]?.url}
+                                    variant="button"
                                 />
                             </div>
                         )}

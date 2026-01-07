@@ -19,12 +19,14 @@ interface SaveListingMenuProps {
     listingId: string;
     currentUser?: SafeUser | null;
     listingImage?: string | null;
+    variant?: 'icon' | 'button';
 }
 
 const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     listingId,
     currentUser,
-    listingImage
+    listingImage,
+    variant = 'icon'
 }) => {
     const router = useRouter();
     const loginModal = useLoginModal();
@@ -439,23 +441,39 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             <div
                 ref={buttonRef}
                 onClick={toggleOpen}
-                className="
+                className={`
                     relative
                     hover:opacity-80
                     transition
                     cursor-pointer
                     z-10
-                "
+                    ${variant === 'button' ? 'bg-white rounded-full' : ''}
+                `}
             >
-                <Heart
-                    size={28}
-                    className={`
+                {variant === 'icon' ? (
+                    <Heart
+                        size={28}
+                        className={`
                         ${isSavedAnywhere
-                            ? 'fill-primary text-primary'
-                            : 'fill-black/50 text-white'}
+                                ? 'fill-primary text-primary'
+                                : 'fill-black/50 text-white'}
                     `}
-                    strokeWidth={isSavedAnywhere ? 0 : 2}
-                />
+                        strokeWidth={isSavedAnywhere ? 0 : 2}
+                    />
+                ) : (
+                    <div className={`
+                        px-3 py-1.5 
+                        rounded-full 
+                        text-sm font-medium 
+                        border
+                        transition-all
+                        ${isSavedAnywhere
+                            ? 'bg-black text-white border-black'
+                            : 'bg-white text-black border-neutral-200 hover:border-black hover:bg-neutral-50'}
+                    `}>
+                        {isSavedAnywhere ? 'Enregistré' : 'Enregistrer'}
+                    </div>
+                )}
             </div>
 
             {/* Mobile Drawer */}
