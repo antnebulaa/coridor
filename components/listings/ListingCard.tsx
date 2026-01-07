@@ -161,13 +161,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-base md:text-lg text-foreground line-clamp-1">
+                                    <div className="font-medium text-base text-foreground line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                                             ? 'Colocation'
                                             : data.category}
                                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase font-normal text-muted-foreground"> {data.propertyAdjective}</span>}
                                     </div>
-                                    <div className="hidden md:block font-medium text-muted-foreground text-sm md:text-base line-clamp-2">
+                                    <div className="hidden md:block font-medium text-muted-foreground text-sm line-clamp-2">
                                         {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                         {data.neighborhood && (
                                             <span className="font-normal text-xs md:text-sm text-neutral-500">
@@ -189,7 +189,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {data.transitData?.mainConnection ? (
-                                <div className="text-neutral-700 dark:text-neutral-300 text-sm md:text-base flex items-center gap-2 -mt-0.5 md:-mt-1 py-[5px]">
+                                <div className="text-neutral-700 dark:text-neutral-300 text-sm flex items-center gap-2 -mt-0.5 md:-mt-1 py-[5px]">
                                     <div className="flex items-center gap-1">
                                         {/* Dynamic Transport Icon */}
                                         {(() => {
