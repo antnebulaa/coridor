@@ -167,7 +167,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                             : data.category}
                                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                                     </div>
-                                    <div className="hidden md:block font-medium text-muted-foreground text-sm line-clamp-2">
+                                    <div className="hidden md:block font-normal text-muted-foreground text-sm line-clamp-2">
                                         {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                         {data.neighborhood && (
                                             <span className="font-normal text-xs md:text-sm text-neutral-500">
@@ -179,7 +179,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {/* Mobile City Display - Visible only on mobile */}
-                            <div className="md:hidden font-medium text-neutral-500 text-sm line-clamp-1 -mt-1">
+                            <div className="md:hidden font-normal text-neutral-500 text-sm line-clamp-1 -mt-1">
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
                                     <span className="font-normal text-xs text-neutral-500">
@@ -379,7 +379,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
                     </div>
 
-                    <div className="font-medium text-foreground">
+                    <div className="font-normal text-foreground">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                             ? 'Colocation'
                             : data.category}
