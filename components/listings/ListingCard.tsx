@@ -170,7 +170,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
                                         <div className="font-semibold text-[26px] md:text-[22px] text-foreground leading-tight">
-                                            {price}€<span className="text-muted-foreground font-normal text-sm">/mois cc</span>
+                                            {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                                         </div>
                                     </div>
                                     {showHeart && (
@@ -394,7 +394,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 <div className="flex flex-col gap-1 mt-2">
                     <div className="flex flex-row justify-between items-start w-full">
                         <div className="font-semibold text-[26px]">
-                            {price}€ <span className="text-muted-foreground font-normal text-sm">/mois cc</span>
+                            {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                         </div>
                         {showHeart && (
                             <div className="ml-auto shrink-0 -mr-1">
