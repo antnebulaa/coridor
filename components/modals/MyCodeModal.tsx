@@ -11,6 +11,7 @@ import Modal from "./Modal";
 import Heading from "../Heading";
 import { Button } from "../ui/Button";
 import { useRouter } from "next/navigation";
+import CustomToast from "../ui/CustomToast";
 
 interface MyCodeModalProps {
     currentUser?: SafeUser | null;
@@ -42,10 +43,22 @@ const MyCodeModal: React.FC<MyCodeModalProps> = ({ currentUser }) => {
         // Check if the Clipboard API is available (Secure Context)
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(uniqueCode)
-                .then(() => toast.success('Code copié !'))
+                .then(() => toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Code copié !"
+                        type="success"
+                    />
+                )))
                 .catch(err => {
                     console.error('Failed to copy: ', err);
-                    toast.error('Erreur lors de la copie');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Erreur lors de la copie"
+                            type="error"
+                        />
+                    ));
                 });
         } else {
             // Fallback for insecure contexts (e.g. HTTP on standard IP)
@@ -64,13 +77,31 @@ const MyCodeModal: React.FC<MyCodeModalProps> = ({ currentUser }) => {
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
-                    toast.success('Code copié !');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Code copié !"
+                            type="success"
+                        />
+                    ));
                 } else {
-                    toast.error('Erreur lors de la copie');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Erreur lors de la copie"
+                            type="error"
+                        />
+                    ));
                 }
             } catch (err) {
                 console.error('Fallback: Oops, unable to copy', err);
-                toast.error('Erreur lors de la copie');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de la copie"
+                        type="error"
+                    />
+                ));
             }
 
             document.body.removeChild(textArea);
@@ -81,11 +112,23 @@ const MyCodeModal: React.FC<MyCodeModalProps> = ({ currentUser }) => {
         setIsLoading(true);
         axios.post('/api/user/generate-code')
             .then(() => {
-                toast.success('Code généré !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Code généré !"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Erreur lors de la génération');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de la génération"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

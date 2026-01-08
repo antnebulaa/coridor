@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import Avatar from "@/components/Avatar";
 import { Button } from "@/components/ui/Button";
 import Heading from "@/components/Heading";
+import CustomToast from "../ui/CustomToast";
 import Modal from "./Modal";
 
 interface AddContactModalProps {
@@ -35,7 +36,13 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
             })
             .catch((error) => {
                 console.error(error);
-                toast.error("Utilisateur introuvable ou code invalide.");
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Utilisateur introuvable ou code invalide."
+                        type="error"
+                    />
+                ));
                 onClose();
             })
             .finally(() => {
@@ -49,13 +56,25 @@ const AddContactModal: React.FC<AddContactModalProps> = ({
         setIsAdding(true);
         axios.post('/api/contacts', { code })
             .then(() => {
-                toast.success("Contact ajouté !");
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Contact ajouté !"
+                        type="success"
+                    />
+                ));
                 router.refresh();
                 onClose();
             })
             .catch((error) => {
                 const message = error.response?.data || "Erreur lors de l'ajout.";
-                toast.error(message);
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={message}
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsAdding(false);

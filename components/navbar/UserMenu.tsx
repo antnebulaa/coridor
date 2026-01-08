@@ -11,6 +11,7 @@ import useRegisterModal from "@/hooks/useRegisterModal";
 import useLoginModal from "@/hooks/useLoginModal";
 import useRentModal from "@/hooks/useRentModal";
 import useMyCodeModal from "@/hooks/useMyCodeModal";
+import CustomToast from "../ui/CustomToast";
 import { SafeUser } from "@/types";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -53,11 +54,23 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
         axios.post('/api/settings', { userMode: newMode })
             .then(() => {
-                toast.success(`Mode ${newMode === 'LANDLORD' ? 'Propriétaire' : 'Locataire'} activé`);
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={`Mode ${newMode === 'LANDLORD' ? 'Propriétaire' : 'Locataire'} activé`}
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Une erreur est survenue.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue."
+                        type="error"
+                    />
+                ));
             });
     }, [currentUser, loginModal, router]);
 

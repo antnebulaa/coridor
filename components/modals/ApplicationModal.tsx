@@ -11,6 +11,7 @@ import SoftInput from "../inputs/SoftInput";
 import { SafeListing, SafeUser } from "@/types";
 import Image from "next/image";
 import { Button } from "../ui/Button";
+import CustomToast from "../ui/CustomToast";
 
 interface ApplicationModalProps {
     isOpen: boolean;
@@ -53,13 +54,26 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
             message: data.message
         })
             .then((response) => {
-                toast.success('Candidature envoyée !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Candidature envoyée !"
+                        type="success"
+                    />
+                ));
                 reset();
                 onClose();
                 router.push(`/inbox/${response.data.id}`);
             })
             .catch((error) => {
-                toast.error(error?.response?.data || 'Une erreur est survenue.');
+                const message = error?.response?.data || 'Une erreur est survenue.';
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={message}
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

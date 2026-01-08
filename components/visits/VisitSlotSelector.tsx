@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
 import { SafeUser } from "@/types";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import CustomToast from "../ui/CustomToast";
 
 interface VisitSlotSelectorProps {
     listingId: string;
@@ -46,7 +47,13 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                 }
             } catch (error) {
                 console.error("Failed to fetch slots", error);
-                toast.error("Impossible de charger les créneaux");
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Impossible de charger les créneaux"
+                        type="error"
+                    />
+                ));
             } finally {
                 setIsLoading(false);
             }
@@ -76,11 +83,23 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                 startTime: selectedSlot.startTime,
                 endTime: selectedSlot.endTime
             });
-            toast.success("Visite confirmée !");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Visite confirmée !"
+                    type="success"
+                />
+            ));
             setIsBooked(true);
             if (onSuccess) onSuccess();
         } catch (error) {
-            toast.error("Erreur lors de la réservation");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de la réservation"
+                    type="error"
+                />
+            ));
             console.error(error);
         } finally {
             setIsBooking(false);

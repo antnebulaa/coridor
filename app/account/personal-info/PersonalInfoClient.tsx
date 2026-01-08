@@ -13,6 +13,7 @@ import SoftInput from "@/components/inputs/SoftInput";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle } from "lucide-react";
+import CustomToast from "@/components/ui/CustomToast";
 
 // Helper for status badges
 const StatusBadge = ({ isComplete }: { isComplete: boolean }) => (
@@ -93,7 +94,13 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
 
         axios.post('/api/settings', data)
             .then(() => {
-                toast.success('Profil mis à jour !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Profil mis à jour !"
+                        type="success"
+                    />
+                ));
                 router.refresh();
                 setIsEditingIdentity(false);
                 setIsEditingEmail(false);
@@ -101,7 +108,13 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                 setIsEditingAddress(false);
             })
             .catch(() => {
-                toast.error('Une erreur est survenue.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue."
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);
