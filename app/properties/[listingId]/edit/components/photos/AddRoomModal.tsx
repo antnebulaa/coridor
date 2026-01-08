@@ -4,6 +4,7 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import CustomToast from "@/components/ui/CustomToast";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
@@ -41,11 +42,26 @@ const AddRoomModal: React.FC<AddRoomModalProps> = ({
             name
         })
             .then(() => {
-                toast.success('Pièce créée');
-                onClose();
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Pièce créée"
+                        type="success"
+                    />
+                ));
+                setCustomName('');
                 router.refresh();
+                onClose();
             })
-            .catch(() => toast.error('Erreur lors de la création'))
+            .catch(() => {
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de la création"
+                        type="error"
+                    />
+                ));
+            })
             .finally(() => setIsLoading(false));
     };
 

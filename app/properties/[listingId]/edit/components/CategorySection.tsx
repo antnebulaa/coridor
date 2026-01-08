@@ -9,6 +9,7 @@ import { Check, X } from "lucide-react";
 
 import { SafeListing, SafeUser } from "@/types";
 import { Button } from "@/components/ui/Button";
+import CustomToast from "@/components/ui/CustomToast";
 import Counter from "@/components/inputs/Counter";
 import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
@@ -105,16 +106,34 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             const response = await axios.post(`/api/listings/${listing.id}/mode`, { mode: newMode });
 
             if (response.data?.targetListingId && response.data.targetListingId !== listing.id) {
-                toast.success(newMode === 'COLOCATION' ? 'Mode Colocation activé (Redirection...)' : 'Mode Logement Entier activé (Redirection...)');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={newMode === 'COLOCATION' ? 'Mode Colocation activé (Redirection...)' : 'Mode Logement Entier activé (Redirection...)'}
+                        type="success"
+                    />
+                ));
                 router.push(`/properties/${response.data.targetListingId}/edit`);
                 return;
             }
 
             setMode(newMode);
-            toast.success(newMode === 'COLOCATION' ? 'Mode Colocation activé' : 'Mode Logement Entier activé');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message={newMode === 'COLOCATION' ? 'Mode Colocation activé' : 'Mode Logement Entier activé'}
+                    type="success"
+                />
+            ));
             router.refresh();
         } catch (error) {
-            toast.error('Erreur lors du changement de mode');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors du changement de mode"
+                    type="error"
+                />
+            ));
         } finally {
             setIsLoading(false);
         }
@@ -126,11 +145,23 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
 
         axios.put(`/api/listings/${listing.id}`, data)
             .then(() => {
-                toast.success('Listing updated!');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Votre annonce a été mise à jour"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Something went wrong.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

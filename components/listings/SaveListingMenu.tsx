@@ -34,10 +34,19 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
     const [mounted, setMounted] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [wishlists, setWishlists] = useState<any[]>(currentUser?.wishlists || []);
     const [isLoading, setIsLoading] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [newListName, setNewListName] = useState('');
+
+    // Optimistic State
+    const [localWishlists, setLocalWishlists] = useState<any[]>(currentUser?.wishlists || []);
+    const [localFavoriteIds, setLocalFavoriteIds] = useState<string[]>(currentUser?.favoriteIds || []);
+
+    // Sync local state with props when they change (server refresh)
+    useEffect(() => {
+        setLocalWishlists(currentUser?.wishlists || []);
+        setLocalFavoriteIds(currentUser?.favoriteIds || []);
+    }, [currentUser]);
 
     useEffect(() => {
         setMounted(true);
@@ -46,29 +55,6 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     // Desktop Popover Positioning
     const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
     const buttonRef = useRef<HTMLDivElement>(null);
-
-    const hasFavoritedMain = currentUser?.wishlists?.some(w =>
-        w.name === "All saved" && w.listings.some(l => l.id === listingId)
-    ) || false;
-
-    // We can also check legacy favoriteIds if "All saved" isn't strictly used yet
-    // But for this new design, we should rely on the fetched wishlists to be accurate
-
-    const fetchWishlists = useCallback(async () => {
-        if (!currentUser) return;
-        try {
-            const response = await axios.get('/api/wishlists');
-            setWishlists(response.data);
-        } catch (error) {
-            console.error(error);
-        }
-    }, [currentUser]);
-
-    useEffect(() => {
-        if (isOpen) {
-            fetchWishlists();
-        }
-    }, [isOpen, fetchWishlists]);
 
     const toggleOpen = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -105,9 +91,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 // Center of the card
                 left = cardRect.left + (cardRect.width / 2);
             } else {
-                // Fallback: Center relative to button? Or Right align?
-                // User specifically asked for center of column (card). 
-                // Fallback to button center if card not found.
+                // Return fallback: Center relative to button
                 left = buttonRect.left + (buttonRect.width / 2);
             }
 
@@ -123,6 +107,9 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
     const handleCreateWishlist = async () => {
         if (!newListName.trim()) return;
+
+        // Optimistic update for creation is harder without an ID, so we keep spinner for this one action 
+        // or generate a temp ID. For now, spinner is acceptable for meaningful creation.
         setIsLoading(true);
         try {
             const res = await axios.post('/api/wishlists', {
@@ -130,13 +117,21 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 listingId
             });
 
+            // Optimistic update after success but before refresh
+            const newList = res.data;
+            // The API returns the new wishlist. We need to ensure it has the listing if the API adds it.
+            // Our API logic above sends listingId, so it should be added.
+            // We can append to localWishlists to update UI immediately
+
+            // However, implementing full optimistic creation needs correct structure.
+            // Let's rely on refresh for creation as it's a rare action, but fix the lag for toggles.
+
             toast.custom((t) => (
                 <CustomToast
                     t={t}
                     message="Collection créée"
                     onUndo={async () => {
                         await axios.delete(`/api/wishlists/${res.data.id}`);
-                        fetchWishlists();
                         router.refresh();
                     }}
                 />
@@ -144,8 +139,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
             setNewListName('');
             setIsCreating(false);
-            fetchWishlists();
-            router.refresh(); // Refresh server data
+            router.refresh();
         } catch (error) {
             toast.custom((t) => (
                 <CustomToast
@@ -160,8 +154,25 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     };
 
     const toggleWishlist = async (wishlistId: string, hasListing: boolean) => {
-        setIsLoading(true);
-        setIsOpen(false); // Close immediately for better UX
+        setIsOpen(false);
+
+        // Optimistic Update
+        const previousWishlists = [...localWishlists];
+
+        setLocalWishlists(current =>
+            current.map(list => {
+                if (list.id === wishlistId) {
+                    return {
+                        ...list,
+                        listings: hasListing
+                            ? list.listings.filter((l: any) => l.id !== listingId)
+                            : [...list.listings, { id: listingId }] // Minimal mock object
+                    };
+                }
+                return list;
+            })
+        );
+
         try {
             if (hasListing) {
                 await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
@@ -171,7 +182,6 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         message="Retiré de la collection"
                         onUndo={async () => {
                             await axios.post(`/api/wishlists/${wishlistId}`, { listingId });
-                            fetchWishlists();
                             router.refresh();
                         }}
                     />
@@ -186,15 +196,15 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         message="Ajouté à la collection"
                         onUndo={async () => {
                             await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
-                            fetchWishlists();
                             router.refresh();
                         }}
                     />
                 ));
             }
-            fetchWishlists();
             router.refresh();
         } catch (error) {
+            // Revert on error
+            setLocalWishlists(previousWishlists);
             toast.custom((t) => (
                 <CustomToast
                     t={t}
@@ -202,40 +212,46 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     type="error"
                 />
             ));
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    // Calculate if favorite for the icon state
-    // We check ALL wishlists. If present in ANY, the heart is filled.
-    // Use the PROP currentUser for immediate feedback before fetching
-    // const isSavedInitial = currentUser?.wishlists?.some(w => w.listings.some(l => l.id === listingId)); // Optional initialization
-
-    // Use the PROP currentUser for immediate feedback before fetching
-    const isSavedInGeneral = currentUser?.favoriteIds?.includes(listingId) || false;
-    const isSavedInWishlists = wishlists.some(w => w.listings.some((l: any) => l.id === listingId));
-
-    // Combined state for the heart icon
+    const isSavedInGeneral = localFavoriteIds.includes(listingId);
+    const isSavedInWishlists = localWishlists.some(w => w.listings.some((l: any) => l.id === listingId));
     const isSavedAnywhere = isSavedInGeneral || isSavedInWishlists;
 
-    // Most recent image from any wishlist for "All listings" thumbnail, or current listing image?
-    // Using current listing image is cleaner for the toggle context.
-
     const handleToggleAll = async () => {
-        setIsLoading(true);
-        setIsOpen(false); // Close immediately
+        setIsOpen(false);
+
+        // Optimistic Snapshot
+        const previousFavoriteIds = [...localFavoriteIds];
+        const previousWishlists = JSON.parse(JSON.stringify(localWishlists)); // Deep copy safety
+
+        // Optimistic Update
+        if (isSavedAnywhere) {
+            // Remove from everything
+            setLocalFavoriteIds(current => current.filter(id => id !== listingId));
+            setLocalWishlists(current =>
+                current.map(list => ({
+                    ...list,
+                    listings: list.listings.filter((l: any) => l.id !== listingId)
+                }))
+            );
+        } else {
+            // Add to General Favorites
+            setLocalFavoriteIds(current => [...current, listingId]);
+        }
+
         try {
             if (isSavedAnywhere) {
-                // 1. Remove from General Favorites (favoriteIds) if present
-                if (isSavedInGeneral) {
+                // 1. Remove from General Favorites
+                if (previousFavoriteIds.includes(listingId)) {
                     await axios.delete(`/api/favorites/${listingId}`);
                 }
 
-                // 2. Remove from ALL lists
-                const listsToRemove = wishlists.filter(w => w.listings.some((l: any) => l.id === listingId));
+                // 2. Remove from lists
+                const listsToRemove = previousWishlists.filter((w: any) => w.listings.some((l: any) => l.id === listingId));
                 if (listsToRemove.length > 0) {
-                    await Promise.all(listsToRemove.map(w => axios.delete(`/api/wishlists/${w.id}?listingId=${listingId}`)));
+                    await Promise.all(listsToRemove.map((w: any) => axios.delete(`/api/wishlists/${w.id}?listingId=${listingId}`)));
                 }
 
                 toast.custom((t) => (
@@ -243,19 +259,18 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         t={t}
                         message="Retiré de tous les favoris"
                         onUndo={async () => {
-                            if (isSavedInGeneral) {
+                            // Undo logic needs to be careful about state syncing
+                            if (previousFavoriteIds.includes(listingId)) {
                                 await axios.post(`/api/favorites/${listingId}`);
                             }
                             if (listsToRemove.length > 0) {
-                                await Promise.all(listsToRemove.map(w => axios.post(`/api/wishlists/${w.id}`, { listingId })));
+                                await Promise.all(listsToRemove.map((w: any) => axios.post(`/api/wishlists/${w.id}`, { listingId })));
                             }
-                            fetchWishlists();
                             router.refresh();
                         }}
                     />
                 ));
             } else {
-                // Add to General Favorites ONLY
                 await axios.post(`/api/favorites/${listingId}`);
 
                 toast.custom((t) => (
@@ -264,22 +279,17 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         message="Ajouté aux favoris"
                         onUndo={async () => {
                             await axios.delete(`/api/favorites/${listingId}`);
-                            fetchWishlists();
                             router.refresh();
                         }}
                     />
                 ));
             }
-
-            // Refresh logic
             router.refresh();
-            // Re-fetch wishlists to update local state (for the check icons)
-            const res = await axios.get('/api/wishlists');
-            setWishlists(res.data);
         } catch (error) {
+            // Revert
+            setLocalFavoriteIds(previousFavoriteIds);
+            setLocalWishlists(previousWishlists);
             toast.error('Une erreur est survenue');
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -339,7 +349,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 {/* Default "All Saved" Mockup if needed, or just iterate wishlists */}
                 {/* Assuming API returns all wishlists including a default one if it exists */}
 
-                {wishlists.map((list) => {
+                {localWishlists.map((list) => {
                     const hasListing = list.listings.some((l: any) => l.id === listingId);
 
                     return (
@@ -459,7 +469,8 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     transition
                     cursor-pointer
                     z-10
-                    ${variant === 'button' ? 'bg-white rounded-full' : ''}
+                    active:scale-90
+                    ${variant === 'button' ? 'bg-white dark:bg-transparent rounded-full' : ''}
                 `}
             >
                 {variant === 'icon' ? (
@@ -479,11 +490,22 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         text-sm font-medium 
                         border
                         transition-all
+                        flex items-center gap-2
                         ${isSavedAnywhere
-                            ? 'bg-black text-white border-black'
-                            : 'bg-white text-black border-neutral-200 hover:border-black hover:bg-neutral-50'}
+                            ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                            : 'bg-white text-black border-neutral-200 hover:border-black hover:bg-neutral-50 dark:bg-transparent dark:text-neutral-200 dark:border-neutral-600 dark:hover:border-neutral-400 dark:hover:bg-neutral-800'}
                     `}>
-                        {isSavedAnywhere ? 'Enregistré' : 'Enregistrer'}
+                        {isSavedAnywhere ? (
+                            <>
+                                <Check size={14} />
+                                Enregistré
+                            </>
+                        ) : (
+                            <>
+                                <Plus size={14} />
+                                Enregistrer
+                            </>
+                        )}
                     </div>
                 )}
             </div>

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast"; // Keep toast import for toast.custom
 import { useRouter } from "next/navigation";
+import CustomToast from "@/components/ui/CustomToast";
 import { X } from "lucide-react";
 import { Room, PropertyImage } from "@prisma/client";
 
@@ -36,12 +37,26 @@ const MovePhotoModal: React.FC<MovePhotoModalProps> = ({
 
         Promise.all(promises)
             .then(() => {
-                toast.success('Photos déplacées');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Photos déplacées"
+                        type="success"
+                    />
+                ));
                 onSuccess();
                 onClose();
                 router.refresh();
             })
-            .catch(() => toast.error('Erreur lors du déplacement'))
+            .catch(() => {
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors du déplacement"
+                        type="error"
+                    />
+                ));
+            })
             .finally(() => setIsLoading(false));
     };
 

@@ -10,6 +10,7 @@ import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import SoftTextArea from "@/components/inputs/SoftTextArea";
 import EditSectionFooter from "./EditSectionFooter";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface DescriptionSectionProps {
     listing: SafeListing;
@@ -39,11 +40,23 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ listing }) => {
 
         axios.put(`/api/listings/${listing.id}`, data)
             .then(() => {
-                toast.success('Description mise à jour !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Description mise à jour !"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Une erreur est survenue.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

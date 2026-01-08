@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { SafeListing } from "@/types";
 import SoftInput from "@/components/inputs/SoftInput";
 import EditSectionFooter from "./EditSectionFooter";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface TitleSectionProps {
     listing: SafeListing;
@@ -35,11 +36,23 @@ const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
 
         axios.put(`/api/listings/${listing.id}`, data)
             .then(() => {
-                toast.success('Title updated!');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Titre mis à jour"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Something went wrong.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

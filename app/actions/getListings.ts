@@ -281,8 +281,8 @@ export default async function getListings(
                 category: property.category,
 
                 surface: unit.surface,
-                floor: unit.floor,
-                totalFloors: unit.totalFloors,
+                floor: property.floor,
+                totalFloors: property.totalFloors,
                 isFurnished: unit.isFurnished,
                 buildYear: property.constructionYear,
 

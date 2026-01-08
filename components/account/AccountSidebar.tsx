@@ -8,6 +8,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { switchUserMode } from "@/app/actions/switchMode";
 import { toast } from "react-hot-toast";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface AccountSidebarProps {
     currentUser?: SafeUser | null;
@@ -23,9 +24,21 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
         try {
             await switchUserMode();
             router.refresh();
-            toast.success('Mode changé avec succès');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Mode changé avec succès"
+                    type="success"
+                />
+            ));
         } catch (error) {
-            toast.error('Une erreur est survenue');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Une erreur est survenue"
+                    type="error"
+                />
+            ));
         } finally {
             setIsLoading(false);
         }

@@ -6,6 +6,7 @@ import { TbPhotoPlus, TbX } from 'react-icons/tb';
 import Image from 'next/image';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import CustomToast from "@/components/ui/CustomToast";
 
 interface MultiImageUploadProps {
     onChange: (value: string[]) => void;
@@ -37,10 +38,22 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             }
 
             onChange([...value, ...newUrls]);
-            toast.success('Images uploaded successfully!');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Images uploaded successfully!"
+                    type="success"
+                />
+            ));
         } catch (error) {
             console.error('Upload error:', error);
-            toast.error('Error uploading images');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Error uploading images"
+                    type="error"
+                />
+            ));
         } finally {
             setUploading(false);
         }

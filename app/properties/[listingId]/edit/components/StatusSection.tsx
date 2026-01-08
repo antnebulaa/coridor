@@ -8,6 +8,7 @@ import { SafeListing } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import Heading from "@/components/Heading";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface StatusSectionProps {
     listing: SafeListing;
@@ -27,11 +28,23 @@ const StatusSection: React.FC<StatusSectionProps> = ({ listing }) => {
         })
             .then(() => {
                 setIsPublished(newStatus);
-                toast.success(newStatus ? 'Annonce publiée !' : 'Annonce mise en pause.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={newStatus ? 'Annonce publiée !' : 'Annonce mise en pause.'}
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Une erreur est survenue.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

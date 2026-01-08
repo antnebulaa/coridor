@@ -16,6 +16,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import MultiImageUpload from "@/components/inputs/MultiImageUpload"; // For hidden upload usage
+import CustomToast from "@/components/ui/CustomToast";
 
 interface AllPhotosModalProps {
     isOpen: boolean;
@@ -96,11 +97,23 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
         const promises = selectedIds.map(id => axios.delete(`/api/images/${id}`));
         try {
             await Promise.all(promises);
-            toast.success("Photos supprimées");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Photos supprimées"
+                    type="success"
+                />
+            ));
             setSelectedIds([]);
             router.refresh();
         } catch (error) {
-            toast.error("Erreur lors de la suppression");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de la suppression"
+                    type="error"
+                />
+            ));
         }
     };
 
@@ -153,7 +166,15 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
 
         // API Call for reorder
         const updates = items.map((item, index) => ({ id: item.id, order: index }));
-        axios.put('/api/images/reorder', { updates }).catch(() => toast.error('Erreur lors du réagencement'));
+        axios.put('/api/images/reorder', { updates }).catch(() => {
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors du réagencement"
+                    type="error"
+                />
+            ));
+        });
     };
 
     const handleUploadToRoom = (urls: string[], roomId: string) => {
@@ -162,11 +183,25 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
             roomId: roomId
         })
             .then(() => {
-                toast.success('Photos ajoutées');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Photos ajoutées"
+                        type="success"
+                    />
+                ));
                 setTargetRoomForAdd(null);
                 router.refresh();
             })
-            .catch(() => toast.error("Erreur lors de l'ajout"));
+            .catch(() => {
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de l'ajout"
+                        type="error"
+                    />
+                ));
+            });
     };
 
     // Determine Title

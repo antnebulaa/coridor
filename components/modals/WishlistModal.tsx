@@ -3,6 +3,7 @@
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import CustomToast from "@/components/ui/CustomToast";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -45,7 +46,13 @@ const WishlistModal = () => {
                     setWishlists(response.data);
                 })
                 .catch(() => {
-                    toast.error('Failed to fetch wishlists');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Failed to fetch wishlists"
+                            type="error"
+                        />
+                    ));
                 })
                 .finally(() => {
                     setIsLoading(false);
@@ -59,12 +66,24 @@ const WishlistModal = () => {
             listingId: wishlistModal.listingId
         })
             .then(() => {
-                toast.success('Added to wishlist!');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Added to wishlist!"
+                        type="success"
+                    />
+                ));
                 router.refresh();
                 wishlistModal.onClose();
             })
             .catch(() => {
-                toast.error('Something went wrong.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Something went wrong."
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);
@@ -78,14 +97,26 @@ const WishlistModal = () => {
             listingId: wishlistModal.listingId
         })
             .then(() => {
-                toast.success(`Saved to ${data.name}`);
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={`Saved to ${data.name}`}
+                        type="success"
+                    />
+                ));
                 router.refresh();
                 wishlistModal.onClose();
                 reset();
                 setIsCreating(false);
             })
             .catch(() => {
-                toast.error('Something went wrong.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Something went wrong."
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

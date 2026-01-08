@@ -28,6 +28,7 @@ import {
     eachMonthOfInterval
 } from "date-fns";
 import { fr } from "date-fns/locale";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface VisitsSectionProps {
     listing: SafeListing & {
@@ -122,7 +123,13 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
         if (selectedDates.length === 0) return;
 
         if (startTime >= endTime) {
-            toast.error("L'heure de fin doit être après l'heure de début");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="L'heure de fin doit être après l'heure de début"
+                    type="error"
+                />
+            ));
             return;
         }
 
@@ -134,7 +141,13 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
         });
 
         if (hasOverlap) {
-            toast.error("Ce créneau chevauche un créneau existant");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Ce créneau chevauche un créneau existant"
+                    type="error"
+                />
+            ));
             return;
         }
 
@@ -154,14 +167,19 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
             );
 
             const payload = [...slotsForSelectedDates, ...newSlotsToAdd];
-
             await axios.post(`/api/listings/${listing.id}/visits`, {
                 slots: payload,
                 dates: selectedDates.map(d => d.toISOString()),
                 visitDuration
             });
 
-            toast.success("Disponibilités ajoutées");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Disponibilités ajoutées"
+                    type="success"
+                />
+            ));
 
             // Auto-advance times for smoother UX
             const currentEndHour = parseInt(endTime.split(':')[0]);
@@ -178,7 +196,13 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
 
             router.refresh();
         } catch (error) {
-            toast.error("Erreur lors de la sauvegarde");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de la sauvegarde"
+                    type="error"
+                />
+            ));
             console.error(error);
         } finally {
             setIsLoading(false);
@@ -197,10 +221,22 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                 slots: remainingSlotsForDate,
                 dates: [slotToDelete.date]
             });
-            toast.success("Créneau supprimé");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Créneau supprimé"
+                    type="success"
+                />
+            ));
             router.refresh();
         } catch (error) {
-            toast.error("Erreur lors de la suppression");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de la suppression"
+                    type="error"
+                />
+            ));
             console.error(error);
         }
     };

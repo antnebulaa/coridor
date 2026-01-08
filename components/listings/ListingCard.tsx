@@ -125,6 +125,29 @@ const ListingCard: React.FC<ListingCardProps> = ({
         return `${data.surface} m²`;
     }, [data.surface, currentUser?.measurementSystem]);
 
+    const floorDisplay = useMemo(() => {
+        if (data.floor === 0) return "RDC";
+        if (data.floor) {
+            const floorText = `${data.floor}${data.totalFloors ? '/' + data.totalFloors : ''} étage${data.floor > 1 ? 's' : ''}`;
+            const elevatorText = data.hasElevator ? "Avec ascenseur" : "Sans ascenseur";
+
+            return (
+                <span className="flex items-center gap-1.5">
+                    {floorText}
+                    <span className="text-[8px] text-neutral-400">●</span>
+                    {elevatorText}
+                    {data.isAccessible && (
+                        <>
+                            <span className="text-[8px] text-neutral-400">●</span>
+                            Accès PMR
+                        </>
+                    )}
+                </span>
+            );
+        }
+        return null;
+    }, [data.floor, data.totalFloors, data.hasElevator, data.isAccessible]);
+
     const handleClick = useCallback(() => {
         if (onSelect) {
             onSelect();
@@ -169,7 +192,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <div className="flex flex-col gap-1">
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
-                                        <div className="font-semibold text-[26px] md:text-[22px] text-foreground leading-tight">
+                                        <div className="font-semibold text-[26px] md:text-[22px] text-[#FE3C08] leading-tight">
                                             {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                                         </div>
                                     </div>
@@ -199,6 +222,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                             </span>
                                         )}
                                     </div>
+                                    {floorDisplay && (
+                                        <div className="hidden md:block font-normal text-muted-foreground text-sm">
+                                            {floorDisplay}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -211,6 +239,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </span>
                                 )}
                             </div>
+                            {floorDisplay && (
+                                <div className="md:hidden font-normal text-neutral-500 text-sm -mt-0.5">
+                                    {floorDisplay}
+                                </div>
+                            )}
 
                             {/* Details Row */}
                             <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2 mb-1 md:mb-2">
@@ -249,12 +282,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <FeatureTag>
                                     <span className="font-medium">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                                 </FeatureTag>
-                                {data.hasElevator && (
-                                    <FeatureTag variant="blue" title="Ascenseur">
-                                        <TbElevator size={18} />
-                                        <span className="invisible w-0 overflow-hidden font-medium">A</span>
-                                    </FeatureTag>
-                                )}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2 mt-1 py-[5px] text-neutral-700 dark:text-neutral-300 text-sm">
@@ -393,7 +420,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                 <div className="flex flex-col gap-1 mt-2">
                     <div className="flex flex-row justify-between items-start w-full">
-                        <div className="font-semibold text-[26px]">
+                        <div className="font-semibold text-[26px] text-[#FE3C08]">
                             {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                         </div>
                         {showHeart && (
@@ -420,6 +447,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </span>
                         )}
                     </div>
+                    {floorDisplay && (
+                        <div className="font-normal text-muted-foreground text-sm md:text-base -mt-1">
+                            {floorDisplay}
+                        </div>
+                    )}
                     <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px] mb-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                             ? `Colocation • ${surfaceDisplay}`
@@ -432,14 +464,6 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <span className="font-medium text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                             </FeatureTag>
                         </div>
-                        {data.hasElevator && (
-                            <div className="ml-2">
-                                <FeatureTag variant="blue" title="Ascenseur">
-                                    <TbElevator size={18} />
-                                    <span className="invisible w-0 overflow-hidden font-medium">A</span>
-                                </FeatureTag>
-                            </div>
-                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 py-[5px] text-neutral-700 dark:text-neutral-300 text-base">

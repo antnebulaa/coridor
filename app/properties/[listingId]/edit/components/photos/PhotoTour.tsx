@@ -14,6 +14,7 @@ import CircleButton from "@/components/ui/CircleButton";
 import RoomCard from "./RoomCard";
 import AllPhotosModal from "./AllPhotosModal";
 import AddRoomModal from "./AddRoomModal";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface PhotoTourProps {
     listingId: string;
@@ -62,10 +63,24 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
             setIsLoading(true);
             axios.delete(`/api/rooms/${roomId}`)
                 .then(() => {
-                    toast.success('Pièce supprimée');
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Pièce supprimée"
+                            type="success"
+                        />
+                    ));
                     router.refresh();
                 })
-                .catch(() => toast.error('Erreur lors de la suppression'))
+                .catch(() => {
+                    toast.custom((t) => (
+                        <CustomToast
+                            t={t}
+                            message="Erreur lors de la suppression"
+                            type="error"
+                        />
+                    ));
+                })
                 .finally(() => setIsLoading(false));
         }
     };
@@ -77,10 +92,24 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
             images: urls
         })
             .then(() => {
-                toast.success('Photos ajoutées');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Photos ajoutées"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
-            .catch(() => toast.error('Erreur lors de l\'ajout'))
+            .catch(() => {
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de l'ajout"
+                        type="error"
+                    />
+                ));
+            })
             .finally(() => setIsUploading(false));
     };
 

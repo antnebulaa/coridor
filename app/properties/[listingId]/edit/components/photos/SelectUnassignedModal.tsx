@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { PropertyImage } from "@prisma/client";
 import { X } from "lucide-react";
+import Image from "next/image";
+import CustomToast from "@/components/ui/CustomToast";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/Button";
 import PhotoGrid from "./PhotoGrid";
@@ -56,12 +58,24 @@ const SelectUnassignedModal: React.FC<SelectUnassignedModalProps> = ({
 
         try {
             await Promise.all(promises);
-            toast.success("Photos ajoutées à la pièce");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Photos ajoutées à la pièce"
+                    type="success"
+                />
+            ));
             onSuccess();
             onClose();
             router.refresh();
         } catch (error) {
-            toast.error("Erreur lors de l'ajout");
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de l'ajout"
+                    type="error"
+                />
+            ));
         } finally {
             setIsLoading(false);
         }

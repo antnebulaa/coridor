@@ -138,6 +138,8 @@ export async function PUT(
                 addressLine1: addressLine1,
                 building: building,
                 apartment: apartment,
+                floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
+                totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
                 // DPE
                 dpe,
                 ges,
@@ -154,8 +156,6 @@ export async function PUT(
             // 2. Prepare RentalUnit Update
             const rentalUnitUpdate: any = {
                 surface: surface ? parseFloat(String(surface)) : undefined,
-                floor: (floor !== undefined && floor !== null) ? parseInt(String(floor), 10) : undefined,
-                totalFloors: (totalFloors !== undefined && totalFloors !== null) ? parseInt(String(totalFloors), 10) : undefined,
                 isFurnished,
                 type: rentalUnitType, // Update type if provided
                 bedType,
@@ -254,7 +254,8 @@ export async function PUT(
 
             // 4.5 Sync Room Entities with Bedroom Count
             // If roomCount is updated, we match the physical "Chambre X" rooms
-            if (roomCount !== undefined) {
+            const effectiveRentalUnitType = rentalUnitType || existingListing.rentalUnit.type;
+            if (roomCount !== undefined && effectiveRentalUnitType === 'ENTIRE_PLACE') {
                 const newCount = parseInt(String(roomCount), 10);
 
                 // Fetch existing "Chambre" rooms

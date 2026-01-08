@@ -13,6 +13,7 @@ import { calculateRentControl } from "./rentControlUtils";
 import PriceAssistantModal from "./PriceAssistantModal";
 import EditSectionFooter from "./EditSectionFooter";
 import { Wand2 } from "lucide-react";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface PriceSectionProps {
     listing: SafeListing;
@@ -129,7 +130,13 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 });
 
                 await Promise.all(updates);
-                toast.success('Loyers des chambres mis à jour !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Loyers des chambres mis à jour !"
+                        type="success"
+                    />
+                ));
             } else {
                 // Standard single update
                 await axios.put(`/api/listings/${listing.id}`, {
@@ -137,11 +144,23 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                     charges: parseInt(data.charges, 10),
                     securityDeposit: parseInt(data.securityDeposit, 10)
                 });
-                toast.success('Loyer mis à jour !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Loyer mis à jour !"
+                        type="success"
+                    />
+                ));
             }
             router.refresh();
         } catch (error) {
-            toast.error('Une erreur est survenue.');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Une erreur est survenue"
+                    type="error"
+                />
+            ));
         } finally {
             setIsLoading(false);
         }
@@ -161,7 +180,13 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
         newPrices.forEach(({ index, price }) => {
             setValue(`roomPrices.${index}.price`, price, { shouldDirty: true });
         });
-        toast.success("Prix appliqués !");
+        toast.custom((t) => (
+            <CustomToast
+                t={t}
+                message="Prix appliqués !"
+                type="success"
+            />
+        ));
     };
 
     if (isColocation) {

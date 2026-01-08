@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import CustomToast from "@/components/ui/CustomToast";
 import { useRouter } from "next/navigation";
 import { Trash2, MapPin, Plus, Train, Car, Bike, Footprints, Briefcase, Home, GraduationCap, Star, Heart } from "lucide-react";
 
@@ -39,11 +40,23 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
         setIsLoading(true);
         axios.delete('/api/user/commute', { data: { id } })
             .then(() => {
-                toast.success('Lieu supprimé');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Lieu supprimé"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Erreur lors de la suppression');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de la suppression"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);
@@ -58,17 +71,35 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
 
         axios.patch('/api/user/commute', { id, isShowOnMap: newState })
             .then(() => {
-                toast.success(newState ? 'Affiché sur la carte' : 'Masqué de la carte');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message={newState ? 'Affiché sur la carte' : 'Masqué de la carte'}
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error("Impossible de modifier la visibilité");
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Impossible de modifier la visibilité"
+                        type="error"
+                    />
+                ));
             });
     }
 
     const onSubmit = () => {
         if (!name || !address) {
-            toast.error('Veuillez remplir tous les champs');
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Veuillez remplir tous les champs"
+                    type="error"
+                />
+            ));
             return;
         }
 
@@ -83,7 +114,13 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
             icon
         })
             .then(() => {
-                toast.success('Lieu ajouté !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Lieu ajouté !"
+                        type="success"
+                    />
+                ));
                 router.refresh();
                 setIsAdding(false);
                 setName('');
@@ -92,7 +129,13 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                 setIcon('briefcase');
             })
             .catch(() => {
-                toast.error("Erreur lors de l'ajout");
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Erreur lors de l'ajout"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

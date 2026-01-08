@@ -2,6 +2,7 @@
 
 import { toast, Toast } from 'react-hot-toast';
 import { Check, X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface CustomToastProps {
     t: Toast;
@@ -22,7 +23,24 @@ const CustomToast: React.FC<CustomToastProps> = ({
     actionLabel,
     onAction
 }) => {
-    const handleAction = () => {
+    // -------------------------------------------------------------------------
+    // Mobile Fix: Force dismiss on touch devices where "hover" can stick.
+    // React-hot-toast pauses on hover by default, which is problematic on mobile
+    // if the tap triggers a persistent hover state.
+    // -------------------------------------------------------------------------
+    useEffect(() => {
+        const isTouch = window.matchMedia('(hover: none)').matches;
+        if (isTouch) {
+            const timer = setTimeout(() => {
+                toast.dismiss(t.id);
+            }, 4000); // Match global duration
+
+            return () => clearTimeout(timer);
+        }
+    }, [t.id]);
+
+    const handleAction = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
         if (onUndo) {
             onUndo();
         }
@@ -36,8 +54,9 @@ const CustomToast: React.FC<CustomToastProps> = ({
 
     return (
         <div
+            onClick={() => toast.dismiss(t.id)}
             className={`${t.visible ? 'animate-enter' : 'animate-leave'
-                } max-w-md w-auto bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-full pointer-events-auto flex items-center ring-1 ring-black/5 dark:ring-white/10 py-2 pl-3 pr-2 gap-3 transition-all duration-300`}
+                } max-w-md w-auto bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-full pointer-events-auto flex items-center ring-1 ring-black/5 dark:ring-white/10 py-2 pl-3 pr-2 gap-3 transition-all duration-300 cursor-pointer`}
         >
             <div className={`shrink-0 rounded-full w-6 h-6 flex items-center justify-center ${type === 'error' ? 'bg-rose-500' : 'bg-green-500'
                 }`}>

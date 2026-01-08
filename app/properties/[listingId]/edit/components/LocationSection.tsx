@@ -12,6 +12,7 @@ import EditSectionFooter from "./EditSectionFooter";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
 import Heading from "@/components/Heading";
 import SoftInput from "@/components/inputs/SoftInput";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface LocationSectionProps {
     listing: SafeListing;
@@ -84,12 +85,24 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             }
         })
             .then(() => {
-                toast.success('Emplacement enregistré !');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Emplacement enregistré"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch((error) => {
                 console.error("Update error full:", error);
-                toast.error(`Something went wrong: ${error.message}`);
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

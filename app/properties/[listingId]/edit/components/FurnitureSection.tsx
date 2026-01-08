@@ -8,6 +8,7 @@ import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Check } from "lucide-react";
 import EditSectionFooter from "./EditSectionFooter";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface FurnitureSectionProps {
     listing: SafeListing & { furniture?: any };
@@ -72,11 +73,23 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
 
         axios.post(`/api/listings/${listing.id}/furniture`, state)
             .then(() => {
-                toast.success('Équipements sauvegardés');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Équipements sauvegardés"
+                        type="success"
+                    />
+                ));
                 router.refresh(); // Refresh to update server-side data
             })
             .catch(() => {
-                toast.error('Une erreur est survenue');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);

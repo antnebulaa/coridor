@@ -43,6 +43,7 @@ import {
 import { SafeListing } from "@/types";
 import EditSectionFooter from "./EditSectionFooter";
 import CategoryInput from "@/components/inputs/CategoryInput";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface AmenitiesSectionProps {
     listing: SafeListing;
@@ -156,11 +157,23 @@ const AmenitiesSection: React.FC<AmenitiesSectionProps> = ({ listing }) => {
 
         axios.put(`/api/listings/${listing.id}`, { amenities: selectedAmenities })
             .then(() => {
-                toast.success('Listing updated!');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Vos équipements ont été mis à jour"
+                        type="success"
+                    />
+                ));
                 router.refresh();
             })
             .catch(() => {
-                toast.error('Something went wrong.');
+                toast.custom((t) => (
+                    <CustomToast
+                        t={t}
+                        message="Une erreur est survenue"
+                        type="error"
+                    />
+                ));
             })
             .finally(() => {
                 setIsLoading(false);
