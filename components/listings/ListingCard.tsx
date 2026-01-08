@@ -7,7 +7,6 @@ import { useCallback, useMemo } from "react";
 import { format } from 'date-fns';
 import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront } from 'lucide-react';
 import { TbElevator } from 'react-icons/tb';
-import { FiberIcon } from "../icons/FiberIcon";
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
 import ListingCardCarousel from "./ListingCardCarousel";
@@ -293,7 +292,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                                 </span>
                                             </div>
                                         </div>
-                                        <span className="line-clamp-1">à {data.transitData.mainConnection.walkTime} min</span>
+                                        <span className="line-clamp-1">{data.transitData.mainConnection.walkTime} min</span>
                                     </>
                                 )}
 
@@ -303,7 +302,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                                 {data.hasFiber && (
                                     <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                                        <FiberIcon size={14} />
+                                        <Wifi size={14} />
                                         <span className="text-sm font-normal">Fibre</span>
                                     </div>
                                 )}
@@ -477,7 +476,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </span>
                                     </div>
                                 </div>
-                                <span>à {data.transitData.mainConnection.walkTime} min</span>
+                                <span>{data.transitData.mainConnection.walkTime} min</span>
                             </>
                         )}
 
@@ -487,7 +486,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                         {data.hasFiber && (
                             <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                                <FiberIcon size={14} />
+                                <Wifi size={14} />
                                 <span className="text-sm font-normal">Fibre</span>
                             </div>
                         )}
