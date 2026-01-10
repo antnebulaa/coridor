@@ -272,6 +272,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                     ">
                                         <div className="relative h-full flex flex-col">
                                             {/* Header Actions */}
+                                            {/* Header Actions - RIGHT (Minimize + Close) */}
                                             <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
                                                 {/* Minimize Button */}
                                                 <button
@@ -296,11 +297,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                     onClick={() => setSelectedListingId('')}
                                                     className="
                                                         w-9 h-9 flex items-center justify-center
-                                                        bg-white/80 dark:bg-black/40
-                                                        backdrop-blur-sm
+                                                        bg-transparent
+                                                        border border-white
                                                         rounded-full 
-                                                        hover:bg-white dark:hover:bg-black/60
-                                                        text-neutral-700 dark:text-neutral-200
+                                                        hover:bg-white/20
+                                                        text-white
                                                         shadow-sm
                                                         transition
                                                     "
@@ -363,6 +364,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 className="md:hidden"
                 transparentHeader
                 noBodyPadding
+                closeButtonVariant="transparent-white"
                 body={
                     selectedListing ? (
                         <div className="pb-24">

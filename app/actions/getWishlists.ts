@@ -15,7 +15,7 @@ export default async function getWishlists() {
             },
             include: {
                 listings: {
-                    take: 1,
+                    take: 3,
                     include: {
                         rentalUnit: {
                             include: {
@@ -47,7 +47,8 @@ export default async function getWishlists() {
                 imageSrc: listing.rentalUnit?.property?.images?.[0]?.url || listing.rentalUnit?.images?.[0]?.url,
                 category: listing.rentalUnit?.property?.category,
                 locationValue: listing.rentalUnit?.property?.city,
-                price: listing.price
+                price: listing.price,
+                images: listing.rentalUnit?.property?.images || listing.rentalUnit?.images || []
             }))
         }));
 

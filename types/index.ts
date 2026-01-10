@@ -218,7 +218,13 @@ export type FullConversationType = Conversation & {
         })[]
     })[],
     messages: FullMessageType[],
-    listing?: Listing | null
+    listing?: (Listing & {
+        rentalUnit: RentalUnit & {
+            property: Property & {
+                owner: User
+            }
+        }
+    }) | null
 };
 
 export type SafeMessage = Omit<

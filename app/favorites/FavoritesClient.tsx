@@ -62,7 +62,7 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
           lg:grid-cols-4
           xl:grid-cols-5
           2xl:grid-cols-6
-          gap-8
+          gap-4
         "
             >
                 {/* All Saved Card */}
@@ -70,7 +70,7 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
                     data={{
                         id: 'all',
                         name: 'Tous les favoris',
-                        listings: wishlists.find(w => w.listings.length > 0)?.listings || [],
+                        listings: wishlists.flatMap(w => w.listings).slice(0, 3) || [],
                         _count: {
                             listings: wishlists.reduce((acc, w) => acc + w._count.listings, 0)
                         }

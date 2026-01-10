@@ -23,6 +23,7 @@ interface MessageBoxProps {
     isMenuOpen: boolean;
     onOpenMenu: () => void;
     onCloseMenu: () => void;
+    showDossier?: boolean;
 }
 
 const MessageBox: React.FC<MessageBoxProps> = ({
@@ -33,7 +34,8 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     onOpenListingRecap,
     isMenuOpen,
     onOpenMenu,
-    onCloseMenu
+    onCloseMenu,
+    showDossier
 }) => {
     const session = useSession();
     const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -258,7 +260,13 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             </div>
                                             <div className="flex flex-col overflow-hidden">
                                                 <div className="font-medium text-base text-neutral-900 dark:text-white truncate">
-                                                    {data.listing.title}
+                                                    {(() => {
+                                                        const l = data.listing as any;
+                                                        if (l.category && l.propertyAdjective) {
+                                                            return `${l.category} ${l.propertyAdjective}`;
+                                                        }
+                                                        return l.title;
+                                                    })()}
                                                 </div>
                                                 <div className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
                                                     {(data.listing as any).city || 'Localisation inconnue'}
@@ -267,15 +275,27 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         </div>
 
                                         {/* Dossier Button */}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onToggleDossier && onToggleDossier();
-                                            }}
-                                            className="w-fit ml-auto px-8 py-3 bg-neutral-100 dark:bg-neutral-800 rounded-[19px] text-center font-medium text-sm text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
-                                        >
-                                            Voir le dossier de candidature
-                                        </button>
+                                        {showDossier ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onToggleDossier && onToggleDossier();
+                                                }}
+                                                className="w-fit ml-auto px-8 py-3 bg-neutral-100 dark:bg-neutral-800 rounded-[19px] text-center font-medium text-sm text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+                                            >
+                                                Voir le dossier de candidature
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onOpenListingRecap && onOpenListingRecap();
+                                                }}
+                                                className="w-fit ml-auto px-8 py-3 bg-neutral-100 dark:bg-neutral-800 rounded-[19px] text-center font-medium text-sm text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+                                            >
+                                                Voir le récapitulatif
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ) : (

@@ -6,10 +6,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ListingCardCarouselProps {
     images: { url: string; label?: string }[];
+    centeredLabel?: boolean;
 }
 
 const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
-    images
+    images,
+    centeredLabel
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -114,22 +116,15 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
 
                         {/* Label Badge */}
                         {image.label && (
-                            <div className="
+                            <div className={`
                                 absolute 
-                                bottom-3 
-                                left-3 
-                                bg-white/90 
-                                backdrop-blur-md
-                                text-neutral-900 
-                                px-3 
-                                py-1.5 
-                                rounded-lg 
-                                text-xs 
-                                font-semibold
                                 z-10
-                                shadow-sm
                                 pointer-events-none
-                            ">
+                                ${centeredLabel
+                                    ? 'bottom-20 left-0 right-0 text-center text-white text-lg font-medium drop-shadow-md'
+                                    : 'bottom-3 left-3 bg-white/90 backdrop-blur-md text-neutral-900 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm'
+                                }
+                            `}>
                                 {image.label}
                             </div>
                         )}

@@ -159,7 +159,15 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 <div className="focus:outline-none">
                     <div className="flex justify-between items-center">
                         <p className="text-md font-medium text-foreground">
-                            {data.listing?.title || data.name || otherUser?.name || 'Unknown User'}
+                            {(() => {
+                                // Try to construct "Type + Adjective" title
+                                const l = data.listing as any;
+                                if (l?.category && l?.propertyAdjective) {
+                                    return `${l.category} ${l.propertyAdjective}`;
+                                }
+                                // Fallback
+                                return l?.title || data.name || otherUser?.name || 'Unknown User';
+                            })()}
                         </p>
                         {lastMessage?.createdAt && (
                             <p className="text-xs text-muted-foreground font-light">

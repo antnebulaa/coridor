@@ -1,8 +1,7 @@
 'use client';
 
 import {
-    HiPaperAirplane,
-    HiPhoto
+    HiPaperAirplane
 } from "react-icons/hi2";
 import MessageInput from "./MessageInput";
 import {
@@ -11,7 +10,7 @@ import {
     useForm
 } from "react-hook-form";
 import axios from "axios";
-import { CldUploadButton } from "next-cloudinary";
+import MobileImageUpload from "@/components/inputs/MobileImageUpload";
 import useConversation from "@/hooks/useConversation";
 import { useRouter } from "next/navigation";
 
@@ -74,13 +73,13 @@ const Form: React.FC<FormProps> = ({
         });
     };
 
-    const handleUpload = (result: any) => {
+    const handleUpload = (url: string) => {
         // Optimistic update for image
         if (currentUser) {
             const tempMessage: SafeMessage = {
                 id: `temp-${Date.now()}`,
                 body: null,
-                image: result?.info?.secure_url,
+                image: url,
                 createdAt: new Date().toISOString(),
                 seenIds: [],
                 conversationId: conversationId,
@@ -94,7 +93,7 @@ const Form: React.FC<FormProps> = ({
         }
 
         axios.post('/api/messages', {
-            image: result?.info?.secure_url,
+            image: url,
             conversationId: conversationId
         }).then(() => {
             router.refresh();
@@ -113,13 +112,7 @@ const Form: React.FC<FormProps> = ({
       lg:gap-4 
       w-full
     ">
-            <CldUploadButton
-                options={{ maxFiles: 1 }}
-                onUpload={handleUpload}
-                uploadPreset="coridor-preset"
-            >
-                <HiPhoto size={30} className="text-primary" />
-            </CldUploadButton>
+            <MobileImageUpload onUpload={handleUpload} />
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="flex items-center gap-2 lg:gap-4 w-full"

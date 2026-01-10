@@ -242,6 +242,11 @@ export default async function getListings(
                                 owner: true,
                                 images: true,
                                 visitSlots: true,
+                                rooms: {
+                                    include: {
+                                        images: true
+                                    }
+                                }
                             }
                         },
                         images: true,
@@ -257,6 +262,7 @@ export default async function getListings(
             const unitImages = listing.rentalUnit.images || [];
             const propertyImages = listing.rentalUnit.property.images || [];
             const aggregatedImages = [...unitImages, ...propertyImages];
+            const itemsRooms = listing.rentalUnit.property.rooms || [];
 
             const property = listing.rentalUnit.property;
             const unit = listing.rentalUnit;
@@ -352,6 +358,7 @@ export default async function getListings(
                     images: listing.rentalUnit.images
                 },
                 images: aggregatedImages,
+                rooms: itemsRooms,
                 user: listing.rentalUnit.property.owner
             };
         });

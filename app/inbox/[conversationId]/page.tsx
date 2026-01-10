@@ -38,21 +38,31 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
 
     if (listing) {
         rent = listing.price;
-        listingUserId = listing.userId;
+        listingUserId = listing.rentalUnit?.property?.ownerId;
+        const owner = listing.rentalUnit?.property?.owner;
+
+        const propertyImages = listing.rentalUnit?.property?.images || [];
+        const unitImages = listing.rentalUnit?.images || [];
+
+        // Prioritize unit images (specific) over property images (common)
+        let aggregatedImages = [...unitImages, ...propertyImages];
+
         safeListing = {
             ...listing,
+            images: aggregatedImages,
+            city: listing.rentalUnit?.property?.city || null,
             createdAt: listing.createdAt.toISOString(),
             statusUpdatedAt: listing.statusUpdatedAt ? listing.statusUpdatedAt.toISOString() : new Date().toISOString(),
-            user: {
-                ...listing.user,
-                createdAt: listing.user.createdAt.toISOString(),
-                updatedAt: listing.user.updatedAt.toISOString(),
-                emailVerified: listing.user.emailVerified?.toISOString() || null,
+            user: owner ? {
+                ...owner,
+                createdAt: owner.createdAt.toISOString(),
+                updatedAt: owner.updatedAt.toISOString(),
+                emailVerified: owner.emailVerified?.toISOString() || null,
                 birthDate: null, // Basic fields only
                 tenantProfile: null,
                 wishlists: null,
                 commuteLocations: null
-            }
+            } : null // Handle if owner is somehow missing
         } as SafeListing;
     }
 

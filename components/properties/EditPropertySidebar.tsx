@@ -53,34 +53,38 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
 
             {/* Links */}
             <div className="flex flex-col gap-2">
-                {currentLinks.map((link) => (
-                    <div
-                        key={link.id}
-                        onClick={() => onChangeSection(link.id as SectionType)}
-                        className={`
-                            p-3 
-                            rounded-xl 
-                            cursor-pointer 
-                            transition
-                            flex flex-col
-                            ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'}
-                        `}
-                    >
-                        <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
-                            {link.label}
-                        </span>
-                        {subtitles?.[link.id] && (
-                            <span className={`
-                                truncate mt-0.5
-                                ${link.id === 'title'
-                                    ? 'text-[20px] font-medium text-neutral-500 dark:text-neutral-400 leading-tight'
-                                    : 'text-xs text-neutral-500 dark:text-neutral-400 font-normal'}
-                            `}>
-                                {subtitles[link.id]}
-                            </span>
-                        )}
-                    </div>
-                ))}
+                {currentLinks.map((link) => {
+                    const isTitle = link.id === 'title';
+                    return (
+                        <div
+                            key={link.id}
+                            onClick={() => !isTitle && onChangeSection(link.id as SectionType)}
+                            className={`
+                                p-3 
+                                rounded-xl 
+                                transition
+                                flex flex-col
+                                ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800' : isTitle ? '' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer'}
+                            `}
+                        >
+                            {!isTitle && (
+                                <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                                    {link.label}
+                                </span>
+                            )}
+                            {subtitles?.[link.id] && (
+                                <span className={`
+                                    truncate mt-0.5
+                                    ${isTitle
+                                        ? 'text-[20px] font-medium text-black dark:text-white leading-tight'
+                                        : 'text-xs text-neutral-500 dark:text-neutral-400 font-normal'}
+                                `}>
+                                    {subtitles[link.id]}
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

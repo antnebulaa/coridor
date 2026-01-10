@@ -35,9 +35,11 @@ const getConversationById = async (
                     include: {
                         rentalUnit: {
                             include: {
+                                images: true,
                                 property: {
                                     include: {
                                         images: true,
+                                        owner: true,
                                         visitSlots: {
                                             include: {
                                                 property: true

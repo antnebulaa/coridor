@@ -207,7 +207,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {!isRoom && (
                 <div className="flex flex-col gap-2">
                     <div className="text-sm font-medium text-neutral-800">
-                        Comment décririez-vous votre bien ? (Optionnel)
+                        Comment décririez-vous votre bien ?
                     </div>
                     <div className="text-xs text-neutral-500 mb-2">
                         Cet adjectif apparaîtra après le type de bien sur l'annonce (ex: "Maison calme").
@@ -219,7 +219,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                         onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
                         disabled={isLoading}
                         options={[
-                            { value: "", label: "Aucun" },
                             // Lumière/Espace
                             { value: "Lumineux", label: "Lumineux" },
                             { value: "Spacieux", label: "Spacieux" },

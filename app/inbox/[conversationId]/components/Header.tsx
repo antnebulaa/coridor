@@ -14,11 +14,15 @@ interface HeaderProps {
         listing?: Listing | null
     };
     onToggleDossier: () => void;
+    onOpenListingRecap?: () => void;
+    showDossier?: boolean;
 };
 
 const Header: React.FC<HeaderProps> = ({
     conversation,
-    onToggleDossier
+    onToggleDossier,
+    onOpenListingRecap,
+    showDossier
 }) => {
     const otherUser = useOtherUser(conversation);
 
@@ -46,6 +50,7 @@ const Header: React.FC<HeaderProps> = ({
         items-center 
         relative
         z-10
+        h-[73px]
       ">
                 <div className="flex gap-3 items-center">
                     <Link
@@ -94,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
 
 
                 <div
-                    onClick={onToggleDossier}
+                    onClick={showDossier ? onToggleDossier : onOpenListingRecap}
                     className="
                         py-1.5
                         px-3
@@ -110,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({
                     "
                 >
                     <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
-                        Voir dossier
+                        {showDossier ? "Voir dossier" : "Voir récapitulatif"}
                     </span>
                 </div>
             </div >

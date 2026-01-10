@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import Heading from "../Heading";
 import HeartButton from "../HeartButton";
 import Image from "next/image";
-import ImageModal from "../modals/ImageModal";
+import ListingImageGallery from "./ListingImageGallery";
 import { Camera } from "lucide-react";
 
 interface ListingHeadProps {
@@ -167,10 +167,12 @@ const ListingHead: React.FC<ListingHeadProps> = ({
                     </button>
                 </div>
             </div>
-            <ImageModal
+            <ListingImageGallery
                 isOpen={isImageModalOpen}
                 onClose={() => setIsImageModalOpen(false)}
                 images={images}
+                listingId={id}
+                currentUser={currentUser}
             />
         </>
     );

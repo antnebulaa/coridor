@@ -203,6 +203,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                                 currentUser={currentUser}
                                                 listingImage={data.images?.[0]?.url}
                                                 variant="button"
+                                                withBorder
                                             />
                                         </div>
                                     )}
@@ -214,10 +215,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                             : data.category}
                                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                                     </div>
-                                    <div className="hidden md:block font-normal text-muted-foreground text-sm line-clamp-2">
+                                    <div className="hidden md:block font-normal text-neutral-700 text-sm line-clamp-2">
                                         {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                         {data.neighborhood && (
-                                            <span className="font-normal text-xs md:text-sm text-neutral-500">
+                                            <span className="font-normal text-xs md:text-sm text-neutral-700">
                                                 , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
                                             </span>
                                         )}
@@ -231,10 +232,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {/* Mobile City Display - Visible only on mobile */}
-                            <div className="md:hidden font-normal text-neutral-500 text-sm line-clamp-1 -mt-1">
+                            <div className="md:hidden font-normal text-neutral-700 text-sm line-clamp-1 -mt-1">
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
-                                    <span className="font-normal text-sm text-neutral-500">
+                                    <span className="font-normal text-sm text-neutral-700">
                                         , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
                                     </span>
                                 )}
@@ -245,8 +246,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
 
-                            {/* Details Row */}
-                            <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-1 md:mt-2 mb-1 md:mb-2">
+                            <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
                                     <FeatureTag>
                                         <span className="font-medium">1 chambre</span>
@@ -284,7 +284,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </FeatureTag>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-2 mt-1 py-[5px] text-neutral-700 dark:text-neutral-300 text-sm">
+                            <div className="flex flex-wrap items-center gap-2 mt-0 py-0.5 text-neutral-700 dark:text-neutral-300 text-sm">
                                 {data.transitData?.mainConnection && (
                                     <>
                                         <div className="flex items-center gap-1">
@@ -430,6 +430,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     currentUser={currentUser}
                                     listingImage={data.images?.[0]?.url}
                                     variant="button"
+                                    withBorder
                                 />
                             </div>
                         )}

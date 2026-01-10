@@ -107,9 +107,14 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
     return (
         <div className="h-full flex flex-row">
-            <div className="h-full flex flex-col flex-1 min-w-0 border-r border-gray-200 dark:border-neutral-800">
+            <div className="h-full flex flex-col flex-1 min-w-0">
                 <div className="flex-none">
-                    <Header conversation={conversation} onToggleDossier={toggleDossier} />
+                    <Header
+                        conversation={conversation}
+                        onToggleDossier={toggleDossier}
+                        onOpenListingRecap={handleOpenListingRecap}
+                        showDossier={showDossier}
+                    />
                 </div>
                 <div className="flex-1 overflow-y-auto min-h-0">
                     <Body
@@ -117,6 +122,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         onOpenVisitSlots={handleOpenVisitSelection}
                         onToggleDossier={toggleDossier}
                         onOpenListingRecap={handleOpenListingRecap}
+                        showDossier={showDossier}
                     />
                 </div>
                 <div className="flex-none bg-white dark:bg-neutral-900">

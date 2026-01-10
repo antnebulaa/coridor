@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { Plus, Check, Heart, Bookmark } from 'lucide-react';
-import { Drawer } from 'vaul';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import BottomSheet from '@/components/ui/BottomSheet';
 
 import { SafeUser } from '@/types';
 import useLoginModal from '@/hooks/useLoginModal';
@@ -20,13 +20,17 @@ interface SaveListingMenuProps {
     currentUser?: SafeUser | null;
     listingImage?: string | null;
     variant?: 'icon' | 'button';
+    withBorder?: boolean;
+    glass?: boolean;
 }
 
 const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     listingId,
     currentUser,
     listingImage,
-    variant = 'icon'
+    variant = 'icon',
+    withBorder,
+    glass
 }) => {
     const router = useRouter();
     const loginModal = useLoginModal();
@@ -102,6 +106,9 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             });
         }
 
+        if (isOpen) {
+            setIsCreating(false);
+        }
         setIsOpen(!isOpen);
     };
 
@@ -392,13 +399,13 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     );
                 })}
                 {/* Create New List Button (Integrated) */}
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout">
                     {!isCreating ? (
                         <motion.div
                             key="create-button"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
+                            initial={{ opacity: 0, marginTop: 20 }}
+                            animate={{ opacity: 1, marginTop: 0 }}
+                            exit={{ opacity: 0, marginTop: -20 }}
                             transition={{ duration: 0.2 }}
                             onClick={() => setIsCreating(true)}
                             className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
@@ -417,11 +424,11 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     ) : (
                         <motion.div
                             key="create-form"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
+                            initial={{ opacity: 0, marginTop: 20 }}
+                            animate={{ opacity: 1, marginTop: 0 }}
+                            exit={{ opacity: 0, marginTop: -20 }}
                             transition={{ duration: 0.2 }}
-                            className="flex items-center gap-2 p-[9px]"
+                            className="flex items-center gap-3 p-[9px]"
                         >
                             <div className="
                                 w-10 h-10 
@@ -432,15 +439,25 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                             ">
                                 <Plus size={20} className="text-neutral-500" />
                             </div>
-                            <div className="flex-1 flex gap-2">
+                            <div className="flex-1 flex gap-2 items-center">
                                 <input
                                     autoFocus
                                     value={newListName}
                                     onChange={(e) => setNewListName(e.target.value)}
-                                    placeholder="Nom..."
-                                    className="flex-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                                    placeholder="Nom de la liste"
+                                    className="
+                                        flex-1 
+                                        bg-transparent 
+                                        p-0 
+                                        font-medium 
+                                        text-[18px] md:text-base 
+                                        placeholder:text-neutral-400 
+                                        focus:outline-none 
+                                        caret-black dark:caret-white
+                                    "
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') handleCreateWishlist();
+                                        if (e.key === 'Escape') setIsCreating(false);
                                     }}
                                 />
                                 <button
@@ -450,12 +467,18 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                                 >
                                     <Check size={16} />
                                 </button>
+                                <button
+                                    onClick={() => setIsCreating(false)}
+                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg text-neutral-500"
+                                >
+                                    <Plus size={16} className="rotate-45" />
+                                </button>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
-        </motion.div>
+        </motion.div >
     );
 
     return (
@@ -470,7 +493,12 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     cursor-pointer
                     z-10
                     active:scale-90
-                    ${variant === 'button' ? 'bg-white dark:bg-transparent rounded-full' : ''}
+                    ${variant === 'button'
+                        ? glass
+                            ? 'bg-white dark:bg-black/20 dark:backdrop-blur-md rounded-full'
+                            : 'bg-white rounded-full'
+                        : ''}
+                    ${withBorder ? 'border border-neutral-200 dark:border-neutral-800' : (glass ? 'border border-transparent dark:border-white/40' : '')}
                 `}
             >
                 {variant === 'icon' ? (
@@ -485,26 +513,21 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     />
                 ) : (
                     <div className={`
-                        px-3 py-1.5 
+                        w-10 h-10
                         rounded-full 
                         text-sm font-medium 
-                        border
                         transition-all
-                        flex items-center gap-2
+                        flex items-center justify-center
                         ${isSavedAnywhere
-                            ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                            : 'bg-white text-black border-neutral-200 hover:border-black hover:bg-neutral-50 dark:bg-transparent dark:text-neutral-200 dark:border-neutral-600 dark:hover:border-neutral-400 dark:hover:bg-neutral-800'}
+                            ? 'bg-neutral-100 text-black dark:bg-neutral-800 dark:text-white'
+                            : (glass
+                                ? 'bg-transparent text-black dark:text-white hover:bg-neutral-50 dark:hover:bg-white/10'
+                                : 'bg-white text-black hover:bg-neutral-50')}
                     `}>
                         {isSavedAnywhere ? (
-                            <>
-                                <Check size={14} />
-                                Enregistré
-                            </>
+                            <Check size={18} />
                         ) : (
-                            <>
-                                <Plus size={14} />
-                                Enregistrer
-                            </>
+                            <Plus size={18} />
                         )}
                     </div>
                 )}
@@ -512,35 +535,33 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
             {/* Mobile Drawer */}
             {isMobile && (
-                <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
-                    <Drawer.Portal>
-                        <Drawer.Overlay
-                            className="fixed inset-0 bg-black/40 z-9999"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsOpen(false);
-                            }}
-                        />
-                        <Drawer.Content
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-neutral-900 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-9999 outline-none pb-10"
-                        >
-                            <Drawer.Title className="sr-only">Enregistrer dans une liste</Drawer.Title>
-                            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-neutral-300 mb-2 mt-3" />
-                            {MenuContent}
-                        </Drawer.Content>
-                    </Drawer.Portal>
-                </Drawer.Root>
+                <BottomSheet
+                    isOpen={isOpen}
+                    onClose={() => {
+                        setIsOpen(false);
+                        setIsCreating(false);
+                    }}
+                    title="Enregistrer dans une liste"
+                >
+                    {MenuContent}
+                </BottomSheet>
             )}
 
             {/* Desktop Popover using Portal */}
             {!isMobile && isOpen && mounted && createPortal(
                 <div
-                    className="fixed inset-0 z-9999"
-                    onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                    className="fixed inset-0 z-[9999] cursor-default"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Prevent event from reaching React tree further up
+                        // And verify it doesn't reach DOM parents if they had listeners (though React delegation handles this)
+                        setIsOpen(false);
+                        setIsCreating(false);
+                    }}
                 >
                     <div
-                        className="fixed z-9999 animate-in fade-in zoom-in-95 duration-200"
+                        className="fixed z-[9999] animate-in fade-in zoom-in-95 duration-200"
                         style={popoverStyle}
                         onClick={(e) => e.stopPropagation()}
                     >

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
-import ReactDOM from 'react-dom';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
     isOpen?: boolean;
@@ -24,6 +24,8 @@ interface ModalProps {
     skipTranslateAnimation?: boolean;
     currentStep?: number;
     totalSteps?: number;
+    closeButtonPosition?: 'left' | 'right';
+    closeButtonVariant?: 'default' | 'transparent-white';
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -44,9 +46,16 @@ const Modal: React.FC<ModalProps> = ({
     hideHeader,
     skipTranslateAnimation,
     currentStep,
-    totalSteps
+    totalSteps,
+    closeButtonPosition = 'right',
+    closeButtonVariant = 'default'
 }) => {
     const [showModal, setShowModal] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Pull-to-close state
     const [isDragging, setIsDragging] = useState(false);
@@ -146,8 +155,8 @@ const Modal: React.FC<ModalProps> = ({
         return null;
     }
 
-    // Portal check for SSR
-    if (typeof window === 'undefined') return null;
+    // Ensure mounted on client
+    if (!mounted) return null;
 
     // Opacity calculation for "FERMER"
     const fermerOpacity = Math.min(translateY / 150, 1);
@@ -248,17 +257,19 @@ const Modal: React.FC<ModalProps> = ({
                                         w-10 
                                         h-10 
                                         rounded-full 
-                                        bg-secondary 
-                                        hover:bg-secondary/80 
                                         flex 
                                         items-center 
                                         justify-center 
                                         transition 
                                         absolute 
-                                        right-6
                                         top-6
-                                        border-0
-                                        ${transparentHeader ? 'bg-white text-black shadow-md' : ''}
+                                        top-6
+                                        ${closeButtonPosition === 'left' ? 'left-6' : 'right-6'}
+                                        ${closeButtonVariant === 'transparent-white'
+                                                ? 'bg-transparent border border-white text-white hover:bg-white/20 shadow-none'
+                                                : `bg-secondary hover:bg-secondary/80 border-0 ${transparentHeader ? 'bg-white text-black shadow-md' : ''}`
+                                            }
+                                        pointer-events-auto z-50
                                         pointer-events-auto z-50
                                     `}
                                     >
@@ -326,7 +337,7 @@ const Modal: React.FC<ModalProps> = ({
         </>
     );
 
-    return ReactDOM.createPortal(modalContent, document.body);
+    return createPortal(modalContent, document.body);
 };
 
 export default Modal;

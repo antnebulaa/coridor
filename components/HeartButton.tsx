@@ -8,13 +8,17 @@ interface HeartButtonProps {
     currentUser?: SafeUser | null;
     listingImage?: string | null;
     variant?: 'icon' | 'button';
+    withBorder?: boolean;
+    glass?: boolean;
 }
 
 const HeartButton: React.FC<HeartButtonProps> = ({
     listingId,
     currentUser,
     listingImage,
-    variant
+    variant,
+    withBorder,
+    glass
 }) => {
     return (
         <SaveListingMenu
@@ -22,6 +26,8 @@ const HeartButton: React.FC<HeartButtonProps> = ({
             currentUser={currentUser}
             listingImage={listingImage}
             variant={variant}
+            withBorder={withBorder}
+            glass={glass}
         />
     );
 }

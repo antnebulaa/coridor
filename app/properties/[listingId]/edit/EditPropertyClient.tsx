@@ -229,7 +229,12 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                                     .length;
                                 return `${count} chambre${count > 1 ? 's' : ''} créée${count > 1 ? 's' : ''}`;
                             })(),
-                            title: listing.title,
+                            title: (() => {
+                                if (listing.category && listing.propertyAdjective) {
+                                    return `${listing.category} ${listing.propertyAdjective}`;
+                                }
+                                return listing.title;
+                            })(),
                             location: listing.addressLine1
                                 ? `${listing.addressLine1}, ${listing.city}`
                                 : listing.city || '',

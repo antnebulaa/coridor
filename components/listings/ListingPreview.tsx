@@ -16,7 +16,7 @@ import ListingCommute from "./ListingCommute";
 import NeighborhoodScore from "./NeighborhoodScore";
 import ListingCardCarousel from "./ListingCardCarousel";
 import { Camera, Euro } from "lucide-react";
-import ImageModal from "../modals/ImageModal";
+import ListingImageGallery from "./ListingImageGallery";
 import { Button } from "../ui/Button";
 import useLoginModal from "@/hooks/useLoginModal";
 import ApplicationModal from "../modals/ApplicationModal";
@@ -157,47 +157,53 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 overflow-hidden 
                 relative
                 group
-                ${isMobileModal ? 'h-[40vh] rounded-none' : 'h-[40vh] rounded-xl'}
+                ${isMobileModal ? 'h-[55vh] rounded-none' : 'h-[40vh] rounded-xl'}
             `}
         >
             <div onClick={() => setIsImageModalOpen(true)} className="w-full h-full cursor-pointer">
-                <ListingCardCarousel images={listingImages} />
+                <ListingCardCarousel images={listingImages} centeredLabel />
             </div>
 
-            <div className={`absolute z-10 ${isMobileModal ? 'top-6 right-6' : 'top-5 right-5'}`}>
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent dark:from-neutral-900 z-10 pointer-events-none" />
+
+
+            <div className={`
+                absolute 
+                bottom-5 
+                right-6 
+                z-20
+                flex 
+                items-center 
+                gap-3
+            `}>
+                <button
+                    onClick={() => setIsImageModalOpen(true)}
+                    className="
+                    bg-white 
+                    hover:bg-neutral-100 
+                    text-black 
+                    px-4 
+                    h-10
+                    rounded-full 
+                    text-sm 
+                    font-semibold 
+                    transition 
+                    flex 
+                    items-center 
+                    justify-center
+                "
+                >
+                    {listingImages.length} photos
+                </button>
+
                 <HeartButton
                     listingId={listing.id}
                     currentUser={currentUser}
                     listingImage={listing.images?.[0]?.url}
+                    variant="button"
+                    glass
                 />
             </div>
-
-            {/* "Voir toutes les photos" Button */}
-            <button
-                onClick={() => setIsImageModalOpen(true)}
-                className="
-                absolute 
-                bottom-5 
-                right-5 
-                bg-white 
-                hover:bg-neutral-100 
-                text-black 
-                px-4 
-                py-2 
-                rounded-lg 
-                text-sm 
-                font-semibold 
-                shadow-md 
-                transition 
-                flex 
-                items-center 
-                gap-2
-                z-20
-            "
-            >
-                <Camera size={18} />
-                {listingImages.length} photos
-            </button>
         </div>
     );
 
@@ -353,10 +359,12 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
 
             </div >
 
-            <ImageModal
+            <ListingImageGallery
                 isOpen={isImageModalOpen}
                 onClose={() => setIsImageModalOpen(false)}
                 images={listingImages}
+                listingId={listing.id}
+                currentUser={currentUser}
             />
 
             <ApplicationModal
