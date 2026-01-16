@@ -9,6 +9,7 @@ import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront } from 'lucide-
 import { TbElevator } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
+import LikeButton from "../LikeButton";
 import ListingCardCarousel from "./ListingCardCarousel";
 
 
@@ -28,6 +29,7 @@ interface ListingCardProps {
     showHeart?: boolean;
     onSelect?: () => void;
     variant?: 'vertical' | 'horizontal';
+    hasLiked?: boolean;
 }
 
 const FeatureTag = ({
@@ -67,7 +69,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
     tertiaryActionLabel,
     showHeart = true,
     onSelect,
-    variant = 'vertical'
+    variant = 'vertical',
+    hasLiked
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
@@ -164,11 +167,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 w-full h-auto md:h-[200px] bg-card rounded-xl p-0 md:p-2 hover:bg-secondary transition">
-                    {/* Image Section - Stacked on Mobile, Side by Side on Desktop */}
+                <div className="flex flex-col md:flex-row lg:flex-col gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[200px] lg:h-auto bg-card rounded-xl p-0 md:p-2 hover:bg-secondary transition">
+                    {/* Image Section - Stacked on Mobile, Side by Side on Tablet, Stacked on Desktop */}
                     <div className="
                         w-full h-[200px]
                         md:w-[260px] md:min-w-[260px] md:h-full
+                        lg:w-full lg:min-w-0 lg:h-auto lg:aspect-4/3
                         relative 
                         overflow-hidden 
                         rounded-[16px]
@@ -189,15 +193,20 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     <div className="flex flex-col justify-between py-1 md:py-2 flex-1 pr-1 md:pr-2">
                         <div className="flex flex-col gap-0 md:gap-1">
                             {/* Price / Heart / Title / Location */}
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-0">
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
-                                        <div className="font-semibold text-[26px] md:text-[22px] text-[#FE3C08] leading-tight">
+                                        <div className="font-semibold text-[26px] md:text-[22px] text-[#2B2DFF] leading-tight">
                                             {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                                         </div>
                                     </div>
                                     {showHeart && (
-                                        <div className="ml-auto shrink-0 -mr-1 md:-mr-2">
+                                        <div className="ml-auto shrink-0 -mr-1 md:-mr-2 flex items-center gap-2">
+                                            <LikeButton
+                                                listingId={data.id}
+                                                currentUser={currentUser}
+                                                hasLiked={hasLiked}
+                                            />
                                             <HeartButton
                                                 listingId={data.id}
                                                 currentUser={currentUser}
@@ -208,7 +217,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 -mt-1">
                                     <div className="font-medium text-base text-foreground line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                                             ? 'Colocation'
@@ -246,10 +255,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
 
-                            <div className="flex flex-row items-center gap-2 md:gap-3 text-base text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
+                            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3 text-base text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
                                     <FeatureTag>
-                                        <span className="font-medium">1 chambre</span>
+                                        <span className="font-medium">1 ch</span>
                                     </FeatureTag>
                                 ) : data.roomCount === 1 ? (
                                     <FeatureTag>
@@ -258,18 +267,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 ) : (
                                     <>
                                         <FeatureTag>
-                                            <span className="font-medium">{data.roomCount || 0}</span> {(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
+                                            <span className="font-medium">{data.roomCount || 0}</span> p
                                         </FeatureTag>
-                                        <div className="hidden sm:block">
-                                            <FeatureTag>
-                                                <span className="font-medium">{Math.max(0, (data.roomCount || 0) - 1)}</span> {Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'}
-                                            </FeatureTag>
-                                        </div>
-                                        <div className="sm:hidden">
-                                            <FeatureTag>
-                                                <span className="font-medium">{Math.max(0, (data.roomCount || 0) - 1)}</span> ch.
-                                            </FeatureTag>
-                                        </div>
+                                        <FeatureTag>
+                                            <span className="font-medium">{Math.max(0, (data.roomCount || 0) - 1)}</span> ch
+                                        </FeatureTag>
                                     </>
                                 )}
 
@@ -282,71 +284,40 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <FeatureTag>
                                     <span className="font-medium">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
                                 </FeatureTag>
-                            </div>
 
-                            <div className="flex flex-wrap items-center gap-2 mt-0 py-0.5 text-neutral-700 dark:text-neutral-300 text-sm">
                                 {data.transitData?.mainConnection && (
-                                    <>
+                                    <div className="flex items-center justify-center gap-1.5 rounded-full px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
                                         <div className="flex items-center gap-1">
-                                            {/* Dynamic Transport Icon */}
                                             {(() => {
                                                 const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                                if (type.includes('bus')) return <BusFront size={20} className="text-neutral-700 dark:text-neutral-300" />;
-                                                if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700 dark:text-neutral-300" />;
+                                                if (type.includes('bus')) return <BusFront size={16} className="text-neutral-700" />;
+                                                if (type.includes('train') || type.includes('rail')) return <Train size={16} className="text-neutral-700" />;
                                                 if (type.includes('tram')) return (
-                                                    <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                                        <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">T</span>
+                                                    <div className="w-4 h-4 rounded-full border border-neutral-700 flex items-center justify-center">
+                                                        <span className="text-[8px] font-bold text-neutral-700">T</span>
                                                     </div>
                                                 );
-                                                // Default to Metro
                                                 return (
-                                                    <div className="w-5 h-5 rounded-full border border-neutral-700 dark:border-neutral-300 flex items-center justify-center">
-                                                        <span className="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">M</span>
+                                                    <div className="w-4 h-4 rounded-full border border-neutral-700 flex items-center justify-center">
+                                                        <span className="text-[8px] font-bold text-neutral-700">M</span>
                                                     </div>
                                                 );
                                             })()}
 
-                                            {/* Line Badge */}
                                             <div
-                                                className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center"
+                                                className="h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center"
                                                 style={{
                                                     backgroundColor: data.transitData.mainConnection.color || '#000',
                                                     color: data.transitData.mainConnection.textColor || '#FFF'
                                                 }}
                                             >
-                                                <span className="text-xs font-bold leading-none pt-px">
+                                                <span className="text-[10px] font-bold leading-none pt-px">
                                                     {data.transitData.mainConnection.line}
                                                 </span>
                                             </div>
                                         </div>
-                                        <span className="line-clamp-1">{data.transitData.mainConnection.walkTime} min</span>
-                                    </>
-                                )}
-
-                                {data.transitData?.mainConnection && (data.hasFiber || data.hasBikeRoom) && (
-                                    <span className="text-[10px] text-muted-foreground">•</span>
-                                )}
-
-                                {data.hasFiber && (
-                                    <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                                        <Wifi size={14} />
-                                        <span className="text-sm font-normal">Fibre</span>
+                                        <span className="font-medium">{data.transitData.mainConnection.walkTime} min</span>
                                     </div>
-                                )}
-
-                                {data.hasFiber && data.hasBikeRoom && (
-                                    <span className="text-[10px] text-muted-foreground">•</span>
-                                )}
-
-                                {data.hasBikeRoom && (
-                                    <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                                        <Bike size={14} />
-                                        <span className="text-sm font-normal">Local vélo</span>
-                                    </div>
-                                )}
-
-                                {!data.transitData?.mainConnection && !data.hasFiber && !data.hasBikeRoom && data.neighborhood && (
-                                    <div className="h-4 md:h-[14px]" />
                                 )}
                             </div>
                         </div>
@@ -418,13 +389,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     )}
                 </div>
 
-                <div className="flex flex-col gap-1 mt-2">
+                <div className="flex flex-col gap-0 mt-2">
                     <div className="flex flex-row justify-between items-start w-full">
-                        <div className="font-semibold text-[26px] text-[#FE3C08]">
+                        <div className="font-semibold text-[26px] text-[#2B2DFF]">
                             {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                         </div>
                         {showHeart && (
-                            <div className="ml-auto shrink-0 -mr-1">
+                            <div className="ml-auto shrink-0 -mr-1 flex items-center gap-2">
+                                <LikeButton
+                                    listingId={data.id}
+                                    currentUser={currentUser}
+                                    hasLiked={hasLiked}
+                                />
                                 <HeartButton
                                     listingId={data.id}
                                     currentUser={currentUser}
@@ -436,7 +412,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
                     </div>
 
-                    <div className="font-normal text-foreground">
+                    <div className="font-normal text-foreground -mt-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                             ? 'Colocation'
                             : data.category}

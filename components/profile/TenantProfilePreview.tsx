@@ -278,7 +278,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                                     Loyer : {rent} €
                                 </span>
                                 <span className="text-sm text-neutral-500">
-                                    Taux d'effort : {effortRate.toFixed(0)}%
+                                    Taux d&apos;effort : {effortRate.toFixed(0)}%
                                 </span>
                             </div>
                         </div>

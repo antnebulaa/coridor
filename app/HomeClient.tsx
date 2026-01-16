@@ -26,12 +26,14 @@ interface HomeClientProps {
     listings: any[]; // SafeListing + relation
     currentUser?: SafeUser | null;
     isSearchActive?: boolean;
+    likes?: string[];
 }
 
 const HomeClient: React.FC<HomeClientProps> = ({
     listings,
     currentUser,
-    isSearchActive = false
+    isSearchActive = false,
+    likes = []
 }) => {
     const [selectedListingId, setSelectedListingId] = useState<string>('');
     const [isOverlayMinimized, setIsOverlayMinimized] = useState(false);
@@ -176,7 +178,9 @@ const HomeClient: React.FC<HomeClientProps> = ({
                         <div className="
                             grid 
                             grid-cols-1 
+                            lg:grid-cols-2
                             gap-4
+                            lg:gap-6
                         ">
                             {listings.length === 0 ? (
                                 <div className="h-[60vh] flex flex-col gap-2 justify-center items-center">
@@ -194,6 +198,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             data={listing}
                                             variant="horizontal"
                                             onSelect={() => setSelectedListingId(listing.id)}
+                                            hasLiked={likes?.includes(listing.id)}
                                         />
                                     </div>
                                 ))

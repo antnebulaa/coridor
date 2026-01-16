@@ -102,6 +102,7 @@ model User {
   contacts   User[]  @relation("UserContacts")
   contactOf  User[]  @relation("UserContacts")
   commuteLocations CommuteLocation[] // NEW: Relation to commute locations
+  likes            Like[]
 }
 
 model TenantProfile {
@@ -323,6 +324,7 @@ model Listing {
   visits        Visit[]
   applications  RentalApplication[]
   messages      Message[]
+  likes         Like[]
   
   // Furniture Inventory (Commercial/Legal)
   furniture     Furniture?
@@ -584,4 +586,16 @@ model CommuteLocation {
   isShowOnMap   Boolean  @default(true) // NEW: Toggle visibility on map
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
 }

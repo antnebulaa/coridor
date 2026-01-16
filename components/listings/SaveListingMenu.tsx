@@ -495,8 +495,8 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     active:scale-90
                     ${variant === 'button'
                         ? glass
-                            ? 'bg-white dark:bg-black/20 dark:backdrop-blur-md rounded-full'
-                            : 'bg-white rounded-full'
+                            ? 'bg-white dark:bg-black/20 dark:backdrop-blur-md rounded-full w-8 h-8 flex items-center justify-center'
+                            : 'bg-white rounded-full w-8 h-8 flex items-center justify-center'
                         : ''}
                     ${withBorder ? 'border border-neutral-200 dark:border-neutral-800' : (glass ? 'border border-transparent dark:border-white/40' : '')}
                 `}
@@ -513,7 +513,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     />
                 ) : (
                     <div className={`
-                        w-10 h-10
+                        w-full h-full
                         rounded-full 
                         text-sm font-medium 
                         transition-all
