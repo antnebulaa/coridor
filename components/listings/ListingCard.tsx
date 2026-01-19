@@ -3,7 +3,7 @@
 import useCountries from "@/hooks/useCountries";
 import { SafeListing, SafeReservation, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { format } from 'date-fns';
 import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront } from 'lucide-react';
 import { TbElevator } from 'react-icons/tb';
@@ -151,7 +151,27 @@ const ListingCard: React.FC<ListingCardProps> = ({
         return null;
     }, [data.floor, data.totalFloors, data.hasElevator, data.isAccessible]);
 
-    const handleClick = useCallback(() => {
+    const dragStart = useRef({ x: 0, y: 0 });
+    const isDrag = useRef(false);
+
+    const handlePointerDown = (e: React.PointerEvent) => {
+        dragStart.current = { x: e.clientX, y: e.clientY };
+        isDrag.current = false;
+    };
+
+    const handlePointerUp = (e: React.PointerEvent) => {
+        const dist = Math.hypot(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y);
+        if (dist > 5) {
+            isDrag.current = true;
+        }
+    };
+
+    const handleClick = useCallback((e: React.MouseEvent) => {
+        if (isDrag.current) {
+            e.stopPropagation();
+            return;
+        }
+
         if (onSelect) {
             onSelect();
         } else {
@@ -164,15 +184,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
     if (variant === 'horizontal') {
         return (
             <div
+                onPointerDown={handlePointerDown}
+                onPointerUp={handlePointerUp}
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row lg:flex-col gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[200px] lg:h-auto bg-card rounded-xl p-0 md:p-2 hover:bg-secondary transition">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-xl p-[5px] md:p-2 hover:bg-secondary transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Tablet, Stacked on Desktop */}
                     <div className="
                         w-full h-[200px]
-                        md:w-[260px] md:min-w-[260px] md:h-full
-                        lg:w-full lg:min-w-0 lg:h-auto lg:aspect-4/3
+                        md:w-[240px] md:min-w-[240px] md:h-full
                         relative 
                         overflow-hidden 
                         rounded-[16px]
@@ -217,7 +238,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0 -mt-1">
+                                <div className="flex-1 min-w-0 mt-1 md:-mt-1">
                                     <div className="font-medium text-base text-foreground line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                                             ? 'Colocation'
@@ -241,7 +262,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {/* Mobile City Display - Visible only on mobile */}
-                            <div className="md:hidden font-normal text-neutral-700 text-sm line-clamp-1 -mt-1">
+                            <div className="md:hidden font-normal text-neutral-700 text-sm line-clamp-1 mt-0.5">
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
                                     <span className="font-normal text-sm text-neutral-700">
@@ -250,7 +271,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
                             </div>
                             {floorDisplay && (
-                                <div className="md:hidden font-normal text-neutral-500 text-sm -mt-0.5">
+                                <div className="md:hidden font-normal text-neutral-500 text-sm mt-0.5">
                                     {floorDisplay}
                                 </div>
                             )}
@@ -367,6 +388,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
     // Default Vertical Card
     return (
         <div
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
             onClick={handleClick}
             className="col-span-1 cursor-pointer group listing-card-container"
         >
@@ -412,7 +435,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
                     </div>
 
-                    <div className="font-normal text-foreground -mt-1">
+                    <div className="font-normal text-foreground mt-1 md:-mt-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                             ? 'Colocation'
                             : data.category}

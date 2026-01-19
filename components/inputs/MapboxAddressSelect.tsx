@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import axios from 'axios';
-import { MapPin, Star, X, TramFront } from "lucide-react";
+import { MapPin, Navigation, Star, TramFront, Building2, Landmark, Trees, TrainFront, X } from "lucide-react";
 import Link from "next/link";
 
 export type AddressSelectValue = {
@@ -16,6 +16,7 @@ export type AddressSelectValue = {
     country?: string;
     zipCode?: string;
     street?: string;
+    apartment?: string;
 }
 
 interface MapboxAddressSelectProps {
@@ -28,10 +29,24 @@ interface MapboxAddressSelectProps {
     clearOnSelect?: boolean;
     renderAsList?: boolean;
     customInputClass?: string;
+    customIconWrapperClass?: string;
     label?: string;
+    icon?: any;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+// Helper for UUID generation with fallback
+function generateUUID() {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
 const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     value,
@@ -43,11 +58,33 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     clearOnSelect = false,
     renderAsList = false,
     customInputClass,
-    label
+    customIconWrapperClass,
+    label,
+    icon: Icon
 }) => {
     const [inputValue, setInputValue] = useState(value?.label || '');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [userProximity, setUserProximity] = useState('ip');
+    const [sessionToken, setSessionToken] = useState('');
+
+    useEffect(() => {
+        setSessionToken(generateUUID());
+    }, []);
+
+    // Attempt to get user location for better relevance
+    useEffect(() => {
+        if (typeof window !== 'undefined' && "geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserProximity(`${position.coords.longitude},${position.coords.latitude}`);
+                },
+                () => {
+                    // Ignore error, fallback to 'ip'
+                }
+            );
+        }
+    }, []);
 
     // Manage placeholder state to clear on focus
     const defaultPlaceholder = placeholder || "Entrez une adresse...";
@@ -81,26 +118,21 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
         if (!query || query.length < 3) return;
 
         try {
-            // Construct URL parameters
             const params = new URLSearchParams({
                 access_token: MAPBOX_TOKEN!,
-                country: limitCountry,
                 language: 'fr',
-                limit: '5' // Back to 5 as requested
+                country: limitCountry,
+                proximity: userProximity,
+                session_token: sessionToken,
+                types: searchTypes || 'address,poi,neighborhood,place,district,locality'
             });
 
-            // Only append types if searchTypes is provided and not empty
-            if (searchTypes) {
-                params.append('types', searchTypes);
-            }
-
-            // Mapbox Geocoding API
             const response = await axios.get(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?${params.toString()}`
+                `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&${params.toString()}`
             );
 
-            if (response.data && response.data.features) {
-                setSuggestions(response.data.features);
+            if (response.data && response.data.suggestions) {
+                setSuggestions(response.data.suggestions);
                 setShowSuggestions(true);
             }
         } catch (error) {
@@ -117,7 +149,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [inputValue, value]);
+    }, [inputValue, value, sessionToken, userProximity, searchTypes]);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -127,74 +159,79 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
         }
     };
 
-    const handleSelect = (feature: any) => {
-        const address = feature.place_name;
-        const [lng, lat] = feature.center;
+    const handleSelect = async (suggestion: any) => {
+        try {
+            // Retrieve details for coordinates
+            const retrieveRes = await axios.get(
+                `https://api.mapbox.com/search/searchbox/v1/retrieve/${suggestion.mapbox_id}?access_token=${MAPBOX_TOKEN}&session_token=${sessionToken}`
+            );
 
-        let city = '';
-        let region = '';
-        let country = '';
-        let district = '';
-        let neighborhood = '';
-        let postcode = '';
+            const feature = retrieveRes.data.features[0];
+            if (!feature) return;
 
-        if (feature.context) {
-            feature.context.forEach((ctx: any) => {
-                if (ctx.id.startsWith('place')) {
-                    city = ctx.text;
-                } else if (ctx.id.startsWith('region')) {
-                    region = ctx.text;
-                } else if (ctx.id.startsWith('country')) {
-                    country = ctx.text;
-                } else if (ctx.id.startsWith('neighborhood')) {
-                    neighborhood = ctx.text;
-                } else if (ctx.id.startsWith('district')) {
-                    district = ctx.text;
-                } else if (ctx.id.startsWith('locality')) {
-                    if (!city) city = ctx.text;
-                } else if (ctx.id.startsWith('postcode')) {
-                    postcode = ctx.text;
-                }
-            });
-        }
+            const [lng, lat] = feature.geometry.coordinates;
 
-        // Infer district logic
-        if (!district) {
-            const postcodeCtx = feature.context?.find((c: any) => c.id.startsWith('postcode'));
-            if (postcodeCtx && city) {
-                const pc = postcodeCtx.text;
+            // Map SearchBox context to our format
+            const ctx = suggestion.context || {};
+
+            const city = ctx.place?.name || ctx.locality?.name || '';
+            const postcode = ctx.postcode?.name || '';
+            const region = ctx.region?.name || ctx.district?.name || ''; // District in SearchBox might differ
+            const country = ctx.country?.name || '';
+            const neighborhood = ctx.neighborhood?.name || '';
+
+            // District logic (Arrondissements)
+            let district = '';
+            // Basic inference from postcode/city like before
+            if (!district && city && postcode) {
                 const cityLower = city.toLowerCase();
-
-                if (cityLower === 'paris' && pc.startsWith('750')) {
-                    const arr = parseInt(pc.substring(3), 10);
+                if (cityLower === 'paris' && postcode.startsWith('750')) {
+                    const arr = parseInt(postcode.substring(3), 10);
                     if (arr >= 1 && arr <= 20) district = `${arr === 1 ? '1er' : arr + 'e'}`;
-                } else if (cityLower === 'marseille' && pc.startsWith('130')) {
-                    const arr = parseInt(pc.substring(3), 10);
+                } else if (cityLower === 'marseille' && postcode.startsWith('130')) {
+                    const arr = parseInt(postcode.substring(3), 10);
                     if (arr >= 1 && arr <= 16) district = `${arr === 1 ? '1er' : arr + 'e'}`;
-                } else if (cityLower === 'lyon' && pc.startsWith('690')) {
-                    const arr = parseInt(pc.substring(3), 10);
+                } else if (cityLower === 'lyon' && postcode.startsWith('690')) {
+                    const arr = parseInt(postcode.substring(3), 10);
                     if (arr >= 1 && arr <= 9) district = `${arr === 1 ? '1er' : arr + 'e'}`;
                 }
             }
+
+            let finalLabel = suggestion.name;
+            if (suggestion.full_address) {
+                const nameLower = suggestion.name.toLowerCase();
+                const fullLower = suggestion.full_address.toLowerCase();
+                if (fullLower.startsWith(nameLower)) {
+                    finalLabel = suggestion.full_address;
+                } else if (suggestion.full_address !== suggestion.name) {
+                    finalLabel = `${suggestion.name}, ${suggestion.full_address}`;
+                }
+            }
+
+            const selectedValue: AddressSelectValue = {
+                label: finalLabel,
+                value: suggestion.mapbox_id,
+                latlng: [lat, lng],
+                region: region || country,
+                city: city,
+                district: district,
+                neighborhood: neighborhood,
+                country: country,
+                zipCode: postcode,
+                street: suggestion.name
+            };
+
+            setInputValue(clearOnSelect ? '' : selectedValue.label);
+            setShowSuggestions(false);
+            setSuggestions([]);
+            onChange(selectedValue);
+
+            // Refresh session token after selection (recommended)
+            setSessionToken(generateUUID());
+
+        } catch (error) {
+            console.error("Error retrieving details:", error);
         }
-
-        const selectedValue: AddressSelectValue = {
-            label: address,
-            value: feature.id, // Mapbox ID
-            latlng: [lat, lng],
-            region: region || country,
-            city: city,
-            district: district,
-            neighborhood: neighborhood,
-            country: country,
-            zipCode: postcode,
-            street: feature.place_name.split(',')[0].trim()
-        };
-
-        setInputValue(clearOnSelect ? '' : address);
-        setShowSuggestions(false);
-        setSuggestions([]);
-        onChange(selectedValue);
     };
 
     if (!MAPBOX_TOKEN) {
@@ -204,6 +241,11 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     return (
         <div ref={wrapperRef} className="relative">
             <div className="relative">
+                {Icon && (
+                    <div className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 text-neutral-800 dark:text-neutral-200 pointer-events-none ${customIconWrapperClass || ''}`}>
+                        <Icon size={18} strokeWidth={2.5} />
+                    </div>
+                )}
                 <input
                     ref={inputRef}
                     value={inputValue}
@@ -214,6 +256,7 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                         peer
                         w-full
                         p-4
+                        ${Icon ? 'pl-12' : ''}
                         font-medium
                         text-lg
                         text-left
@@ -301,75 +344,93 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
             </div>
             {showSuggestions && suggestions.length > 0 && (
                 <ul className={`
-                    ${renderAsList ? 'relative mt-4 border-0 shadow-none bg-transparent w-full' : 'absolute z-50 w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl mt-2 shadow-xl'}
+                    ${renderAsList ? 'relative mt-0 border-0 shadow-none bg-transparent w-full' : 'absolute z-50 w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl mt-2 shadow-xl'}
                     ${!renderAsList && 'max-h-[300px] overflow-y-auto'}
                 `}>
-                    {suggestions.map((feature, index) => {
-                        const mainText = feature.text || feature.place_name.split(',')[0];
-                        const secondaryText = feature.place_name.replace(mainText, '').replace(/^,\s*/, '');
+                    {suggestions.map((suggestion, index) => {
+                        const mainText = suggestion.name;
+                        // Avoid repetition if full_address starts with name
+                        let secondaryText = suggestion.full_address || suggestion.place_formatted || "";
+                        if (secondaryText.startsWith(mainText)) {
+                            secondaryText = secondaryText.substring(mainText.length).replace(/^,\s*/, '');
+                        }
 
-                        const getIcon = (feature: any) => {
-                            const categories = (feature.properties?.category || '').toLowerCase();
-                            const maki = (feature.properties?.maki || '').toLowerCase();
-                            const name = feature.text?.toLowerCase() || '';
-                            const types = feature.place_type || [];
+                        const getPlaceConfig = (s: any) => {
+                            const maki = (s.maki || '').toLowerCase();
+                            const type = s.feature_type || '';
+                            const cats = (s.poi_category || []).map((c: string) => c.toLowerCase());
+                            const name = (s.name || '').toLowerCase();
 
-                            // Check for official Maki icons (Mapbox standard)
-                            if (maki === 'rail' || maki === 'rail-metro' || maki === 'rail-light' || maki === 'metro') return <TramFront size={20} />;
-
-                            // Check categories && name && types
-                            if (
-                                categories.includes('tram') || name.includes('tramway') ||
-                                categories.includes('metro') || categories.includes('subway') || name.includes('métro') ||
-                                categories.includes('railway') || categories.includes('train') || name.includes('gare') || name.includes('rer') ||
-                                (types.includes('poi') && (name.includes('station') || name.includes('gare'))) // Fallback for generic station POIs
-                            ) {
-                                return <TramFront size={20} />;
+                            // Parks / Nature
+                            if (maki === 'park' || cats.some((c: string) => c.includes('park') || c.includes('garden') || c.includes('forest') || c.includes('parc'))) {
+                                return { icon: <Trees size={20} />, bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' };
                             }
 
-                            return <MapPin size={20} />;
+                            // Monuments / Culture
+                            if (maki === 'museum' || maki === 'monument' || maki === 'castle' || maki === 'art-gallery' ||
+                                cats.some((c: string) => c.includes('museum') || c.includes('historic') || c.includes('castle') || c.includes('monument') || c.includes('tourist'))) {
+                                return { icon: <Landmark size={20} />, bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-600 dark:text-rose-400' };
+                            }
+
+                            // Heavy Rail (Gare)
+                            if (maki === 'rail' || maki === 'railway' || maki === 'train' ||
+                                cats.some((c: string) => c.includes('rail') || c.includes('train')) ||
+                                name.includes('gare')) {
+                                return { icon: <TrainFront size={20} />, bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400' };
+                            }
+
+                            // Metro / Tram
+                            if (maki === 'metro' || maki === 'rail-metro' || maki === 'rail-light' ||
+                                cats.some((c: string) => c.includes('tram') || c.includes('metro') || c.includes('subway')) ||
+                                name.includes('tramway') || name.includes('métro') || name.includes('rer')) {
+                                return { icon: <TramFront size={20} />, bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-600 dark:text-sky-400' };
+                            }
+
+                            // City
+                            if (type === 'place' || type === 'locality') {
+                                return { icon: <Building2 size={20} />, bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400' };
+                            }
+                            // Neighborhood / District
+                            if (type === 'neighborhood' || type === 'district') {
+                                return { icon: <MapPin size={20} />, bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400' };
+                            }
+                            // POI Default
+                            return { icon: <MapPin size={20} />, bg: 'bg-neutral-100 dark:bg-neutral-800', text: 'text-neutral-500' };
                         };
+
+                        const config = getPlaceConfig(suggestion);
 
                         return (
                             <li
-                                key={`${feature.id}-${index}`}
-                                onClick={() => handleSelect(feature)}
-                                className="
+                                key={`${suggestion.mapbox_id}-${index}`}
+                                onClick={() => handleSelect(suggestion)}
+                                className={`
                                     flex items-center gap-3
-                                    px-2 py-3
+                                    ${renderAsList ? 'py-3' : 'p-3'}
+                                    rounded-xl
                                     border-b border-neutral-100 dark:border-neutral-800 last:border-0
                                     hover:bg-neutral-50
                                     dark:hover:bg-neutral-800
-                                    cursor-pointer 
+                                    cursor-pointer
                                     transition
-                                "
+                                `}
                             >
-                                {/* Left Icon */}
-                                <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-full shrink-0 text-neutral-500">
-                                    {getIcon(feature)}
+                                {/* Left Icon - Rounded Square */}
+                                <div className={`p-2.5 rounded-xl shrink-0 ${config.bg} ${config.text}`}>
+                                    {config.icon}
                                 </div>
 
                                 {/* Text Content */}
                                 <div className="flex flex-col flex-1 overflow-hidden">
-                                    <span className="font-medium text-lg truncate text-left">{mainText}</span>
-                                    <span className="text-base text-neutral-500 truncate text-left">{secondaryText}</span>
+                                    <span className="font-medium text-[15px] truncate text-left text-neutral-800 dark:text-neutral-200">{mainText}</span>
+                                    <span className="text-[13px] text-neutral-500 truncate text-left">{secondaryText}</span>
                                 </div>
-
-                                {/* Right Action (Star) */}
-                                <Link
-                                    href="/account/preferences"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-full transition text-neutral-400 hover:text-yellow-500"
-                                    title="Ajouter aux favoris"
-                                >
-                                    <Star size={18} />
-                                </Link>
                             </li>
                         )
                     })}
                 </ul>
             )}
-        </div>
+        </div >
     );
 };
 

@@ -144,7 +144,7 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                 </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto px-0 py-2">
                 {uniqueDates.map((dateStr) => {
                     const dateObj = parseISO(dateStr);
                     const isOpen = openDate === dateStr;
@@ -154,7 +154,7 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                         <div key={dateStr} className="border border-gray-200 dark:border-neutral-800 rounded-lg overflow-hidden mb-3">
                             <button
                                 onClick={() => setOpenDate(isOpen ? null : dateStr)}
-                                className="w-full flex items-center justify-between p-4 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 transition"
+                                className="w-full flex items-center justify-between px-2 py-3 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 transition"
                             >
                                 <span className="font-semibold text-neutral-800 dark:text-white capitalize">
                                     {format(dateObj, 'EEEE d MMMM yyyy', { locale: fr })}
@@ -164,8 +164,8 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
 
                             {isOpen && (
                                 <div
-                                    className="p-4 bg-blue-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800"
-                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}
+                                    className="p-2 bg-blue-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800"
+                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}
                                 >
                                     {daySlots.map((slot, idx) => {
                                         const isSelected = selectedSlot?.date === slot.date && selectedSlot?.startTime === slot.startTime;

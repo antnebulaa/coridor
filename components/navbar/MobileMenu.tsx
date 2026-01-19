@@ -76,7 +76,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount, hasPe
     const { isOpen } = useConversation();
     const isContentMode = searchParams?.get('view') === 'content';
 
-    if (isOpen || isContentMode) {
+    const isTenantProfile = pathname?.startsWith('/account/tenant-profile');
+
+    if (isOpen || isContentMode || isTenantProfile) {
         return null;
     }
 

@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Briefcase, Star, MoreHorizontal, Search, Pencil, Trash } from 'lucide-react';
+import { Briefcase, Star, MoreHorizontal, Search, Pencil, Trash, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Modal from './Modal';
 import useSearchModal from '@/hooks/useSearchModal';
 import useCommuteModal from '@/hooks/useCommuteModal';
@@ -21,13 +22,16 @@ import { Home, GraduationCap, Heart, Coffee, Utensils, ShoppingBag } from 'lucid
 enum STEPS {
     LOCATION = 0,
     CATEGORY = 1,
-    FILTERS = 2,
-    COMMUTE = 3,
-    SAVE_FAVORITE = 4
+    BUDGET = 2,
+    FILTERS = 3,
+    COMMUTE = 4,
+    SAVE_FAVORITE = 5
 }
 
 const SearchModal = () => {
     const router = useRouter();
+    const minPriceRef = useRef<HTMLInputElement>(null);
+    const budgetContentRef = useRef<HTMLDivElement>(null);
     const params = useSearchParams();
     const searchModal = useSearchModal();
     const commuteModal = useCommuteModal();
@@ -41,10 +45,20 @@ const SearchModal = () => {
     const [minSurface, setMinSurface] = useState<string>('9');
     const [maxSurface, setMaxSurface] = useState<string>('');
     const [roomCount, setRoomCount] = useState(1);
+    const [bedroomCount, setBedroomCount] = useState(0); // Added bedroomCount
     const [bathroomCount, setBathroomCount] = useState(1);
 
     // UI State
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+    const [openFilterSection, setOpenFilterSection] = useState<'budget' | 'surface' | 'rooms' | null>('budget');
+
+    const toggleFilterSection = (section: 'budget' | 'surface' | 'rooms') => {
+        if (openFilterSection === section) {
+            setOpenFilterSection(null);
+        } else {
+            setOpenFilterSection(section);
+        }
+    };
 
     // Saved Locations State
     const [savedLocations, setSavedLocations] = useState<any[]>([]);
@@ -84,6 +98,9 @@ const SearchModal = () => {
         label: string;
     }
     const [commutePoints, setCommutePoints] = useState<CommutePoint[]>([]);
+    const [commuteAddress, setCommuteAddress] = useState<any>(undefined);
+    const [commuteTime, setCommuteTime] = useState('30');
+    const [commuteMode, setCommuteMode] = useState('public_transport');
 
     // Quick Add Favorite State
     const [isAddingFavorite, setIsAddingFavorite] = useState(false);
@@ -257,6 +274,7 @@ const SearchModal = () => {
 
         if (category) urlParams.set('category', category);
         if (roomCount > 1) urlParams.set('roomCount', roomCount.toString());
+        if (bedroomCount > 0) urlParams.set('bedroomCount', bedroomCount.toString()); // Added bedroomCount param
         if (bathroomCount > 1) urlParams.set('bathroomCount', bathroomCount.toString());
         if (minPrice) urlParams.set('minPrice', minPrice);
         if (maxPrice) urlParams.set('maxPrice', maxPrice);
@@ -279,6 +297,7 @@ const SearchModal = () => {
         const detailsParts = [];
         if (category) detailsParts.push(category);
         if (roomCount > 1) detailsParts.push(`${roomCount} pièces`);
+        if (bedroomCount > 0) detailsParts.push(`${bedroomCount} ch`);
         if (bathroomCount > 1) detailsParts.push(`${bathroomCount} sdb`);
         if (minSurface) detailsParts.push(`${minSurface}m² min`);
         if (maxPrice) detailsParts.push(`Max ${maxPrice}€`);
@@ -311,6 +330,7 @@ const SearchModal = () => {
         params,
         commutePoints,
         roomCount,
+        bedroomCount,
         bathroomCount,
         minPrice,
         maxPrice,
@@ -335,6 +355,7 @@ const SearchModal = () => {
 
                 if (category) params.set('category', category);
                 if (roomCount > 1) params.set('roomCount', roomCount.toString());
+                if (bedroomCount > 0) params.set('bedroomCount', bedroomCount.toString());
                 if (bathroomCount > 1) params.set('bathroomCount', bathroomCount.toString());
                 if (minPrice) params.set('minPrice', minPrice);
                 if (maxPrice) params.set('maxPrice', maxPrice);
@@ -359,7 +380,7 @@ const SearchModal = () => {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [locations, category, roomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface, commutePoints]);
+    }, [locations, category, roomCount, bedroomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface, commutePoints]);
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.SAVE_FAVORITE) {
@@ -393,6 +414,7 @@ const SearchModal = () => {
             return;
         }
         setLocations([...locations, value]);
+        setStep(STEPS.CATEGORY);
     };
 
     const handleLocationRemove = (valueToRemove: string) => {
@@ -444,345 +466,445 @@ const SearchModal = () => {
 
     const hasWorkplace = savedLocations.some(l => l.icon === 'briefcase' || l.name === 'Travail');
 
-    let bodyContent = (
-        <div className="flex flex-col gap-6">
+    let bodyContent: React.ReactElement | undefined = undefined;
 
-
-            <MapboxAddressSelect
-                key={isAddingFavorite ? 'fav' : 'search'}
-                value={undefined} // Always empty to allow new selection
-                onChange={handleLocationSelect}
-                placeholder={isAddingFavorite
-                    ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail")
-                    : (locations.length > 0 ? "Saisir un autre lieu" : (isMobile ? "Saisir un lieu" : "Saisir un ou plusieurs lieux"))
-                }
-                searchTypes={isAddingFavorite ? "address,poi" : undefined}
-                limitCountry="fr"
-                autoFocus={true}
-                clearOnSelect
-                renderAsList={true}
-                customInputClass="!text-3xl !font-medium"
-            />
-
-            {/* Cancel Button for Add Favorite Mode */}
-            {isAddingFavorite && (
-                <div
-                    onClick={() => setIsAddingFavorite(false)}
-                    className="text-sm font-semibold underline cursor-pointer hover:text-neutral-500 self-end -mt-4 mb-2"
-                >
-                    Annuler
-                </div>
-            )}
-
-            {/* Selected Locations List */}
-            {!isAddingFavorite && locations.length > 0 && (
-                <div className="flex flex-col gap-3">
-                    {locations.map((loc) => (
-                        <div key={loc.value} className="flex flex-col p-4 bg-secondary rounded-xl relative text-foreground">
-                            <div className="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                                    <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-semibold text-lg">
-                                    {loc.city && !loc.label.split(',')[0].toLowerCase().includes(loc.city.toLowerCase())
-                                        ? `${loc.city} ${loc.label.split(',')[0]}`
-                                        : (loc.label.split(',')[0] || loc.city)}
-                                </span>
+    // Unified Accordion View for Search Steps
+    // Unified Accordion View for Search Steps
+    if (step <= STEPS.FILTERS) {
+        bodyContent = (
+            <div className="flex flex-col gap-3 p-4 md:p-6">
+                {/* 1. LOCATION SECTION */}
+                <div className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-all duration-300 ${step === STEPS.LOCATION ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}>
+                    <div
+                        onClick={() => setStep(STEPS.LOCATION)}
+                        className={`flex items-center justify-between px-[20px] py-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.LOCATION ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                    >
+                        <div className={step === STEPS.LOCATION ? "text-2xl font-bold" : "text-sm font-medium text-neutral-500"}>Où ?</div>
+                        {step !== STEPS.LOCATION && (
+                            <div className="text-sm font-semibold truncate max-w-[200px]">
+                                {locations.length > 0
+                                    ? locations.map(l => l.city || l.label.split(',')[0].trim()).join(', ')
+                                    : 'Toute la France'}
                             </div>
+                        )}
+                    </div>
 
-
-
-                            <button
-                                onClick={() => handleLocationRemove(loc.value)}
-                                className="absolute top-4 right-4 p-1 hover:bg-background/50 rounded-full transition"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Alternative Searches */}
-            {/* Alternative Searches */}
-            <div className="mt-4">
-                <div className="text-sm font-medium text-muted-foreground mb-3">Recherches alternatives</div>
-                <div className="flex flex-col gap-3">
-                    {isLoadingFavorites ? (
-                        // Skeleton Loading
-                        [...Array(3)].map((_, i) => (
-                            <div key={i} className="h-[60px] w-full bg-neutral-100 dark:bg-neutral-800 animate-pulse rounded-xl" />
-                        ))
-                    ) : (
-                        savedLocations.map((loc) => {
-                            const iconList = [
-                                { id: 'briefcase', icon: Briefcase, label: 'Travail' },
-                                { id: 'home', icon: Home, label: 'Bureaux' },
-                                { id: 'school', icon: GraduationCap, label: 'École' },
-                                { id: 'favorite', icon: Star, label: 'Favori' },
-                                { id: 'partner', icon: Heart, label: 'Partenaire' }
-                            ];
-                            // Find matching icon or default to Star
-                            const matchedIcon = iconList.find(i => i.id === loc.icon);
-                            const Icon = matchedIcon ? matchedIcon.icon : Star;
-
-                            return (
-                                <div
-                                    key={loc.id}
-                                    className="relative flex items-center justify-between h-[60px] border border-border rounded-xl hover:shadow-sm transition group pr-2"
-                                >
-                                    {/* Main Clickable Area */}
-                                    <div
-                                        className="flex items-center gap-3 p-4 flex-1 cursor-pointer active:scale-95 transition h-full rounded-l-xl"
-                                        onClick={() => handleFavoriteSelect(loc)}
-                                    >
-                                        <Icon size={24} className="text-foreground" strokeWidth={1.5} />
-                                        <div className="flex flex-col text-left">
-                                            <span className="font-medium">{loc.name || "Favori"}</span>
-                                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">{loc.address}</span>
-                                        </div>
+                    <div className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${step === STEPS.LOCATION ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                            <div className="px-[20px] pb-6 pt-2">
+                                <div className="mt-4">
+                                    <div className="mb-2 relative">
+                                        <MapboxAddressSelect
+                                            key={isAddingFavorite ? 'fav' : 'search'}
+                                            value={undefined}
+                                            onChange={handleLocationSelect}
+                                            placeholder={isAddingFavorite
+                                                ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail")
+                                                : (locations.length > 0 ? "Saisir un autre lieu" : "Saisir un lieu")
+                                            }
+                                            icon={Search}
+                                            searchTypes={isAddingFavorite ? "address,poi" : "district,locality,neighborhood,place,address,poi"}
+                                            limitCountry="fr"
+                                            autoFocus={true}
+                                            clearOnSelect
+                                            renderAsList={true}
+                                            customInputClass="!text-xl !font-medium !pl-7 !py-2 !pr-0 rounded-none placeholder:text-neutral-400"
+                                        />
                                     </div>
 
-
-                                    {/* Menu Trigger */}
-                                    <div className="relative">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setActiveMenuId(activeMenuId === loc.id ? null : loc.id);
-                                            }}
-                                            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition z-10 relative"
+                                    {isAddingFavorite && (
+                                        <div
+                                            onClick={() => setIsAddingFavorite(false)}
+                                            className="text-sm font-semibold underline cursor-pointer hover:text-neutral-500 self-end mb-2"
                                         >
-                                            <MoreHorizontal size={20} className="text-muted-foreground" />
-                                        </button>
+                                            Annuler
+                                        </div>
+                                    )}
 
-                                        {/* Dropdown Menu */}
-                                        {activeMenuId === loc.id && (
+                                    {/* Selected Locations Chips */}
+                                    {!isAddingFavorite && locations.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                                            {locations.map((loc) => (
+                                                <div key={loc.value} className="flex items-center gap-1 pl-3 pr-2 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-sm font-medium">
+                                                    <span>{loc.city || loc.label.split(',')[0]}</span>
+                                                    <button onClick={() => handleLocationRemove(loc.value)} className="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-full">
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Alternative Searches / Favorites */}
+                                    <div className="mt-4 flex flex-col gap-3">
+                                        {!isAddingFavorite && !isLoadingFavorites && (
                                             <>
-                                                {/* Removed Overlay */}
                                                 <div
-                                                    className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-border rounded-xl shadow-xl z-50 overflow-hidden"
-                                                    onClick={(e) => e.stopPropagation()}
+                                                    onClick={() => setStep(STEPS.COMMUTE)}
+                                                    className="flex items-center gap-2 text-sm font-semibold cursor-pointer hover:underline"
                                                 >
-                                                    <div className="flex flex-col">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleFavoriteSelect(loc);
-                                                            }}
-                                                            className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition text-sm text-left"
-                                                        >
-                                                            <Search size={16} />
-                                                            Rechercher autour
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleFavoriteEdit(loc);
-                                                            }}
-                                                            className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition text-sm text-left"
-                                                        >
-                                                            <Pencil size={16} />
-                                                            Modifier le favori
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleFavoriteDelete(loc);
-                                                            }}
-                                                            className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/10 text-red-500 transition text-sm text-left border-t border-border"
-                                                        >
-                                                            <Trash size={16} />
-                                                            Supprimer ce lieu
-                                                        </button>
+                                                    <div className="p-1.5 bg-neutral-100 rounded-full">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
                                                     </div>
+                                                    Recherche par temps de trajet
+                                                </div>
+
+                                                <div
+                                                    onClick={() => {
+                                                        setIsAddingFavorite(true);
+                                                        if (hasWorkplace) {
+                                                            setFavoriteTitle('Favori');
+                                                            setFavoriteIcon('favorite');
+                                                        } else {
+                                                            setFavoriteTitle('Travail');
+                                                            setFavoriteIcon('briefcase');
+                                                        }
+                                                    }}
+                                                    className="flex items-center gap-2 text-sm font-semibold cursor-pointer hover:underline"
+                                                >
+                                                    <div className="p-1.5 bg-neutral-100 rounded-full">
+                                                        {hasWorkplace ? (
+                                                            <Star size={16} strokeWidth={2} />
+                                                        ) : (
+                                                            <Briefcase size={16} strokeWidth={2} />
+                                                        )}
+                                                    </div>
+                                                    {hasWorkplace ? "Ajouter un lieu favori" : "Ajouter un lieu de travail"}
                                                 </div>
                                             </>
                                         )}
+
+                                        {/* Existing Favorites List */}
+                                        {!isAddingFavorite && !isLoadingFavorites && savedLocations.length > 0 && (
+                                            <div className="flex flex-col gap-2 mt-2">
+                                                {savedLocations.map((loc) => {
+                                                    const iconList = [
+                                                        { id: 'briefcase', icon: Briefcase },
+                                                        { id: 'home', icon: Home },
+                                                        { id: 'school', icon: GraduationCap },
+                                                        { id: 'favorite', icon: Star },
+                                                        { id: 'partner', icon: Heart }
+                                                    ];
+                                                    const matchedIcon = iconList.find(i => i.id === loc.icon);
+                                                    const Icon = matchedIcon ? matchedIcon.icon : Star;
+
+                                                    return (
+                                                        <div key={loc.id} className="flex items-center justify-between group cursor-pointer" onClick={() => handleFavoriteSelect(loc)}>
+                                                            <div className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black">
+                                                                <Icon size={16} />
+                                                                <span>{loc.name}</span>
+                                                            </div>
+                                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleFavoriteEdit(loc); }}
+                                                                    className="p-1 hover:bg-neutral-100 rounded"
+                                                                >
+                                                                    <Pencil size={12} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleFavoriteDelete(loc); }}
+                                                                    className="p-1 hover:bg-red-50 text-red-500 rounded"
+                                                                >
+                                                                    <Trash size={12} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            );
-                        }))}
-
-                    {/* Only show static items if not loading or after loading */}
-                    {!isLoadingFavorites && (
-                        <>
-                            <div
-                                onClick={() => setStep(STEPS.COMMUTE)}
-                                className="flex items-center justify-between p-4 border border-border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95 animate-slide-up"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                                    </svg>
-                                    <span className="font-medium">Recherche par temps de trajet</span>
-                                </div>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-muted-foreground">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                </svg>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <div
-                                onClick={() => {
-                                    // Enable quick add mode
-                                    setIsAddingFavorite(true);
-                                    if (hasWorkplace) {
-                                        setFavoriteTitle('Favori');
-                                        setFavoriteIcon('favorite'); // star
-                                    } else {
-                                        setFavoriteTitle('Travail');
-                                        setFavoriteIcon('briefcase');
+                {/* 2. CATEGORY SECTION */}
+                <div className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-all duration-300 ${step === STEPS.CATEGORY ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}>
+                    <div
+                        onClick={() => setStep(STEPS.CATEGORY)}
+                        className={`flex items-center justify-between px-[20px] py-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.CATEGORY ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                    >
+                        <div className={step === STEPS.CATEGORY ? "text-2xl font-bold" : "text-sm font-medium text-neutral-500"}>Quoi ?</div>
+                        {step !== STEPS.CATEGORY && (
+                            <div className="text-sm font-semibold truncate max-w-[200px]">
+                                {category ? category : 'Type de logement'}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${step === STEPS.CATEGORY ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                            <div className="px-[20px] pb-6 pt-2">
+                                <div className="flex flex-row flex-wrap gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {categories.map((item) => {
+                                        const isSelected = category.split(',').includes(item.label);
+                                        return (
+                                            <div key={item.label}>
+                                                <CategoryInput
+                                                    onClick={(label) => {
+                                                        let current = category ? category.split(',') : [];
+                                                        if (current.includes(label)) {
+                                                            current = current.filter(c => c !== label);
+                                                        } else {
+                                                            current = current.length > 0 ? [...current, label] : [label];
+                                                            setStep(STEPS.BUDGET);
+                                                        }
+                                                        setCategory(current.join(','));
+                                                    }}
+                                                    selected={isSelected}
+                                                    label={item.label}
+                                                    icon={item.icon}
+                                                    variant="search"
+                                                />
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. BUDGET SECTION */}
+                <div className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-all duration-300 ${step === STEPS.BUDGET ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}>
+                    <div
+                        onClick={() => {
+                            setStep(STEPS.BUDGET);
+                            if (budgetContentRef.current) {
+                                // Disable transition strictly to allow immediate focus
+                                budgetContentRef.current.style.transition = 'none';
+                                budgetContentRef.current.style.gridTemplateRows = '1fr';
+                                budgetContentRef.current.style.opacity = '1';
+
+                                // Focus immediately while visible
+                                minPriceRef.current?.focus();
+
+                                // Restore transition for future animations (closing)
+                                setTimeout(() => {
+                                    if (budgetContentRef.current) {
+                                        budgetContentRef.current.style.transition = '';
+                                        // Specific properties will be handled by React classNames after render
+                                        budgetContentRef.current.style.gridTemplateRows = '';
+                                        budgetContentRef.current.style.opacity = '';
                                     }
-                                }}
-                                className={`flex items-center justify-between p-4 border rounded-xl hover:shadow-sm cursor-pointer transition active:scale-95 animate-slide-up stagger-1 ${isAddingFavorite ? 'border-primary bg-primary/5' : 'border-border'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    {hasWorkplace ? (
-                                        <Star size={24} className={isAddingFavorite ? "text-primary" : "text-foreground"} strokeWidth={1.5} />
-                                    ) : (
-                                        <Briefcase size={24} className={isAddingFavorite ? "text-primary" : "text-foreground"} strokeWidth={1.5} />
-                                    )}
-                                    <span className={isAddingFavorite ? "font-semibold text-primary" : "font-medium"}>
-                                        {hasWorkplace ? "Ajouter un lieu favori" : "Ajouter un lieu de travail"}
-                                    </span>
-                                </div>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-5 h-5 ${isAddingFavorite ? "text-primary" : "text-muted-foreground"}`}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                </svg>
+                                }, 100);
+                            }
+                        }}
+                        className={`flex items-center justify-between px-[20px] py-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.BUDGET ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                    >
+                        <div className={step === STEPS.BUDGET ? "text-2xl font-bold" : "text-sm font-medium text-neutral-500"}>Budget</div>
+                        {step !== STEPS.BUDGET && (
+                            <div className="text-sm font-semibold truncate max-w-[200px]">
+                                {minPrice || maxPrice ? `${minPrice ? minPrice + '€' : '0€'} - ${maxPrice ? maxPrice + '€' : 'Max'}` : 'Définir un budget'}
                             </div>
-                        </>
-                    )}
+                        )}
+                    </div>
+
+                    <div ref={budgetContentRef} className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${step === STEPS.BUDGET ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                            <div className="px-[20px] pb-6 pt-2">
+                                <div className="flex flex-col gap-3">
+                                    <div className="font-semibold text-sm">Budget (par mois)</div>
+                                    <div className="flex flex-row gap-4 items-center">
+                                        <SoftInput
+                                            id="minPrice"
+                                            label="Min"
+                                            formatPrice
+                                            type="number"
+                                            inputMode="numeric"
+                                            value={minPrice}
+                                            onChange={(e) => setMinPrice(e.target.value)}
+                                            autoFocus={step === STEPS.BUDGET}
+                                            inputRef={minPriceRef}
+                                        />
+                                        <div className="text-neutral-400">-</div>
+                                        <SoftInput
+                                            id="maxPrice"
+                                            label="Max"
+                                            formatPrice
+                                            type="number"
+                                            inputMode="numeric"
+                                            value={maxPrice}
+                                            onChange={(e) => setMaxPrice(e.target.value)}
+                                        />
+                                    </div>
+                                    <Link
+                                        href="/account/tenant-profile"
+                                        onClick={() => searchModal.onClose()}
+                                        className="mt-2 text-xs text-neutral-500 bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg flex gap-3 items-start group hover:bg-neutral-200 dark:hover:bg-neutral-700 transition cursor-pointer"
+                                    >
+                                        <div className="shrink-0 pt-0.5 text-base">💡</div>
+                                        <span>
+                                            <span className="font-semibold block text-neutral-800 dark:text-neutral-200 group-hover:underline">Booster votre recherche ?</span>
+                                            En complétant votre dossier locataire, accédez à des suggestions plus précises.
+                                        </span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. FILTERS SECTION (Features) */}
+                <div className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-all duration-300 ${step === STEPS.FILTERS ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}>
+                    <div
+                        onClick={() => setStep(STEPS.FILTERS)}
+                        className={`flex items-center justify-between px-[20px] py-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.FILTERS ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                    >
+                        <div className={step === STEPS.FILTERS ? "text-2xl font-bold" : "text-sm font-medium text-neutral-500"}>Filtres</div>
+                        {step !== STEPS.FILTERS && (
+                            <div className="text-sm font-semibold truncate max-w-[200px]">
+                                Surface, pièces...
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${step === STEPS.FILTERS ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                        <div className="overflow-hidden">
+                            <div className="px-[20px] pb-6 pt-2 flex flex-col gap-6">
+
+
+
+                                {/* Surface */}
+                                <div className="flex flex-col gap-3">
+                                    <div className="font-semibold text-sm">Surface (m²)</div>
+                                    <div className="flex flex-row gap-4 items-center">
+                                        <SoftInput
+                                            id="minSurface"
+                                            label="Min"
+                                            type="number"
+                                            inputMode="numeric"
+                                            value={minSurface}
+                                            onChange={(e) => setMinSurface(e.target.value)}
+                                        />
+                                        <div className="text-neutral-400">-</div>
+                                        <SoftInput
+                                            id="maxSurface"
+                                            label="Max"
+                                            type="number"
+                                            inputMode="numeric"
+                                            value={maxSurface}
+                                            onChange={(e) => setMaxSurface(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <hr className="border-neutral-100" />
+
+                                {/* Rooms & Bedrooms */}
+                                <div className="flex flex-col gap-4">
+                                    <Counter
+                                        title="Pièces"
+                                        subtitle="Minimum"
+                                        value={roomCount}
+                                        onChange={(value) => {
+                                            setRoomCount(value);
+                                            if (value <= bedroomCount) {
+                                                setBedroomCount(Math.max(0, value - 1));
+                                            }
+                                        }}
+                                    />
+                                    <Counter
+                                        title="Chambres"
+                                        subtitle="Minimum"
+                                        value={bedroomCount}
+                                        min={0}
+                                        onChange={(value) => {
+                                            setBedroomCount(value);
+                                            if (roomCount <= value) {
+                                                setRoomCount(value + 1);
+                                            }
+                                        }}
+                                    />
+                                    <Counter
+                                        title="Salles de bain"
+                                        subtitle="Minimum"
+                                        value={bathroomCount}
+                                        onChange={(value) => setBathroomCount(value)}
+                                    />
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div >
-    );
-
-
-
+        );
+    }
 
     if (step === STEPS.COMMUTE) {
         bodyContent = (
-            <ListingCommuteStep
-                commutePoints={commutePoints}
-                setCommutePoints={setCommutePoints}
-                savedLocations={savedLocations}
-            />
-        );
-    }
-
-    if (step === STEPS.CATEGORY) {
-        bodyContent = (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-8 p-4 md:p-6">
                 <Heading
-                    title="Quel type de logement cherchez-vous ?"
-                    subtitle="Choisissez une catégorie"
+                    title="Temps de trajet maximum"
+                    subtitle="Définissez votre temps de trajet idéal"
                 />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto">
-                    {categories.map((item) => {
-                        const isSelected = category.split(',').includes(item.label);
-                        return (
-                            <div key={item.label} className="col-span-1">
-                                <CategoryInput
-                                    onClick={(label) => {
-                                        let current = category ? category.split(',') : [];
-                                        if (current.includes(label)) {
-                                            current = current.filter(c => c !== label);
-                                        } else {
-                                            current = [...current, label];
-                                        }
-                                        setCategory(current.join(','));
-                                    }}
-                                    selected={isSelected}
-                                    label={item.label}
-                                    icon={item.icon}
-                                    variant="search"
-                                />
+
+                <MapboxAddressSelect
+                    value={commuteAddress}
+                    onChange={(val) => setCommuteAddress(val)}
+                    placeholder="Adresse de destination (Travail, École...)"
+                    autoFocus
+                />
+
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <div className="font-semibold">Temps max (minutes)</div>
+                            <div className="text-neutral-500 text-sm">Combien de temps maximum ?</div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => {
+                                    const newVal = (parseInt(commuteTime) || 30) - 5;
+                                    setCommuteTime(newVal < 5 ? '5' : newVal.toString());
+                                }}
+                                className="w-10 h-10 rounded-full border border-neutral-400 flex items-center justify-center hover:opacity-80 transition"
+                            >
+                                -
+                            </button>
+                            <div className="font-light text-xl text-neutral-600">
+                                {commuteTime || 30}
                             </div>
-                        )
-                    })}
-                </div>
-            </div>
-        );
-    }
+                            <button
+                                onClick={() => {
+                                    const newVal = (parseInt(commuteTime) || 30) + 5;
+                                    setCommuteTime(newVal.toString());
+                                }}
+                                className="w-10 h-10 rounded-full border border-neutral-400 flex items-center justify-center hover:opacity-80 transition"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
 
-    if (step === STEPS.FILTERS) {
-        bodyContent = (
-            <div className="flex flex-col gap-8">
-                <Heading
-                    title="Affinez votre recherche"
-                    subtitle="Trouvez le logement idéal"
-                />
-
-                {/* Budget Section */}
-                <div id="budget" className="flex flex-col gap-4">
-                    <div className="font-semibold text-lg">Budget (par mois)</div>
-                    <div className="flex flex-row gap-4 items-center">
-                        <SoftInput
-                            id="minPrice"
-                            label="Prix min"
-                            formatPrice
-                            type="number"
-                            inputMode="numeric"
-                            value={minPrice}
-                            onChange={(e) => setMinPrice(e.target.value)}
-                        />
-                        <SoftInput
-                            id="maxPrice"
-                            label="Prix max"
-                            formatPrice
-                            type="number"
-                            inputMode="numeric"
-                            value={maxPrice}
-                            onChange={(e) => setMaxPrice(e.target.value)}
-                        />
+                    <div className="font-semibold mb-2 mt-4">Mode de transport</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            { id: 'driving', label: 'Voiture', icon: '🚗' },
+                            { id: 'cycling', label: 'Vélo', icon: '🚲' },
+                            { id: 'walking', label: 'Marche', icon: '🚶' },
+                            { id: 'public_transport', label: 'Transports', icon: '🚌' }
+                        ].map((mode) => (
+                            <div
+                                key={mode.id}
+                                onClick={() => setCommuteMode(mode.id)}
+                                className={`
+                                    flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition
+                                    ${commuteMode === mode.id ? 'border-black bg-neutral-50' : 'border-transparent bg-neutral-100 hover:border-neutral-200'}
+                                `}
+                            >
+                                <span className="text-xl">{mode.icon}</span>
+                                <span className="font-medium text-sm">{mode.label}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
-                <hr />
-
-                {/* Surface Section */}
-                <div id="surface" className="flex flex-col gap-4">
-                    <div className="font-semibold text-lg">Surface (m²)</div>
-                    <div className="flex flex-row gap-4 items-center">
-                        <SoftInput
-                            id="minSurface"
-                            label="Surface min (m²)"
-                            type="number"
-                            inputMode="numeric"
-                            value={minSurface}
-                            onChange={(e) => setMinSurface(e.target.value)}
-                        />
-                        <SoftInput
-                            id="maxSurface"
-                            label="Surface max (m²)"
-                            type="number"
-                            inputMode="numeric"
-                            value={maxSurface}
-                            onChange={(e) => setMaxSurface(e.target.value)}
-                        />
-                    </div>
-                </div>
-                <hr />
-
-                {/* Rooms Section */}
-                <div id="rooms" className="flex flex-col gap-4">
-                    <div className="font-semibold text-lg">Pièces et lits</div>
-                    <Counter
-                        title="Pièces"
-                        subtitle="Nombre de pièces minimum"
-                        value={roomCount}
-                        onChange={(value) => setRoomCount(value)}
-                    />
-                    <hr />
-                    <Counter
-                        title="Salles de bain"
-                        subtitle="Nombre de salles de bain minimum"
-                        value={bathroomCount}
-                        onChange={(value) => setBathroomCount(value)}
-                    />
-                </div>
-            </div>
+            </div >
         );
     }
 
@@ -796,7 +918,7 @@ const SearchModal = () => {
         ];
 
         bodyContent = (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex flex-col gap-1">
                     <div className="text-xl font-semibold">{tempLocation?.label.split(',')[0]}</div>
                     <div className="text-xl font-semibold">
@@ -871,6 +993,7 @@ const SearchModal = () => {
             totalSteps={Object.keys(STEPS).length / 2}
             hideHeader={true}
             skipTranslateAnimation={true}
+            noBodyPadding={true}
         />
     );
 };

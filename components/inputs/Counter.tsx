@@ -54,12 +54,14 @@ const Counter: React.FC<CounterProps> = ({
                         active:border-black
                         active:text-black
                         transition
+                        bg-neutral-50
+                        dark:bg-neutral-800
                         ${value === min ? 'opacity-20 cursor-not-allowed' : ''}
                     `}
                 >
                     <AiOutlineMinus />
                 </div>
-                <div className="font-light text-xl text-neutral-600 w-8 text-center">
+                <div className="font-normal text-xl text-neutral-900 dark:text-neutral-100 w-8 text-center">
                     {value}
                 </div>
                 <div
@@ -79,6 +81,8 @@ const Counter: React.FC<CounterProps> = ({
                         active:border-black
                         active:text-black
                         transition
+                        bg-neutral-50
+                        dark:bg-neutral-800
                     "
                 >
                     <AiOutlinePlus />

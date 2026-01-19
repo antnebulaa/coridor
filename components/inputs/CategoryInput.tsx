@@ -29,24 +29,25 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
             <div
                 onClick={() => onClick(label)}
                 className={`
-                    rounded-xl
-                    p-4
+                    rounded-full
+                    px-3 py-2
                     flex
                     flex-row
                     items-center
                     justify-center
-                    gap-3
+                    gap-2
                     border
                     transition
                     cursor-pointer
                     active:scale-95
-                    text-lg
-                    font-semibold
+                    text-base
+                    font-normal
+                    text-nowrap
                     ${baseColor}
                 `}
             >
                 {image ? (
-                    <div className="relative w-[30px] h-[30px]">
+                    <div className="relative w-[20px] h-[20px] shrink-0">
                         <Image
                             src={image}
                             alt={label}
@@ -55,9 +56,11 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
                         />
                     </div>
                 ) : (
-                    <Icon size={28} />
+                    <div className="shrink-0">
+                        <Icon size={20} strokeWidth={1.5} />
+                    </div>
                 )}
-                <div className="font-semibold">
+                <div className="font-normal">
                     {label}
                 </div>
             </div>

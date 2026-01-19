@@ -19,7 +19,6 @@ export const categories = [
     {
         label: 'Appartement',
         icon: Building2,
-        image: '/images/apartment_icon.jpg',
         description: 'Un appartement cosy !',
     },
 ];

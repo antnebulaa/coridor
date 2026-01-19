@@ -10,6 +10,7 @@ import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 import { SafeListing } from "@/types";
 import EditSectionFooter from "./EditSectionFooter";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
+import LocationPicker from "@/components/inputs/LocationPicker";
 import Heading from "@/components/Heading";
 import SoftInput from "@/components/inputs/SoftInput";
 import CustomToast from "@/components/ui/CustomToast";
@@ -57,6 +58,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
     const onLocationSelect = (val: AddressSelectValue) => {
         const street = val.street || val.label.split(',')[0].trim();
         setValue('addressLine1', street);
+        setValue('apartment', val.apartment);
         setValue('zipCode', val.zipCode);
         setValue('city', val.city);
         setValue('country', val.country);
@@ -116,59 +118,20 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                 subtitle="Aidez les voyageurs à vous trouver !"
             />
 
-            <div className="relative z-20">
-                <MapboxAddressSelect
+            <div className="relative z-10">
+                <LocationPicker
                     value={{
                         label: addressLine1 || locationValue || '',
                         value: '',
                         latlng: [latitude, longitude],
                         region: '',
                         city: city,
-                        country: country
+                        country: country,
+                        street: addressLine1,
+                        zipCode: listing.zipCode || ''
                     }}
                     onChange={onLocationSelect}
-                    label="Adresse"
-                    customInputClass="px-3 pb-2 pt-6 rounded-xl border-input border-[1px] font-normal bg-background focus:border-foreground"
                 />
-            </div>
-
-            <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <SoftInput
-                        id="apartment"
-                        label="N° Appartement"
-                        register={register}
-                        errors={errors}
-                        disabled={isLoading}
-                    />
-                    <SoftInput
-                        id="building"
-                        label="Bâtiment / Escalier"
-                        register={register}
-                        errors={errors}
-                        disabled={isLoading}
-                    />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <SoftInput
-                        id="zipCode"
-                        label="Code postal"
-                        register={register}
-                        errors={errors}
-                        disabled={isLoading}
-                    />
-                    <SoftInput
-                        id="city"
-                        label="Ville"
-                        register={register}
-                        errors={errors}
-                        disabled={isLoading}
-                    />
-                </div>
-            </div>
-
-            <div className="z-10 relative">
-                <Map center={latlng as number[]} />
             </div>
 
             <EditSectionFooter

@@ -68,6 +68,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   interactiveWidget: 'resizes-content',
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -87,11 +88,19 @@ export default async function RootLayout({
             <Toaster
               position="bottom-center"
               toastOptions={{
-                className: 'z-[100000]',
-                duration: 4000
+                className: 'z-[100000] !max-w-[calc(100vw-32px)] !w-full md:!w-auto md:!min-w-[400px] text-center justify-center',
+                style: {
+                  padding: '16px 30px',
+                  fontSize: '16px',
+                  borderRadius: '20px',
+                  fontWeight: 500,
+                },
+                duration: 2000
               }}
-              containerStyle={{ zIndex: 100000 }}
-              containerClassName="mb-20 md:mb-4"
+              containerStyle={{
+                zIndex: 100000,
+                bottom: 112, /* Lift up slightly + 12px */
+              }}
             />
             <Suspense fallback={<div></div>}>
               <SearchModal />

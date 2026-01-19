@@ -82,7 +82,7 @@ export default async function getListingById(
             availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
 
             // Facade / Mapped Fields
-            locationValue: property.city,
+            locationValue: property.address || property.city,
             city: property.city,
             country: property.country,
             district: property.district,

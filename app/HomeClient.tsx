@@ -154,7 +154,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
             mx-auto
         ">
             <div className="
-                h-dvh md:h-[calc(100vh-5rem)]
+                h-screen md:h-[calc(100vh-5rem)]
                 grid 
                 grid-cols-1 md:grid-cols-12 
                 gap-0
@@ -165,9 +165,9 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 <div className={listColumnClasses}>
                     <div className="pt-20 md:pt-4 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
 
-                        {!isSearchActive && (
+                        {/* {!isSearchActive && (
                             <ResumeSearch />
-                        )}
+                        )} */}
                         <div className="flex items-center justify-between mb-4">
                             <div className="font-semibold text-neutral-800 dark:text-neutral-200">
                                 {listings.length} {listings.length > 1 ? 'annonces' : 'annonce'}
@@ -178,7 +178,6 @@ const HomeClient: React.FC<HomeClientProps> = ({
                         <div className="
                             grid 
                             grid-cols-1 
-                            lg:grid-cols-2
                             gap-4
                             lg:gap-6
                         ">
@@ -212,7 +211,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 <div className={mapColumnClasses}>
                     <div className="h-full w-full relative">
                         <MapMain
-                            key={isSearchActive ? 'map-search' : 'map-default'} // Force remount on layout change to prevent Leaflet container reuse error
+                            // key removed to prevent "undefined reading appendChild" crash on layout change. 
+                            // ResizeHandler within MapMain handles the size update.
                             listings={listings}
                             selectedListingId={selectedListingId}
                             onSelect={(id) => setSelectedListingId(id)}

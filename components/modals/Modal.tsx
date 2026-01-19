@@ -98,19 +98,18 @@ const Modal: React.FC<ModalProps> = ({
 
     // Touch Handlers
     const onTouchStart = (e: React.TouchEvent) => {
-        // Only allow if we are at the top of the scroll content
-        if (scrollRef.current && scrollRef.current.scrollTop > 0) return;
-
+        // Always capture startY
         startY.current = e.touches[0].clientY;
-        setIsDragging(true);
+        // Don't set isDragging here to allow native scroll to start if direction is up
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging) return;
-
-        // Check scroll again just in case
+        // If we are scrolled down, never drag
         if (scrollRef.current && scrollRef.current.scrollTop > 0) {
-            setTranslateY(0);
+            if (isDragging) {
+                setIsDragging(false);
+                setTranslateY(0);
+            }
             return;
         }
 
@@ -119,10 +118,14 @@ const Modal: React.FC<ModalProps> = ({
 
         // Only allow dragging down (positive diff)
         if (diff > 0) {
+            if (!isDragging) setIsDragging(true);
             // Add resistance/damping
             setTranslateY(diff * 0.6);
-            // Optional: Prevent default to stop native scroll bouncing? 
-            // e.preventDefault() might break scroll if not careful, better to let it be for now since we check scrollTop
+
+            // Prevent native pull-to-refresh or rubber band if needed
+            if (e.cancelable && window.scrollY === 0) {
+                // optionally e.preventDefault() if strictly blocking body scroll
+            }
         }
     };
 
@@ -223,8 +226,8 @@ const Modal: React.FC<ModalProps> = ({
                         className={`
                             transform
                             transition
-                            duration-300
-                            ease-out
+                            duration-500
+                            ease-[cubic-bezier(0.32,0.72,0,1)]
                             h-full
                             md:h-auto
                             ${!skipTranslateAnimation ? (showModal ? 'translate-y-0' : 'translate-y-full') : ''}
@@ -270,7 +273,6 @@ const Modal: React.FC<ModalProps> = ({
                                                 : `bg-secondary hover:bg-secondary/80 border-0 ${transparentHeader ? 'bg-white text-black shadow-md' : ''}`
                                             }
                                         pointer-events-auto z-50
-                                        pointer-events-auto z-50
                                     `}
                                     >
                                         <X size={18} />
@@ -303,26 +305,23 @@ const Modal: React.FC<ModalProps> = ({
                                         </div>
                                     </div>
                                 )}
-                                <div className="flex flex-col md:flex-row items-center gap-4 w-full justify-between">
+                                <div className="flex flex-row items-center gap-4 w-full justify-between">
                                     {secondaryAction && secondaryActionLabel && (
                                         <Button
                                             variant="outline"
                                             disabled={disabled}
                                             onClick={handleSecondaryAction}
-                                            className="w-full md:w-auto md:flex-1 rounded-full h-[50px] text-[16px] !border-neutral-200 !border-[1px] hover:!border-black"
+                                            className="w-auto flex-1 rounded-full h-[50px] text-[16px] !border-neutral-200 !border-[1px] hover:!border-black"
                                         >
                                             {secondaryActionLabel}
                                         </Button>
                                     )}
 
-                                    {/* Progress Bar (Only if steps provided) */}
-
-
                                     {actionLabel && (
                                         <Button
                                             disabled={disabled}
                                             onClick={handleSubmit}
-                                            className="w-full md:w-auto md:flex-1 rounded-full h-[50px] text-[16px]"
+                                            className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
                                         >
                                             {actionLabel}
                                         </Button>

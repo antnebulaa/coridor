@@ -20,7 +20,9 @@ export async function GET(request: Request) {
         const minSurface = searchParams.get('minSurface');
         const maxSurface = searchParams.get('maxSurface');
 
-        let query: any = {};
+        let query: any = {
+            isPublished: true
+        };
 
         // 1. Direct Listing Fields
         if (roomCount) {

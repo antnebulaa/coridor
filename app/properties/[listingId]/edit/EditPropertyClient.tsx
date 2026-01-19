@@ -182,7 +182,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
 
     return (
         <Container>
-            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10 pt-0 md:pt-4">
                 {/* Sidebar - Hidden on mobile if content is shown */}
                 <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} md:pt-0`}>
                     <div className="flex items-center gap-4 mb-6">

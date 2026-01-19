@@ -13,7 +13,7 @@ const Search = () => {
     const citiesParam = params?.get('cities');
     const commuteParam = params?.get('commute');
 
-    let label = "On cherche où ?";
+    let label = "Rechercher une location";
     let hasLocation = false;
 
     if (commuteParam) {
@@ -87,35 +87,14 @@ const Search = () => {
             {/* Location Search */}
             <div
                 onClick={() => searchModal.onOpen({ step: commuteParam ? 3 : 0 })}
-                className="border border-border w-full md:min-w-fit py-2 rounded-full hover:shadow-md transition cursor-pointer bg-background shadow-md md:shadow-none"
+                className="border border-border w-full md:min-w-fit h-[50px] px-[20px] rounded-full hover:shadow-md transition cursor-pointer bg-background shadow-md md:shadow-none flex items-center"
             >
-                <div className="flex flex-row items-center justify-between px-2 gap-3">
-                    <div className="p-2 bg-primary rounded-full text-primary-foreground">
+                <div className="flex flex-row items-center justify-between gap-3 w-full">
+                    <div className="text-neutral-800 dark:text-white flex items-center justify-center">
                         <SearchIcon size={18} strokeWidth={2.5} />
                     </div>
                     <div className="text-sm font-medium truncate flex-1 text-left pl-2">
                         {label}
-                    </div>
-
-                    {/* Vertical Divider & Add Favorite Button */}
-                    <div className="flex items-center gap-3 pr-2">
-                        <div className="w-px h-6 bg-neutral-300 dark:bg-neutral-700"></div>
-                        <Link
-                            href="/account/preferences"
-                            onClick={(e) => e.stopPropagation()}
-                            className="
-                                p-1.5 
-                                bg-secondary 
-                                hover:bg-neutral-200
-                                dark:hover:bg-neutral-700 
-                                rounded-full 
-                                transition 
-                                flex items-center justify-center
-                            "
-                            title="Ajouter un favori"
-                        >
-                            <Plus size={16} className="text-foreground" />
-                        </Link>
                     </div>
                 </div>
             </div>
@@ -124,25 +103,25 @@ const Search = () => {
             {/* Advanced Filters - Hidden on Mobile */}
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'budget' })}
-                className={`hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-secondary border-foreground' : ''}`}
+                className={`hidden md:flex items-center justify-center h-[50px] border border-border px-[20px] rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {budgetLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'surface' })}
-                className={`hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-secondary border-foreground' : ''}`}
+                className={`hidden md:flex items-center justify-center h-[50px] border border-border px-[20px] rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${surfaceLabel !== 'Surface' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {surfaceLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2, section: 'rooms' })}
-                className={`hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-secondary border-foreground' : ''}`}
+                className={`hidden md:flex items-center justify-center h-[50px] border border-border px-[20px] rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${roomsLabel !== 'Pièces' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {roomsLabel}
             </div>
             <div
                 onClick={() => searchModal.onOpen({ step: 2 })}
-                className="hidden md:block border border-border py-3 px-4 rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
+                className="hidden md:flex items-center justify-center h-[50px] border border-border px-[20px] rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap"
             >
                 Filtres
             </div>

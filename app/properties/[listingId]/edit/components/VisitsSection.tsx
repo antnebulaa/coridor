@@ -3,12 +3,14 @@
 import { useState, useMemo } from "react";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
-import { Trash2, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { Trash2, Plus, Minus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import FloatingValuesButton from "@/components/ui/FloatingValuesButton";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
+import LargeActionButton from "@/components/ui/LargeActionButton";
 import {
     format,
     addMonths,
@@ -29,6 +31,7 @@ import {
 } from "date-fns";
 import { fr } from "date-fns/locale";
 import CustomToast from "@/components/ui/CustomToast";
+import BottomSheet from "@/components/ui/BottomSheet";
 
 interface VisitsSectionProps {
     listing: SafeListing & {
@@ -38,7 +41,7 @@ interface VisitsSectionProps {
     className?: string; // Allow overriding height/layout
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
 
 const RECOMMENDATIONS = {
     STUDIO: 15,
@@ -51,13 +54,14 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
     const router = useRouter();
     const [selectedDates, setSelectedDates] = useState<Date[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
 
     // Local state for slots
     const [slots, setSlots] = useState<any[]>(listing.visitSlots || []);
     const [visitDuration, setVisitDuration] = useState(listing.visitDuration || 20);
 
     const [startTime, setStartTime] = useState("09:00");
-    const [endTime, setEndTime] = useState("18:00");
+    const [endTime, setEndTime] = useState("12:00");
 
     // Recommend duration on mount if not set
     useMemo(() => {
@@ -94,6 +98,15 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
         const slotsCount = Math.floor(totalMinutes / visitDuration);
         return slotsCount * 2;
     }, [slots, visitDuration]);
+
+    // Calculate Recommended Duration
+    const recommendedDuration = useMemo(() => {
+        const surface = listing.surface || 0;
+        if (surface < 20) return 15;
+        if (surface < 50) return 20;
+        if (surface < 80) return 30;
+        return 40;
+    }, [listing.surface]);
 
     // Calendar Logic: Generate next 12 months
     const today = startOfToday();
@@ -244,7 +257,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
     return (
         <div className={`flex flex-col md:flex-row rounded-xl overflow-hidden relative ${className || 'h-[calc(100vh-140px)] md:h-[600px]'}`}>
             {/* Calendar Section (Scrollable) */}
-            <div className="flex-1 overflow-y-auto pb-[300px] md:pb-6 px-2 md:px-6 scroll-smooth">
+            <div className="flex-1 overflow-y-auto pb-[300px] md:pb-6 px-0 md:px-4 scroll-smooth">
                 {months.map((monthDate, monthIdx) => {
                     const monthStart = startOfMonth(monthDate);
                     const monthEnd = endOfMonth(monthStart);
@@ -279,27 +292,28 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                                             key={idx}
                                             onClick={() => !isPast && toggleDate(day)}
                                             className={`
-                                                aspect-square rounded-lg md:rounded-xl border p-0.5 md:p-2 transition relative
-                                                flex flex-col items-center justify-center
-                                                ${isPast ? 'opacity-30 bg-neutral-50 cursor-not-allowed' : 'cursor-pointer'}
-                                                ${isSelected
-                                                    ? 'bg-neutral-900 text-white border-neutral-900 z-10 shadow-md'
-                                                    : !isPast && 'border-neutral-200 hover:border-neutral-400 bg-white'
+                                                aspect-square rounded-lg md:rounded-xl p-0.5 md:p-2 transition relative
+                                                flex flex-col items-center justify-center border-2
+                                                ${hasSlots ? 'border-[#FE3C10]' : 'border-transparent'}
+                                                ${isPast
+                                                    ? 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
+                                                    : isSelected
+                                                        ? 'bg-[#FE3C10] text-white shadow-md'
+                                                        : 'bg-neutral-100 text-neutral-700 cursor-pointer hover:bg-neutral-200'
                                                 }
-                                                ${hasSlots && !isSelected && !isPast ? 'bg-neutral-50' : ''}
                                             `}
                                         >
                                             <span className={`
                                                 text-sm md:text-base font-medium
-                                                ${isToday(day) && !isSelected ? 'text-indigo-600 font-bold' : ''}
+                                                ${isToday(day) && !isSelected ? 'text-[#FE3C10] font-bold' : ''}
                                             `}>
                                                 {format(day, 'd')}
                                             </span>
 
                                             {hasSlots && (
                                                 <div className="mt-0.5 md:mt-1 flex gap-0.5">
-                                                    <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-green-500'}`} />
-                                                    {daySlots.length > 1 && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-green-500'}`} />}
+                                                    <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-[#FE3C10]'}`} />
+                                                    {daySlots.length > 1 && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-[#FE3C10]'}`} />}
                                                 </div>
                                             )}
                                         </div>
@@ -314,135 +328,188 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
 
             {/* Sidebar / Bottom Panel */}
             <div className={`
-                fixed bottom-0 left-0 right-0 z-30 flex flex-col bg-white border-t border-neutral-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]
-                md:static md:w-[350px] md:border-t-0 md:border-l md:shadow-none md:h-full
+                fixed bottom-0 left-0 right-0 z-30 flex flex-col w-full
+                pointer-events-none md:pointer-events-auto
+                bg-transparent md:bg-white 
+                border-t-0 md:border-t md:border-l border-neutral-200 
+                shadow-none md:shadow-none md:h-full
             `}>
                 {selectedDates.length === 0 ? (
-                    <div className="p-6 flex flex-col items-center justify-center text-center h-full text-neutral-500 pb-10 md:pb-6">
+                    <div className="pointer-events-auto bg-white p-6 flex flex-col items-center justify-center text-center h-full text-neutral-500 pb-10 md:pb-6 md:h-auto rounded-t-2xl md:rounded-none shadow-[0_-4px_20px_rgba(0,0,0,0.05)] md:shadow-none">
                         <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
                             <CalendarIcon size={24} className="text-neutral-400" />
                         </div>
                         <p className="font-medium text-sm">Sélectionnez des dates pour gérer les créneaux</p>
                     </div>
                 ) : (
-                    <div className="flex flex-col h-full max-h-[50vh] md:max-h-none">
+                    <div className="flex flex-col h-full max-h-[50vh] md:max-h-none justify-end">
 
-                        {/* Header: Selected Count + Actions */}
-                        <div className="p-4 md:p-6 border-b border-neutral-100 flex justify-between items-center bg-white sticky top-0 z-20">
-                            <div>
-                                <h3 className="font-bold text-neutral-900">
-                                    {selectedDates.length} date{selectedDates.length > 1 ? 's' : ''}
-                                </h3>
-                                <p className="text-xs text-neutral-500 hidden md:block">Gérez les créneaux pour la sélection</p>
-                            </div>
-                            <button
-                                onClick={() => setSelectedDates([])}
-                                className="text-xs font-medium text-neutral-500 underline"
-                            >
-                                Tout désélectionner
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+                        <div className="flex-1 px-4 pb-4 md:p-6 space-y-6 md:flex-none flex flex-col justify-end">
 
                             {/* Existing Slots List */}
-                            {selectedDates.some(d => getSlotsForDate(d).length > 0) && (
-                                <div className="space-y-3">
-                                    <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Créneaux existants</h4>
-                                    <div className="space-y-2">
-                                        {selectedDates.flatMap(date => {
-                                            const daySlots = getSlotsForDate(date);
-                                            return daySlots.map((slot, idx) => (
-                                                <div key={`${date.toISOString()}-${idx}`} className="flex items-center justify-between p-3 border border-neutral-200 rounded-xl bg-neutral-50">
-                                                    <div>
-                                                        <p className="font-medium text-sm text-neutral-900">{format(date, 'd MMM', { locale: fr })}</p>
-                                                        <p className="text-xs text-neutral-500">{slot.startTime} - {slot.endTime}</p>
+                            {selectedDates.filter(d => getSlotsForDate(d).length > 0).length > 0 && (
+                                <div className="pointer-events-auto bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] md:shadow-none md:bg-transparent max-h-[35vh] overflow-y-auto relative">
+                                    <div className="sticky top-0 z-20 md:static">
+                                        <div className="bg-white px-4 pt-4 pb-2 md:bg-transparent md:p-0">
+                                            <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Créneaux de visite existants</h4>
+                                        </div>
+                                        <div className="h-4 w-full bg-gradient-to-b from-white to-transparent md:hidden pointer-events-none" />
+                                    </div>
+                                    <div className="px-4 pb-4 md:p-0 relative z-0 divide-y divide-neutral-100">
+                                        {selectedDates
+                                            .filter(d => getSlotsForDate(d).length > 0)
+                                            .sort((a, b) => a.getTime() - b.getTime())
+                                            .map(date => {
+                                                const daySlots = getSlotsForDate(date);
+                                                return (
+                                                    <div key={date.toISOString()} className="space-y-2 py-4 first:pt-0">
+                                                        <div className="font-medium text-sm text-neutral-900 capitalize">
+                                                            {format(date, 'EEEE d MMMM', { locale: fr })}
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {daySlots.sort((a, b) => a.startTime.localeCompare(b.startTime)).map((slot, idx) => (
+                                                                <div
+                                                                    key={`${date.toISOString()}-${idx}`}
+                                                                    className="flex items-center gap-2 px-3 py-2 bg-neutral-50 rounded-lg"
+                                                                >
+                                                                    <span className="text-[20px] font-medium text-neutral-900">
+                                                                        {slot.startTime} - {slot.endTime}
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => handleDeleteSlot(slot)}
+                                                                        className="text-neutral-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-full transition -mr-1"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                    <button
-                                                        onClick={() => handleDeleteSlot(slot)}
-                                                        className="text-neutral-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            ));
-                                        })}
+                                                );
+                                            })}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Add Slot Form */}
-                            <div className="space-y-4">
-                                <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Ajouter un créneau</h4>
+                            {/* Add Slot Form - MOVED TO BOTTOM SHEET */}
+                        </div>
 
-                                <div className="bg-neutral-50 p-3 rounded-xl flex items-center justify-between">
-                                    <span className="text-sm font-medium text-neutral-700">Durée</span>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
-                                            className="w-7 h-7 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center text-sm font-bold hover:border-neutral-400 transition"
-                                        >-</button>
-                                        <span className="font-bold text-sm min-w-12 text-center text-neutral-900">{visitDuration} min</span>
-                                        <button
-                                            onClick={() => setVisitDuration(visitDuration + 5)}
-                                            className="w-7 h-7 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center text-sm font-bold hover:border-neutral-400 transition"
-                                        >+</button>
+                        {/* Footer with Action Button */}
+                        <div className="p-4 pb-12 md:p-6 bg-transparent md:bg-white border-t-0 md:border-t border-neutral-100 pointer-events-auto">
+                            <LargeActionButton
+                                label="Ajouter un créneau de visite"
+                                onClick={() => setIsAddSheetOpen(true)}
+                                disabled={isLoading}
+                            />
+                        </div>
+
+                        <BottomSheet
+                            isOpen={isAddSheetOpen}
+                            onClose={() => setIsAddSheetOpen(false)}
+                            title="Ajouter un créneau"
+                        >
+                            <div className="p-6 space-y-6">
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Durée et horaires</h4>
+
+                                    <div className="relative mt-6">
+                                        {visitDuration === recommendedDuration && (
+                                            <div className="absolute -top-6 right-0 bg-neutral-900 text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm animate-in fade-in zoom-in duration-200">
+                                                Recommandé
+                                            </div>
+                                        )}
+                                        <div className="bg-neutral-50 p-3 rounded-xl flex items-center justify-between">
+                                            <span className="text-sm font-medium text-neutral-700">Visite de</span>
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    onClick={() => setVisitDuration(Math.max(15, visitDuration - 5))}
+                                                    className="w-10 h-10 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center text-neutral-600 hover:border-neutral-400 hover:text-neutral-900 transition"
+                                                >
+                                                    <Minus size={20} />
+                                                </button>
+                                                <div className="min-w-16 text-center">
+                                                    <span className="font-medium text-lg text-neutral-900 leading-none">{visitDuration} min</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => setVisitDuration(visitDuration + 5)}
+                                                    className="w-10 h-10 rounded-full bg-white shadow-sm border border-neutral-200 flex items-center justify-center text-neutral-600 hover:border-neutral-400 hover:text-neutral-900 transition"
+                                                >
+                                                    <Plus size={20} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <SoftSelect
+                                            id="startTime"
+                                            label="Début"
+                                            value={startTime}
+                                            onChange={(e) => setStartTime(e.target.value)}
+                                            options={Array.from({ length: 24 * 4 }).map((_, i) => {
+                                                const h = Math.floor(i / 4);
+                                                const m = (i % 4) * 15;
+                                                const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                                                return {
+                                                    value: timeStr,
+                                                    label: timeStr,
+                                                    disabled: false
+                                                };
+                                            })}
+                                        />
+
+                                        <SoftSelect
+                                            id="endTime"
+                                            label="Fin"
+                                            value={endTime}
+                                            onChange={(e) => setEndTime(e.target.value)}
+                                            options={Array.from({ length: 24 * 4 }).map((_, i) => {
+                                                const h = Math.floor(i / 4);
+                                                const m = (i % 4) * 15;
+                                                const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                                                return {
+                                                    value: timeStr,
+                                                    label: timeStr,
+                                                    disabled: timeStr <= startTime
+                                                };
+                                            })}
+                                        />
+                                    </div>
+
+                                    <div className="text-center">
+                                        <p className="text-sm text-neutral-500">
+                                            Soit <span className="font-bold text-neutral-900">{Math.floor(Math.max(0, (parseInt(endTime.split(':')[0]) * 60 + parseInt(endTime.split(':')[1] || '0')) - (parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1] || '0'))) / visitDuration)}</span> créneaux de {visitDuration} min
+                                        </p>
+                                        {(() => {
+                                            const [startH, startM] = startTime.split(':').map(Number);
+                                            const [endH, endM] = endTime.split(':').map(Number);
+                                            const startMinutes = startH * 60 + (startM || 0);
+                                            const endMinutes = endH * 60 + (endM || 0);
+
+                                            if (startMinutes <= 630 && endMinutes >= 870) {
+                                                return (
+                                                    <p className="text-xs text-orange-600 mt-2 font-medium bg-orange-50 inline-block px-2 py-1 rounded-lg">
+                                                        Pas de pause déjeuner ? 🥪
+                                                    </p>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <SoftSelect
-                                        id="startTime"
-                                        label="Début"
-                                        value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
-                                        options={HOURS.map(h => {
-                                            const hourStr = `${h.toString().padStart(2, '0')}:00`;
-                                            const isOccupied = selectedDates.some(date => {
-                                                const daySlots = getSlotsForDate(date);
-                                                return daySlots.some(slot => {
-                                                    const s = parseInt(slot.startTime.split(':')[0]);
-                                                    const e = parseInt(slot.endTime.split(':')[0]);
-                                                    return h >= s && h < e;
-                                                });
-                                            });
-                                            return {
-                                                value: hourStr,
-                                                label: hourStr,
-                                                disabled: isOccupied
-                                            };
-                                        })}
-                                    />
-
-                                    <SoftSelect
-                                        id="endTime"
-                                        label="Fin"
-                                        value={endTime}
-                                        onChange={(e) => setEndTime(e.target.value)}
-                                        options={HOURS.map(h => {
-                                            const hourStr = `${h.toString().padStart(2, '0')}:00`;
-                                            const startH = parseInt(startTime.split(':')[0]);
-
-                                            // Simple validity check
-                                            const isValid = h > startH;
-
-                                            return {
-                                                value: hourStr,
-                                                label: hourStr,
-                                                disabled: !isValid
-                                            };
-                                        })}
-                                    />
-                                </div>
-
-                                <Button
-                                    label="Ajouter"
-                                    onClick={handleAddSlot}
+                                <LargeActionButton
+                                    label="Confirmer"
+                                    onClick={() => {
+                                        handleAddSlot();
+                                        setIsAddSheetOpen(false);
+                                    }}
                                     disabled={isLoading}
-                                    className="w-full"
                                 />
                             </div>
-                        </div>
+                        </BottomSheet>
                     </div>
                 )}
             </div>

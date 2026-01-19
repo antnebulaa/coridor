@@ -42,15 +42,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
     let paddingTop = 'pt-0';
     if (isMainPage) {
-        paddingTop = 'pt-0 md:pt-20'; // Match Navbar height (approx 80px)
+        paddingTop = 'pt-0 md:pt-20';
     } else {
         // Not Home
         paddingTop = 'md:pt-20'; // Hidden on mobile, block on desktop
     }
 
     return (
-        <div className={`${paddingBottom} ${paddingTop} ${isInbox ? 'h-full w-full bg-background overflow-hidden relative' : ''}`}>
-            {children}
+        <div className={`${paddingBottom} ${isInbox ? 'h-full w-full bg-background overflow-hidden relative' : ''}`}>
+            <div className={paddingTop}>
+                {children}
+            </div>
         </div>
     );
 };

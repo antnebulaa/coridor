@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -28,6 +29,14 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
 }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+
+    const [encodedUrl, setEncodedUrl] = useState('');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setEncodedUrl(encodeURIComponent(window.location.href));
+        }
+    }, []);
 
     const {
         register,
@@ -135,18 +144,15 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
                 />
             </div>
 
-            {/* Modify Dossier Link */}
             <div className="flex justify-between items-center text-sm text-neutral-500">
                 <span>Votre dossier complet sera joint à ce message.</span>
-                <button
-                    onClick={() => {
-                        onClose();
-                        router.push('/account/tenant-profile');
-                    }}
+                <Link
+                    href={`/account/tenant-profile?returnUrl=${encodedUrl}`}
+                    onClick={onClose}
                     className="text-neutral-800 underline font-medium hover:text-black"
                 >
                     Modifier mon dossier
-                </button>
+                </Link>
             </div>
         </div>
     );

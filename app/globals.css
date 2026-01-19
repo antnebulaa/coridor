@@ -120,6 +120,14 @@ hr {
 }
 
 @layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   .container-custom {
     @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;
   }

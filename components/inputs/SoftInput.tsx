@@ -2,6 +2,7 @@
 
 import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 import { BiEuro } from 'react-icons/bi';
+import { useEffect, useRef } from "react";
 
 interface SoftInputProps {
     id: string;
@@ -17,6 +18,8 @@ interface SoftInputProps {
 
     inputMode?: "text" | "numeric" | "decimal" | "search" | "email" | "tel" | "url" | "none";
     className?: string;
+    autoFocus?: boolean;
+    inputRef?: React.Ref<HTMLInputElement>;
 }
 
 const SoftInput: React.FC<SoftInputProps> = ({
@@ -33,9 +36,24 @@ const SoftInput: React.FC<SoftInputProps> = ({
 
     inputMode,
     className,
+    autoFocus,
+    inputRef
 }) => {
+    const internalRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (autoFocus) {
+            const timer = setTimeout(() => {
+                internalRef.current?.focus();
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [autoFocus]);
+
+    const registerProps = register ? register(id, { required }) : {} as any;
+
     return (
-        <div className="w-full relative">
+        <div className="w-full relative min-w-0">
             {formatPrice && (
                 <BiEuro
                     size={24}
@@ -45,10 +63,25 @@ const SoftInput: React.FC<SoftInputProps> = ({
             <input
                 id={id}
                 disabled={disabled}
-                {...(register ? register(id, { required }) : {})}
+                {...registerProps}
+                ref={(e) => {
+                    internalRef.current = e;
+
+                    if (inputRef) {
+                        if (typeof inputRef === 'function') {
+                            inputRef(e);
+                        } else {
+                            (inputRef as React.MutableRefObject<HTMLInputElement | null>).current = e;
+                        }
+                    }
+
+                    if (registerProps.ref) {
+                        registerProps.ref(e);
+                    }
+                }}
                 onChange={(e) => {
-                    if (register) {
-                        register(id, { required }).onChange(e);
+                    if (registerProps.onChange) {
+                        registerProps.onChange(e);
                     }
                     if (onChange) {
                         onChange(e);
@@ -75,6 +108,8 @@ const SoftInput: React.FC<SoftInputProps> = ({
           ${formatPrice ? 'pl-3 pr-9' : 'pl-3'}
           ${errors?.[id] ? 'border-red-500' : 'border-input'}
           ${errors?.[id] ? 'focus:border-red-500' : 'focus:border-foreground'}
+          min-w-0
+          [&::-webkit-calendar-picker-indicator]:hidden
 
           ${className}
         `}

@@ -24,7 +24,7 @@ const Recenter = ({ center }: { center: number[] }) => {
     const map = useMap();
     useEffect(() => {
         if (center) {
-            map.setView(center as L.LatLngExpression, 15);
+            map.setView(center as L.LatLngExpression, 17);
         }
     }, [center, map]);
     return null;
@@ -55,7 +55,7 @@ const Map: React.FC<MapProps> = ({ center }) => {
                 <>
                     <Circle
                         center={center as L.LatLngExpression}
-                        radius={200}
+                        radius={50}
                         pathOptions={{
                             color: '#ef4444',
                             fillColor: '#ef4444',

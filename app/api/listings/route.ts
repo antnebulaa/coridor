@@ -73,6 +73,7 @@ export async function POST(
                     data: {
                         ownerId: currentUser.id,
                         address: location?.label,
+                        addressLine1: location?.street,
                         city: location?.city,
                         district: location?.district,
                         neighborhood: location?.neighborhood,

@@ -1,9 +1,8 @@
 'use client';
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
 import Container from "@/components/Container";
+import AccountBackButton from "./AccountBackButton";
 
 interface AccountClientLayoutProps {
     children: React.ReactNode;
@@ -31,23 +30,7 @@ const AccountClientLayout: React.FC<AccountClientLayoutProps> = ({
                     ${isMainPage ? 'hidden md:block' : 'block'}
                 `}>
                     {!isMainPage && (
-                        <div className="md:hidden mb-6">
-                            <Link
-                                href="/account"
-                                className="
-                                    inline-flex 
-                                    items-center 
-                                    justify-center 
-                                    p-2 
-                                    rounded-full 
-                                    hover:bg-neutral-100 
-                                    transition
-                                    -ml-2
-                                "
-                            >
-                                <ChevronLeft size={24} />
-                            </Link>
-                        </div>
+                        <AccountBackButton />
                     )}
                     {children}
                 </div>
