@@ -25,7 +25,6 @@ export default async function getListingById(
                                         order: 'asc'
                                     }
                                 },
-                                visitSlots: true,
                                 rooms: {
                                     include: {
                                         images: true
@@ -35,7 +34,11 @@ export default async function getListingById(
                                     where: { isActive: true },
                                     include: {
                                         listings: true,
-                                        targetRoom: true,
+                                        targetRoom: {
+                                            include: {
+                                                images: true
+                                            }
+                                        },
                                         images: {
                                             orderBy: {
                                                 order: 'asc'
@@ -64,15 +67,45 @@ export default async function getListingById(
             return null;
         }
 
+        const property = listing.rentalUnit.property;
+        const unit = listing.rentalUnit;
+
+        // Fetch User's slots manually
+        const userSlots = await prisma.visitSlot.findMany({
+            where: {
+                userId: property.ownerId
+            }
+        });
+
+        // Helper for distance (Simple Haversine)
+        const getDistanceInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+            if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+            const R = 6371e3; // metres
+            const q1 = lat1 * Math.PI / 180;
+            const q2 = lat2 * Math.PI / 180;
+            const dq = (lat2 - lat1) * Math.PI / 180;
+            const dl = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(dq / 2) * Math.sin(dq / 2) +
+                Math.cos(q1) * Math.cos(q2) *
+                Math.sin(dl / 2) * Math.sin(dl / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c;
+        };
+
+        // Filter slots by location
+        const relevantSlots = userSlots.filter((slot: any) => {
+            const dist = getDistanceInMeters(slot.latitude, slot.longitude, property.latitude!, property.longitude!);
+            return dist <= (slot.radius || 200);
+        });
+
         const unitImages = listing.rentalUnit.images || [];
         const propertyImages = listing.rentalUnit.property.images || [];
         const aggregatedImages = Array.from(new Map(
             [...unitImages, ...propertyImages]
                 .map(img => [img.id, img])
         ).values()).sort((a, b) => a.order - b.order);
-
-        const property = listing.rentalUnit.property;
-        const unit = listing.rentalUnit;
 
         return {
             ...listing,
@@ -165,7 +198,7 @@ export default async function getListingById(
                         wishlists: null,
                         commuteLocations: null,
                     },
-                    visitSlots: listing.rentalUnit.property.visitSlots.map((slot: any) => ({
+                    visitSlots: relevantSlots.map((slot: any) => ({ // Use relevant slots
                         ...slot,
                         date: slot.date.toISOString()
                     })),
@@ -204,7 +237,7 @@ export default async function getListingById(
                 ...room,
                 images: room.images
             })),
-            visitSlots: listing.rentalUnit.property.visitSlots.map((slot: any) => ({
+            visitSlots: relevantSlots.map((slot: any) => ({ // Use relevant slots
                 ...slot,
                 date: slot.date.toISOString()
             })),
@@ -217,7 +250,11 @@ export default async function getListingById(
                 tenantProfile: null,
                 wishlists: null,
                 commuteLocations: null,
-            }
+            },
+            userGlobalSlots: userSlots.map((slot: any) => ({
+                ...slot,
+                date: slot.date.toISOString()
+            }))
         };
     } catch (error: any) {
         throw new Error(error);

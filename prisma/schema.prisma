@@ -103,6 +103,7 @@ model User {
   contactOf  User[]  @relation("UserContacts")
   commuteLocations CommuteLocation[] // NEW: Relation to commute locations
   likes            Like[]
+  visitSlots       VisitSlot[]   // Availability linked to User + Location
 }
 
 model TenantProfile {
@@ -245,7 +246,7 @@ model Property {
   rentalUnits     RentalUnit[]
   rooms           Room[]        // Physical rooms (Salon, Cuisine, etc.)
   images          PropertyImage[] // Common Area images
-  visitSlots      VisitSlot[]   // Owner availability is linked to Property location
+
   
   // Caching/Transit
   transitData     Json?
@@ -369,12 +370,19 @@ model Furniture {
 
 model VisitSlot {
   id          String   @id @default(uuid())
-  propertyId  String   // MOVED: Availability is linked to Property/Owner
+  userId      String   // Availability is linked to User
+  
   date        DateTime
   startTime   String
   endTime     String
+  
+  // Location of the Landlord's presence
+  latitude    Float
+  longitude   Float
+  address     String?
+  radius      Int      @default(200) // Match radius in meters
 
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum VisitStatus {

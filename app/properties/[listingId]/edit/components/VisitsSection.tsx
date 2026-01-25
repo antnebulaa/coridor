@@ -37,6 +37,7 @@ interface VisitsSectionProps {
     listing: SafeListing & {
         visitSlots?: any[];
         visitDuration?: number | null;
+        userGlobalSlots?: any[];
     };
     className?: string; // Allow overriding height/layout
 }
@@ -157,7 +158,34 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
             toast.custom((t) => (
                 <CustomToast
                     t={t}
-                    message="Ce créneau chevauche un créneau existant"
+                    message="Ce créneau chevauche un créneau existant ici"
+                    type="error"
+                />
+            ));
+            return;
+        }
+
+        // Check for Global Conflicts (Remote)
+        const globalSlots = listing.userGlobalSlots || [];
+        const hasGlobalConflict = selectedDates.some(date => {
+            return globalSlots.some((gs: any) => {
+                // Only check slots that are NOT local (i.e. conflicts)
+                const isLocal = slots.some(s => s.id === gs.id);
+                if (isLocal) return false;
+
+                const isSameDate = isSameDay(parseISO(gs.date), date);
+                if (!isSameDate) return false;
+
+                // Check time overlap
+                return (startTime < gs.endTime) && (endTime > gs.startTime);
+            });
+        });
+
+        if (hasGlobalConflict) {
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Impossible : Vous avez déjà des disponibilités ailleurs sur ce créneau"
                     type="error"
                 />
             ));
@@ -282,6 +310,17 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                                     const isSelected = selectedDates.some(d => isSameDay(d, day));
                                     const daySlots = getSlotsForDate(day);
                                     const hasSlots = daySlots.length > 0;
+
+                                    // Check for conflicts (Slots elsewhere)
+                                    const globalSlots = listing.userGlobalSlots || [];
+                                    const conflictSlots = globalSlots.filter((gs: any) =>
+                                        isSameDay(parseISO(gs.date), day) &&
+                                        !daySlots.some((ls: any) =>
+                                            gs.startTime === ls.startTime && gs.endTime === ls.endTime
+                                        )
+                                    );
+                                    const hasConflicts = conflictSlots.length > 0;
+
                                     const isCurrentMonth = isSameMonth(day, monthDate);
                                     const isPast = isBefore(day, startOfToday());
 
@@ -294,7 +333,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                                             className={`
                                                 aspect-square rounded-lg md:rounded-xl p-0.5 md:p-2 transition relative
                                                 flex flex-col items-center justify-center border-2
-                                                ${hasSlots ? 'border-[#FE3C10]' : 'border-transparent'}
+                                                ${hasSlots ? 'border-[#FE3C10]' : hasConflicts ? 'border-neutral-300' : 'border-transparent'}
                                                 ${isPast
                                                     ? 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
                                                     : isSelected
@@ -310,12 +349,14 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                                                 {format(day, 'd')}
                                             </span>
 
-                                            {hasSlots && (
-                                                <div className="mt-0.5 md:mt-1 flex gap-0.5">
+                                            <div className="mt-0.5 md:mt-1 flex gap-0.5">
+                                                {hasSlots && (
                                                     <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-[#FE3C10]'}`} />
-                                                    {daySlots.length > 1 && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-[#FE3C10]'}`} />}
-                                                </div>
-                                            )}
+                                                )}
+                                                {hasConflicts && (
+                                                    <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white/50' : 'bg-neutral-400'}`} />
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -397,7 +438,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                         {/* Footer with Action Button */}
                         <div className="p-4 pb-12 md:p-6 bg-transparent md:bg-white border-t-0 md:border-t border-neutral-100 pointer-events-auto">
                             <LargeActionButton
-                                label="Ajouter un créneau de visite"
+                                label="Ajouter une plage horaires de visites"
                                 onClick={() => setIsAddSheetOpen(true)}
                                 disabled={isLoading}
                             />

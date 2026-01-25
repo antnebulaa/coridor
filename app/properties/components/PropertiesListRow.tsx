@@ -49,7 +49,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 flex 
                 items-center 
                 gap-4 
-                py-2
+                py-3
                 px-0
                 md:px-4 
                 border-b 
@@ -81,59 +81,55 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                     )}
                 </div>
                 <div className="flex flex-col min-w-0 gap-0.5">
-                    {/* Title: Category */}
-                    <span className={`font-medium text-neutral-900 truncate ${isMainProperty ? 'font-bold text-lg' : ''}`}>
-                        {categoryLabel}
+                    {/* Title: [Type] [Door] • [Floor] • [T#] */}
+                    {/* Title: [Type] [Door] • [Floor] • [T#] */}
+                    <div className={`flex items-center font-medium text-neutral-900 truncate ${isMainProperty ? 'text-lg' : 'text-base'}`}>
+                        {(() => {
+                            // If it's a Room, override the category "Maison/Appart" with "Chambre"
+                            const isRoom = data.rentalUnit?.type === 'PRIVATE_ROOM';
+                            let typeLabel = isRoom ? 'Chambre' : (data.category === 'Appartement' ? 'Appart' : data.category);
+
+                            // For rooms, we might want to append the name/number if available
+                            let roomName = '';
+                            if (isRoom && data.rentalUnit?.name) {
+                                let name = data.rentalUnit.name.replace('Bedroom ', ''); // Remove English default if present
+                                name = name.trim();
+
+                                // Avoid "Chambre Chambre"
+                                if (name.toLowerCase().startsWith('chambre')) {
+                                    typeLabel = ''; // The name already has it
+                                    roomName = name;
+                                } else {
+                                    roomName = ` ${name}`;
+                                }
+                            }
+
+                            return [
+                                `${typeLabel}${data.apartment ? ` ${data.apartment}` : ''}${roomName}`,
+                                data.floor !== null && data.floor !== undefined ? (data.floor === 0 ? 'RDC' : `${data.floor}e`) : null,
+                                data.roomCount ? `T${data.roomCount}` : null
+                            ].filter(Boolean).map((part, index, arr) => (
+                                <div key={index} className="flex items-center">
+                                    <span>{part}</span>
+                                    {index < arr.length - 1 && (
+                                        <span className="text-[8px] text-neutral-400 mx-1.5">•</span>
+                                    )}
+                                </div>
+                            ));
+                        })()}
+                    </div>
+
+                    {/* Subtitle: Street */}
+                    <span className="text-sm text-gray-500 truncate">
+                        {data.addressLine1 || data.city || ''}
                     </span>
 
-                    {/* Desktop Details: Rooms/Surface */}
-                    <span className="hidden md:block text-sm text-neutral-500 truncate">
-                        {((data as any).rentalUnitType && (data as any).rentalUnitType !== 'ENTIRE_PLACE') ? (
-                            surfaceDisplay || ''
-                        ) : (
-                            <>
-                                {data.roomCount || 0} pièces
-                                {(data.roomCount || 0) > 1 ? ` • ${(data.roomCount || 0) - 1} ch.` : ''}
-                                {surfaceDisplay ? ` • ${surfaceDisplay}` : ''}
-                            </>
-                        )}
-                    </span>
-
-                    {/* Mobile Address/Description */}
-                    <div className="md:hidden flex flex-col mt-0.5 min-w-0">
-                        {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
-                            <span className="text-xs text-neutral-500 truncate">
-                                {data.description || data.city || ''}
-                            </span>
-                        ) : (
-                            data.addressLine1 ? (
-                                <>
-                                    {/* Primary Identifier: Appt/Building */}
-                                    {(data.apartment || data.building) && (
-                                        <span className="text-xs font-semibold text-gray-900 truncate">
-                                            {[
-                                                data.apartment ? `Appt ${data.apartment}` : null,
-                                                data.building ? `Bat ${data.building}` : null
-                                            ].filter(Boolean).join(' • ')}
-                                        </span>
-                                    )}
-                                    {/* Secondary Identifier: Street */}
-                                    <span className={`${(data.apartment || data.building) ? 'text-neutral-500' : 'text-neutral-700'} text-xs`}>
-                                        {data.addressLine1}, {data.zipCode} {data.city}
-                                    </span>
-                                    {isColocation && (
-                                        <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full w-fit mt-1">
-                                            COLOCATION
-                                        </span>
-                                    )}
-                                </>
-                            ) : (
-                                // Fallback
-                                <span className="text-xs text-neutral-500">
-                                    {data.city || location?.label || ''} {data.district || ''}
-                                </span>
-                            )
-                        )}
+                    {/* Smart Footer - Mock Data */}
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                        <span className="text-sm text-neutral-900 truncate">
+                            Loyer en retard de 5j
+                        </span>
                     </div>
                 </div>
             </div>
@@ -186,27 +182,7 @@ const PropertiesListRow: React.FC<PropertiesListRowProps> = ({
                 {data.price}€ /mois
             </div>
 
-            {/* Column 4: Status - 15% (Desktop) / Visible on Mobile - HIDDEN FOR COLOCATION MAIN */}
-            <div className="flex flex-col items-end pl-2 md:flex-1">
-                {!isColocation && (
-                    <>
-                        {data.isPublished ? (
-                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Publié
-                            </div>
-                        ) : (
-                            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                                En pause
-                            </div>
-                        )}
-                        {data.statusUpdatedAt && (
-                            <div className="text-[10px] text-neutral-400 mt-1 whitespace-nowrap hidden md:block">
-                                {formatDistanceToNow(new Date(data.statusUpdatedAt), { addSuffix: true, locale: fr })}
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+
         </div>
     );
 };

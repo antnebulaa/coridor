@@ -26,10 +26,12 @@ const PropertiesPage = async () => {
 
     return (
         <ClientOnly>
-            <PropertiesClient
-                properties={properties}
-                currentUser={currentUser}
-            />
+            <div className="bg-neutral-100 min-h-screen">
+                <PropertiesClient
+                    properties={properties}
+                    currentUser={currentUser}
+                />
+            </div>
         </ClientOnly>
     );
 };

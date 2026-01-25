@@ -241,7 +241,6 @@ export default async function getListings(
                             include: {
                                 owner: true,
                                 images: true,
-                                visitSlots: true,
                                 rooms: {
                                     include: {
                                         images: true
@@ -349,11 +348,7 @@ export default async function getListings(
                             updatedAt: listing.rentalUnit.property.owner.updatedAt.toISOString(),
                             emailVerified: listing.rentalUnit.property.owner.emailVerified?.toISOString() || null,
                             birthDate: listing.rentalUnit.property.owner.birthDate?.toISOString() || null
-                        },
-                        visitSlots: listing.rentalUnit.property.visitSlots.map((slot: any) => ({
-                            ...slot,
-                            date: slot.date.toISOString()
-                        }))
+                        }
                     },
                     images: listing.rentalUnit.images
                 },

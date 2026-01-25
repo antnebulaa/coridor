@@ -73,6 +73,7 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
             onClick={() => onClick(label)}
             className={`
         rounded-xl
+        relative
         p-4
         flex
         flex-col
@@ -81,9 +82,27 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
         transition
         cursor-pointer
         active:scale-95
-        ${selected ? 'border-2 border-foreground' : 'border border-border'}
+        ${selected
+                    ? 'border-2 border-[#1719FF] bg-[#DFDFFF] text-[#1719FF]'
+                    : 'border border-transparent bg-neutral-100 dark:bg-neutral-800 hover:border-black'
+                }
       `}
         >
+            {/* Radio Indicator */}
+            <div className={`
+                absolute top-3 right-3
+                w-6 h-6
+                rounded-full
+                border-2
+                flex items-center justify-center
+                transition
+                ${selected ? 'border-[#1719FF] bg-[#1719FF]' : 'border-neutral-300 bg-white'}
+            `}>
+                {selected && (
+                    <div className="w-2.5 h-2.5 bg-white rounded-full" />
+                )}
+            </div>
+
             {image ? (
                 <div className="relative w-[30px] h-[30px]">
                     <Image
@@ -94,9 +113,9 @@ const CategoryInput: React.FC<CategoryInputProps> = ({
                     />
                 </div>
             ) : (
-                <Icon size={30} />
+                <Icon className="w-8 h-8" />
             )}
-            <div className="font-medium">
+            <div className="font-medium text-lg">
                 {label}
             </div>
         </div>

@@ -25,11 +25,7 @@ export default async function getDashboardStats() {
                 },
                 rentalUnit: {
                     include: {
-                        property: {
-                            include: {
-                                visitSlots: true
-                            }
-                        }
+                        property: true
                     }
                 }
             }
@@ -49,17 +45,7 @@ export default async function getDashboardStats() {
             if (!property) return;
 
             // Identify property unique constraints for alerts
-            if (!seenPropertyIds.has(property.id)) {
-                const propertySlots = property.visitSlots || [];
-
-                if (propertySlots.length === 0) {
-                    seenPropertyIds.add(property.id);
-                    listingsWithoutSlots.push({
-                        id: listing.id,
-                        title: listing.title
-                    });
-                }
-            }
+            // Property Alert Logic Disabled for Refactor
 
             listing.reservations.forEach((reservation: any) => {
                 totalRevenue += reservation.totalPrice;

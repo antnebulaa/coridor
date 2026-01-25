@@ -17,6 +17,7 @@ export type AddressSelectValue = {
     zipCode?: string;
     street?: string;
     apartment?: string;
+    building?: string;
 }
 
 interface MapboxAddressSelectProps {

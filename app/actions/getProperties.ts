@@ -26,7 +26,6 @@ export default async function getProperties() {
                         images: true
                     }
                 },
-                visitSlots: true,
                 rentalUnits: {
                     where: {
                         OR: [
@@ -50,7 +49,6 @@ export default async function getProperties() {
                                         images: true
                                     }
                                 },
-                                visitSlots: true,
                                 rentalUnits: true // Recursion break? Prisma might complain, checking
                             }
                         },
@@ -61,7 +59,6 @@ export default async function getProperties() {
                                         property: {
                                             include: {
                                                 owner: true,
-                                                visitSlots: true,
                                                 images: true,
                                                 rooms: {
                                                     include: {
@@ -96,10 +93,6 @@ export default async function getProperties() {
                 wishlists: null,
                 commuteLocations: null
             },
-            visitSlots: property.visitSlots.map((slot: any) => ({
-                ...slot,
-                date: slot.date.toISOString(),
-            })),
             rentalUnits: property.rentalUnits.map((unit: any) => ({
                 ...unit,
                 listings: unit.listings.map((listing: any) => {
@@ -118,8 +111,11 @@ export default async function getProperties() {
                             }
                         },
                         images: Array.from(new Map(
-                            [...(unit.images || []), ...(property.images || [])]
-                                .map((img: any) => [img.id, img])
+                            [
+                                ...(unit.targetRoom?.images || []),
+                                ...(unit.images || []),
+                                ...(property.images || [])
+                            ].map((img: any) => [img.id, img])
                         ).values()), // Deduplicate images by ID
 
                         // New Mapped Fields
@@ -146,6 +142,19 @@ export default async function getProperties() {
                         totalFloors: property.totalFloors,
                         isFurnished: unit.isFurnished,
                         // ... mapped fields logic similar to getListingById
+                        reservations: (listing.reservations || []).map((reservation: any) => ({
+                            ...reservation,
+                            createdAt: reservation.createdAt.toISOString(),
+                            startDate: reservation.startDate.toISOString(),
+                            endDate: reservation.endDate.toISOString(),
+                            listing: {
+                                ...listing,
+                                createdAt: listing.createdAt.toISOString(),
+                                updatedAt: listing.updatedAt.toISOString(),
+                                statusUpdatedAt: listing.statusUpdatedAt.toISOString(),
+                                availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
+                            }
+                        })),
                     };
                     return mappedListing;
                 }),

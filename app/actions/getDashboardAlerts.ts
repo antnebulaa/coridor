@@ -14,10 +14,8 @@ export default async function getDashboardAlerts() {
             where: {
                 rentalUnit: {
                     property: {
-                        ownerId: currentUser.id,
-                        visitSlots: {
-                            none: {}
-                        }
+                        ownerId: currentUser.id
+                        // visitSlots relation removed
                     }
                 },
                 rentalUnitId: { not: undefined }

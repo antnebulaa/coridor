@@ -10,7 +10,7 @@ import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 import { SafeListing } from "@/types";
 import EditSectionFooter from "./EditSectionFooter";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
-import LocationPicker from "@/components/inputs/LocationPicker";
+import LocationEditor from "@/components/inputs/LocationEditor";
 import Heading from "@/components/Heading";
 import SoftInput from "@/components/inputs/SoftInput";
 import CustomToast from "@/components/ui/CustomToast";
@@ -52,6 +52,9 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
     const country = watch('country');
     const addressLine1 = watch('addressLine1');
     const locationValue = watch('locationValue');
+    const apartment = watch('apartment');
+    const building = watch('building');
+    const zipCode = watch('zipCode');
 
     const latlng = useMemo(() => [latitude, longitude], [latitude, longitude]);
 
@@ -59,6 +62,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
         const street = val.street || val.label.split(',')[0].trim();
         setValue('addressLine1', street);
         setValue('apartment', val.apartment);
+        setValue('building', val.building);
         setValue('zipCode', val.zipCode);
         setValue('city', val.city);
         setValue('country', val.country);
@@ -113,13 +117,8 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
 
     return (
         <div className="flex flex-col gap-8">
-            <Heading
-                title="Où est situé votre logement ?"
-                subtitle="Aidez les voyageurs à vous trouver !"
-            />
-
             <div className="relative z-10">
-                <LocationPicker
+                <LocationEditor
                     value={{
                         label: addressLine1 || locationValue || '',
                         value: '',
@@ -128,7 +127,9 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                         city: city,
                         country: country,
                         street: addressLine1,
-                        zipCode: listing.zipCode || ''
+                        zipCode: zipCode,
+                        apartment: apartment,
+                        building: building
                     }}
                     onChange={onLocationSelect}
                 />

@@ -8,6 +8,7 @@ import Heading from "../Heading";
 import { categories } from "../navbar/Categories";
 import CategoryInput from "../inputs/CategoryInput";
 import LocationPicker from "../inputs/LocationPicker";
+import LocationEditor from "../inputs/LocationEditor";
 import MapboxAddressSelect from "../inputs/MapboxAddressSelect";
 import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
@@ -24,6 +25,7 @@ import { calculateRentControl } from "@/app/properties/[listingId]/edit/componen
 import VisitsSection from "@/app/properties/[listingId]/edit/components/VisitsSection";
 import { SafeListing } from "@/types";
 import CustomToast from "../ui/CustomToast";
+import DarkActionButtonFlex from "../ui/DarkActionButtonFlex";
 
 import { LeaseType } from "@prisma/client";
 
@@ -76,13 +78,13 @@ const RentModal = () => {
             bathroomCount: 1,
             imageSrc: '',
             imageSrcs: [],
-            price: 1,
+            price: '' as any,
             title: '',
             description: '',
             leaseType: LeaseType.LONG_TERM,
             dpe: 'C',
             ges: 'A',
-            charges: 0,
+            charges: '' as any,
             amenities: [],
             rooms: []
         }
@@ -126,7 +128,7 @@ const RentModal = () => {
                 })) || []
             });
 
-            if (listing.rentalUnit?.type !== 'ENTIRE_PLACE') {
+            if (rentModal.mode === 'ROOM_CONFIG' || listing.rentalUnit?.type !== 'ENTIRE_PLACE') {
                 setStep(STEPS.INFO);
             } else {
                 setStep(STEPS.CATEGORY);
@@ -151,13 +153,13 @@ const RentModal = () => {
                 bathroomCount: 1,
                 imageSrc: '',
                 imageSrcs: [],
-                price: 1, // Default price
+                price: '', // Default price
                 title: '',
                 description: '',
                 leaseType: LeaseType.LONG_TERM,
                 dpe: property.dpe || 'C',
                 ges: property.ges || 'A',
-                charges: 0,
+                charges: '',
                 amenities: amenities,
                 rooms: []
             });
@@ -173,13 +175,13 @@ const RentModal = () => {
                 bathroomCount: 1,
                 imageSrc: '',
                 imageSrcs: [],
-                price: 1,
+                price: '',
                 title: '',
                 description: '',
                 leaseType: LeaseType.LONG_TERM,
                 dpe: 'C',
                 ges: 'A',
-                charges: 0,
+                charges: '',
                 amenities: [],
                 rooms: []
             });
@@ -254,7 +256,7 @@ const RentModal = () => {
     }
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
-        if (step !== STEPS.PRICE) {
+        if (rentModal.mode !== 'ROOM_CONFIG' && step !== STEPS.PRICE) {
             return onNext();
         }
 
@@ -269,6 +271,7 @@ const RentModal = () => {
             ...data,
             title: data.title || generatedTitle,
             description: data.description || generatedDescription,
+            price: (rentModal.mode === 'ROOM_CONFIG' && !data.price) ? 0 : data.price,
             propertyId: rentModal.propertyContext?.id // Phase 3: Add Unit Context
         };
 
@@ -339,14 +342,18 @@ const RentModal = () => {
         if (step === STEPS.INTRO) {
             return 'Commencer';
         }
-        if (step === STEPS.PRICE) {
-            return rentModal.editingListing ? 'Enregistrer les modifications' : 'Créer';
+        if (step === STEPS.PRICE || rentModal.mode === 'ROOM_CONFIG') {
+            return rentModal.editingListing ? 'Enregistrer' : 'Créer';
         }
 
         return 'Suivant';
     }, [step, rentModal.editingListing]);
 
     const secondaryActionLabel = useMemo(() => {
+        if (rentModal.mode === 'ROOM_CONFIG') {
+            return undefined;
+        }
+
         if (step === STEPS.CATEGORY) {
             return undefined;
         }
@@ -445,7 +452,6 @@ const RentModal = () => {
                                 selected={category === item.label}
                                 label={item.label}
                                 icon={item.icon}
-                                image={item.image}
                             />
                         </div>
                     ))}
@@ -459,10 +465,17 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <div className="relative z-10">
-                    <LocationPicker
-                        value={location}
-                        onChange={(value) => setCustomValue('location', value)}
-                    />
+                    {rentModal.editingListing ? (
+                        <LocationEditor
+                            value={location}
+                            onChange={(value) => setCustomValue('location', value)}
+                        />
+                    ) : (
+                        <LocationPicker
+                            value={location}
+                            onChange={(value) => setCustomValue('location', value)}
+                        />
+                    )}
                 </div>
             </div>
         );
@@ -674,6 +687,17 @@ const RentModal = () => {
 
                 {isRoom && (
                     <>
+                        <div className="mb-6">
+                            <SoftInput
+                                id="surface"
+                                label="Surface (m²)"
+                                type="number"
+                                disabled={isLoading}
+                                register={register}
+                                errors={errors}
+                                required
+                            />
+                        </div>
                         <div className="flex flex-col gap-2">
                             <label className="font-medium">Type de lit</label>
                             <div className="flex gap-4">
@@ -908,12 +932,13 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Ajoutez des photos"
-                    subtitle="Montrez à quoi ressemble votre logement !"
+                    title="Ajoutez des photos de votre bien"
+                    subtitle="Ajoutez au minimum 4 photos. Vous pourrez toujours en ajouter d'autres plus tard."
                 />
                 <MultiImageUpload
                     value={imageSrcs}
                     onChange={(value) => setCustomValue('imageSrcs', value)}
+                    layoutMode="cover"
                 />
             </div>
         )
@@ -1055,7 +1080,9 @@ const RentModal = () => {
             body={bodyContent}
             currentStep={step === STEPS.INTRO ? undefined : step}
             totalSteps={STEPS.AVAILABILITY}
-            disabled={isNextDisabled || isLoading}
+            disabled={isNextDisabled}
+            isLoading={isLoading}
+            actionButtonComponent={DarkActionButtonFlex}
         />
     );
 };

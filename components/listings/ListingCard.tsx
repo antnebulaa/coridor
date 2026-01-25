@@ -189,7 +189,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-xl p-[5px] md:p-2 hover:bg-secondary transition">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-xl md:p-2 hover:bg-secondary transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Tablet, Stacked on Desktop */}
                     <div className="
                         w-full h-[200px]
@@ -212,13 +212,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                     {/* Content Section */}
                     <div className="flex flex-col justify-between py-1 md:py-2 flex-1 pr-1 md:pr-2">
-                        <div className="flex flex-col gap-0 md:gap-1">
+                        <div className="flex flex-col gap-0 md:gap-0">
                             {/* Price / Heart / Title / Location */}
                             <div className="flex flex-col gap-0">
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
-                                        <div className="font-semibold text-[26px] md:text-[22px] text-[#2B2DFF] leading-tight">
-                                            {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
+                                        <div className="font-semibold text-[26px] md:text-[22px] text-[#005600] leading-tight">
+                                            {price}€<span className="text-neutral-400 font-normal text-sm ml-1">/ mois cc</span>
                                         </div>
                                     </div>
                                     {showHeart && (
@@ -262,16 +262,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {/* Mobile City Display - Visible only on mobile */}
-                            <div className="md:hidden font-normal text-neutral-700 text-sm line-clamp-1 mt-0.5">
+                            <div className="md:hidden font-normal text-neutral-500 text-sm line-clamp-1 mt-0.5">
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
-                                    <span className="font-normal text-sm text-neutral-700">
+                                    <span className="font-normal text-sm text-neutral-500">
                                         , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
                                     </span>
                                 )}
                             </div>
                             {floorDisplay && (
-                                <div className="md:hidden font-normal text-neutral-500 text-sm mt-0.5">
+                                <div className="md:hidden font-normal text-neutral-700 text-sm mt-0.5">
                                     {floorDisplay}
                                 </div>
                             )}
@@ -307,7 +307,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </FeatureTag>
 
                                 {data.transitData?.mainConnection && (
-                                    <div className="flex items-center justify-center gap-1.5 rounded-full px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
+                                    <div className="flex items-center justify-center gap-1.5 rounded-full px-2 h-8 leading-none text-sm bg-white border border-neutral-300 text-neutral-700">
                                         <div className="flex items-center gap-1">
                                             {(() => {
                                                 const type = (data.transitData.mainConnection.type || "").toLowerCase();
@@ -414,7 +414,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                 <div className="flex flex-col gap-0 mt-2">
                     <div className="flex flex-row justify-between items-start w-full">
-                        <div className="font-semibold text-[26px] text-[#2B2DFF]">
+                        <div className="font-medium text-[26px] text-[#2B2DFF]">
                             {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
                         </div>
                         {showHeart && (

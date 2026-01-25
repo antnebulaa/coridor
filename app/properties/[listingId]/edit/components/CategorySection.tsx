@@ -37,7 +37,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
         defaultValues: {
             category: listing.category,
             hasPrivateBathroom: (listing as any).hasPrivateBathroom || false,
-            rentalUnitType: listing.rentalUnitType || 'ENTIRE_PLACE', // Default if missing
+            // rentalUnitType: listing.rentalUnitType || 'ENTIRE_PLACE', // Removed
             isFurnished: listing.isFurnished,
             surface: listing.surface,
             surfaceUnit: listing.surfaceUnit || currentUser.measurementSystem || 'metric',
@@ -60,7 +60,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
     });
 
     const category = watch('category');
-    const rentalUnitType = watch('rentalUnitType');
+    // const rentalUnitType = watch('rentalUnitType'); // Removed
     const propertyAdjective = watch('propertyAdjective');
     const isFurnished = watch('isFurnished');
     const surfaceUnit = watch('surfaceUnit');
@@ -82,7 +82,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
     const energy_cost_max = watch('energy_cost_max');
     const dpe_year = watch('dpe_year');
 
-    const isRoomMode = rentalUnitType !== 'ENTIRE_PLACE';
+    const isRoomMode = isRoom; // rentalUnitType !== 'ENTIRE_PLACE';
 
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
@@ -92,52 +92,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
         })
     }
 
-    // --- Colocation Logic ---
-    const propertyRentalUnits = (listing.rentalUnit as any)?.property?.rentalUnits || [];
-    // Check if there are active rooms (ignoring the 'ENTIRE_PLACE' one which is active in Standard mode)
-    // We check for PRIVATE_ROOM type specifically
-    const hasActiveRooms = propertyRentalUnits.some((u: any) => u.type === 'PRIVATE_ROOM' && u.isActive);
-    const [mode, setMode] = useState<string>(hasActiveRooms ? 'COLOCATION' : 'STANDARD');
-
-    const handleModeChange = async (newMode: string) => {
-        if (newMode === mode) return;
-        setIsLoading(true);
-        try {
-            const response = await axios.post(`/api/listings/${listing.id}/mode`, { mode: newMode });
-
-            if (response.data?.targetListingId && response.data.targetListingId !== listing.id) {
-                toast.custom((t) => (
-                    <CustomToast
-                        t={t}
-                        message={newMode === 'COLOCATION' ? 'Mode Colocation activé (Redirection...)' : 'Mode Logement Entier activé (Redirection...)'}
-                        type="success"
-                    />
-                ));
-                router.push(`/properties/${response.data.targetListingId}/edit`);
-                return;
-            }
-
-            setMode(newMode);
-            toast.custom((t) => (
-                <CustomToast
-                    t={t}
-                    message={newMode === 'COLOCATION' ? 'Mode Colocation activé' : 'Mode Logement Entier activé'}
-                    type="success"
-                />
-            ));
-            router.refresh();
-        } catch (error) {
-            toast.custom((t) => (
-                <CustomToast
-                    t={t}
-                    message="Erreur lors du changement de mode"
-                    type="error"
-                />
-            ));
-        } finally {
-            setIsLoading(false);
-        }
-    };
     // ------------------------
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
@@ -187,21 +141,6 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                     />
                 </div>
             )}
-
-            {/* Mode de location (CUSTOM SWITCH) */}
-            <div className="flex flex-col gap-2">
-                <SoftSelect
-                    id="rentalUnitType"
-                    label="Mode de location"
-                    value={mode}
-                    onChange={(e) => handleModeChange(e.target.value)}
-                    disabled={isLoading}
-                    options={[
-                        { value: "STANDARD", label: "Logement entier" },
-                        { value: "COLOCATION", label: "Colocation (Activation chambres)" }
-                    ]}
-                />
-            </div>
 
             {/* Adjectif du bien */}
             {!isRoom && (

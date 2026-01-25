@@ -3,9 +3,23 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Room, PropertyImage } from "@prisma/client";
-import { DragDropContext } from "@hello-pangea/dnd";
 import { X, Plus, ChevronLeft, Image as ImageIcon, Upload, Move, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+    TouchSensor,
+    MouseSensor
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    sortableKeyboardCoordinates
+} from '@dnd-kit/sortable';
 import { Button } from "@/components/ui/Button";
 import PageBody from "@/components/ui/PageBody";
 import PhotoGrid from "./PhotoGrid";
@@ -124,48 +138,73 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
         return room ? room.name : undefined;
     };
 
-    // Drag End - STRICTLY REORDERING ONLY
-    const onDragEnd = (result: any) => {
-        if (!result.destination) return;
+    // Sensors
+    const sensors = useSensors(
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 10,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
-        const sourceId = result.source.droppableId;
-        const destinationId = result.destination.droppableId;
+    // Dnd-kit Handler
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
 
-        // Prevent moving between lists via drag and drop
-        if (sourceId !== destinationId) {
-            return;
+        if (active.id !== over?.id) {
+            let currentItems: PropertyImage[] = [];
+            let type: 'global' | 'unassigned' | 'room' = 'global';
+            let roomId: string | undefined = undefined;
+
+            if (activeView === 'global') {
+                currentItems = optimisticGlobalImages;
+                type = 'global';
+            } else if (activeView === 'unassigned') {
+                currentItems = optimisticUnassigned;
+                type = 'unassigned';
+            } else if (activeView === 'room' && activeRoomId) {
+                const room = optimisticRooms.find(r => r.id === activeRoomId);
+                if (room) {
+                    currentItems = room.images;
+                    type = 'room';
+                    roomId = activeRoomId;
+                }
+            }
+
+            if (currentItems.length > 0) {
+                const oldIndex = currentItems.findIndex((item) => item.id === active.id);
+                const newIndex = currentItems.findIndex((item) => item.id === over?.id);
+                const newOrder = arrayMove(currentItems, oldIndex, newIndex);
+                handleReorder(newOrder, type, roomId);
+            }
+        }
+    };
+
+    // Reorder Handlers
+    const handleReorder = (newOrder: PropertyImage[], type: 'global' | 'unassigned' | 'room', roomId?: string) => {
+        // Optimistic Update
+        if (type === 'global') setOptimisticGlobalImages(newOrder);
+        else if (type === 'unassigned') setOptimisticUnassigned(newOrder);
+        else if (type === 'room' && roomId) {
+            const roomIndex = optimisticRooms.findIndex(r => r.id === roomId);
+            if (roomIndex !== -1) {
+                const newRooms = [...optimisticRooms];
+                newRooms[roomIndex] = { ...newRooms[roomIndex], images: newOrder };
+                setOptimisticRooms(newRooms);
+            }
         }
 
-        // Helper to get list by ID
-        const getList = (id: string) => {
-            if (id === 'global') return { items: [...optimisticGlobalImages], type: 'global' };
-            if (id === 'unassigned') return { items: [...optimisticUnassigned], type: 'unassigned' };
-            const roomIndex = optimisticRooms.findIndex(r => r.id === id);
-            if (roomIndex !== -1) return { items: [...optimisticRooms[roomIndex].images], type: 'room', index: roomIndex };
-            return null;
-        };
-
-        const list = getList(sourceId);
-        if (!list) return;
-
-        const items = list.items as PropertyImage[];
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
-
-        // Update state
-        if (list.type === 'global') setOptimisticGlobalImages(items);
-        else if (list.type === 'unassigned') setOptimisticUnassigned(items);
-        else if (list.type === 'room' && typeof list.index === 'number') {
-            const newRooms = [...optimisticRooms];
-            newRooms[list.index] = {
-                ...newRooms[list.index],
-                images: items
-            };
-            setOptimisticRooms(newRooms);
-        }
-
-        // API Call for reorder
-        const updates = items.map((item, index) => ({ id: item.id, order: index }));
+        // API Update
+        const updates = newOrder.map((item, index) => ({ id: item.id, order: index }));
         axios.put('/api/images/reorder', { updates }).catch(() => {
             toast.custom((t) => (
                 <CustomToast
@@ -240,7 +279,11 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
             {/* Content */}
             <PageBody className="flex-1 overflow-y-auto bg-neutral-50/30 pb-32">
                 <div className="max-w-5xl mx-auto flex flex-col gap-10">
-                    <DragDropContext onDragEnd={onDragEnd}>
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
 
                         {/* GLOBAL VIEW */}
                         {activeView === 'global' && (
@@ -257,7 +300,9 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                                     selectable
                                     selectedIds={selectedIds}
                                     onSelect={handleSelect}
+
                                     getItemBadge={getImageBadge}
+                                    onReorder={(newOrder) => handleReorder(newOrder, 'global')}
                                 />
                             </section>
                         )}
@@ -364,6 +409,7 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                                             selectable
                                             selectedIds={selectedIds}
                                             onSelect={handleSelect}
+                                            onReorder={(newOrder) => handleReorder(newOrder, 'room', room.id)}
                                             emptyContent={
                                                 <div className="text-neutral-400 italic text-sm border-2 border-dashed rounded-xl p-8 text-center bg-neutral-50/50 h-full flex items-center justify-center">
                                                     Aucune photo dans cette pièce.
@@ -374,7 +420,9 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                                 );
                             })()
                         )}
-                    </DragDropContext>
+
+
+                    </DndContext>
                 </div>
             </PageBody>
 

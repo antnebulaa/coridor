@@ -51,8 +51,15 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             ...listing,
             images: aggregatedImages,
             city: listing.rentalUnit?.property?.city || null,
+            charges: listing.charges,
             createdAt: listing.createdAt.toISOString(),
             statusUpdatedAt: listing.statusUpdatedAt ? listing.statusUpdatedAt.toISOString() : new Date().toISOString(),
+            visitSlots: (listing.rentalUnit?.property?.visitSlots || []).map((slot: any) => ({
+                ...slot,
+                date: slot.date.toISOString(),
+                createdAt: slot.createdAt?.toISOString(),
+                updatedAt: slot.updatedAt?.toISOString()
+            })),
             user: owner ? {
                 ...owner,
                 createdAt: owner.createdAt.toISOString(),

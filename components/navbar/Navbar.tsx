@@ -7,14 +7,17 @@ import UserMenu from './UserMenu';
 
 import { usePathname } from 'next/navigation';
 
+import useUserCounters from '@/hooks/useUserCounters';
+
 interface NavbarProps {
     currentUser?: any;
-    unreadCount?: number;
+    // unreadCount removed from props
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentUser, unreadCount }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     const pathname = usePathname();
     const isHomePage = pathname === '/';
+    const { unreadCount } = useUserCounters(currentUser);
 
     return (
         <div

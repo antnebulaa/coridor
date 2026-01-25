@@ -23,14 +23,10 @@ export async function GET(
             include: {
                 rentalUnit: {
                     include: {
-                        property: {
-                            include: {
-                                visitSlots: true
-                            }
-                        }
+                        property: true // Get property for coords/owner
                     }
                 },
-                visits: true
+                // visits: true -- REMOVED: We need global visits, not just local ones
             }
         });
 
@@ -38,12 +34,61 @@ export async function GET(
             return NextResponse.json({ error: "Listing not found" }, { status: 404 });
         }
 
+        const property = listing.rentalUnit.property;
+
+        // Fetch User's slots
+        const userSlots = await prisma.visitSlot.findMany({
+            where: {
+                userId: property.ownerId
+            }
+        });
+
+        // FETCH ALL VISITS FOR THIS LANDLORD (Global Availability Check)
+        const allLandlordVisits = await prisma.visit.findMany({
+            where: {
+                listing: {
+                    rentalUnit: {
+                        property: {
+                            ownerId: property.ownerId
+                        }
+                    }
+                },
+                status: {
+                    not: "CANCELLED"
+                }
+            }
+        });
+
         const safeListing = listing as any;
         const duration = safeListing.visitDuration || 20;
         const capacityPerSlot = 2;
 
         const availableSlots: any[] = [];
-        const visitSlots = listing.rentalUnit.property.visitSlots;
+
+        // Helper for distance
+        const getDistanceInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+            if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+            const R = 6371e3; // metres
+            const q1 = lat1 * Math.PI / 180;
+            const q2 = lat2 * Math.PI / 180;
+            const dq = (lat2 - lat1) * Math.PI / 180;
+            const dl = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(dq / 2) * Math.sin(dq / 2) +
+                Math.cos(q1) * Math.cos(q2) *
+                Math.sin(dl / 2) * Math.sin(dl / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c;
+        };
+
+        // Filter slots by location
+        const visitSlots = userSlots.filter((slot: any) => {
+            // If slot has no location, maybe ignore or assume global? Assuming required location.
+            // Dist must be <= radius
+            const dist = getDistanceInMeters(slot.latitude, slot.longitude, property.latitude!, property.longitude!);
+            return dist <= (slot.radius || 200);
+        });
 
         visitSlots.forEach((slot: any) => {
             const dateStr = format(new Date(slot.date), 'yyyy-MM-dd');
@@ -56,9 +101,9 @@ export async function GET(
 
                 const slotStartStr = format(currentTime, 'HH:mm');
 
-                // Count bookings for this specific slot
-                const bookingsCount = listing.visits.filter((visit: any) =>
-                    visit.status !== 'CANCELLED' &&
+                // Count bookings for this specific slot GLOBALLY
+                const bookingsCount = allLandlordVisits.filter((visit: any) =>
+                    // visit.status !== 'CANCELLED' && // Already filtered in query
                     format(new Date(visit.date), 'yyyy-MM-dd') === dateStr &&
                     visit.startTime === slotStartStr
                 ).length;

@@ -14,8 +14,7 @@ import LeaseModal from "@/components/modals/LeaseModal";
 import MyCodeModal from "@/components/modals/MyCodeModal";
 import { Toaster } from "react-hot-toast";
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getUnreadMessageCount from "@/app/actions/getUnreadMessageCount";
-import getDashboardAlerts from "@/app/actions/getDashboardAlerts";
+// Imports removed: getUnreadMessageCount, getDashboardAlerts
 import AuthProvider from "@/providers/AuthProvider";
 import MainLayout from "@/components/MainLayout";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -77,8 +76,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentUser = await getCurrentUser();
-  const unreadCount = await getUnreadMessageCount();
-  const dashboardAlerts = await getDashboardAlerts();
+  // Removed unreadCount fetch
+  // Removed dashboardAlerts fetch
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -113,14 +112,14 @@ export default async function RootLayout({
             <MyCodeModal currentUser={currentUser} />
             <LeaseModal currentUser={currentUser} />
             <Suspense fallback={<div></div>}>
-              <Navbar currentUser={currentUser} unreadCount={unreadCount} />
+              <Navbar currentUser={currentUser} />
             </Suspense>
             <MainLayout>
               {children}
             </MainLayout>
             <ClientFooter />
             <Suspense fallback={<div></div>}>
-              <MobileMenu currentUser={currentUser} unreadCount={unreadCount} hasPendingAlert={dashboardAlerts.hasPendingConfig} />
+              <MobileMenu currentUser={currentUser} />
             </Suspense>
           </ThemeProvider>
         </AuthProvider>

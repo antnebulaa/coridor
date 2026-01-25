@@ -1,16 +1,15 @@
-import Container from "@/components/Container";
 import EmptyState from "@/components/EmptyState";
-import ListingCard from "@/components/listings/ListingCard";
 import HomeClient from "./HomeClient";
+import LandlordCalendarClient from "./components/calendar/LandlordCalendarClient";
+import getLandlordCalendarData from "./actions/getLandlordCalendarData";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getListings from "@/app/actions/getListings"; // Fixed
+import getListings, { IListingsParams } from "@/app/actions/getListings"; // Fixed
 import getLikes from "@/app/actions/getLikes";
-import { SafeUser } from "@/types";
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: Promise<any> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<IListingsParams> }) {
   const resolvedParams = await searchParams;
   const listings = await getListings(resolvedParams);
   const currentUser = await getCurrentUser();
@@ -20,6 +19,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<any
     return (
       <EmptyState showReset />
     )
+  }
+
+  // Landlord Mode: Show Calendar
+  if (currentUser?.userMode === 'LANDLORD') {
+    const calendarData = await getLandlordCalendarData();
+    if (calendarData) {
+      return (
+        <LandlordCalendarClient
+          data={calendarData}
+          currentUser={currentUser}
+        />
+      );
+    }
   }
 
   const isSearchActive = Object.keys(resolvedParams).length > 0;

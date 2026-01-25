@@ -39,12 +39,7 @@ const getConversationById = async (
                                 property: {
                                     include: {
                                         images: true,
-                                        owner: true,
-                                        visitSlots: {
-                                            include: {
-                                                property: true
-                                            }
-                                        }
+                                        owner: true
                                     }
                                 }
                             }

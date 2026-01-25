@@ -2,25 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, Heart, LayoutDashboard, User, Home, Building2, MessageSquare } from "lucide-react";
+import { Heart, LayoutDashboard, User, Home, Building2, MessageSquare, Calendar } from "lucide-react";
 import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
-import useSearchModal from "@/hooks/useSearchModal";
 import { motion } from "framer-motion";
 import useConversation from "@/hooks/useConversation";
 
+import useUserCounters from "@/hooks/useUserCounters";
+
 interface MobileMenuProps {
     currentUser?: SafeUser | null;
-    unreadCount?: number;
-    hasPendingAlert?: boolean;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount, hasPendingAlert }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
+    const { unreadCount, hasPendingAlert } = useUserCounters(currentUser);
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
     const loginModal = useLoginModal();
-    const searchModal = useSearchModal();
     const [activePath, setActivePath] = useState(pathname);
 
     useEffect(() => {
@@ -29,8 +28,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount, hasPe
 
     const routes = [
         {
-            label: 'Accueil',
-            icon: Home,
+            label: currentUser?.userMode === 'LANDLORD' ? 'Agenda' : 'Accueil',
+            icon: currentUser?.userMode === 'LANDLORD' ? Calendar : Home,
             href: '/',
             active: activePath === '/'
         },
@@ -78,7 +77,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser, unreadCount, hasPe
 
     const isTenantProfile = pathname?.startsWith('/account/tenant-profile');
 
-    if (isOpen || isContentMode || isTenantProfile) {
+    const isPropertyEdit = pathname?.includes('/edit');
+
+    if (isOpen || isContentMode || isTenantProfile || isPropertyEdit) {
         return null;
     }
 

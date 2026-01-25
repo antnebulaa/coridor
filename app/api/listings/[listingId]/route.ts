@@ -33,6 +33,35 @@ export async function DELETE(
         return NextResponse.error();
     }
 
+    // If it's a Private Room (Sub-listing), we usually want to delete the RentalUnit itself
+    // to cleanly remove it from the Property structure (and thus from Rent Section).
+    if (listingToCheck.rentalUnit.type === 'PRIVATE_ROOM') {
+        // Deleting RentalUnit should cascade delete the Listing (via schema)
+        // We also want to delete the Physical Room if it's strictly linked?
+        // For now, let's delete the RentalUnit.
+        // Note: If we want to delete the Physical Room (table Room), we can do it if targetRoomId is set.
+        // But let's start with RentalUnit as that's what PriceSection iterates on.
+
+        await prisma.rentalUnit.delete({
+            where: { id: listingToCheck.rentalUnitId }
+        });
+
+        // Optional: Physical Room cleanup could be added here if needed.
+        if (listingToCheck.rentalUnit.targetRoomId) {
+            // Check if other units use it? Assuming 1:1 for now.
+            // await prisma.room.delete({ where: { id: listingToCheck.rentalUnit.targetRoomId } }).catch(() => {});
+            // Retaining it allows re-adding it easily. Let's keep Physical Room for now unless User deletes it explicitly?
+            // Actually user said "Supprimer la chambre". 
+            // Logic in RoomsConfig displays "roomListings" -> which are Listings.
+            // If I delete RentalUnit, the Listing is gone.
+            // Does RoomsConfig display Physical Rooms without Listings?
+            // "rentalUnits.flatMap..." -> It iterates RentalUnits.
+            // So deleting RentalUnit is sufficient.
+        }
+
+        return NextResponse.json({ success: true });
+    }
+
     const listing = await prisma.listing.deleteMany({
         where: {
             id: listingId

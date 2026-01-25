@@ -19,6 +19,7 @@ interface TenantProfilePreviewProps {
         jobType?: string | null;
     };
     rent?: number;
+    charges?: any; // { amount: number, included: boolean }
     candidateScope?: {
         compositionType: string;
         membersIds: string[];
@@ -33,6 +34,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
     user,
     tenantProfile,
     rent,
+    charges,
     candidateScope
 }) => {
     if (!tenantProfile) return null;
@@ -78,9 +80,25 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
     }, 0) || 0;
 
     // Rent Multiplier Calculation
-    const rentMultiplier = rent && totalHouseholdIncome > 0 ? (totalHouseholdIncome / rent) : 0;
-    const isSolvent = rentMultiplier >= 3;
-    const effortRate = rent && totalHouseholdIncome > 0 ? (rent / totalHouseholdIncome) * 100 : 0;
+    // Rent Multiplier Calculation
+    const chargesAmount = charges?.amount || 0;
+    const totalMonthlyCost = (rent || 0) + chargesAmount;
+
+    const rentMultiplier = totalMonthlyCost > 0 && totalHouseholdIncome > 0 ? (totalHouseholdIncome / totalMonthlyCost) : 0;
+    const effortRate = totalMonthlyCost > 0 && totalHouseholdIncome > 0 ? (totalMonthlyCost / totalHouseholdIncome) * 100 : 0;
+
+    const remainingIncome = totalHouseholdIncome - totalMonthlyCost;
+
+    let solvencyStatus = { color: 'bg-red-500', label: 'Reste à vivre faible' };
+    if (remainingIncome >= 4000) {
+        solvencyStatus = { color: 'bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 animate-pulse', label: 'Reste à vivre très élevé' };
+    } else if (remainingIncome >= 2500) {
+        solvencyStatus = { color: 'bg-purple-500', label: 'Reste à vivre élevé' };
+    } else if (remainingIncome >= 1500) {
+        solvencyStatus = { color: 'bg-green-500', label: 'Reste à vivre confortable' };
+    } else if (remainingIncome >= 800) {
+        solvencyStatus = { color: 'bg-orange-500', label: 'Reste à vivre standard' };
+    }
 
 
     return (
@@ -121,10 +139,10 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             {/* Rental Project Section */}
             {candidateScope && (
                 <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
                         <Home size={16} /> Projet de location
                     </h3>
-                    <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-3 text-sm">
+                    <div className="bg-neutral-100 rounded-2xl p-4 flex flex-col gap-3 text-sm">
                         <div className="flex justify-between">
                             <span className="text-neutral-600">Recherche</span>
                             <span className="font-medium text-neutral-900">{getCompositionLabel(candidateScope.compositionType)}</span>
@@ -155,10 +173,10 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
 
             {/* Professional Situation */}
             <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
                     <Briefcase size={16} /> Situation Professionnelle
                 </h3>
-                <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-3">
+                <div className="bg-neutral-100 rounded-xl p-4 flex flex-col gap-3">
                     <div className="flex justify-between items-center">
                         <span className="text-neutral-600">Poste</span>
                         <span className="font-medium text-neutral-900">{tenantProfile.jobTitle || "Non renseigné"}</span>
@@ -196,7 +214,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                     <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
                         <Users size={16} /> Garants ({tenantProfile.guarantors.length})
                     </h3>
-                    <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-4">
+                    <div className="bg-neutral-50 rounded-xl p-4 flex flex-col gap-4">
                         {tenantProfile.guarantors.map((g, i) => {
                             const typeTranslations: Record<string, string> = {
                                 FAMILY: 'Garant Familial',
@@ -238,10 +256,10 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
 
             {/* Financial Summary */}
             <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
                     <Wallet size={16} /> Synthèse Financière
                 </h3>
-                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
+                <div className="bg-neutral-50 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2 text-sm">
                         <span className="text-neutral-600">Revenus du foyer</span>
                         <span className="font-medium">{netSalary + partnerNetSalary} €</span>
@@ -255,7 +273,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                         <span className="font-medium">{aplAmount} €</span>
                     </div>
                     <hr className="border-neutral-300 mb-4" />
-                    <div className="flex justify-between items-center text-lg font-bold text-neutral-900">
+                    <div className="flex justify-between items-center text-lg font-medium text-neutral-900">
                         <span>Total Mensuel</span>
                         <span>{totalHouseholdIncome} €</span>
                     </div>
@@ -265,20 +283,23 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             {/* Effort Rate / Solvency */}
             {rent && (
                 <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
                         <Home size={16} /> Solvabilité
                     </h3>
                     <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-4">
                         <div className="flex justify-between items-start">
                             <div className="flex flex-col gap-1">
-                                <span className="font-bold text-lg text-neutral-900">
-                                    Revenus : {rentMultiplier.toFixed(1)}x le loyer
+                                <span className="font-medium text-lg text-neutral-900">
+                                    Revenus : {rentMultiplier.toFixed(1)} × le loyer
                                 </span>
                                 <span className="text-sm text-neutral-500">
-                                    Loyer : {rent} €
+                                    Loyer : {rent} € {chargesAmount > 0 && `+ ${chargesAmount} € charges`}
                                 </span>
                                 <span className="text-sm text-neutral-500">
                                     Taux d&apos;effort : {effortRate.toFixed(0)}%
+                                </span>
+                                <span className="text-sm text-neutral-500">
+                                    Reste à vivre : {totalHouseholdIncome - rent} €
                                 </span>
                             </div>
                         </div>
@@ -293,22 +314,20 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                                 />
                                 {/* Remaining Income */}
                                 <div
-                                    className="h-full bg-neutral-200"
+                                    className="h-full bg-green-500"
                                     style={{ width: `${Math.max(0, 100 - effortRate)}%` }}
                                 />
                             </div>
                             <div className="flex justify-between text-xs text-neutral-500 font-medium">
-                                <span>Loyer ({effortRate.toFixed(0)}%)</span>
-                                <span>Reste à vivre ({totalHouseholdIncome - rent} €)</span>
+                                <span className="text-neutral-900">Loyer </span>
+                                <span className="text-neutral-900">Reste à vivre </span>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs">
-                            <div className={`w-2 h-2 rounded-full ${isSolvent ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+                        <div className="flex items-center gap-2 text-sm">
+                            <div className={`w-4 h-4 rounded-full ${solvencyStatus.color}`}></div>
                             <span className="text-neutral-600">
-                                {isSolvent
-                                    ? "Solvabilité validée (> 3x le loyer)"
-                                    : "Solvabilité juste (< 3x le loyer)"}
+                                {solvencyStatus.label}
                             </span>
                         </div>
                     </div>

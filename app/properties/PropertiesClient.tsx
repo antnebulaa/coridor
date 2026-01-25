@@ -9,10 +9,12 @@ import { Plus } from 'lucide-react';
 
 import { SafeProperty, SafeUser, SafeRentalUnit } from "@/types";
 import Container from "@/components/Container";
-import PropertiesListRow from "./components/PropertiesListRow";
 import EmptyState from "@/components/EmptyState";
 import { Button } from '@/components/ui/Button';
+import DarkActionButton from "@/components/ui/DarkActionButton";
 import PageHeader from "@/components/PageHeader";
+import PropertyStandardCard from "./components/PropertyStandardCard";
+import PropertyColocationCard from "./components/PropertyColocationCard";
 
 interface PropertiesClientProps {
     properties: SafeProperty[];
@@ -49,6 +51,80 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
         return property.rentalUnits?.reduce((acc, unit) => acc + (unit.listings?.length || 0), 0) || 0;
     }
 
+    // Filter Logic
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'VACANT' | 'PUBLISHED' | 'OCCUPIED'>('ALL');
+
+    // Helper: Compute Counts logic
+    const computeCounts = useCallback(() => {
+        let counts = { ALL: 0, VACANT: 0, PUBLISHED: 0, OCCUPIED: 0 };
+        properties.forEach(property => {
+            const units = property.rentalUnits || [];
+            units.forEach((unit: any) => {
+                let unitListings: any[] = unit.listings || [];
+                // Handle Ghost Main Unit
+                if (unit.type === 'ENTIRE_PLACE' && unitListings.length === 0) {
+                    unitListings = [{ isPublished: false, reservations: [] }];
+                }
+
+                unitListings.forEach((l: any) => {
+                    counts.ALL++;
+                    const isOccupied = (l.reservations || []).some((r: any) => new Date(r.endDate) > new Date());
+
+                    if (isOccupied) counts.OCCUPIED++;
+                    else counts.VACANT++; // Not occupied = Vacant
+
+                    if (l.isPublished) counts.PUBLISHED++;
+                });
+            });
+        });
+        return counts;
+    }, [properties]);
+
+    const counts = computeCounts();
+
+    const filters = [
+        { label: 'Tous', value: 'ALL', count: counts.ALL },
+        { label: 'Vacants', value: 'VACANT', count: counts.VACANT },
+        { label: 'Publiés', value: 'PUBLISHED', count: counts.PUBLISHED },
+        { label: 'Loués', value: 'OCCUPIED', count: counts.OCCUPIED },
+    ];
+
+    // Helper: Filter listings for a property
+    const getFilteredListingsForProperty = (property: SafeProperty) => {
+        const allListings = (property.rentalUnits || []).flatMap(unit =>
+            (unit.listings || []).map(listing => ({
+                ...listing,
+                rentalUnit: unit,
+                images: (listing.images && listing.images.length > 0) ? listing.images : property.images
+            }))
+        );
+
+        // Fallback for Entire Place without listing object (Edge case)
+        const mainUnit = property.rentalUnits?.find((u: any) => u.type === 'ENTIRE_PLACE');
+        if (mainUnit && (!mainUnit.listings || mainUnit.listings.length === 0)) {
+            // It's a "Ghost" listing (vacant/unpublished)
+            allListings.push({
+                id: mainUnit.id,
+                rentalUnit: mainUnit,
+                isPublished: false,
+                reservations: [],
+                // ... partial mock
+            } as any);
+        }
+
+        return allListings.filter((l: any) => {
+            if (statusFilter === 'ALL') return true;
+
+            const isOccupied = (l.reservations || []).some((r: any) => new Date(r.endDate) > new Date());
+
+            if (statusFilter === 'VACANT') return !isOccupied;
+            if (statusFilter === 'OCCUPIED') return isOccupied;
+            if (statusFilter === 'PUBLISHED') return l.isPublished;
+
+            return true;
+        });
+    }
+
     return (
         <Container>
             <PageHeader
@@ -56,149 +132,97 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 subtitle="Gérez l'ensemble de vos biens et leurs annonces associées."
             />
 
-            <div className="mt-4 flex flex-col gap-0 pb-24">
+            {/* Quick Filters */}
+            <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+                {filters.map((filter) => (
+                    <button
+                        key={filter.value}
+                        onClick={() => setStatusFilter(filter.value as any)}
+                        className={`
+                            px-4 
+                            py-2 
+                            rounded-full 
+                            text-sm 
+                            font-medium 
+                            whitespace-nowrap 
+                            transition
+                            border
+                            ${statusFilter === filter.value
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-300'}
+                        `}
+                    >
+                        {filter.label} <span className={`ml-1 ${statusFilter === filter.value ? 'text-neutral-300' : 'text-neutral-400'}`}>({filter.count})</span>
+                    </button>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pb-24 mt-4">
                 {(!properties || properties.length === 0) ? (
-                    <EmptyState
-                        title="Aucune propriété trouvée"
-                        subtitle="Vous n'avez pas encore ajouté de propriété."
-                    />
+                    <div className="col-span-full">
+                        <EmptyState
+                            title="Aucune propriété trouvée"
+                            subtitle="Vous n'avez pas encore ajouté de propriété."
+                        />
+                    </div>
                 ) : (
-                    properties.map((property) => (
-                        <div key={property.id} className="bg-white mb-12">
-                            {(isColocation(property) || getTotalListings(property) === 0) && (
-                                <div className="flex justify-between items-start mb-6 border-b pb-4">
-                                    <div>
-                                        <h3 className="text-xl font-medium">
-                                            {[
-                                                (property.address || [property.addressLine1, (property.zipCode ? `${property.zipCode} ${property.city}` : property.city)].filter(Boolean).join(' ')).replace(', France', ''),
-                                                property.building && `Bât. ${property.building}`,
-                                                property.apartment && `Apt ${property.apartment}`
-                                            ].filter(Boolean).join(', ') || "Propriété sans adresse"}
-                                        </h3>
-                                        <p className="text-neutral-500 text-sm">
-                                            {getTotalListings(property)} Annonce(s)
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                    properties.map((property) => {
+                        // Apply Filter Logic
+                        const filteredPropertyItems = getFilteredListingsForProperty(property);
+                        if (filteredPropertyItems.length === 0) return null;
 
-                            {/* List of Units/Listings */}
-                            <div className="flex flex-col">
-                                {(property.rentalUnits || []).flatMap(unit => unit.listings || []).length === 0 && (
-                                    <div className="text-sm text-neutral-500 italic">Aucune annonce pour cette propriété.</div>
-                                )}
+                        const isColoc = isColocation(property);
 
-                                {/* Logic: Separate Main Unit from Rooms */}
-                                {(() => {
-                                    // 1. Get all listings from units
-                                    const allListings = (property.rentalUnits || []).flatMap(unit =>
-                                        (unit.listings || []).map(listing => ({ ...listing, rentalUnit: unit }))
-                                    );
+                        if (isColoc) {
+                            return (
+                                <PropertyColocationCard
+                                    key={property.id}
+                                    property={property}
+                                />
+                            );
+                        } else {
+                            // Standard Mode: Find the main listing
+                            // We need robustness here: what if RentalUnit['ENTIRE_PLACE'] exists but no listing?
+                            // Or what if it's a single room property not in colocation mode (edge case)?
+                            // Assuming Standard = Entire Place usually.
+                            let mainListing = property.rentalUnits?.flatMap(u => u.listings || []).find(l => l.rentalUnit.type === 'ENTIRE_PLACE');
 
-                                    // 2. Identify Main Listing (Entire Place)
-                                    // If not found in listings, try to find the unit and create a placeholder
-                                    let mainListing = allListings.find((l: any) => l.rentalUnit.type === 'ENTIRE_PLACE');
+                            // Fallback if no listing created yet (Draft property)
+                            if (!mainListing) {
+                                // Mock a listing object or handle gracefully
+                                // For now, we skip if no listing, but ideally we should show a "Draft Card".
+                                // Let's try to find ANY listing or just property info
+                                return null;
+                            }
 
-                                    if (!mainListing) {
-                                        const mainUnit = property.rentalUnits?.find((u: any) => u.type === 'ENTIRE_PLACE');
-                                        if (mainUnit) {
-                                            // Fallback: Create a displayable listing object from the unit
-                                            // We try to find a listing inside the unit that might have been missed by flatMap?
-                                            // Or just use the first listing if it exists but wasn't mapped correctly? 
-                                            // (Unlikely, flatMap covers it).
-                                            // If no listing exists, we show a placeholder (but linking to property edit might fail if no listingId).
-                                            // We'll use the unit ID as a fallback, hoping usage allows it or link is handled.
-                                            // But standard link is /properties/[id]/edit. 
-                                            // If we pass unit ID, it might 404.
-                                            // However, displaying it is better than nothing.
-                                            mainListing = {
-                                                id: mainUnit.id, // Placeholder ID
-                                                title: mainUnit.name || "Propriété principale",
-                                                category: property.category,
-                                                rentalUnit: mainUnit,
-                                                price: 0,
-                                                roomCount: property.rooms?.length || 0,
-                                                images: property.images
-                                            } as any;
-                                        }
-                                    }
+                            // Inject property images as fallback if needed (handled in card or here?)
+                            // Card handles data.images. 
+                            const enrichedListing = {
+                                ...mainListing,
+                                images: (mainListing.images && mainListing.images.length > 0) ? mainListing.images : property.images
+                            };
 
-                                    // 3. Identify Sub Listings (Rooms)
-                                    const subListings = allListings
-                                        .filter((l: any) => l.rentalUnit.type !== 'ENTIRE_PLACE')
-                                        // Filter out duplicates if "Principal" is actually the main listing showing as room?
-                                        // No, leave data as is.
-                                        .sort((a: any, b: any) => (a.rentalUnit.name || '').localeCompare(b.rentalUnit.name || ''));
-
-                                    // 4. Calculate Total Rent for Main Listing header
-                                    let displayMainListing = mainListing;
-                                    if (mainListing && subListings.length > 0) {
-                                        const totalRent = subListings.reduce((sum: number, item: any) => sum + (Number(item.price) || 0), 0);
-                                        // Only override price if we have rooms active
-                                        displayMainListing = { ...mainListing, price: totalRent };
-                                    }
-
-                                    return (
-                                        <>
-                                            {/* 1. Main Listing (Header) */}
-                                            {displayMainListing && (
-                                                <div className="relative z-10">
-                                                    <PropertiesListRow
-                                                        key={displayMainListing.id}
-                                                        data={displayMainListing}
-                                                        currentUser={currentUser}
-                                                        isMainProperty={subListings.length > 0}
-                                                        isColocation={isColocation(property)}
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {/* 2. Sub Listings */}
-                                            {subListings.map((listing: any) => (
-                                                <div
-                                                    key={listing.id}
-                                                    className="pl-4 md:pl-8 relative"
-                                                >
-                                                    <PropertiesListRow
-                                                        key={listing.id}
-                                                        data={listing}
-                                                        currentUser={currentUser}
-                                                        isSmall
-                                                    />
-                                                </div>
-                                            ))}
-
-                                            {/* 3. Add Room Button (Under last room) */}
-                                            {isColocation(property) && (
-                                                <div className="pl-4 md:pl-8 pt-2">
-                                                    <Button
-                                                        onClick={() => rentModal.onOpen(undefined, property)}
-                                                        variant="outline"
-                                                        className="w-full md:w-auto justify-start"
-                                                        icon={Plus}
-                                                    >
-                                                        Ajouter une chambre
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                        </div>
-                    ))
+                            return (
+                                <PropertyStandardCard
+                                    key={mainListing.id}
+                                    data={enrichedListing}
+                                    property={property}
+                                    currentUser={currentUser}
+                                />
+                            );
+                        }
+                    })
                 )}
             </div>
 
             {/* Floating Action Button (FAB) for Add Property */}
             <div className="fixed bottom-24 right-6 md:bottom-10 md:right-10 z-50">
-                <Button
+                <DarkActionButton
                     onClick={() => rentModal.onOpen()}
-                    className="rounded-full shadow-lg"
                     icon={Plus}
                 >
-                    Ajouter un bien
-                </Button>
+                    Ajouter un bien en location
+                </DarkActionButton>
             </div>
         </Container>
     );

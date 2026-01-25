@@ -48,7 +48,7 @@ export async function POST(
     } = body;
 
     // Validate essential fields
-    if (!title || !description || !price || (!location && !propertyId)) {
+    if (!title || !description || (price === undefined || price === null || price === '') || (!location && !propertyId)) {
         return NextResponse.error();
     }
 

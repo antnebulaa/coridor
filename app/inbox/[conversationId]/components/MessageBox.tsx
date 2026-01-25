@@ -207,7 +207,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     "flex flex-col gap-2 bg-white border border-gray-200 p-4 rounded-2xl",
                                     isOwn ? "rounded-br-none" : "rounded-bl-none"
                                 )}>
-                                    <div className="font-semibold text-gray-900">
+                                    <div className="font-medium text-gray-900">
                                         {data.sender?.name || 'Le propriétaire'} est intéressé par votre profil et vous propose une visite.
                                     </div>
                                     <div className="text-gray-500 mb-2">
@@ -220,7 +220,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             onOpenVisitSlots && onOpenVisitSlots();
                                         }}
                                         className="
-                                        px-4 py-2 bg-black text-white rounded-lg text-sm font-bold
+                                        px-4 py-2 bg-black text-white rounded-lg text-sm font-medium
                                         hover:bg-neutral-800 transition w-fit
                                         disabled:opacity-50 disabled:cursor-not-allowed
                                     "

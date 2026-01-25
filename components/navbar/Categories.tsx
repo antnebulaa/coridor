@@ -1,10 +1,9 @@
 'use client';
 
 import {
-    Home,
-    Building2,
-    Ship
-} from 'lucide-react';
+    HomeModernIcon,
+    BuildingOfficeIcon
+} from '@heroicons/react/24/outline';
 import Container from '../Container';
 import CategoryBox from './CategoryBox';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -12,13 +11,12 @@ import { usePathname, useSearchParams } from 'next/navigation';
 export const categories = [
     {
         label: 'Maison',
-        icon: Home,
-        image: '/images/house_icon.jpg',
+        icon: HomeModernIcon,
         description: 'Une maison entière pour vous !',
     },
     {
         label: 'Appartement',
-        icon: Building2,
+        icon: BuildingOfficeIcon,
         description: 'Un appartement cosy !',
     },
 ];
@@ -43,7 +41,6 @@ const Categories = () => {
                         label={item.label}
                         selected={category === item.label}
                         icon={item.icon}
-                        image={item.image}
                     />
                 ))}
             </div>

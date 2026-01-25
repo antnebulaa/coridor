@@ -6,7 +6,8 @@ interface RentModalStore {
     isOpen: boolean;
     editingListing?: SafeListing | null;
     propertyContext?: SafeProperty | null; // Phase 3: Add Unit Context
-    onOpen: (listing?: SafeListing, property?: SafeProperty) => void;
+    mode: 'FULL' | 'ROOM_CONFIG';
+    onOpen: (listing?: SafeListing, property?: SafeProperty, mode?: 'FULL' | 'ROOM_CONFIG') => void;
     onClose: () => void;
 }
 
@@ -14,8 +15,9 @@ const useRentModal = create<RentModalStore>((set) => ({
     isOpen: false,
     editingListing: null,
     propertyContext: null,
-    onOpen: (listing, property) => set({ isOpen: true, editingListing: listing, propertyContext: property }),
-    onClose: () => set({ isOpen: false, editingListing: null, propertyContext: null }),
+    mode: 'FULL',
+    onOpen: (listing, property, mode = 'FULL') => set({ isOpen: true, editingListing: listing, propertyContext: property, mode }),
+    onClose: () => set({ isOpen: false, editingListing: null, propertyContext: null, mode: 'FULL' }),
 }));
 
 export default useRentModal;

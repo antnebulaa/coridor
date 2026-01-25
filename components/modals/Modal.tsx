@@ -26,6 +26,8 @@ interface ModalProps {
     totalSteps?: number;
     closeButtonPosition?: 'left' | 'right';
     closeButtonVariant?: 'default' | 'transparent-white';
+    isLoading?: boolean;
+    actionButtonComponent?: React.FC<any>;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -37,6 +39,7 @@ const Modal: React.FC<ModalProps> = ({
     footer,
     actionLabel,
     disabled,
+    isLoading, // Destructure
     secondaryAction,
     secondaryActionLabel,
     className,
@@ -48,7 +51,8 @@ const Modal: React.FC<ModalProps> = ({
     currentStep,
     totalSteps,
     closeButtonPosition = 'right',
-    closeButtonVariant = 'default'
+    closeButtonVariant = 'default',
+    actionButtonComponent: ActionButtonComponent
 }) => {
     const [showModal, setShowModal] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -86,7 +90,7 @@ const Modal: React.FC<ModalProps> = ({
     }, [isOpen]);
 
     const handleClose = useCallback(() => {
-        if (disabled) {
+        if (isLoading) { // Only block close if properly loading/submitting
             return;
         }
 
@@ -94,7 +98,7 @@ const Modal: React.FC<ModalProps> = ({
         setTimeout(() => {
             onClose();
         }, 300);
-    }, [disabled, onClose]);
+    }, [isLoading, onClose]);
 
     // Touch Handlers
     const onTouchStart = (e: React.TouchEvent) => {
@@ -139,20 +143,20 @@ const Modal: React.FC<ModalProps> = ({
     };
 
     const handleSubmit = useCallback(() => {
-        if (disabled) {
+        if (disabled || isLoading) {
             return;
         }
 
         onSubmit();
-    }, [disabled, onSubmit]);
+    }, [disabled, isLoading, onSubmit]);
 
     const handleSecondaryAction = useCallback(() => {
-        if (disabled || !secondaryAction) {
+        if (isLoading || !secondaryAction) { // Allow back even if disabled (validation error), but block if loading
             return;
         }
 
         secondaryAction();
-    }, [disabled, secondaryAction]);
+    }, [isLoading, secondaryAction]);
 
     if (!isOpen) {
         return null;
@@ -309,7 +313,7 @@ const Modal: React.FC<ModalProps> = ({
                                     {secondaryAction && secondaryActionLabel && (
                                         <Button
                                             variant="outline"
-                                            disabled={disabled}
+                                            disabled={isLoading} // Only disable back if loading
                                             onClick={handleSecondaryAction}
                                             className="w-auto flex-1 rounded-full h-[50px] text-[16px] !border-neutral-200 !border-[1px] hover:!border-black"
                                         >
@@ -318,13 +322,25 @@ const Modal: React.FC<ModalProps> = ({
                                     )}
 
                                     {actionLabel && (
-                                        <Button
-                                            disabled={disabled}
-                                            onClick={handleSubmit}
-                                            className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
-                                        >
-                                            {actionLabel}
-                                        </Button>
+                                        ActionButtonComponent ? (
+                                            <ActionButtonComponent
+                                                disabled={disabled || isLoading}
+                                                loading={isLoading}
+                                                onClick={handleSubmit}
+                                                className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
+                                                fullWidth // Pass fullWidth if the component supports it, or let flex-1 handle width
+                                            >
+                                                {actionLabel}
+                                            </ActionButtonComponent>
+                                        ) : (
+                                            <Button
+                                                disabled={disabled || isLoading}
+                                                onClick={handleSubmit}
+                                                className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
+                                            >
+                                                {actionLabel}
+                                            </Button>
+                                        )
                                     )}
                                 </div>
                                 {footer}

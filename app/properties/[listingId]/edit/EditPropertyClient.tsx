@@ -20,6 +20,7 @@ import PhotosSection from "./components/PhotosSection";
 import VisitsSection from "./components/VisitsSection";
 import StatusSection from "./components/StatusSection";
 import RoomsConfigSection from "./components/RoomsConfigSection";
+import LeaseTypeSection from "./components/LeaseTypeSection";
 import { sidebarLinks } from "./constants";
 
 
@@ -40,6 +41,7 @@ export type SectionType =
     | 'amenities'
     | 'furniture'
     | 'photos'
+    | 'leaseType'
     | 'visits'
     | 'lease'
     | 'price'
@@ -51,8 +53,6 @@ export type SectionType =
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Plus, ArrowLeft } from "lucide-react";
-
-// ... imports
 
 const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     listing,
@@ -77,14 +77,6 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         if (sectionParam && sectionTitles[sectionParam as SectionType]) {
             setActiveSection(sectionParam as SectionType);
             setShowContent(true);
-            // Derive tab from section if possible, but simplistic map:
-            const tabMap: Record<string, TabType> = {
-                'visits': 'location', // Visits is in Location tab? No, let's check constants.
-                // Actually VisitsSection is usually in Logement or Location?
-                // sidebarLinks is imported effectively. 
-                // I'll just set the section and content, the Sidebar might desync but the content will show.
-            };
-            // For now, just showing content is enough.
         }
     }, [searchParams]);
 
@@ -123,6 +115,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         amenities: 'Atouts',
         furniture: 'Équipements',
         photos: 'Gestion des photos',
+        leaseType: 'Mode de location',
         visits: 'Visites',
         lease: 'Bail',
         price: 'Loyer',
@@ -161,6 +154,8 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                     activeRoomId={activeRoomId}
                     setActiveRoomId={setActiveRoomId}
                 />;
+            case 'leaseType':
+                return <LeaseTypeSection listing={listing} currentUser={currentUser} />;
             case 'visits':
                 return <VisitsSection listing={listing} />;
             case 'lease':

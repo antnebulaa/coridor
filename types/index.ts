@@ -148,6 +148,11 @@ export type SafeListing = Omit<
     // Added for facade compatibility
     locationValue: string | null;
     description: string;
+    reservations?: SafeReservation[];
+    charges?: any; // { amount: number, included: boolean }
+
+    // Global Availability for Landlord Conflict Checking
+    userGlobalSlots?: SafeVisitSlot[];
 };
 
 export type SafeReservation = Omit<

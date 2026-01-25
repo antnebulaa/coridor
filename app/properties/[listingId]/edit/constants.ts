@@ -1,4 +1,8 @@
-import { Home, Key, Settings } from "lucide-react";
+import {
+    Home, Key, Settings,
+    Type, AlignLeft, DoorOpen, MapPin, Sparkles, Armchair, Camera,
+    Calendar, FileText, Euro, User, FileCheck, Eye, Trash2
+} from "lucide-react";
 import { TabType, SectionType } from "./EditPropertyClient";
 
 export const sidebarTabs = [
@@ -7,26 +11,27 @@ export const sidebarTabs = [
     { id: 'preferences', icon: Settings, label: 'Préférences' },
 ] as const;
 
-export const sidebarLinks: Record<TabType, { id: string; label: string }[]> = {
+export const sidebarLinks: Record<TabType, { id: string; label: string; icon: any }[]> = {
     logement: [
-        { id: 'title', label: 'Titre de l\'annonce' },
-        { id: 'description', label: 'Description détaillée' },
-        { id: 'rooms', label: 'Configuration des chambres' },
-        { id: 'location', label: 'Emplacement' },
-        { id: 'category', label: 'Type de logement' },
-        { id: 'amenities', label: 'Atouts' },
-        { id: 'furniture', label: 'Équipements' },
-        { id: 'photos', label: 'Gestion des photos' },
+        { id: 'title', label: 'Titre de l\'annonce', icon: Type },
+        { id: 'description', label: 'Description détaillée', icon: AlignLeft },
+        { id: 'rooms', label: 'Configuration des chambres', icon: DoorOpen },
+        { id: 'location', label: 'Emplacement', icon: MapPin },
+        { id: 'category', label: 'Type de logement', icon: Home },
+        { id: 'amenities', label: 'Atouts', icon: Sparkles },
+        { id: 'furniture', label: 'Équipements', icon: Armchair },
+        { id: 'photos', label: 'Gestion des photos', icon: Camera },
     ],
     location: [
-        { id: 'visits', label: 'Visites' },
-        { id: 'lease', label: 'Bail' },
-        { id: 'price', label: 'Loyer' },
-        { id: 'tenant', label: 'Profil locataire' },
-        { id: 'application', label: 'Paramètres de candidature' },
+        { id: 'leaseType', label: 'Mode de location', icon: Home },
+        { id: 'visits', label: 'Visites', icon: Calendar },
+        { id: 'lease', label: 'Bail', icon: FileText },
+        { id: 'price', label: 'Loyer', icon: Euro },
+        { id: 'tenant', label: 'Profil locataire', icon: User },
+        { id: 'application', label: 'Paramètres de candidature', icon: FileCheck },
     ],
     preferences: [
-        { id: 'status', label: 'Statut de l\'annonce' },
-        { id: 'delete', label: 'Supprimer l\'annonce' },
+        { id: 'status', label: 'Statut de l\'annonce', icon: Eye },
+        { id: 'delete', label: 'Supprimer l\'annonce', icon: Trash2 },
     ]
 };

@@ -42,7 +42,11 @@ export async function POST(
             }
         },
         include: {
-            rentalUnit: true
+            rentalUnit: {
+                include: {
+                    property: true // Get property for coordinates
+                }
+            }
         }
     });
 
@@ -50,18 +54,20 @@ export async function POST(
         return NextResponse.json({ error: "Listing not found or unauthorized" }, { status: 404 });
     }
 
-    const propertyId = listing.rentalUnit.propertyId;
+    const property = listing.rentalUnit.property;
 
     try {
         console.log("Processing visit slots for listing:", listingId);
-        console.log("Property ID:", propertyId);
+        console.log("User ID:", currentUser.id);
+        console.log("Location:", property.address, property.latitude, property.longitude);
         console.log("Dates to update:", dates);
         console.log("New slots count:", slots.length);
 
         await prisma.$transaction(async (tx: any) => {
             console.log("Starting transaction...");
 
-            // 1. Delete existing slots for the specific dates
+            // 1. Delete existing slots for the specific dates AND location
+            // We only remove slots that are tied to THIS property's location
             if (dates && dates.length > 0) {
                 console.log("Deleting slots for dates:", dates);
                 // Convert ISO strings to Date objects for Prisma
@@ -69,7 +75,9 @@ export async function POST(
 
                 const deleteResult = await tx.visitSlot.deleteMany({
                     where: {
-                        propertyId: propertyId,
+                        userId: currentUser.id, // User owned
+                        latitude: property.latitude, // Exact location match
+                        longitude: property.longitude,
                         date: {
                             in: dateObjects
                         }
@@ -78,15 +86,19 @@ export async function POST(
                 console.log("Deleted count:", deleteResult.count);
             }
 
-            // 2. Create new slots
+            // 2. Create new slots linked to User and Location
             if (slots.length > 0) {
                 console.log("Creating new slots...");
                 const createResult = await tx.visitSlot.createMany({
                     data: slots.map((slot: any) => ({
-                        propertyId: propertyId,
+                        userId: currentUser.id,
                         date: new Date(slot.date), // Explicitly convert to Date object
                         startTime: slot.startTime,
-                        endTime: slot.endTime
+                        endTime: slot.endTime,
+                        latitude: property.latitude || 0,
+                        longitude: property.longitude || 0,
+                        address: property.address || `${property.addressLine1}, ${property.city}`,
+                        radius: 200 // Default radius
                     }))
                 });
                 console.log("Created count:", createResult.count);

@@ -5,7 +5,7 @@ import { PropertyImage } from "@prisma/client";
 import { X } from "lucide-react";
 import Image from "next/image";
 import CustomToast from "@/components/ui/CustomToast";
-import { DragDropContext } from "@hello-pangea/dnd";
+
 import { Button } from "@/components/ui/Button";
 import PhotoGrid from "./PhotoGrid";
 import axios from "axios";
@@ -104,15 +104,13 @@ const SelectUnassignedModal: React.FC<SelectUnassignedModalProps> = ({
                             <p>Aucune photo non classée disponible.</p>
                         </div>
                     ) : (
-                        <DragDropContext onDragEnd={() => { }}>
-                            <PhotoGrid
-                                id="select-unassigned"
-                                images={unassignedImages}
-                                selectable
-                                selectedIds={selectedIds}
-                                onSelect={handleSelect}
-                            />
-                        </DragDropContext>
+                        <PhotoGrid
+                            id="select-unassigned"
+                            images={unassignedImages}
+                            selectable
+                            selectedIds={selectedIds}
+                            onSelect={handleSelect}
+                        />
                     )}
                 </div>
 

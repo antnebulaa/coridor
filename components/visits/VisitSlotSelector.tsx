@@ -138,13 +138,13 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
     return (
         <div className="flex flex-col h-full bg-white dark:bg-neutral-900">
             <div className="p-6 border-b border-gray-200 dark:border-neutral-800">
-                <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Choisissez la date de consultation</h3>
+                <h3 className="text-xl font-medium text-neutral-800 dark:text-white">Choisissez la date de consultation</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Ces créneaux correspondent à des visites groupées (2 candidats maximum).
                 </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-0 py-2">
+            <div className="flex-1 overflow-y-auto px-6 py-6">
                 {uniqueDates.map((dateStr) => {
                     const dateObj = parseISO(dateStr);
                     const isOpen = openDate === dateStr;
@@ -154,9 +154,9 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                         <div key={dateStr} className="border border-gray-200 dark:border-neutral-800 rounded-lg overflow-hidden mb-3">
                             <button
                                 onClick={() => setOpenDate(isOpen ? null : dateStr)}
-                                className="w-full flex items-center justify-between px-2 py-3 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 transition"
+                                className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 hover:bg-gray-50 dark:hover:bg-neutral-800 transition"
                             >
-                                <span className="font-semibold text-neutral-800 dark:text-white capitalize">
+                                <span className="font-medium text-neutral-800 dark:text-white capitalize">
                                     {format(dateObj, 'EEEE d MMMM yyyy', { locale: fr })}
                                 </span>
                                 {isOpen ? <ChevronUp size={20} className="text-blue-600 dark:text-blue-400" /> : <ChevronDown size={20} className="text-gray-400" />}
@@ -164,7 +164,7 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
 
                             {isOpen && (
                                 <div
-                                    className="p-2 bg-blue-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800"
+                                    className="p-4 bg-blue-50 dark:bg-neutral-800/50 border-t border-gray-100 dark:border-neutral-800"
                                     style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}
                                 >
                                     {daySlots.map((slot, idx) => {
@@ -177,10 +177,10 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                                                 onClick={() => handleSelectSlot(slot)}
                                                 className={`
                                                     w-full
-                                                    px-2 py-2 rounded-md font-semibold text-sm
+                                                    px-2 py-2 rounded-xl font-normal text-sm
                                                     transition text-center truncate
                                                     ${isSelected
-                                                        ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-600 ring-offset-1 dark:ring-offset-neutral-900'
+                                                        ? 'bg-blue-600 text-white shadow-lg dark:ring-offset-neutral-900'
                                                         : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-800/50'}
                                                 `}
                                             >

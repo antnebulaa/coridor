@@ -9,7 +9,7 @@ interface EditPropertySidebarProps {
     onChangeTab: (tab: TabType) => void;
     onChangeSection: (section: SectionType) => void;
     subtitles?: Record<string, string>;
-    customLinks?: Record<TabType, { id: string; label: string }[]>;
+    customLinks?: Record<TabType, { id: string; label: string; icon?: any }[]>;
 }
 
 const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
@@ -60,28 +60,38 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                             key={link.id}
                             onClick={() => !isTitle && onChangeSection(link.id as SectionType)}
                             className={`
-                                p-3 
+                                p-1.5 
                                 rounded-xl 
                                 transition
-                                flex flex-col
+                                flex flex-row items-center gap-3
                                 ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800' : isTitle ? '' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer'}
                             `}
                         >
-                            {!isTitle && (
-                                <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
-                                    {link.label}
-                                </span>
-                            )}
-                            {subtitles?.[link.id] && (
-                                <span className={`
-                                    truncate mt-0.5
-                                    ${isTitle
-                                        ? 'text-[20px] font-medium text-black dark:text-white leading-tight'
-                                        : 'text-xs text-neutral-500 dark:text-neutral-400 font-normal'}
-                                `}>
-                                    {subtitles[link.id]}
-                                </span>
-                            )}
+                            <div className={`
+                                w-10 h-10 rounded-lg 
+                                bg-[#FBFBFB] dark:bg-neutral-700 
+                                flex items-center justify-center shrink-0
+                            `}>
+                                {link.icon && <link.icon size={20} className="text-neutral-600 dark:text-neutral-300" />}
+                            </div>
+
+                            <div className="flex flex-col min-w-0">
+                                {!isTitle && (
+                                    <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                                        {link.label}
+                                    </span>
+                                )}
+                                {subtitles?.[link.id] && (
+                                    <span className={`
+                                        truncate mt-0.5
+                                        ${isTitle
+                                            ? 'text-[20px] font-medium text-black dark:text-white leading-tight'
+                                            : 'text-xs text-neutral-500 dark:text-neutral-400 font-normal'}
+                                    `}>
+                                        {subtitles[link.id]}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     );
                 })}

@@ -24,7 +24,6 @@ export default async function getAllFavorites() {
                             include: {
                                 owner: true,
                                 images: true,
-                                visitSlots: true,
                             }
                         },
                         images: true,
@@ -128,10 +127,6 @@ export default async function getAllFavorites() {
                             emailVerified: listing.rentalUnit.property.owner.emailVerified?.toISOString() || null,
                             birthDate: listing.rentalUnit.property.owner.birthDate?.toISOString() || null
                         },
-                        visitSlots: listing.rentalUnit.property.visitSlots.map((slot: any) => ({
-                            ...slot,
-                            date: slot.date.toISOString()
-                        }))
                     },
                     images: listing.rentalUnit.images
                 },
