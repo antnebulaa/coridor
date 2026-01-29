@@ -36,7 +36,23 @@ const getConversations = async () => {
                             include: {
                                 property: {
                                     include: {
-                                        owner: true
+                                        owner: true,
+                                        images: {
+                                            include: {
+                                                room: true
+                                            }
+                                        },
+                                        rooms: {
+                                            include: {
+                                                images: true
+                                            }
+                                        }
+                                    }
+                                },
+                                images: true,
+                                targetRoom: {
+                                    include: {
+                                        images: true
                                     }
                                 }
                             }
@@ -52,7 +68,48 @@ const getConversations = async () => {
             }
         });
 
-        return conversations;
+        const safeConversations = conversations.map((conversation: any) => {
+            const listing = conversation.listing;
+            if (!listing) return conversation;
+
+            const unitImages = listing.rentalUnit?.images || [];
+            const targetRoomImages = listing.rentalUnit?.targetRoom?.images || [];
+
+            const targetRoomId = listing.rentalUnit?.targetRoom?.id;
+            const propertyImagesRaw = listing.rentalUnit?.property?.images || [];
+
+            const propertyImages = propertyImagesRaw.filter((img: any) => {
+                if (!img.roomId) return true;
+                if (img.roomId === targetRoomId) return true;
+                return img.room && !img.room.name.toLowerCase().startsWith('chambre');
+            });
+
+            const rooms = listing.rentalUnit.property.rooms || [];
+            const roomsImages = rooms.flatMap((room: any) => {
+                if (room.id !== targetRoomId && room.name.toLowerCase().startsWith('chambre')) {
+                    return [];
+                }
+                return room.images || [];
+            });
+
+            const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
+            const uniqueUrls = new Set();
+            const aggregatedImages = allImages.filter(img => {
+                if (uniqueUrls.has(img.url)) return false;
+                uniqueUrls.add(img.url);
+                return true;
+            });
+
+            return {
+                ...conversation,
+                listing: {
+                    ...listing,
+                    images: aggregatedImages
+                }
+            };
+        });
+
+        return safeConversations;
     } catch (error: any) {
         console.error("GET_CONVERSATIONS_ERROR", error);
         // Fallback: Fetch conversations without deep listing relations to avoid crash on data integrity issues

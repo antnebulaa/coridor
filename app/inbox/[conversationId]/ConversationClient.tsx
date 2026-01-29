@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { SafeUser, SafeMessage, SafeListing } from "@/types";
 import clsx from "clsx";
+import { format } from "date-fns";
 import Header from "./components/Header";
 import Body from "./components/Body";
 import Form from "./components/Form";
@@ -36,6 +37,13 @@ interface ConversationClientProps {
     } | null;
     listing?: (SafeListing & { user?: SafeUser }) | null;
     applicationId?: string | null;
+    conversationId?: string;
+    confirmedVisit?: {
+        id: string;
+        date: string;
+        startTime: string;
+        endTime: string;
+    } | null;
 }
 
 const ConversationClient: React.FC<ConversationClientProps> = ({
@@ -47,12 +55,14 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     showDossier,
     listing,
     candidateScope,
-    applicationId
+    applicationId,
+    conversationId,
+    confirmedVisit
 }) => {
     const router = useRouter();
 
     const [messages, setMessages] = useState(initialMessages);
-    const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE');
+    const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE' || m.body?.startsWith('VISIT_CONFIRMED|'));
 
     useEffect(() => {
         setMessages(initialMessages);
@@ -121,6 +131,97 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         : null;
     const unit = isImperial ? 'sq ft' : 'm²';
 
+    // Helper to generate .ics file
+    const downloadICS = useCallback(() => {
+        if (!confirmedVisit || !listing) return;
+
+        const { date, startTime, endTime } = confirmedVisit;
+        // Clean date string to YYYYMMDD
+        const dateOnly = date.split('T')[0].replace(/-/g, '');
+        const startStr = startTime.replace(':', '') + '00';
+        const endStr = endTime.replace(':', '') + '00';
+
+        const startDate = `${dateOnly}T${startStr}`;
+        const endDate = `${dateOnly}T${endStr}`;
+
+        // Construct title: T{roomCount} {surface}m² {city}
+        const roomInfo = listing.roomCount ? `T${listing.roomCount}` : (listing.category || 'Visite');
+        const surfaceInfo = listing.surface ? ` ${listing.surface}m²` : '';
+        const title = `Visite - ${roomInfo}${surfaceInfo} à ${listing.city || ''}`;
+
+        // Construct full address
+        const parts = [
+            listing.addressLine1,
+            listing.zipCode,
+            listing.city
+        ].filter(Boolean);
+
+        const location = parts.join(' ');
+
+        const icsContent = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'BEGIN:VEVENT',
+            `DTSTART:${startDate}`,
+            `DTEND:${endDate}`,
+            `SUMMARY:${title}`,
+            `LOCATION:${location}`,
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\n');
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'visite.ics');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }, [confirmedVisit, listing]);
+
+    // Timeline Steps Logic
+    const timelineSteps = useMemo(() => {
+        const steps: { title: string; description: any; completed: boolean }[] = [
+            {
+                title: "Candidature envoyée",
+                description: "Le propriétaire a bien reçu votre dossier et étudie votre profil.",
+                completed: true
+            }
+        ];
+
+        if (hasProposedVisit) {
+            steps.push({
+                title: "Proposition de visite",
+                description: "Votre profil intéresse le propriétaire qui vous propose une visite.",
+                completed: true
+            });
+        }
+
+        if (confirmedVisit) {
+            let dateFormatted = confirmedVisit.date;
+            try {
+                dateFormatted = format(new Date(confirmedVisit.date), 'dd/MM/yyyy');
+            } catch (e) { }
+
+            steps.push({
+                title: "Rendez-vous confirmé",
+                description: (
+                    <span>
+                        Visite programmée le <button onClick={downloadICS} className="font-medium underline text-neutral-700 hover:text-black">
+                            {dateFormatted}
+                        </button> à <button onClick={downloadICS} className="font-medium underline text-neutral-700 hover:text-black">
+                            {confirmedVisit.startTime}
+                        </button>.
+                    </span>
+                ),
+                completed: true
+            });
+        }
+
+        return steps;
+    }, [hasProposedVisit, confirmedVisit, downloadICS]);
+
     return (
         <div className="h-full flex flex-row">
             <div className="h-full flex flex-col flex-1 min-w-0">
@@ -139,6 +240,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         onToggleDossier={toggleDossier}
                         onOpenListingRecap={handleOpenListingRecap}
                         showDossier={showDossier}
+                        confirmedVisit={confirmedVisit}
                     />
                 </div>
                 <div className="flex-none bg-white dark:bg-neutral-900">
@@ -315,7 +417,11 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                 <VisitSlotSelector
                                     listingId={listing.id}
                                     currentUser={currentUser}
-                                    onSuccess={() => setIsVisitSelectionOpen(false)}
+                                    onSuccess={() => {
+                                        setIsVisitSelectionOpen(false);
+                                        router.refresh();
+                                    }}
+                                    conversationId={conversationId}
                                 />
                             </div>
                         ) : (
@@ -330,7 +436,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <div className="flex flex-col gap-1">
-                                            <div className="text-xl font-bold dark:text-white">
+                                            <div className="text-2xl font-medium dark:text-white">
                                                 {rent} € <span className="font-light text-neutral-500 dark:text-neutral-400 text-sm">/ mois</span>
                                             </div>
                                             <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -339,15 +445,40 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             <div className="text-sm text-neutral-500 dark:text-neutral-400">
                                                 Propriétaire : {listing?.user?.name}
                                             </div>
-                                            <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                            <div className="text-md text-neutral-500 dark:text-neutral-400 mt-1">
                                                 {listing?.roomCount} pièces • {listing?.guestCount} chambres • {displaySurface} {unit}
                                             </div>
-                                            <div className="mt-4">
-                                                <div className="font-bold text-sm text-neutral-900 dark:text-white">
-                                                    Vous avez envoyé une candidature
-                                                </div>
-                                                <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                                                    {listing?.user?.name} a bien reçu votre résumé et dossier et va maintenant étudier votre profil.
+                                            <div className="mt-8 mb-12">
+                                                <div className="flex flex-col">
+                                                    {timelineSteps.map((step, index) => {
+                                                        const isLast = index === timelineSteps.length - 1;
+                                                        return (
+                                                            <div key={index} className="relative pl-6 pb-8 last:pb-0">
+                                                                {/* Line */}
+                                                                {!isLast && (
+                                                                    <div
+                                                                        className="absolute left-[3.5px] top-3 w-px bg-neutral-200 dark:bg-neutral-800 -bottom-2 mt-2 mb-2"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                )}
+
+                                                                {/* Dot */}
+                                                                <div
+                                                                    className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-neutral-900 dark:bg-white z-10"
+                                                                    aria-hidden="true"
+                                                                />
+
+                                                                <div className="flex flex-col gap-1">
+                                                                    <div className="font-medium text-base text-neutral-900 dark:text-white leading-none mt-0.5">
+                                                                        {step.title}
+                                                                    </div>
+                                                                    <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                                                                        {step.description}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>

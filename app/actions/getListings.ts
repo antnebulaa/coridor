@@ -240,7 +240,11 @@ export default async function getListings(
                         property: {
                             include: {
                                 owner: true,
-                                images: true,
+                                images: {
+                                    include: {
+                                        room: true
+                                    }
+                                },
                                 rooms: {
                                     include: {
                                         images: true
@@ -249,7 +253,11 @@ export default async function getListings(
                             }
                         },
                         images: true,
-                        targetRoom: true
+                        targetRoom: {
+                            include: {
+                                images: true
+                            }
+                        }
                     }
                 },
             },
@@ -259,9 +267,44 @@ export default async function getListings(
         // Mapper to SafeListing with Flattened Facade
         const safeListings = listings.map((listing: any) => {
             const unitImages = listing.rentalUnit.images || [];
-            const propertyImages = listing.rentalUnit.property.images || [];
-            const aggregatedImages = [...unitImages, ...propertyImages];
-            const itemsRooms = listing.rentalUnit.property.rooms || [];
+            const targetRoomImages = listing.rentalUnit.targetRoom?.images || [];
+
+            const targetRoomId = listing.rentalUnit.targetRoom?.id;
+            const propertyImagesRaw = listing.rentalUnit.property.images || [];
+
+            // Filter out images of OTHER bedrooms (keep common areas like Salon/Cuisine + target room)
+            const propertyImages = propertyImagesRaw.filter((img: any) => {
+                if (!img.roomId) return true; // Global property image
+                if (img.roomId === targetRoomId) return true; // Target room image
+                // If it has a room, check name. If it starts with 'Chambre' and is not target, exclude.
+                // Otherwise (Salon, Cuisine, SDB...), keep it.
+                return img.room && !img.room.name.toLowerCase().startsWith('chambre');
+            });
+
+            // Aggregating images from:
+            // 1. Rental Unit (Specific to this listing/unit)
+            // 2. Target Room (The physical room being rented)
+            // 3. Property (Common areas images directly attached to property)
+            // 4. Other Rooms (Common areas like Salon/Cuisine, excluding OTHER bedrooms)
+
+            const rooms = listing.rentalUnit.property.rooms || [];
+            const roomsImages = rooms.flatMap((room: any) => {
+                // Exclude OTHER bedrooms
+                if (room.id !== targetRoomId && room.name.toLowerCase().startsWith('chambre')) {
+                    return [];
+                }
+                return room.images || [];
+            });
+
+            const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
+            const uniqueUrls = new Set();
+            const aggregatedImages = allImages.filter(img => {
+                if (uniqueUrls.has(img.url)) return false;
+                uniqueUrls.add(img.url);
+                return true;
+            });
+
+            const itemsRooms = rooms;
 
             const property = listing.rentalUnit.property;
             const unit = listing.rentalUnit;

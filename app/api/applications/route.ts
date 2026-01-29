@@ -106,20 +106,44 @@ export async function POST(
         }
 
         // Get tenant candidate scope
-        const candidateScope = await prisma.tenantCandidateScope.findFirst({
+        let candidateScope = await prisma.tenantCandidateScope.findFirst({
             where: {
-                creatorUserId: currentUser.id
+                OR: [
+                    { creatorUserId: currentUser.id },
+                    { membersIds: { has: currentUser.id } }
+                ]
             }
         });
 
-        if (candidateScope) {
-            await prisma.rentalApplication.create({
+        // Auto-create scope if missing (Default to SOLO)
+        if (!candidateScope) {
+            candidateScope = await prisma.tenantCandidateScope.create({
                 data: {
-                    listingId: listingId,
-                    candidateScopeId: candidateScope.id,
-                    status: 'SENT'
+                    creatorUserId: currentUser.id,
+                    compositionType: 'SOLO',
+                    targetLeaseType: 'ANY',
                 }
             });
+        }
+
+        if (candidateScope) {
+            // Check if application already exists
+            const existingApp = await prisma.rentalApplication.findFirst({
+                where: {
+                    listingId: listingId,
+                    candidateScopeId: candidateScope.id
+                }
+            });
+
+            if (!existingApp) {
+                await prisma.rentalApplication.create({
+                    data: {
+                        listingId: listingId,
+                        candidateScopeId: candidateScope.id,
+                        status: 'SENT'
+                    }
+                });
+            }
         }
 
         // Create the application message

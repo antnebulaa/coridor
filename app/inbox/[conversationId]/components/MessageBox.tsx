@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 
 import { FullMessageType, SafeMessage } from "@/types";
 import Avatar from "@/components/Avatar";
-import { HiCheck, HiClock } from "react-icons/hi2";
+import { HiCheck, HiClock, HiCalendarDays } from "react-icons/hi2";
 import ImageModal from "./ImageModal";
 import MessageMenu from "./MessageMenu";
 
@@ -24,6 +24,12 @@ interface MessageBoxProps {
     onOpenMenu: () => void;
     onCloseMenu: () => void;
     showDossier?: boolean;
+    confirmedVisit?: {
+        id: string;
+        date: string;
+        startTime: string;
+        endTime: string;
+    } | null;
 }
 
 const MessageBox: React.FC<MessageBoxProps> = ({
@@ -35,7 +41,8 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     isMenuOpen,
     onOpenMenu,
     onCloseMenu,
-    showDossier
+    showDossier,
+    confirmedVisit
 }) => {
     const session = useSession();
     const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -202,32 +209,158 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     translate
                                 "
                                 />
+
+                            ) : data.body?.startsWith('VISIT_CONFIRMED|') ? (
+                                (() => {
+                                    const parts = data.body?.split('|') || [];
+                                    const dateStr = parts[1];
+                                    const timeStr = parts[2];
+
+                                    const downloadICS = () => {
+                                        const safeListing = data.listing as any;
+                                        if (!dateStr || !timeStr || !safeListing) return;
+
+                                        const dateOnly = new Date(dateStr).toISOString().split('T')[0].replace(/-/g, '');
+                                        const [hoursStr, minutesStr] = timeStr.split(':');
+                                        const hours = parseInt(hoursStr);
+                                        const minutes = parseInt(minutesStr);
+
+                                        const startStr = `${hoursStr}${minutesStr}00`;
+
+                                        // Default duration 30 mins
+                                        let endH = hours;
+                                        let endM = minutes + 30;
+                                        if (endM >= 60) { endH++; endM -= 60; }
+                                        const endHStr = endH.toString().padStart(2, '0');
+                                        const endMStr = endM.toString().padStart(2, '0');
+                                        const endStr = `${endHStr}${endMStr}00`;
+
+                                        const startDate = `${dateOnly}T${startStr}`;
+                                        const endDate = `${dateOnly}T${endStr}`;
+
+                                        const roomInfo = safeListing.roomCount ? `T${safeListing.roomCount}` : (safeListing.category || 'Visite');
+                                        const surfaceInfo = safeListing.surface ? ` ${safeListing.surface}m²` : '';
+                                        const title = `Visite - ${roomInfo}${surfaceInfo} à ${safeListing.city || ''}`;
+
+                                        const partsAddr = [
+                                            safeListing.addressLine1,
+                                            safeListing.zipCode,
+                                            safeListing.city
+                                        ].filter(Boolean);
+                                        const location = partsAddr.join(' ');
+
+                                        const icsContent = [
+                                            'BEGIN:VCALENDAR',
+                                            'VERSION:2.0',
+                                            'BEGIN:VEVENT',
+                                            `DTSTART:${startDate}`,
+                                            `DTEND:${endDate}`,
+                                            `SUMMARY:${title}`,
+                                            `LOCATION:${location}`,
+                                            'END:VEVENT',
+                                            'END:VCALENDAR'
+                                        ].join('\n');
+
+                                        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                                        const url = window.URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.setAttribute('download', 'visite.ics');
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                    };
+
+                                    let formattedDate = dateStr;
+                                    try {
+                                        formattedDate = format(new Date(dateStr), 'dd/MM/yyyy');
+                                    } catch (e) { }
+
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-neutral-100 p-4 rounded-[19px]",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="font-medium text-gray-900">
+                                                {!isOwn ? "Vous avez confirmé votre rendez-vous pour une visite le" : "Rendez-vous confirmé"}
+                                                <br />{formattedDate} à {timeStr}.
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                                                    {timeStr}
+                                                </div>
+                                                <div className="text-xs text-green-600 font-medium">
+                                                    Confirmé
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); downloadICS(); }}
+                                                className="mt-2 w-full py-2.5 bg-neutral-300 hover:bg-neutral-200 text-neutral-900 text-sm font-medium rounded-xl transition flex items-center justify-center gap-2"
+                                            >
+                                                <HiCalendarDays className="w-4 h-4" />
+                                                Ajouter à votre calendrier
+                                            </button>
+                                        </div>
+                                    );
+                                })()
                             ) : data.body === 'INVITATION_VISITE' ? (
-                                <div className={clsx(
-                                    "flex flex-col gap-2 bg-white border border-gray-200 p-4 rounded-2xl",
-                                    isOwn ? "rounded-br-none" : "rounded-bl-none"
-                                )}>
-                                    <div className="font-medium text-gray-900">
-                                        {data.sender?.name || 'Le propriétaire'} est intéressé par votre profil et vous propose une visite.
-                                    </div>
-                                    <div className="text-gray-500 mb-2">
-                                        Veuillez choisir un horaire parmi les créneaux disponibles.
-                                    </div>
-                                    <button
-                                        disabled={!data.listingId || !onOpenVisitSlots}
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // prevent long press trigger on button click
-                                            onOpenVisitSlots && onOpenVisitSlots();
-                                        }}
-                                        className="
+                                (() => {
+                                    if (confirmedVisit) {
+                                        const dateStr = confirmedVisit.date;
+                                        const timeStr = confirmedVisit.startTime;
+                                        let formattedDate = dateStr;
+                                        try {
+                                            formattedDate = format(new Date(dateStr), 'dd/MM/yyyy');
+                                        } catch (e) { }
+                                        return (
+                                            <div className={clsx(
+                                                "flex flex-col gap-2 bg-white border border-gray-200 p-4 rounded-2xl",
+                                                isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                            )}>
+                                                <div className="font-medium text-gray-900">
+                                                    {!isOwn ? "Vous avez confirmé votre rendez-vous" : "Rendez-vous confirmé"}
+                                                    <br /> pour une visite le {formattedDate} à {timeStr}.
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <div className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                                                        {timeStr}
+                                                    </div>
+                                                    <div className="text-xs text-green-600 font-medium">
+                                                        Confirmé
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-white border border-gray-200 p-4 rounded-2xl",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="font-medium text-gray-900">
+                                                {data.sender?.name || 'Le propriétaire'} est intéressé par votre profil et vous propose une visite.
+                                            </div>
+                                            <div className="text-gray-500 mb-2">
+                                                Veuillez choisir un horaire parmi les créneaux disponibles.
+                                            </div>
+                                            <button
+                                                disabled={!data.listingId || !onOpenVisitSlots}
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // prevent long press trigger on button click
+                                                    onOpenVisitSlots && onOpenVisitSlots();
+                                                }}
+                                                className="
                                         px-4 py-2 bg-black text-white rounded-lg text-sm font-medium
                                         hover:bg-neutral-800 transition w-fit
                                         disabled:opacity-50 disabled:cursor-not-allowed
                                     "
-                                    >
-                                        Choisir un horaire
-                                    </button>
-                                </div>
+                                            >
+                                                Choisir un horaire
+                                            </button>
+                                        </div>
+                                    );
+                                })()
                             ) : data.listing && (data.listing as any).images ? (
                                 <div className="flex flex-col gap-2">
                                     {data.body && (
@@ -299,7 +432,41 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div>{data.body}</div>
+                                <div>
+                                    {(() => {
+                                        if (!data.body) return null;
+
+                                        // Simple regex for [text](url) markdown links
+                                        // And also fallback for raw URLs if needed?
+                                        // The current format is: "... [Télécharger le Document](url)"
+
+                                        const parts = data.body.split(/(\[.*?\]\(.*?\))/g);
+
+                                        return (
+                                            <div className="whitespace-pre-wrap">
+                                                {parts.map((part, i) => {
+                                                    const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+                                                    if (linkMatch) {
+                                                        const [_, text, url] = linkMatch;
+                                                        return (
+                                                            <a
+                                                                key={i}
+                                                                href={url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="underline font-semibold hover:opacity-80"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                {text}
+                                                            </a>
+                                                        );
+                                                    }
+                                                    return <span key={i}>{part}</span>;
+                                                })}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             )}
                         </div>
                     </div>

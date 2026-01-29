@@ -48,7 +48,8 @@ export type SectionType =
     | 'tenant'
     | 'application'
     | 'status'
-    | 'delete';
+    | 'delete'
+    | 'expenses';
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -96,6 +97,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     };
 
     const handleSectionChange = (section: SectionType) => {
+        if (section === 'expenses') {
+            router.push(`/properties/${listing.id}/expenses`);
+            return;
+        }
         setActiveSection(section);
         setShowContent(true);
         router.push(`${pathname}?view=content`, { scroll: false });
@@ -123,6 +128,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         application: 'Paramètres de candidature',
         status: 'Statut de l\'annonce',
         delete: 'Supprimer l\'annonce',
+        expenses: 'Dépenses & Charges',
     };
 
     const renderContent = () => {

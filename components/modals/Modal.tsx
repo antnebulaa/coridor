@@ -12,7 +12,7 @@ interface ModalProps {
     title?: string;
     body?: React.ReactElement;
     footer?: React.ReactElement;
-    actionLabel: string;
+    actionLabel?: string;
     disabled?: boolean;
     secondaryAction?: () => void;
     secondaryActionLabel?: string;
@@ -291,7 +291,7 @@ const Modal: React.FC<ModalProps> = ({
                                 onTouchStart={onTouchStart}
                                 onTouchMove={onTouchMove}
                                 onTouchEnd={onTouchEnd}
-                                className={`relative flex-auto overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}
+                                className={`relative w-full overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}
                             >
                                 {body}
                             </div>
@@ -345,6 +345,8 @@ const Modal: React.FC<ModalProps> = ({
                                 </div>
                                 {footer}
                             </div>
+                            {/* Spacer to push content up on mobile if short */}
+                            <div className="flex-grow md:hidden" />
                         </div>
                     </div>
                 </div>

@@ -13,6 +13,12 @@ interface BodyProps {
     onToggleDossier?: () => void;
     onOpenListingRecap?: () => void;
     showDossier?: boolean;
+    confirmedVisit?: {
+        id: string;
+        date: string;
+        startTime: string;
+        endTime: string;
+    } | null;
 }
 
 const Body: React.FC<BodyProps> = ({
@@ -20,7 +26,8 @@ const Body: React.FC<BodyProps> = ({
     onOpenVisitSlots,
     onToggleDossier,
     onOpenListingRecap,
-    showDossier
+    showDossier,
+    confirmedVisit
 }) => {
     const [messages, setMessages] = useState(initialMessages);
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -62,6 +69,7 @@ const Body: React.FC<BodyProps> = ({
                     isMenuOpen={activeMessageId === message.id}
                     onOpenMenu={() => setActiveMessageId(message.id)}
                     onCloseMenu={() => setActiveMessageId(null)}
+                    confirmedVisit={confirmedVisit}
                 />
             ))}
             <div ref={bottomRef} className="pt-24" />

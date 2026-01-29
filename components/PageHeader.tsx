@@ -2,6 +2,8 @@
 
 import { Button } from './ui/Button';
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { BiChevronLeft } from "react-icons/bi";
 
 interface PageHeaderProps {
     title: React.ReactNode;
@@ -13,6 +15,9 @@ interface PageHeaderProps {
     actionControls?: React.ReactNode;
     titleClassName?: string;
     hideSeparator?: boolean;
+    showBack?: boolean;
+    backLabel?: string;
+    backHref?: string;
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
@@ -24,10 +29,28 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     secondaryAction,
     actionControls,
     titleClassName,
-    hideSeparator
+    hideSeparator,
+    showBack,
+    backLabel,
+    backHref
 }) => {
+    const router = useRouter();
+
     return (
         <div className="flex flex-col gap-4 pt-4">
+            {showBack && (
+                <div
+                    onClick={() => backHref ? router.push(backHref) : router.back()}
+                    className="
+                        flex items-center gap-1 cursor-pointer hover:opacity-75 transition w-fit text-neutral-600
+                    "
+                >
+                    <BiChevronLeft size={24} />
+                    <div className="font-medium text-sm">
+                        {backLabel || 'Retour'}
+                    </div>
+                </div>
+            )}
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
                     <div className={cn("text-2xl font-medium", titleClassName)}>

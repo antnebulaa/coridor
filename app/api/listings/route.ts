@@ -43,9 +43,12 @@ export async function POST(
         bedroomCount, // Phase 4.1: Explicit bedroom count
         bedType, // New field
         hasPrivateBathroom, // New field
+        isPublished, // New field to allow immediate publish
         // Legacy
         imageSrc
     } = body;
+
+    console.log("POST Listing Body Images:", imageSrcs?.length, imageSrcs);
 
     // Validate essential fields
     if (!title || !description || (price === undefined || price === null || price === '') || (!location && !propertyId)) {
@@ -159,8 +162,8 @@ export async function POST(
                     title,
                     description,
                     price: typeof price === 'string' ? parseInt(price, 10) : price,
-                    status: "DRAFT",
-                    isPublished: false,
+                    status: isPublished ? "PUBLISHED" : "DRAFT",
+                    isPublished: isPublished || false,
 
                     // category: category, // FIXED: Removed (Moved to Property)
 

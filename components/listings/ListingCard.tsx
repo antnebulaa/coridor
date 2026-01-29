@@ -41,7 +41,7 @@ const FeatureTag = ({
     variant?: 'default' | 'yellow' | 'blue';
     title?: string;
 }) => {
-    const baseStyles = "flex items-center justify-center gap-1 rounded-full px-3 md:px-3.5 h-8 leading-none text-sm";
+    const baseStyles = "flex items-center justify-center gap-1  py-6 rounded-[12px] px-3 md:px-3.5 h-8 leading-none text-sm border border-neutral-100";
     const variants = {
         default: "bg-secondary text-foreground",
         yellow: "bg-[#FFFE3C] text-[#282828]",
@@ -203,11 +203,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <ListingCardCarousel images={data.images} />
                         </div>
 
-                        {isNew && (
-                            <div className="absolute top-3 left-3 bg-card px-2 py-1 rounded-[8px] text-[10px] font-bold shadow-sm z-10 uppercase tracking-wide text-card-foreground">
-                                Nouveau
-                            </div>
-                        )}
+                        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
+                            {isNew && (
+                                <div className="bg-card px-2 py-2 rounded-[0px] text-[10px] font-medium shadow-sm uppercase tracking-wide text-card-foreground">
+                                    Nouveau
+                                </div>
+                            )}
+                            {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
+                                <div className="bg-[#fbea00] px-2 py-2 rounded-[0px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
+                                    Colocation
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Content Section */}
@@ -217,7 +224,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <div className="flex flex-col gap-0">
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
-                                        <div className="font-semibold text-[26px] md:text-[22px] text-[#005600] leading-tight">
+                                        <div className="font-medium text-[26px] md:text-[22px] text-[#1b1b1b] leading-tight">
                                             {price}€<span className="text-neutral-400 font-normal text-sm ml-1">/ mois cc</span>
                                         </div>
                                     </div>
@@ -241,7 +248,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <div className="flex-1 min-w-0 mt-1 md:-mt-1">
                                     <div className="font-medium text-base text-foreground line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                                            ? 'Colocation'
+                                            ? 'Chambre en colocation'
                                             : data.category}
                                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                                     </div>
@@ -262,7 +269,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
 
                             {/* Mobile City Display - Visible only on mobile */}
-                            <div className="md:hidden font-normal text-neutral-500 text-sm line-clamp-1 mt-0.5">
+                            <div className="md:hidden font-normal text-neutral-500 text-sm line-clamp-1 mt-0">
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
                                     <span className="font-normal text-sm text-neutral-500">
@@ -303,11 +310,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
 
                                 <FeatureTag>
-                                    <span className="font-medium">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                                    <span className="font-medium">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? 'Meublé' : 'Vide'}</span>
                                 </FeatureTag>
 
                                 {data.transitData?.mainConnection && (
-                                    <div className="flex items-center justify-center gap-1.5 rounded-full px-2 h-8 leading-none text-sm bg-white border border-neutral-300 text-neutral-700">
+                                    <div className="flex items-center justify-center gap-1.5 rounded-full px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
                                         <div className="flex items-center gap-1">
                                             {(() => {
                                                 const type = (data.transitData.mainConnection.type || "").toLowerCase();
@@ -320,7 +327,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                                 );
                                                 return (
                                                     <div className="w-4 h-4 rounded-full border border-neutral-700 flex items-center justify-center">
-                                                        <span className="text-[8px] font-bold text-neutral-700">M</span>
+                                                        <span className="text-[8px] font-bold text-neutral-700 items-center">M</span>
                                                     </div>
                                                 );
                                             })()}
@@ -405,11 +412,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 >
 
                     <ListingCardCarousel images={data.images} />
-                    {isNew && (
-                        <div className="absolute top-3 left-3 bg-card px-3 py-1 rounded-full text-xs font-semibold shadow-sm z-10 text-card-foreground">
-                            Nouvelle annonce
-                        </div>
-                    )}
+                    <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
+                        {isNew && (
+                            <div className="bg-card px-3 py-1 rounded-full text-xs font-semibold shadow-sm text-card-foreground">
+                                Nouvelle annonce
+                            </div>
+                        )}
+                        {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
+                            <div className="bg-[#002FA7] px-3 py-1 rounded-full text-xs font-semibold shadow-sm text-white uppercase tracking-wide">
+                                Colocation
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-0 mt-2">
@@ -437,7 +451,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                     <div className="font-normal text-foreground mt-1 md:-mt-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                            ? 'Colocation'
+                            ? 'Chambre en colocation'
                             : data.category}
                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                         {' '}à {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
@@ -461,7 +475,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         }
                         <div className="ml-2">
                             <FeatureTag>
-                                <span className="font-medium text-xs md:text-sm">{data.isFurnished ? 'Meublé' : 'Vide'}</span>
+                                <span className="font-medium text-xs md:text-sm">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? 'Meublé' : 'Vide'}</span>
                             </FeatureTag>
                         </div>
                     </div>

@@ -4,21 +4,32 @@ import { SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
-import { CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle, FolderOpen, Calendar } from "lucide-react";
 import { useMemo } from "react";
 import Link from "next/link";
+import VisitCard from "./components/VisitCard";
+import SubscriptionCarousel from "./components/SubscriptionCarousel";
 
 interface TenantDashboardClientProps {
     currentUser: SafeUser;
     rentalProject: any; // SafeTenantCandidateScope
+    applications?: any[];
+    visits?: any[];
 }
 
 const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
     currentUser,
-    rentalProject
+    rentalProject,
+    applications = [],
+    visits = []
 }) => {
     const router = useRouter();
     const tenantProfile = (currentUser as any).tenantProfile;
+
+    // Active Applications Count
+    const activeApplicationsCount = applications.filter(app =>
+        ['PENDING', 'SENT', 'VISIT_PROPOSED', 'VISIT_CONFIRMED', 'ACCEPTED'].includes(app.status)
+    ).length;
 
     // 1. Account Created (Always true if logged in)
     const isAccountCreated = true;
@@ -47,8 +58,6 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
         if (!tenantProfile) return false;
 
         // Check Self Job/Income (Basic requirement)
-        // We assume netSalary is required field in the form, so checking it is a good proxy.
-        // Or checking jobType/jobTitle.
         const hasSelfInfo = !!tenantProfile.netSalary && !!tenantProfile.jobTitle;
 
         if (!hasSelfInfo) return false;
@@ -67,7 +76,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
             id: 'account',
             label: 'Créer mon compte',
             isCompleted: isAccountCreated,
-            href: '/account/profile' // Already done, maybe just link to profile
+            href: '/account/profile'
         },
         {
             id: 'project',
@@ -100,7 +109,53 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     subtitle="Bienvenue sur votre espace locataire."
                 />
 
-                <div className="max-w-2xl mx-auto mt-8">
+                <div className="max-w-2xl mx-auto mt-8 flex flex-col gap-6">
+                    {/* My Applications Tile */}
+                    <Link
+                        href="/dashboard/applications"
+                        className="bg-neutral-100 rounded-2xl p-6 hover:border-black/20 hover:shadow-md transition group cursor-pointer flex items-center justify-between"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                <FolderOpen size={24} />
+                            </div>
+                            <div className="flex flex-col">
+                                <div className="font-medium text-lg text-neutral-900 group-hover:text-blue-600 transition">
+                                    Mes Candidatures
+                                </div>
+                                <div className="text-neutral-500 text-sm">
+                                    {activeApplicationsCount > 0
+                                        ? `${activeApplicationsCount} candidature${activeApplicationsCount > 1 ? 's' : ''} en cours`
+                                        : "Aucune candidature en cours"
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center group-hover:bg-neutral-200 transition">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-neutral-500">
+                                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                    </Link>
+
+                    {/* Visits Section */}
+                    {visits.length > 0 && (
+                        <div className="flex flex-col gap-4 mt-1.5">
+                            <div className="flex items-center gap-2 text-2xl font-medium text-neutral-900">
+                                <Calendar className="text-neutral-500" size={20} />
+                                Mes rendez-vous à venir
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                {visits.map((visit) => (
+                                    <VisitCard key={visit.id} visit={visit} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Subscription Carousel */}
+                    <SubscriptionCarousel />
+
                     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                         <div className="mb-6">
                             <h2 className="text-xl font-medium mb-2">

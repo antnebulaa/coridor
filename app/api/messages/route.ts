@@ -47,7 +47,35 @@ export async function POST(
             include: {
                 seen: true,
                 sender: true,
-                listing: true
+                listing: {
+                    include: {
+                        rentalUnit: {
+                            include: {
+                                property: {
+                                    include: {
+                                        owner: true,
+                                        images: {
+                                            include: {
+                                                room: true
+                                            }
+                                        },
+                                        rooms: {
+                                            include: {
+                                                images: true
+                                            }
+                                        }
+                                    }
+                                },
+                                images: true,
+                                targetRoom: {
+                                    include: {
+                                        images: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
 
@@ -95,7 +123,34 @@ export async function POST(
             }
         }
 
-        return NextResponse.json(newMessage);
+        // Map images for the immediate response
+        const safeMessage = { ...newMessage } as any;
+        if (safeMessage.listing) {
+            const listing = safeMessage.listing;
+            const unitImages = listing.rentalUnit?.images || [];
+            const targetRoomImages = listing.rentalUnit?.targetRoom?.images || [];
+
+            const targetRoomId = listing.rentalUnit?.targetRoom?.id;
+            const propertyImagesRaw = listing.rentalUnit?.property?.images || [];
+
+            const propertyImages = propertyImagesRaw.filter((img: any) => {
+                if (!img.roomId) return true;
+                if (img.roomId === targetRoomId) return true;
+                return img.room && !img.room.name.toLowerCase().startsWith('chambre');
+            });
+
+            const allImages = [...unitImages, ...targetRoomImages, ...propertyImages];
+            const uniqueUrls = new Set();
+            const aggregatedImages = allImages.filter((img: any) => {
+                if (uniqueUrls.has(img.url)) return false;
+                uniqueUrls.add(img.url);
+                return true;
+            });
+
+            safeMessage.listing.images = aggregatedImages;
+        }
+
+        return NextResponse.json(safeMessage);
     } catch (error: any) {
         console.log(error, 'ERROR_MESSAGES');
         return new NextResponse('InternalError', { status: 500 });

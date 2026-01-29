@@ -14,6 +14,7 @@ interface VisitSlotSelectorProps {
     listingId: string;
     currentUser?: SafeUser | null;
     onSuccess?: () => void;
+    conversationId?: string;
 }
 
 interface AvailableSlot {
@@ -26,7 +27,8 @@ interface AvailableSlot {
 const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
     listingId,
     currentUser,
-    onSuccess
+    onSuccess,
+    conversationId
 }) => {
     const [slots, setSlots] = useState<AvailableSlot[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +83,8 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                 listingId,
                 date: selectedSlot.date,
                 startTime: selectedSlot.startTime,
-                endTime: selectedSlot.endTime
+                endTime: selectedSlot.endTime,
+                conversationId // Pass conversationId
             });
             toast.custom((t) => (
                 <CustomToast

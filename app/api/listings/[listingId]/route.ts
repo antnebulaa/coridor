@@ -88,7 +88,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    console.log("PUT BODY:", body);
+    console.log("PUT BODY:", body.imageSrcs?.length, body.imageSrcs);
 
     // Fetch Listing to get relations
     const existingListing = await prisma.listing.findUnique({
@@ -145,6 +145,7 @@ export async function PUT(
         rentalUnitType, // NEW: Expecting 'ENTIRE_PLACE' | 'PRIVATE_ROOM'
         bedType, // NEW
         hasPrivateBathroom, // NEW
+        isPublished // NEW
     } = body;
 
     try {
@@ -202,7 +203,10 @@ export async function PUT(
                 leaseType,
                 charges: charges ? { amount: parseInt(String(charges), 10) } : undefined,
                 securityDeposit: (securityDeposit !== undefined && securityDeposit !== null) ? parseInt(String(securityDeposit), 10) : undefined,
-                propertyAdjective
+                propertyAdjective,
+                isPublished: isPublished,
+                status: isPublished !== undefined ? (isPublished ? 'PUBLISHED' : 'DRAFT') : undefined,
+                statusUpdatedAt: isPublished !== undefined ? new Date() : undefined
             };
 
             // 4. Distribute Amenities (Boolean Flags)

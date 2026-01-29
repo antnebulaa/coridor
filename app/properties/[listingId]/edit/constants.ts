@@ -1,7 +1,7 @@
 import {
     Home, Key, Settings,
     Type, AlignLeft, DoorOpen, MapPin, Sparkles, Armchair, Camera,
-    Calendar, FileText, Euro, User, FileCheck, Eye, Trash2
+    Calendar, FileText, Euro, User, FileCheck, Eye, Trash2, ChartBar
 } from "lucide-react";
 import { TabType, SectionType } from "./EditPropertyClient";
 
@@ -29,6 +29,7 @@ export const sidebarLinks: Record<TabType, { id: string; label: string; icon: an
         { id: 'price', label: 'Loyer', icon: Euro },
         { id: 'tenant', label: 'Profil locataire', icon: User },
         { id: 'application', label: 'Paramètres de candidature', icon: FileCheck },
+        { id: 'expenses', label: 'Dépenses & Charges', icon: ChartBar },
     ],
     preferences: [
         { id: 'status', label: 'Statut de l\'annonce', icon: Eye },

@@ -99,12 +99,18 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
             {/* Listing Summary */}
             <div className="flex gap-4 items-center p-4 bg-neutral-50 rounded-xl border border-neutral-200">
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
-                    <Image
-                        fill
-                        src={listing.images[0].url}
-                        alt="Listing"
-                        className="object-cover"
-                    />
+                    {listing.images && listing.images.length > 0 ? (
+                        <Image
+                            fill
+                            src={listing.images[0].url}
+                            alt="Listing"
+                            className="object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-neutral-200 flex items-center justify-center text-neutral-400">
+                            <span className="text-xs">Aucune photo</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex flex-col">
                     <div className="font-bold">{listing.title}</div>

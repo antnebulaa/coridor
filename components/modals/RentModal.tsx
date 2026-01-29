@@ -86,7 +86,8 @@ const RentModal = () => {
             ges: 'A',
             charges: '' as any,
             amenities: [],
-            rooms: []
+            rooms: [],
+            isPublished: false
         }
     });
 
@@ -113,7 +114,9 @@ const RentModal = () => {
                 bedType: (listing as any).bedType || undefined,
                 hasPrivateBathroom: (listing as any).hasPrivateBathroom || false,
                 imageSrc: '',
-                imageSrcs: listing.images?.map((img: any) => img.url) || [],
+                imageSrcs: listing.images?.length
+                    ? listing.images.map((img: any) => img.url)
+                    : (listing.rentalUnit?.images?.map((img: any) => img.url) || []),
                 price: listing.price,
                 title: listing.title,
                 description: listing.description,
@@ -125,7 +128,8 @@ const RentModal = () => {
                 rooms: property?.rooms?.map((room: any) => ({
                     name: room.name,
                     images: room.images?.map((img: any) => img.url) || []
-                })) || []
+                })) || [],
+                isPublished: listing.isPublished || false
             });
 
             if (rentModal.mode === 'ROOM_CONFIG' || listing.rentalUnit?.type !== 'ENTIRE_PLACE') {
@@ -219,6 +223,7 @@ const RentModal = () => {
     const [rentControlData, setRentControlData] = useState<any>(null);
     const price = watch('price');
     const surfaceValue = watch('surface');
+    const isPublished = watch('isPublished');
 
     useEffect(() => {
         if (location && (surfaceValue || 50)) { // Fallback if surface missing
@@ -272,7 +277,8 @@ const RentModal = () => {
             title: data.title || generatedTitle,
             description: data.description || generatedDescription,
             price: (rentModal.mode === 'ROOM_CONFIG' && !data.price) ? 0 : data.price,
-            propertyId: rentModal.propertyContext?.id // Phase 3: Add Unit Context
+            propertyId: rentModal.propertyContext?.id, // Phase 3: Add Unit Context
+            isPublished: data.isPublished
         };
 
         if (rentModal.editingListing) {
@@ -343,11 +349,12 @@ const RentModal = () => {
             return 'Commencer';
         }
         if (step === STEPS.PRICE || rentModal.mode === 'ROOM_CONFIG') {
+            if (isPublished) return 'Publier l\'annonce';
             return rentModal.editingListing ? 'Enregistrer' : 'Créer';
         }
 
         return 'Suivant';
-    }, [step, rentModal.editingListing]);
+    }, [step, rentModal.editingListing, isPublished]);
 
     const secondaryActionLabel = useMemo(() => {
         if (rentModal.mode === 'ROOM_CONFIG') {
@@ -688,6 +695,13 @@ const RentModal = () => {
                 {isRoom && (
                     <>
                         <div className="mb-6">
+                            <label className="block text-lg font-semibold mb-2">Photos</label>
+                            <MultiImageUpload
+                                value={imageSrcs}
+                                onChange={(value) => setCustomValue('imageSrcs', value)}
+                            />
+                        </div>
+                        <div className="mb-6">
                             <SoftInput
                                 id="surface"
                                 label="Surface (m²)"
@@ -772,6 +786,30 @@ const RentModal = () => {
                         onChange={(value) => setCustomValue('bathroomCount', value)}
                     />
                 )}
+
+                <hr />
+                {/* Publish Switch */}
+                <div
+                    onClick={() => setCustomValue('isPublished', !isPublished)}
+                    className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 cursor-pointer transition ${isPublished ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}`}
+                >
+                    <div className="flex flex-col gap-1">
+                        <div className="font-medium">Publier l'annonce</div>
+                        <div className="text-sm text-neutral-500">
+                            L'annonce sera visible par les locataires.
+                        </div>
+                    </div>
+                    <div className={`
+                        w-12 h-7 rounded-full relative transition flex items-center p-1
+                        ${isPublished ? 'bg-black' : 'bg-neutral-300'}
+                    `}>
+                        <div className={`
+                            w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ease-out
+                            ${isPublished ? 'translate-x-5' : 'translate-x-0'}
+                        `} />
+                    </div>
+                </div>
+
             </div>
         );
     }

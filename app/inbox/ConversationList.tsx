@@ -12,14 +12,14 @@ interface ConversationListProps {
     currentUser: SafeUser | null;
 }
 
-type Tab = 'tenant' | 'landlord' | 'support';
+type Tab = 'all' | 'tenant' | 'landlord' | 'support';
 
 const ConversationList: React.FC<ConversationListProps> = ({
     initialItems,
     currentUser
 }) => {
     const [items, setItems] = useState(initialItems);
-    const [currentTab, setCurrentTab] = useState<Tab>('tenant');
+    const [currentTab, setCurrentTab] = useState<Tab>('all');
     const router = useRouter();
     const { isOpen } = useConversation();
 
@@ -31,6 +31,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
         if (!currentUser) return [];
 
         return items.filter((item) => {
+            if (currentTab === 'all') return true;
+
             // 1. Support Logic: No listing, or Broken Listing Data (fallback to Support)
             // We use 'as any' to check for deep property existence safely
             const deepOwnerId = (item.listing as any)?.rentalUnit?.property?.owner?.id;
@@ -122,6 +124,27 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 </div>
 
                 <div className="flex gap-2 pb-2 overflow-x-auto">
+                    <button
+                        onClick={() => setCurrentTab('all')}
+                        className={clsx(`
+                            px-4
+                            py-2
+                            text-sm 
+                            font-medium 
+                            transition
+                            relative
+                            flex
+                            items-center
+                            gap-2
+                            rounded-full
+                        `,
+                            currentTab === 'all'
+                                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                        )}
+                    >
+                        Tous
+                    </button>
                     <button
                         onClick={() => setCurrentTab('tenant')}
                         className={clsx(`

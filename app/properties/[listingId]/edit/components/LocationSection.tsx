@@ -42,6 +42,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             latitude: listing.latitude || 0,
             longitude: listing.longitude || 0,
             locationValue: (listing as any).locationValue || '',
+            purchasePrice: (listing.rentalUnit?.property as any)?.purchasePrice || '',
         }
     });
 
@@ -81,6 +82,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
 
         axios.put(`/api/listings/${listing.id}`, {
             ...data,
+            purchasePrice: parseInt(data.purchasePrice, 10),
             location: {
                 label: data.locationValue,
                 value: data.locationValue,
@@ -133,6 +135,25 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
                     }}
                     onChange={onLocationSelect}
                 />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <Heading
+                    title="Valeur du bien"
+                    subtitle="Prix d'achat ou valeur estimée (pour le calcul de rentabilité)"
+                />
+                <div className="relative">
+                    <SoftInput
+                        id="purchasePrice"
+                        label="Prix d'achat (€)"
+                        type="number"
+                        disabled={isLoading}
+                        register={register}
+                        errors={errors}
+                        required={false}
+                        placeholder="Ex: 250000"
+                    />
+                </div>
             </div>
 
             <EditSectionFooter

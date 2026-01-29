@@ -18,7 +18,8 @@ import {
     RentalUnit,
     VisitSlot,
     Visit,
-    RentalUnitType
+    RentalUnitType,
+    Expense
 } from "@prisma/client";
 
 export type SafePropertyImage = PropertyImage;
@@ -31,6 +32,10 @@ export type SafeVisitSlot = Omit<VisitSlot, "date"> & {
     date: string;
 };
 
+export type SafeExpense = Omit<Expense, "dateOccurred"> & {
+    dateOccurred: string;
+};
+
 // 1. SafeProperty (The Physical Asset)
 export type SafeProperty = Omit<
     Property,
@@ -41,10 +46,11 @@ export type SafeProperty = Omit<
     owner: SafeUser;
     images: SafePropertyImage[];
     rooms: SafeRoom[];
-    visitSlots: SafeVisitSlot[];
+    visitSlots?: SafeVisitSlot[];
     rentalUnits: SafeRentalUnit[];
     lat?: number | null;
     lng?: number | null;
+    expenses?: SafeExpense[];
 };
 
 // 2. SafeRentalUnit (The Logical Unit)
@@ -66,6 +72,7 @@ export type SafeListing = Omit<
     updatedAt: string;
     statusUpdatedAt: string;
     availableFrom: string | null;
+    activeApplications?: any[];
 
     rentalUnit: SafeRentalUnit;
 

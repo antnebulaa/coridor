@@ -3,6 +3,7 @@
 import { SafeListing, SafeUser } from "@/types";
 import Avatar from "../Avatar";
 import useCountries from "@/hooks/useCountries";
+import { useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import ListingEnergy from "./ListingEnergy";
@@ -44,6 +45,9 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
     const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
     const loginModal = useLoginModal();
+    const { data: session } = useSession();
+    const effectiveUserId = currentUser?.id || (session?.user as any)?.id;
+    const isOwner = effectiveUserId === listing.user?.id;
 
     const onApply = useCallback(() => {
         if (!currentUser) {
@@ -382,6 +386,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
             <ListingMobileFooter
                 listing={listing}
                 onApply={onApply}
+                isOwner={isOwner}
             />
         </>
     );

@@ -20,6 +20,7 @@ interface SoftInputProps {
     className?: string;
     autoFocus?: boolean;
     inputRef?: React.Ref<HTMLInputElement>;
+    placeholder?: string;
 }
 
 const SoftInput: React.FC<SoftInputProps> = ({
@@ -37,7 +38,8 @@ const SoftInput: React.FC<SoftInputProps> = ({
     inputMode,
     className,
     autoFocus,
-    inputRef
+    inputRef,
+    placeholder
 }) => {
     const internalRef = useRef<HTMLInputElement>(null);
 
@@ -88,7 +90,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
                     }
                 }}
                 value={value}
-                placeholder=" "
+                placeholder={placeholder || " "}
                 type={type}
                 inputMode={inputMode}
                 className={`
@@ -112,7 +114,15 @@ const SoftInput: React.FC<SoftInputProps> = ({
           [&::-webkit-calendar-picker-indicator]:hidden
 
           ${className}
+          max-w-full
+          w-full
+          min-w-0
+          appearance-none
         `}
+                style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                }}
             />
             <label
                 className={`

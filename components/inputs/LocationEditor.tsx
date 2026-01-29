@@ -10,29 +10,18 @@ interface LocationEditorProps {
     onChange: (value: AddressSelectValue) => void;
 }
 
+
 const LocationEditor: React.FC<LocationEditorProps> = ({
     value,
     onChange
 }) => {
-    // Form states
-    const [street, setStreet] = useState(value?.street || '');
-    const [apartment, setApartment] = useState(value?.apartment || '');
-    const [building, setBuilding] = useState(value?.building || '');
-    const [city, setCity] = useState(value?.city || '');
-    const [zipCode, setZipCode] = useState(value?.zipCode || '');
-    const [country, setCountry] = useState(value?.country || 'France');
-
-    // Update internal state when value prop changes
-    useEffect(() => {
-        if (value) {
-            setStreet(value.street || value.label.split(',')[0]);
-            setApartment(value.apartment || '');
-            setBuilding(value.building || '');
-            setCity(value.city || '');
-            setZipCode(value.zipCode || '');
-            setCountry(value.country || 'France');
-        }
-    }, [value]);
+    // Derived values directly from props - No internal state
+    const street = value?.street || (value?.label?.includes(',') ? value.label.split(',')[0] : value?.label) || '';
+    const apartment = value?.apartment || '';
+    const building = value?.building || '';
+    const city = value?.city || '';
+    const zipCode = value?.zipCode || '';
+    const country = value?.country || 'France';
 
     const Map = useMemo(() => dynamic(() => import('@/components/Map'), {
         ssr: false
@@ -68,10 +57,7 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
                     <label className="absolute text-[11px] text-neutral-500 top-2 left-3">Adresse postale</label>
                     <input
                         value={street}
-                        onChange={(e) => {
-                            setStreet(e.target.value);
-                            updateParent({ street: e.target.value });
-                        }}
+                        onChange={(e) => updateParent({ street: e.target.value })}
                         className="w-full pt-6 pb-2 px-3 outline-none text-base font-medium placeholder:font-normal"
                         placeholder="Nom de la rue"
                     />
@@ -83,10 +69,7 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
                         <label className="absolute text-[11px] text-neutral-500 top-2 left-3">Appartement</label>
                         <input
                             value={apartment}
-                            onChange={(e) => {
-                                setApartment(e.target.value);
-                                updateParent({ apartment: e.target.value });
-                            }}
+                            onChange={(e) => updateParent({ apartment: e.target.value })}
                             className="w-full pt-6 pb-2 px-3 outline-none text-base font-medium placeholder:font-normal"
                             placeholder="N° d'appartement"
                         />
@@ -95,10 +78,7 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
                         <label className="absolute text-[11px] text-neutral-500 top-2 left-3">Bâtiment</label>
                         <input
                             value={building}
-                            onChange={(e) => {
-                                setBuilding(e.target.value);
-                                updateParent({ building: e.target.value });
-                            }}
+                            onChange={(e) => updateParent({ building: e.target.value })}
                             className="w-full pt-6 pb-2 px-3 outline-none text-base font-medium placeholder:font-normal"
                             placeholder="Bâtiment"
                         />
@@ -111,10 +91,7 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
                         <label className="absolute text-[11px] text-neutral-500 top-2 left-3">Ville</label>
                         <input
                             value={city}
-                            onChange={(e) => {
-                                setCity(e.target.value);
-                                updateParent({ city: e.target.value });
-                            }}
+                            onChange={(e) => updateParent({ city: e.target.value })}
                             className="w-full pt-6 pb-2 px-3 outline-none text-base font-medium placeholder:font-normal"
                             placeholder="Ville"
                         />
@@ -123,10 +100,7 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
                         <label className="absolute text-[11px] text-neutral-500 top-2 left-3">Code postal</label>
                         <input
                             value={zipCode}
-                            onChange={(e) => {
-                                setZipCode(e.target.value);
-                                updateParent({ zipCode: e.target.value });
-                            }}
+                            onChange={(e) => updateParent({ zipCode: e.target.value })}
                             className="w-full pt-6 pb-2 px-3 outline-none text-base font-medium placeholder:font-normal"
                             placeholder="Code postal"
                         />

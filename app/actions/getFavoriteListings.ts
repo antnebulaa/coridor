@@ -20,6 +20,20 @@ export default async function getFavoriteListings() {
                     include: {
                         property: {
                             include: {
+                                images: {
+                                    include: {
+                                        room: true
+                                    }
+                                },
+                                rooms: {
+                                    include: {
+                                        images: true
+                                    }
+                                }
+                            }
+                        },
+                        targetRoom: {
+                            include: {
                                 images: true
                             }
                         }
@@ -28,11 +42,42 @@ export default async function getFavoriteListings() {
             }
         });
 
-        const safeFavorites = favorites.map((favorite: any) => ({
-            ...favorite,
-            createdAt: favorite.createdAt.toISOString(),
-            statusUpdatedAt: favorite.statusUpdatedAt.toISOString()
-        }));
+        const safeFavorites = favorites.map((favorite: any) => {
+            const unitImages = favorite.rentalUnit?.images || [];
+            const targetRoomImages = favorite.rentalUnit?.targetRoom?.images || [];
+
+            const targetRoomId = favorite.rentalUnit?.targetRoom?.id;
+            const propertyImagesRaw = favorite.rentalUnit?.property?.images || [];
+
+            const propertyImages = propertyImagesRaw.filter((img: any) => {
+                if (!img.roomId) return true;
+                if (img.roomId === targetRoomId) return true;
+                return img.room && !img.room.name.toLowerCase().startsWith('chambre');
+            });
+
+            const rooms = favorite.rentalUnit?.property?.rooms || [];
+            const roomsImages = rooms.flatMap((room: any) => {
+                if (room.id !== targetRoomId && room.name.toLowerCase().startsWith('chambre')) {
+                    return [];
+                }
+                return room.images || [];
+            });
+
+            const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
+            const uniqueUrls = new Set();
+            const aggregatedImages = allImages.filter(img => {
+                if (uniqueUrls.has(img.url)) return false;
+                uniqueUrls.add(img.url);
+                return true;
+            });
+
+            return {
+                ...favorite,
+                createdAt: favorite.createdAt.toISOString(),
+                statusUpdatedAt: favorite.statusUpdatedAt.toISOString(),
+                images: aggregatedImages
+            };
+        });
 
         return safeFavorites;
     } catch (error: any) {

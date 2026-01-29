@@ -36,10 +36,24 @@ const getConversationById = async (
                         rentalUnit: {
                             include: {
                                 images: true,
+                                targetRoom: {
+                                    include: {
+                                        images: true
+                                    }
+                                },
                                 property: {
                                     include: {
-                                        images: true,
-                                        owner: true
+                                        images: {
+                                            include: {
+                                                room: true
+                                            }
+                                        },
+                                        rooms: {
+                                            include: {
+                                                images: true
+                                            }
+                                        },
+                                        owner: true,
                                     }
                                 }
                             }

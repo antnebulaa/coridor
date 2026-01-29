@@ -41,16 +41,45 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
         listingUserId = listing.rentalUnit?.property?.ownerId;
         const owner = listing.rentalUnit?.property?.owner;
 
-        const propertyImages = listing.rentalUnit?.property?.images || [];
+        const propertyImagesRaw = listing.rentalUnit?.property?.images || [];
         const unitImages = listing.rentalUnit?.images || [];
+        const targetRoomImages = listing.rentalUnit?.targetRoom?.images || [];
 
-        // Prioritize unit images (specific) over property images (common)
-        let aggregatedImages = [...unitImages, ...propertyImages];
+        const targetRoomId = listing.rentalUnit?.targetRoom?.id;
+
+        const propertyImages = propertyImagesRaw.filter((img: any) => {
+            if (!img.roomId) return true;
+            if (img.roomId === targetRoomId) return true;
+            return img.room && !img.room.name.toLowerCase().startsWith('chambre');
+        });
+
+        const rooms = listing.rentalUnit?.property?.rooms || [];
+        const roomsImages = rooms.flatMap((room: any) => {
+            if (room.id !== targetRoomId && room.name.toLowerCase().startsWith('chambre')) {
+                return [];
+            }
+            return room.images || [];
+        });
+
+        const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
+        const uniqueUrls = new Set();
+        const aggregatedImages = allImages.filter((img: any) => {
+            if (uniqueUrls.has(img.url)) return false;
+            uniqueUrls.add(img.url);
+            return true;
+        });
 
         safeListing = {
             ...listing,
+            ...listing,
             images: aggregatedImages,
             city: listing.rentalUnit?.property?.city || null,
+            addressLine1: listing.rentalUnit?.property?.addressLine1 || null,
+            zipCode: listing.rentalUnit?.property?.zipCode || null,
+
+            surface: listing.rentalUnit?.surface || null,
+            category: listing.rentalUnit?.property?.category || "Logement",
+
             charges: listing.charges,
             createdAt: listing.createdAt.toISOString(),
             statusUpdatedAt: listing.statusUpdatedAt ? listing.statusUpdatedAt.toISOString() : new Date().toISOString(),
@@ -132,6 +161,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
 
     // Fetch Status and Application ID
     let applicationId = null;
+    let confirmedVisit = null;
+
     if (safeListing && otherUser) {
         // We need to find the application linking this user (via scope) and this property
         const application = await prisma.rentalApplication.findFirst({
@@ -144,6 +175,31 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
             select: { id: true }
         });
         applicationId = application?.id || null;
+
+        // Fetch valid visit (confirmed)
+        // We check if EITHER the current user OR the other user is the candidate for this listing.
+        // This covers both Candidate View (viewing their own visit) and Landlord View (viewing candidate's visit).
+        const visit = await prisma.visit.findFirst({
+            where: {
+                listingId: safeListing.id,
+                candidateId: {
+                    in: [otherUser.id, currentUser?.id].filter(Boolean) as string[]
+                },
+                status: 'CONFIRMED'
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        if (visit) {
+            confirmedVisit = {
+                id: visit.id,
+                date: visit.date.toISOString(),
+                startTime: visit.startTime,
+                endTime: visit.endTime
+            };
+        }
     }
 
     return (
@@ -158,6 +214,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 listing={safeListing}
                 candidateScope={safeScope}
                 applicationId={applicationId}
+                conversationId={conversation.id}
+                confirmedVisit={confirmedVisit}
             />
         </div>
     );

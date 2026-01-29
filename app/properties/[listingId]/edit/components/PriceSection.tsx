@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/Button";
 import { calculateRentControl } from "./rentControlUtils";
 import PriceAssistantModal from "./PriceAssistantModal";
 import EditSectionFooter from "./EditSectionFooter";
-import { Wand2 } from "lucide-react";
+import { Wand2, TrendingUp, Scale } from "lucide-react";
 import CustomToast from "@/components/ui/CustomToast";
+import RentRevisionModal from "../../../components/RentRevisionModal";
+import RegularizationModal from "../../../components/RegularizationModal";
 
 interface PriceSectionProps {
     listing: SafeListing;
@@ -24,6 +26,12 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [rentControlData, setRentControlData] = useState<any>(null);
     const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+    const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
+    const [isRegularizationModalOpen, setIsRegularizationModalOpen] = useState(false);
+
+    // Active Lease Logic (V2 - fetched via getListingById)
+    const activeLease = listing.activeApplications?.[0];
+    const hasActiveLease = !!activeLease;
 
     // Logic for Colocation / Rooms
     const property = listing.rentalUnit?.property;
@@ -32,6 +40,17 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
 
     const rooms = property?.rentalUnits?.filter((unit: any) => unit.type === 'PRIVATE_ROOM') || [];
     const isColocation = rooms.length > 0;
+
+    // Locked Rent Logic
+    const currentRent = hasActiveLease && activeLease.financials?.[0]?.baseRentCents
+        ? activeLease.financials[0].baseRentCents / 100
+        : listing.price;
+
+    const currentCharges = hasActiveLease && activeLease.financials?.[0]?.serviceChargesCents
+        ? activeLease.financials[0].serviceChargesCents / 100
+        : listing.charges ? (listing.charges as any).amount : '';
+
+    const isLocked = hasActiveLease;
 
     // Form logic with support for multiple rooms
     const {
@@ -43,8 +62,8 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
         formState: { errors },
     } = useForm<FieldValues>({
         defaultValues: {
-            price: listing.price,
-            charges: listing.charges ? (listing.charges as any).amount : '',
+            price: currentRent,
+            charges: currentCharges,
             securityDeposit: listing.securityDeposit,
             // Map rooms to a form array structure
             roomPrices: rooms.map((room: any) => {
@@ -328,10 +347,56 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
         <div className="flex flex-col gap-8 pb-28 md:pb-0">
             <div className="flex flex-col gap-2">
                 <h3 className="text-lg font-semibold">Loyer mensuel</h3>
+                {isLocked && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-yellow-800 flex items-start gap-2">
+                        <Info className="shrink-0 mt-0.5" size={16} />
+                        <div>
+                            <span className="font-semibold block">Loyer verrouillé par le bail actif</span>
+                            Pour modifier le loyer, utilisez le bouton "Réviser le loyer".
+                        </div>
+                    </div>
+                )}
                 <p className="text-neutral-500 font-light">
                     Indiquez le montant du loyer mensuel hors charges.
                 </p>
+                {hasActiveLease && (
+                    <div className="flex gap-2 mt-2">
+                        <div
+                            onClick={() => setIsRevisionModalOpen(true)}
+                            className="text-xs font-medium text-neutral-600 border border-neutral-300 rounded-full px-3 py-1 cursor-pointer hover:bg-neutral-100 transition flex items-center gap-1"
+                        >
+                            <TrendingUp size={14} />
+                            Réviser le loyer
+                        </div>
+                        <div
+                            onClick={() => setIsRegularizationModalOpen(true)}
+                            className="text-xs font-medium text-neutral-600 border border-neutral-300 rounded-full px-3 py-1 cursor-pointer hover:bg-neutral-100 transition flex items-center gap-1"
+                        >
+                            <Scale size={14} />
+                            Régulariser les charges
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {hasActiveLease && (
+                <>
+                    <RentRevisionModal
+                        isOpen={isRevisionModalOpen}
+                        onClose={() => setIsRevisionModalOpen(false)}
+                        applicationId={activeLease.id}
+                        currentRent={activeLease.financials?.[0]?.baseRentCents ? activeLease.financials[0].baseRentCents / 100 : listing.price}
+                        currentCharges={activeLease.financials?.[0]?.serviceChargesCents ? activeLease.financials[0].serviceChargesCents / 100 : (listing.charges as any)?.amount || 0}
+                        leaseStartDate={activeLease.financials?.[0]?.startDate ? new Date(activeLease.financials[0].startDate) : new Date()}
+                        financials={activeLease.financials || []}
+                    />
+                    <RegularizationModal
+                        isOpen={isRegularizationModalOpen}
+                        onClose={() => setIsRegularizationModalOpen(false)}
+                        propertyId={listing.rentalUnit?.property?.id || ""}
+                    />
+                </>
+            )}
 
             <div className="
                 relative 
@@ -350,7 +415,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 <div className="relative flex items-center justify-center">
                     <input
                         id="price"
-                        disabled={isLoading}
+                        disabled={isLoading || isLocked}
                         {...register('price', { required: true, min: 1 })}
                         type="number"
                         className={`
@@ -397,7 +462,7 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                     <div className="relative flex items-center justify-center">
                         <input
                             id="charges"
-                            disabled={isLoading}
+                            disabled={isLoading || isLocked}
                             {...register('charges', { min: 0 })}
                             type="number"
                             className="peer w-full text-center text-3xl font-bold bg-transparent outline-none transition disabled:opacity-70 disabled:cursor-not-allowed placeholder-neutral-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none max-w-[200px]"
@@ -428,9 +493,9 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                         return (
                             <div
                                 key={months}
-                                onClick={() => setValue('securityDeposit', amount)}
+                                onClick={() => !isLocked && setValue('securityDeposit', amount)}
                                 className={`
-                                   cursor-pointer
+                                   ${isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
                                    rounded-xl
                                    border-2
                                    p-4

@@ -8,12 +8,14 @@ interface ListingMobileFooterProps {
     listing: SafeListing;
     onApply: () => void;
     disabled?: boolean;
+    isOwner?: boolean;
 }
 
 const ListingMobileFooter: React.FC<ListingMobileFooterProps> = ({
     listing,
     onApply,
-    disabled
+    disabled,
+    isOwner
 }) => {
     return (
         <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-neutral-200 px-4 py-3 pb-8 z-[60] md:hidden">
@@ -29,11 +31,13 @@ const ListingMobileFooter: React.FC<ListingMobileFooterProps> = ({
                     </div>
                 </div>
                 <div className="flex-1">
-                    <Button
-                        label="Candidater"
-                        onClick={onApply}
-                        disabled={disabled}
-                    />
+                    {!isOwner && (
+                        <Button
+                            label="Candidater"
+                            onClick={onApply}
+                            disabled={disabled}
+                        />
+                    )}
                 </div>
             </div>
         </div>

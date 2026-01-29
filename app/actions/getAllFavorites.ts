@@ -23,11 +23,24 @@ export default async function getAllFavorites() {
                         property: {
                             include: {
                                 owner: true,
-                                images: true,
+                                images: {
+                                    include: {
+                                        room: true
+                                    }
+                                },
+                                rooms: {
+                                    include: {
+                                        images: true
+                                    }
+                                }
                             }
                         },
                         images: true,
-                        targetRoom: true
+                        targetRoom: {
+                            include: {
+                                images: true
+                            }
+                        }
                     }
                 }
             },
@@ -38,8 +51,39 @@ export default async function getAllFavorites() {
 
         const safeFavorites = favorites.map((listing: any) => {
             const unitImages = listing.rentalUnit.images || [];
-            const propertyImages = listing.rentalUnit.property.images || [];
-            const aggregatedImages = [...unitImages, ...propertyImages];
+            const targetRoomImages = listing.rentalUnit.targetRoom?.images || [];
+
+            const targetRoomId = listing.rentalUnit.targetRoom?.id;
+            const propertyImagesRaw = listing.rentalUnit.property.images || [];
+
+            const propertyImages = propertyImagesRaw.filter((img: any) => {
+                if (!img.roomId) return true;
+                if (img.roomId === targetRoomId) return true;
+                return img.room && !img.room.name.toLowerCase().startsWith('chambre');
+            });
+
+            // Aggregating images from:
+            // 1. Rental Unit (Specific to this listing/unit)
+            // 2. Target Room (The physical room being rented)
+            // 3. Property (Common areas images directly attached to property)
+            // 4. Other Rooms (Common areas like Salon/Cuisine, excluding OTHER bedrooms)
+
+            const rooms = listing.rentalUnit.property.rooms || [];
+            const roomsImages = rooms.flatMap((room: any) => {
+                // Exclude OTHER bedrooms
+                if (room.id !== targetRoomId && room.name.toLowerCase().startsWith('chambre')) {
+                    return [];
+                }
+                return room.images || [];
+            });
+
+            const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
+            const uniqueUrls = new Set();
+            const aggregatedImages = allImages.filter(img => {
+                if (uniqueUrls.has(img.url)) return false;
+                uniqueUrls.add(img.url);
+                return true;
+            });
 
             const property = listing.rentalUnit.property;
             const unit = listing.rentalUnit;

@@ -1,12 +1,12 @@
 'use client';
 
 import { SafeUser } from "@/types";
-import { Meh, Smile } from "lucide-react";
+import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { motion } from "framer-motion"; // Added framer-motion
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LikeButtonProps {
     listingId: string;
@@ -23,6 +23,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     const router = useRouter();
     const [hasLiked, setHasLiked] = useState(initialHasLiked);
     const [isLoading, setIsLoading] = useState(false);
+    const shouldAnimate = useRef(false);
 
     const toggleLike = useCallback(async (e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
@@ -34,14 +35,15 @@ const LikeButton: React.FC<LikeButtonProps> = ({
 
         if (isLoading) return;
 
-        setHasLiked(!hasLiked); // Optimistic UI
+        shouldAnimate.current = true;
+        setHasLiked(!hasLiked);
         setIsLoading(true);
 
         try {
             await axios.post(`/api/likes/${listingId}`);
             router.refresh();
         } catch (error) {
-            setHasLiked(!hasLiked); // Revert if failed
+            setHasLiked(!hasLiked);
             toast.error("Une erreur est survenue");
         } finally {
             setIsLoading(false);
@@ -53,42 +55,62 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     return (
         <div
             onClick={toggleLike}
-            className={`
+            className="
                 relative
                 hover:opacity-80
                 transition
                 cursor-pointer
-            `}
+                w-8 h-8
+                flex items-center justify-center
+            "
         >
-            <motion.div
-                key={hasLiked ? "liked" : "unliked"}
-                initial={{ scale: 0.8, rotate: -10 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className={`
-                    w-8 h-8
-                    rounded-full 
-                    flex items-center justify-center
-                    border border-neutral-200 dark:border-neutral-800
-                    bg-white dark:bg-neutral-900
-                    transition-colors
-                    ${hasLiked
-                        ? 'text-black'
-                        : 'text-neutral-500 hover:bg-neutral-50 hover:text-black'}
-                `}
-            >
+            <svg width="1" height="0" className="absolute pointer-events-none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="ai-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop stopColor="#D82800" offset="0%" />
+                        <stop stopColor="#D82800" offset="50%" />
+                        <stop stopColor="#750077" offset="100%" />
+                    </linearGradient>
+                </defs>
+            </svg>
+
+            <AnimatePresence mode="wait">
                 {hasLiked ? (
-                    <Smile
-                        size={18}
-                        className="fill-amber-400 text-black"
-                    />
+                    <motion.div
+                        key="liked"
+                        initial={shouldAnimate.current ? { scale: 0, y: 15 } : { scale: 1, y: 0 }}
+                        animate={shouldAnimate.current ? {
+                            scale: [0, 2.2, 2.4, 1.2, 1],
+                            y: [15, -22, -42, -22, 0], // Jump Action
+                            rotate: [0, 0, 0, 0]
+                        } : { scale: 1, y: 0 }}
+                        exit={{ scale: 0, transition: { duration: 0.1 } }}
+                        transition={{
+                            duration: 0.4,
+                            ease: "easeOut",
+                            times: [0, 0.3, 0.5, 0.7, 1]
+                        }}
+                    >
+                        <AiFillHeart
+                            size={28}
+                            style={{ fill: "url(#ai-gradient)" }}
+                        />
+                    </motion.div>
                 ) : (
-                    <Meh
-                        size={18}
-                        className="fill-transparent"
-                    />
+                    <motion.div
+                        key="unliked"
+                        initial={shouldAnimate.current ? { scale: 0 } : { scale: 1 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <AiOutlineHeart
+                            size={28}
+                            className="fill-neutral-500"
+                        />
+                    </motion.div>
                 )}
-            </motion.div>
+            </AnimatePresence>
         </div>
     );
 }

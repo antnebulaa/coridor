@@ -4,6 +4,7 @@ import axios from "axios";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import useLoginModal from "@/hooks/useLoginModal";
 import { SafeListing, SafeReservation, SafeUser } from "@/types";
@@ -42,9 +43,18 @@ const ListingClient: React.FC<ListingClientProps> = ({
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
     const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
 
+    const { data: session } = useSession();
+    const sessionUserId = (session?.user as any)?.id;
+    const effectiveUserId = currentUser?.id || sessionUserId;
+    const isOwner = effectiveUserId === listing.user.id;
+
     const onContactHost = useCallback(() => {
-        if (!currentUser) {
+        if (!effectiveUserId) {
             return loginModal.onOpen();
+        }
+
+        if (isOwner) {
+            return toast.error("Vous ne pouvez pas vous contacter vous-même");
         }
 
         setIsLoading(true);
@@ -62,22 +72,40 @@ const ListingClient: React.FC<ListingClientProps> = ({
             .finally(() => {
                 setIsLoading(false);
             })
-    }, [currentUser, loginModal, listing.user.id, router]);
+    }, [effectiveUserId, loginModal, listing.user.id, router, isOwner]);
 
     const onApply = useCallback(() => {
-        if (!currentUser) {
+        if (!effectiveUserId) {
             return loginModal.onOpen();
         }
 
-        // Check if profile is complete (basic check: jobType OR netSalary)
-        const isProfileComplete = !!(currentUser.tenantProfile?.jobType || currentUser.tenantProfile?.netSalary);
-
-        if (!isProfileComplete) {
-            return setIsIncompleteProfileModalOpen(true);
+        if (isOwner) {
+            return toast.error("Vous ne pouvez pas candidater à votre propre annonce");
         }
 
+        // Check if profile is complete (basic check: jobType OR netSalary)
+        const isProfileComplete = !!(currentUser?.tenantProfile?.jobType || currentUser?.tenantProfile?.netSalary);
+
+        if (!isProfileComplete && !session) {
+            // If we rely on session, we might not have profile data unless we fetch it.
+            // But for now let's assume if currentUser is null, we can't check profile easily 
+            // unless we trust the user is logged in.
+            // If currentUser is null but session exists, we should probably allow or warn.
+            // Let's rely on currentUser being populated if possible.
+            // But if server failed, currentUser is null.
+            // We can skip profile check or assume incomplete?
+            // Let's skip profile check if using session fallback for now (or improve logic later).
+        }
+
+        // Keep original profile check using currentUser if available. 
+        // If currentUser is null, we can't check profile.
+        if (currentUser && !isProfileComplete) {
+            return setIsIncompleteProfileModalOpen(true);
+        }
+        // If currentUser is null (using session), we proceed to modal.
+
         setIsApplicationModalOpen(true);
-    }, [currentUser, loginModal]);
+    }, [currentUser, effectiveUserId, loginModal, isOwner, session]);
 
     return (
         <Container>
@@ -116,21 +144,30 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                 <div className="text-muted-foreground font-light">
                                     Contactez l'hôte pour plus d'informations ou pour organiser une visite.
                                 </div>
-                                <Button
-                                    label="Contacter l'hôte"
-                                    onClick={onContactHost}
-                                    disabled={isLoading}
-                                />
-                                <hr />
-                                <div className="text-muted-foreground font-light text-sm">
-                                    Vous avez un dossier complet ? Déposez votre candidature directement.
-                                </div>
-                                <Button
-                                    label="Déposer ma candidature"
-                                    onClick={onApply}
-                                    disabled={isLoading}
-                                    className="bg-[#1719FF] border-[#1719FF] hover:opacity-90"
-                                />
+                                {!isOwner && (
+                                    <>
+                                        <Button
+                                            label="Contacter l'hôte"
+                                            onClick={onContactHost}
+                                            disabled={isLoading}
+                                        />
+                                        <hr />
+                                        <div className="text-muted-foreground font-light text-sm">
+                                            Vous avez un dossier complet ? Déposez votre candidature directement.
+                                        </div>
+                                        <Button
+                                            label="Déposer ma candidature"
+                                            onClick={onApply}
+                                            disabled={isLoading}
+                                            className="bg-[#1719FF] border-[#1719FF] hover:opacity-90"
+                                        />
+                                    </>
+                                )}
+                                {isOwner && (
+                                    <div className="text-center text-neutral-500 font-light py-4">
+                                        C'est votre annonce
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -151,6 +188,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 listing={listing}
                 onApply={onApply}
                 disabled={isLoading}
+                isOwner={isOwner}
             />
         </Container>
     );

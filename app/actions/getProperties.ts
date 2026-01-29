@@ -70,7 +70,15 @@ export default async function getProperties() {
                                         images: true
                                     }
                                 },
-                                reservations: true
+                                reservations: true,
+                                applications: {
+                                    where: {
+                                        leaseStatus: 'SIGNED'
+                                    },
+                                    include: {
+                                        financials: true
+                                    }
+                                }
                             }
                         }
                     }
@@ -81,33 +89,33 @@ export default async function getProperties() {
         // Safe property mapping
         const safeProperties = properties.map((property: any) => ({
             ...property,
-            createdAt: property.createdAt.toISOString(),
-            updatedAt: property.updatedAt.toISOString(),
+            createdAt: property.createdAt?.toISOString(),
+            updatedAt: property.updatedAt?.toISOString(),
             owner: {
                 ...property.owner,
-                createdAt: property.owner.createdAt.toISOString(),
-                updatedAt: property.owner.updatedAt.toISOString(),
+                createdAt: property.owner.createdAt?.toISOString(),
+                updatedAt: property.owner.updatedAt?.toISOString(),
                 emailVerified: property.owner.emailVerified?.toISOString() || null,
                 birthDate: property.owner.birthDate?.toISOString() || null,
                 tenantProfile: null, // Minimal safe user
                 wishlists: null,
                 commuteLocations: null
             },
-            rentalUnits: property.rentalUnits.map((unit: any) => ({
+            rentalUnits: property.rentalUnits?.map((unit: any) => ({
                 ...unit,
-                listings: unit.listings.map((listing: any) => {
+                listings: unit.listings?.map((listing: any) => {
                     const mappedListing: any = {
                         ...listing,
-                        createdAt: listing.createdAt.toISOString(),
-                        updatedAt: listing.updatedAt.toISOString(),
-                        statusUpdatedAt: listing.statusUpdatedAt.toISOString(),
+                        createdAt: listing.createdAt?.toISOString(),
+                        updatedAt: listing.updatedAt?.toISOString(),
+                        statusUpdatedAt: listing.statusUpdatedAt?.toISOString() || null,
                         availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
                         rentalUnit: {
                             ...unit,
                             property: {
                                 ...property,
-                                createdAt: property.createdAt.toISOString(),
-                                updatedAt: property.updatedAt.toISOString()
+                                createdAt: property.createdAt?.toISOString(),
+                                updatedAt: property.updatedAt?.toISOString()
                             }
                         },
                         images: Array.from(new Map(
@@ -144,28 +152,40 @@ export default async function getProperties() {
                         // ... mapped fields logic similar to getListingById
                         reservations: (listing.reservations || []).map((reservation: any) => ({
                             ...reservation,
-                            createdAt: reservation.createdAt.toISOString(),
-                            startDate: reservation.startDate.toISOString(),
-                            endDate: reservation.endDate.toISOString(),
+                            createdAt: reservation.createdAt?.toISOString(),
+                            startDate: reservation.startDate?.toISOString(),
+                            endDate: reservation.endDate?.toISOString(),
                             listing: {
                                 ...listing,
-                                createdAt: listing.createdAt.toISOString(),
-                                updatedAt: listing.updatedAt.toISOString(),
-                                statusUpdatedAt: listing.statusUpdatedAt.toISOString(),
+                                createdAt: listing.createdAt?.toISOString(),
+                                updatedAt: listing.updatedAt?.toISOString(),
+                                statusUpdatedAt: listing.statusUpdatedAt?.toISOString() || null,
                                 availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
                             }
+                        })),
+                        activeApplications: (listing.applications || []).map((app: any) => ({
+                            ...app,
+                            createdAt: app.createdAt?.toISOString(),
+                            updatedAt: app.updatedAt?.toISOString(),
+                            appliedAt: app.appliedAt?.toISOString(),
+                            financials: (app.financials || []).map((fin: any) => ({
+                                ...fin,
+                                createdAt: fin.createdAt?.toISOString(),
+                                startDate: fin.startDate?.toISOString(),
+                                endDate: fin.endDate?.toISOString() || null
+                            }))
                         })),
                     };
                     return mappedListing;
                 }),
                 property: {
                     ...property,
-                    createdAt: property.createdAt.toISOString(),
-                    updatedAt: property.updatedAt.toISOString(),
+                    createdAt: property.createdAt?.toISOString(),
+                    updatedAt: property.updatedAt?.toISOString(),
                     owner: {
                         ...property.owner,
-                        createdAt: property.owner.createdAt.toISOString(),
-                        updatedAt: property.owner.updatedAt.toISOString(),
+                        createdAt: property.owner.createdAt?.toISOString(),
+                        updatedAt: property.owner.updatedAt?.toISOString(),
                         emailVerified: property.owner.emailVerified?.toISOString() || null
                     }
                 }

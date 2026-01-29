@@ -59,6 +59,18 @@ export default async function getListingById(
                             }
                         }
                     }
+                },
+                applications: {
+                    where: {
+                        leaseStatus: 'SIGNED'
+                    },
+                    include: {
+                        financials: {
+                            orderBy: {
+                                startDate: 'desc'
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -106,6 +118,13 @@ export default async function getListingById(
             [...unitImages, ...propertyImages]
                 .map(img => [img.id, img])
         ).values()).sort((a, b) => a.order - b.order);
+
+        console.log("DEBUG: RentalUnits count:", listing.rentalUnit.property.rentalUnits?.length);
+        if (listing.rentalUnit.property.rentalUnits) {
+            listing.rentalUnit.property.rentalUnits.forEach((u: any, i: number) => {
+                console.log(`RentalUnit ${i} images:`, u.images?.length);
+            })
+        }
 
         return {
             ...listing,
@@ -182,6 +201,19 @@ export default async function getListingById(
             isKitchenEquipped: false, // Default or map if available
             isLastFloor: property.floor === property.totalFloors,
 
+            activeApplications: (listing.applications || []).map((app: any) => ({
+                ...app,
+                createdAt: app.createdAt?.toISOString(),
+                updatedAt: app.updatedAt?.toISOString(),
+                appliedAt: app.appliedAt?.toISOString(),
+                financials: (app.financials || []).map((fin: any) => ({
+                    ...fin,
+                    createdAt: fin.createdAt?.toISOString(),
+                    startDate: fin.startDate?.toISOString(),
+                    endDate: fin.endDate?.toISOString() || null
+                }))
+            })),
+
             rentalUnit: {
                 ...listing.rentalUnit,
                 property: {
@@ -220,7 +252,8 @@ export default async function getListingById(
                             bathroomCount: unit.bathroomCount,
                             guestCount: unit.guestCount,
                             bedType: unit.bedType,
-                            hasPrivateBathroom: unit.hasPrivateBathroom
+                            hasPrivateBathroom: unit.hasPrivateBathroom,
+                            images: unit.images
                         }))
                     }))
                 },

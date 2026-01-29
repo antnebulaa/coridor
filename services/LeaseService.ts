@@ -104,6 +104,46 @@ export interface LeaseConfig {
 export class LeaseService {
 
     /**
+     * Index Rent (IRL Revision)
+     */
+    static async indexRent(
+        applicationId: string,
+        baseRentCents: number,
+        serviceChargesCents: number,
+        effectiveDate: Date
+    ) {
+        // 1. Find active financial record
+        const activeFinancial = await prisma.leaseFinancials.findFirst({
+            where: {
+                rentalApplicationId: applicationId,
+                endDate: null
+            }
+        });
+
+        if (activeFinancial) {
+            // Close it the day before effective date
+            const endDate = new Date(effectiveDate);
+            endDate.setDate(endDate.getDate() - 1);
+
+            await prisma.leaseFinancials.update({
+                where: { id: activeFinancial.id },
+                data: { endDate: endDate }
+            });
+        }
+
+        // 2. Create new record
+        await prisma.leaseFinancials.create({
+            data: {
+                rentalApplicationId: applicationId,
+                baseRentCents,
+                serviceChargesCents,
+                startDate: effectiveDate,
+                endDate: null
+            }
+        });
+    }
+
+    /**
      * Main entry point to generate the Lease Configuration from an Application ID.
      */
     static async generateLeaseConfig(applicationId: string): Promise<LeaseConfig> {
@@ -454,5 +494,43 @@ export class LeaseService {
             termination_clause: terminationText,
             resolutory_clause: resolutoryText
         };
+    }
+
+    /**
+     * Initialize LeaseFinancials upon signature
+     */
+    static async initializeFinancials(applicationId: string) {
+        const application = await prisma.rentalApplication.findUnique({
+            where: { id: applicationId },
+            include: { listing: true, candidateScope: true, financials: true }
+        });
+
+        if (!application) throw new Error("Application not found");
+        if (application.financials.length > 0) return; // Already initialized
+
+        const listing = application.listing;
+
+        // Extract Charges logic
+        let chargesAmount = 0;
+        if (listing.charges) {
+            const charges: any = listing.charges;
+            if (typeof charges === 'number') {
+                chargesAmount = charges;
+            } else if (typeof charges === 'object') {
+                chargesAmount = Number(charges.amount || charges.value || 0);
+            }
+        }
+
+        // Determine Start Date (Move In Date or Now)
+        const startDate = application.candidateScope.targetMoveInDate || new Date();
+
+        await prisma.leaseFinancials.create({
+            data: {
+                rentalApplicationId: application.id,
+                baseRentCents: listing.price * 100,
+                serviceChargesCents: Math.round(chargesAmount * 100), // charges * 100
+                startDate: startDate
+            }
+        });
     }
 }

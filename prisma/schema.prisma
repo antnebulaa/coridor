@@ -184,6 +184,7 @@ model Property {
   category        String   // Apartment, House, etc.
   constructionYear Int?
   totalSurface    Float?   // Surface totale du bien
+  purchasePrice   Int?     // Prix d'achat (Euros)
   
   // Location
   address         String?  // Full address string
@@ -250,6 +251,9 @@ model Property {
   
   // Caching/Transit
   transitData     Json?
+
+  expenses              Expense[]
+  reconciliationHistory ReconciliationHistory[]
 }
 
 enum RentalUnitType {
@@ -280,6 +284,7 @@ model RentalUnit {
   property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   listings    Listing[]
   images      PropertyImage[] // Unit specific images
+  expenses    Expense[]
 }
 
 model Listing {
@@ -575,9 +580,33 @@ model RentalApplication {
   yousignSignatureId String? // Signature Request ID
   signedLeaseUrl     String? // URL of final signed PDF
 
+  // Lease Indexation
+  indexationQuarter  Int?    // 1, 2, 3, or 4
+  baseIndexValue     Float?  // Index value at lease signature
+
 
   listing        Listing              @relation(fields: [listingId], references: [id], onDelete: Cascade)
   candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
+  
+  reconciliationHistory ReconciliationHistory[]
+  
+  // Financial History
+  financials         LeaseFinancials[]
+}
+
+model LeaseFinancials {
+  id                   String   @id @default(uuid())
+  rentalApplicationId  String
+  
+  baseRentCents        Int      // Loyer hors charges
+  serviceChargesCents  Int      // Provision sur charges
+  
+  startDate            DateTime @db.Date // Date d'entrée en vigueur
+  endDate              DateTime? @db.Date // Date de fin (null = actif)
+
+  createdAt            DateTime @default(now())
+
+  rentalApplication    RentalApplication @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
 }
 
 // NEW: Commute Location Model
@@ -606,4 +635,94 @@ model Like {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listingId])
+}
+
+// EXPENSES & RECONCILIATION
+
+enum ExpenseCategory {
+  COLD_WATER
+  HOT_WATER
+  ELECTRICITY_COMMON
+  ELECTRICITY_PRIVATE
+  HEATING_COLLECTIVE
+  TAX_PROPERTY
+  ELEVATOR
+  INSURANCE
+  MAINTENANCE
+  CARETAKER
+  OTHER
+  METERS
+  GENERAL_CHARGES
+  BUILDING_CHARGES
+  PARKING
+  INSURANCE_GLI
+}
+
+enum ExpenseFrequency {
+  ONCE
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+model Expense {
+  id                     String           @id @default(uuid())
+  propertyId             String
+  rentalUnitId           String?
+  category               ExpenseCategory
+  label                  String
+  amountTotalCents       Int
+  dateOccurred           DateTime         @db.Date
+  frequency              ExpenseFrequency
+  isRecoverable          Boolean
+  recoverableRatio       Float            @default(1.0)
+  proofUrl               String?
+  isFinalized            Boolean          @default(false)
+  amountRecoverableCents Int?             // Computed or manually set? Image doesn't specify logic, just field.
+  amountDeductibleCents  Int?             // NEW: Montant déductible des impôts
+
+  property               Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentalUnit             RentalUnit?      @relation(fields: [rentalUnitId], references: [id])
+  
+  reconciliationItems    ReconciliationItem[]
+}
+
+model ReconciliationHistory {
+  id                    String   @id @default(uuid())
+  propertyId            String
+  leaseId               String   // Linked to RentalApplication (Lease)
+  
+  periodStart           DateTime @db.Date
+  periodEnd             DateTime @db.Date
+  
+  totalRealChargesCents Int
+  totalProvisionsCents  Int
+  finalBalanceCents     Int      // Debiteur or Crediteur
+  
+  reportUrl             String?
+  createdAt             DateTime @default(now())
+
+  property              Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  lease                 RentalApplication @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  
+  items                 ReconciliationItem[]
+}
+
+model ReconciliationItem {
+  reconciliationId String
+  expenseId        String
+
+  reconciliation   ReconciliationHistory @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+  expense          Expense               @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@id([reconciliationId, expenseId])
+}
+model RentIndex {
+  id          String   @id @default(uuid())
+  quarter     Int
+  year        Int
+  value       Float
+  publishedAt DateTime
+
+  @@unique([year, quarter])
 }
