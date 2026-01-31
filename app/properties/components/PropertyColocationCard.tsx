@@ -114,7 +114,7 @@ const PropertyColocationCard: React.FC<PropertyColocationCardProps> = ({
 
             <div
                 onClick={() => router.push(`/properties/${mainListingId}/edit`)}
-                className="bg-white rounded-[20px] p-3 transition cursor-pointer active:scale-95 flex flex-col gap-2"
+                className="bg-white rounded-[20px] p-3 transition cursor-pointer active:scale-98 flex flex-col gap-2"
             >
                 {/* Header: Image & Title */}
                 <div className="flex gap-4 items-start">

@@ -232,6 +232,37 @@ export default async function getListings(
             orderBy = { price: 'desc' };
         }
 
+        // Exclude Rented Listings (Active Signed Lease)
+        // A listing is Rented if it has at least one application with leaseStatus='SIGNED' 
+        // AND the associated financial record is active (endDate is null or future).
+
+        const excludeRentedCondition = {
+            applications: {
+                none: {
+                    leaseStatus: 'SIGNED',
+                    financials: {
+                        some: {
+                            OR: [
+                                { endDate: null },
+                                { endDate: { gt: new Date() } }
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        // Combine with existing query
+        if (query.AND) {
+            if (Array.isArray(query.AND)) {
+                query.AND.push(excludeRentedCondition);
+            } else {
+                query.AND = [query.AND, excludeRentedCondition];
+            }
+        } else {
+            query.AND = [excludeRentedCondition];
+        }
+
         const listings = await prisma.listing.findMany({
             where: query,
             include: {

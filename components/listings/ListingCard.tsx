@@ -41,7 +41,7 @@ const FeatureTag = ({
     variant?: 'default' | 'yellow' | 'blue';
     title?: string;
 }) => {
-    const baseStyles = "flex items-center justify-center gap-1  py-6 rounded-[12px] px-3 md:px-3.5 h-8 leading-none text-sm border border-neutral-100";
+    const baseStyles = "flex items-center justify-center gap-1  py-5 rounded-[12px] px-3 md:px-3.5 h-8 leading-none text-sm border border-neutral-100";
     const variants = {
         default: "bg-secondary text-foreground",
         yellow: "bg-[#FFFE3C] text-[#282828]",
@@ -205,12 +205,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
                             {isNew && (
-                                <div className="bg-card px-2 py-2 rounded-[0px] text-[10px] font-medium shadow-sm uppercase tracking-wide text-card-foreground">
+                                <div className="bg-card px-2 py-2 rounded-[12px] text-[10px] font-medium shadow-sm uppercase tracking-wide text-card-foreground">
                                     Nouveau
                                 </div>
                             )}
                             {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
-                                <div className="bg-[#fbea00] px-2 py-2 rounded-[0px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
+                                <div className="bg-[#fbea00] px-2 py-2 rounded-[12px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
                                     Colocation
                                 </div>
                             )}
@@ -314,7 +314,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </FeatureTag>
 
                                 {data.transitData?.mainConnection && (
-                                    <div className="flex items-center justify-center gap-1.5 rounded-full px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
+                                    <div className="flex items-center justify-center gap-1.5 rounded-[12px] px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
                                         <div className="flex items-center gap-1">
                                             {(() => {
                                                 const type = (data.transitData.mainConnection.type || "").toLowerCase();

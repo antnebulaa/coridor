@@ -183,6 +183,7 @@ model Property {
   // Physical Characteristics
   category        String   // Apartment, House, etc.
   constructionYear Int?
+  constructionPeriod String? // e.g. "Avant 1948", "1949 - 1974"
   totalSurface    Float?   // Surface totale du bien
   purchasePrice   Int?     // Prix d'achat (Euros)
   
@@ -207,6 +208,7 @@ model Property {
   isNearHospital    Boolean @default(false)
   isQuietArea       Boolean @default(false)
   
+  hasSeparateKitchen Boolean @default(false) // NEW field
   hasSofteners      Boolean @default(false) // Adoucisseur
   hasFiber          Boolean @default(false)
   hasBikeRoom       Boolean @default(false)

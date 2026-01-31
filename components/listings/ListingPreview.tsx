@@ -168,7 +168,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 <ListingCardCarousel images={listingImages} centeredLabel />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent dark:from-neutral-900 z-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent z-10 pointer-events-none" />
 
 
             <div className={`

@@ -18,6 +18,7 @@ export interface AnalyticData {
     // KPIs
     yieldGross: number; // Percent
     yieldNet: number; // Percent
+    yieldNetNet: number; // Percent
     propertyValue: number;
 
     // Expense Breakdown
@@ -27,6 +28,16 @@ export interface AnalyticData {
     // Evolution
     netBenefitEvolution: number | null;
     totalExpensesEvolution: number | null;
+    totalIncomeEvolution: number | null;
+    yieldGrossEvolution: number | null;
+    yieldNetEvolution: number | null;
+    yieldNetNetEvolution: number | null;
+
+    // Previous Values (for display context)
+    totalIncomePrev: number | null;
+    yieldGrossPrev: number | null;
+    yieldNetPrev: number | null;
+    yieldNetNetPrev: number | null;
 }
 
 const EXPENSE_LABELS: Record<string, string> = {
@@ -187,29 +198,37 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
 
     const yieldNet = price > 0 ? ((netBenefitCents / 100) / price) * 100 : 0;
 
+    // Net Net Yield (Estimated after Tax)
+    // Default assumption: Flat Tax ~30% impact on the Net Yield
+    // Only apply tax if positive benefit.
+    const yieldNetNet = yieldNet > 0 ? yieldNet * 0.7 : yieldNet;
+
     // 5. Calculate Evolution (Recursive call for N-1)
     // Avoid infinite recursion by checking year > 2000 or similar if needed, but normally user picks recent years.
     // Ideally we just want NetBenefit N-1.
     // Calling the full function is expensive but simplest for now given the logic is there.
     let netBenefitEvolution: number | null = null;
     let totalExpensesEvolution: number | null = null;
-    try {
-        // Only fetch if likely to have data (e.g. not going back too far)
-        // And don't recurse if this call IS a recursion check (not passed as arg but implied).
-        // Actually, let's just do a quick simplified fetch for N-1 Net Benefit to avoid full overhead?
-        // No, re-using logic ensures consistency.
-        // We need a way to stop recursion if we descend too far, but here we just need N-1, so depth 1.
-        // But getFinancialAnalytics(N-1) will call getFinancialAnalytics(N-2)...
-        // We should add an optional param `depth` or separate logic.
-        // Alternatively, calculate Net Benefit N-1 directly here without full recursion.
-        // RE-implementing minimal logic for N-1:
+    let totalIncomeEvolution: number | null = null;
+    let yieldGrossEvolution: number | null = null;
+    let yieldNetEvolution: number | null = null;
+    let yieldNetNetEvolution: number | null = null;
 
+    // Previous Values
+    let totalIncomePrev: number | null = null;
+    let yieldGrossPrev: number | null = null;
+    let yieldNetPrev: number | null = null;
+    let yieldNetNetPrev: number | null = null;
+
+    try {
         const prevYear = year - 1;
         const startPrev = new Date(prevYear, 0, 1);
         const endPrev = new Date(prevYear, 11, 31);
 
         // Income N-1
         let incomePrevCents = 0;
+        let baseRentPrevCents = 0;
+
         for (const app of applications) {
             for (const fin of app.financials) {
                 if (fin.startDate > endPrev) continue;
@@ -219,6 +238,7 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
                     const d = new Date(prevYear, m, 15);
                     if (d >= fin.startDate && (!fin.endDate || d <= fin.endDate)) {
                         incomePrevCents += (fin.baseRentCents + fin.serviceChargesCents);
+                        baseRentPrevCents += fin.baseRentCents;
                     }
                 }
             }
@@ -233,16 +253,48 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
             _sum: { amountTotalCents: true }
         });
 
-        const netBenefitPrevCents = incomePrevCents - (expensesPrev._sum.amountTotalCents || 0);
+        const expensesPrevCents = expensesPrev._sum.amountTotalCents || 0;
+        const netBenefitPrevCents = incomePrevCents - expensesPrevCents;
 
+        // --- Compute Evolutions ---
+
+        // 1. Net Benefit
         if (netBenefitPrevCents !== 0) {
             netBenefitEvolution = ((netBenefitCents - netBenefitPrevCents) / Math.abs(netBenefitPrevCents)) * 100;
         }
 
-        // Total Expenses Evolution
-        const expensesPrevCents = expensesPrev._sum.amountTotalCents || 0;
+        // 2. Total Expenses
         if (expensesPrevCents !== 0) {
             totalExpensesEvolution = ((totalExpensesCents - expensesPrevCents) / Math.abs(expensesPrevCents)) * 100;
+        }
+
+        // 3. Total Income
+        if (incomePrevCents !== 0) {
+            totalIncomeEvolution = ((totalIncomeCents - incomePrevCents) / incomePrevCents) * 100;
+            totalIncomePrev = incomePrevCents / 100;
+        } else if (totalIncomeCents > 0) {
+            // Previous 0 -> High growth
+            // Handle display elsewhere
+        }
+
+        // 4. Yields
+        if (price > 0) {
+            const yGrossPrev = ((baseRentPrevCents / 100) / price) * 100;
+            const yNetPrev = ((netBenefitPrevCents / 100) / price) * 100;
+            const yNetNetPrev = yNetPrev > 0 ? yNetPrev * 0.7 : yNetPrev;
+
+            if (yGrossPrev !== 0) {
+                yieldGrossEvolution = ((yieldGross - yGrossPrev) / yGrossPrev) * 100;
+                yieldGrossPrev = yGrossPrev;
+            }
+            if (yNetPrev !== 0) {
+                yieldNetEvolution = ((yieldNet - yNetPrev) / Math.abs(yNetPrev)) * 100;
+                yieldNetPrev = yNetPrev;
+            }
+            if (yNetNetPrev !== 0) {
+                yieldNetNetEvolution = ((yieldNetNet - yNetNetPrev) / Math.abs(yNetNetPrev)) * 100;
+                yieldNetNetPrev = yNetNetPrev;
+            }
         }
     } catch (e) {
         console.error("Failed to calc evolution", e);
@@ -270,10 +322,19 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
         expenseDistribution,
         yieldGross: parseFloat(yieldGross.toFixed(2)),
         yieldNet: parseFloat(yieldNet.toFixed(2)),
+        yieldNetNet: parseFloat(yieldNetNet.toFixed(2)),
         propertyValue: price,
         totalDeductible: totalDeductibleCents / 100,
         totalRecoverable: totalRecoverableCents / 100,
         netBenefitEvolution,
-        totalExpensesEvolution
+        totalExpensesEvolution,
+        totalIncomeEvolution,
+        yieldGrossEvolution,
+        yieldNetEvolution,
+        yieldNetNetEvolution,
+        totalIncomePrev,
+        yieldGrossPrev: yieldGrossPrev ? parseFloat(yieldGrossPrev.toFixed(2)) : null,
+        yieldNetPrev: yieldNetPrev ? parseFloat(yieldNetPrev.toFixed(2)) : null,
+        yieldNetNetPrev: yieldNetNetPrev ? parseFloat(yieldNetNetPrev.toFixed(2)) : null
     };
 }

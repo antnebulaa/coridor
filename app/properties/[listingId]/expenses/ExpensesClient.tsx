@@ -489,7 +489,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     </div>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10 pt-0 md:pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10 pt-0">
                 {/* Sidebar - Hidden on mobile */}
                 <div className="hidden md:block col-span-1 md:pt-0">
                     <div className="flex items-center gap-4 mb-6">
@@ -529,7 +529,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     </div>
 
                     {/* Content Box */}
-                    <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
+                    <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
 
                         <PageBody padVertical={false} className="px-4 md:px-8 md:py-8 py-6">
                             {/* Mobile Section Title (Non-sticky) */}
@@ -564,18 +564,17 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                     <Button label="Ajouter ma première dépense" onClick={() => setIsOpen(true)} variant="outline" />
                                 </div>
                             ) : (
-                                <div className="flex flex-col divide-y divide-neutral-100">
+                                <div className="flex flex-col gap-4">
                                     {property.expenses.map((expense) => {
                                         const category = EXPENSE_CATEGORIES.find(c => c.value === expense.category);
                                         const CategoryIcon = category?.icon || HelpCircle;
                                         return (
-                                            <div key={expense.id} className="py-3 flex flex-col gap-2">
+                                            <div key={expense.id} className="py-0 flex flex-col gap-2">
                                                 {/* Date Line - Fixed, doesn't slide */}
                                                 <div className="text-xs text-neutral-500 font-medium px-1 uppercase tracking-wider">
                                                     {format(new Date(expense.dateOccurred), 'dd MMM yyyy', { locale: fr })}
                                                 </div>
 
-                                                {/* Swipeable Content Block */}
                                                 <SwipeableExpenseItem
                                                     onDelete={() => handleDelete(expense.id)}
                                                     onAddProof={() => {
@@ -583,8 +582,9 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                         setStep(STEPS.PROOF);
                                                         setIsOpen(true);
                                                     }}
+                                                    disabled={expense.isFinalized}
                                                 >
-                                                    <div className="flex items-center justify-between border-b border-neutral-100 last:border-0 pb-0">
+                                                    <div className={`p-3 flex items-center justify-between ${expense.isFinalized ? 'opacity-75' : ''}`}>
                                                         <div className="flex items-center gap-3 flex-1 min-w-0 pl-2">
                                                             {/* Icon Box */}
                                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${category?.bg || 'bg-neutral-100'}`}>
@@ -593,8 +593,13 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
                                                             {/* Text Info */}
                                                             <div className="flex flex-col min-w-0">
-                                                                <span className="font-normal text-neutral-900 truncate text-base">
+                                                                <span className="font-normal text-neutral-900 truncate text-base flex items-center gap-2">
                                                                     {expense.label}
+                                                                    {expense.isFinalized && (
+                                                                        <div className="bg-neutral-100 p-1 rounded-md" title="Dépense régularisée (Modifications verrouillées)">
+                                                                            <Shield size={12} className="text-neutral-500" />
+                                                                        </div>
+                                                                    )}
                                                                 </span>
                                                                 <div className="flex flex-wrap items-center gap-2 mt-0.5">
                                                                     {expense.isRecoverable && (expense.amountRecoverableCents || 0) > 0 && (

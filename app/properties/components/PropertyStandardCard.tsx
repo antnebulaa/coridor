@@ -29,12 +29,11 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
     const [isRegularizationModalOpen, setIsRegularizationModalOpen] = useState(false);
 
     // Status Logic
-    const hasActiveReservation = (data.reservations || []).some((r: any) => new Date(r.endDate) > new Date());
     const hasActiveLease = (data.activeApplications || []).length > 0;
-    const isOccupied = hasActiveReservation || hasActiveLease;
+    const isOccupied = hasActiveLease;
 
     const nextFreeDate = isOccupied
-        ? (data.reservations || []).sort((a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0]?.endDate
+        ? null // Leases don't typically have a strict "end date" visually needed here for short-term flow.
         : null;
 
     // Rent Status Logic (Mocked for now as requested)
@@ -76,7 +75,7 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
 
             <div
                 onClick={() => router.push(`/properties/${data.id}/edit`)}
-                className="bg-white rounded-[20px] p-3 hover:shadow-md transition cursor-pointer active:scale-95 flex flex-col gap-2"
+                className="bg-white rounded-[20px] p-3 hover:shadow-md transition cursor-pointer active:scale-98 flex flex-col gap-2"
             >
                 {/* Header: Image & Title */}
                 <div className="flex gap-3 items-start">
@@ -117,7 +116,7 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
                         Status
                     </div>
                     <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 font-medium text-xl text-neutral-500">
+                        <div className="flex items-center gap-2 font-medium text-lg text-neutral-800">
                             <div className={`w-3.5 h-3.5 rounded-full ${isOccupied ? 'bg-green-600' : 'bg-orange-500'}`}></div>
                             {isOccupied ? 'En location' : 'Aucun locataire'}
                         </div>
@@ -167,7 +166,7 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
                     </div>
 
                     <div className="flex justify-between items-center">
-                        <div className="font-medium text-neutral-900 text-xl">
+                        <div className="font-medium text-neutral-800 text-xl">
                             {displayRent}€ <span className="text-neutral-400 text-base font-medium"> </span>
                         </div>
                         {isOccupied ? (

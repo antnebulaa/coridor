@@ -31,7 +31,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ propertyId }) =
         <div className="flex flex-col gap-6 mb-8 animate-fade-in">
             {/* Header / Filter */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h2 className="text-xl font-medium">Tableau de bord financier</h2>
+
 
                 {/* Years Tabs */}
                 <div className="flex gap-2 bg-neutral-100 p-1.5 rounded-2xl overflow-x-auto max-w-full">

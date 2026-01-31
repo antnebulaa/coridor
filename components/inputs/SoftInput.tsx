@@ -17,6 +17,7 @@ interface SoftInputProps {
     value?: string;
 
     inputMode?: "text" | "numeric" | "decimal" | "search" | "email" | "tel" | "url" | "none";
+    pattern?: string;
     className?: string;
     autoFocus?: boolean;
     inputRef?: React.Ref<HTMLInputElement>;
@@ -36,6 +37,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
     value,
 
     inputMode,
+    pattern,
     className,
     autoFocus,
     inputRef,
@@ -93,6 +95,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
                 placeholder={placeholder || " "}
                 type={type}
                 inputMode={inputMode}
+                pattern={pattern}
                 className={`
           peer
           w-full

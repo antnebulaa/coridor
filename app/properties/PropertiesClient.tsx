@@ -54,6 +54,20 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
     // Filter Logic
     const [statusFilter, setStatusFilter] = useState<'ALL' | 'VACANT' | 'PUBLISHED' | 'OCCUPIED'>('ALL');
 
+    // Helper: Check if listing is occupied (Active Lease only)
+    const checkIsOccupied = (listing: any) => {
+        // Short-term reservations removed as per user request
+
+        const hasActiveLease = (listing.activeApplications || []).some((app: any) => {
+            // Check if any financial record is active (endDate is null or in future)
+            return (app.financials || []).some((fin: any) =>
+                !fin.endDate || new Date(fin.endDate) > new Date()
+            );
+        });
+
+        return hasActiveLease;
+    };
+
     // Helper: Compute Counts logic
     const computeCounts = useCallback(() => {
         let counts = { ALL: 0, VACANT: 0, PUBLISHED: 0, OCCUPIED: 0 };
@@ -63,12 +77,12 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 let unitListings: any[] = unit.listings || [];
                 // Handle Ghost Main Unit
                 if (unit.type === 'ENTIRE_PLACE' && unitListings.length === 0) {
-                    unitListings = [{ isPublished: false, reservations: [] }];
+                    unitListings = [{ isPublished: false, reservations: [], activeApplications: [] }];
                 }
 
                 unitListings.forEach((l: any) => {
                     counts.ALL++;
-                    const isOccupied = (l.reservations || []).some((r: any) => new Date(r.endDate) > new Date());
+                    const isOccupied = checkIsOccupied(l);
 
                     if (isOccupied) counts.OCCUPIED++;
                     else counts.VACANT++; // Not occupied = Vacant
@@ -108,6 +122,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
                 rentalUnit: mainUnit,
                 isPublished: false,
                 reservations: [],
+                activeApplications: [],
                 // ... partial mock
             } as any);
         }
@@ -115,7 +130,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
         return allListings.filter((l: any) => {
             if (statusFilter === 'ALL') return true;
 
-            const isOccupied = (l.reservations || []).some((r: any) => new Date(r.endDate) > new Date());
+            const isOccupied = checkIsOccupied(l);
 
             if (statusFilter === 'VACANT') return !isOccupied;
             if (statusFilter === 'OCCUPIED') return isOccupied;

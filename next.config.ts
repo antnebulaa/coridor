@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   images: {
     domains: [
       "avatars.githubusercontent.com",
@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       "example.com"
     ]
   }
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

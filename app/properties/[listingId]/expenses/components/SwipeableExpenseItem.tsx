@@ -8,12 +8,14 @@ interface SwipeableExpenseItemProps {
     children: React.ReactNode;
     onDelete: () => void;
     onAddProof: () => void;
+    disabled?: boolean;
 }
 
 const SwipeableExpenseItem: React.FC<SwipeableExpenseItemProps> = ({
     children,
     onDelete,
-    onAddProof
+    onAddProof,
+    disabled
 }) => {
     const x = useMotionValue(0);
     const controls = useAnimation();
@@ -28,6 +30,8 @@ const SwipeableExpenseItem: React.FC<SwipeableExpenseItemProps> = ({
     const deleteScale = useTransform(x, [-80, 0], [1, 0.8]);
 
     const handleDragEnd = async (_: any, info: PanInfo) => {
+        if (disabled) return;
+
         const threshold = 100; // Trigger threshold
         const dragDistance = info.offset.x;
 
@@ -51,40 +55,42 @@ const SwipeableExpenseItem: React.FC<SwipeableExpenseItemProps> = ({
 
     return (
         <div className="relative select-none touch-pan-y">
-            {/* Background Actions Layer */}
-            <div className="absolute inset-0 flex items-center justify-between rounded-xl overflow-hidden pointer-events-none">
-                {/* Left Background (Revealed when swiping Right) - Blue */}
-                <motion.div
-                    style={{ opacity: proofOpacity }}
-                    className="absolute left-0 top-0 bottom-0 w-full bg-blue-500 flex items-center justify-start pl-2 text-white"
-                >
-                    <motion.div style={{ scale: proofScale }} className="flex items-center">
-                        <Receipt size={24} />
-                        <span className="font-medium ml-2">Reçu</span>
+            {/* Background Actions Layer - Only show if not disabled */}
+            {!disabled && (
+                <div className="absolute inset-0 flex items-center justify-between rounded-xl overflow-hidden pointer-events-none">
+                    {/* Left Background (Revealed when swiping Right) - Blue */}
+                    <motion.div
+                        style={{ opacity: proofOpacity }}
+                        className="absolute left-0 top-0 bottom-0 w-full bg-blue-500 flex items-center justify-start pl-2 text-white"
+                    >
+                        <motion.div style={{ scale: proofScale }} className="flex items-center">
+                            <Receipt size={24} />
+                            <span className="font-medium ml-2">Reçu</span>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
 
-                {/* Right Background (Revealed when swiping Left) - Red */}
-                <motion.div
-                    style={{ opacity: deleteOpacity }}
-                    className="absolute right-0 top-0 bottom-0 w-full bg-red-500 flex items-center justify-end pr-2 text-white"
-                >
-                    <motion.div style={{ scale: deleteScale }} className="flex items-center">
-                        <span className="font-medium mr-2">Supprimer</span>
-                        <Trash2 size={24} />
+                    {/* Right Background (Revealed when swiping Left) - Red */}
+                    <motion.div
+                        style={{ opacity: deleteOpacity }}
+                        className="absolute right-0 top-0 bottom-0 w-full bg-red-500 flex items-center justify-end pr-2 text-white"
+                    >
+                        <motion.div style={{ scale: deleteScale }} className="flex items-center">
+                            <span className="font-medium mr-2">Supprimer</span>
+                            <Trash2 size={24} />
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-            </div>
+                </div>
+            )}
 
             {/* Foreground Content Layer */}
             <motion.div
-                drag="x"
+                drag={disabled ? false : "x"}
                 dragConstraints={{ left: 0, right: 0 }} // This creates the resistance!
-                dragElastic={0.7} // Allow pulling significantly past constraints
+                dragElastic={disabled ? 0 : 0.7} // Allow pulling significantly past constraints
                 animate={controls}
                 onDragEnd={handleDragEnd}
                 style={{ x, touchAction: "pan-y" }}
-                className="relative bg-white z-10 cursor-grab active:cursor-grabbing"
+                className={`relative bg-white z-10 rounded-xl shadow-sm border border-neutral-200 ${!disabled && "cursor-grab active:cursor-grabbing"}`}
             >
                 {children}
             </motion.div>

@@ -10,20 +10,29 @@ interface KPICardsProps {
         netBenefit: number;
         yieldGross: number;
         yieldNet: number;
+        yieldNetNet: number;
         totalDeductible: number;
         totalRecoverable: number;
         netBenefitEvolution: number | null;
         totalExpensesEvolution: number | null;
+        totalIncomeEvolution: number | null;
+        yieldGrossEvolution: number | null;
+        yieldNetEvolution: number | null;
+        yieldNetNetEvolution: number | null;
+
+        // Prev Values
+        totalIncomePrev: number | null;
+        yieldGrossPrev: number | null;
+        yieldNetPrev: number | null;
+        yieldNetNetPrev: number | null;
     }
 }
 
 const KPICard = ({ title, value, subtext, icon: Icon, color, className, chart }: any) => (
-    <div className={`bg-white p-3 rounded-2xl border border-neutral-200 flex flex-col gap-1 ${className}`}>
+    <div className={`bg-white p-3 rounded-2xl pl-3 flex flex-col gap-1 ${className}`}>
         <div className="flex items-center gap-2 mb-1">
-            <div className={`p-0 rounded-md ${color} bg-opacity-10`}>
-                <Icon size={14} className={color.replace('bg-', 'text-')} />
-            </div>
-            <p className="text-sm text-neutral-600 font-semibold">{title}</p>
+
+            <p className="text-sm text-neutral-700 font-semibold">{title}</p>
         </div>
 
         {chart ? (
@@ -38,7 +47,7 @@ const KPICard = ({ title, value, subtext, icon: Icon, color, className, chart }:
             </div>
         ) : (
             <div>
-                <h4 className="text-2xl font-medium text-neutral-900">{value}</h4>
+                <h4 className="text-2xl font-medium text-neutral-600">{value}</h4>
                 {subtext && <div className="text-sm text-neutral-500">{subtext}</div>}
             </div>
         )}
@@ -63,7 +72,7 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
     return (
         <div className="flex flex-col gap-4 w-full">
             {showIncompleteWarning && (
-                <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-2xl flex items-start gap-3 w-full animate-fade-in">
+                <div className="bg-white-50 border-2 border-neutral-700 text-neutral-700 px-4 py-3 rounded-2xl flex items-start gap-3 w-full animate-fade-in">
                     <TrendingUp className="shrink-0 mt-0.5" size={18} />
                     <div className="text-sm">
                         <span className="font-semibold block">Données en cours de consolidation</span>
@@ -72,43 +81,88 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 w-full">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 w-full">
                 <KPICard
                     title="Bénéfice Net"
                     value={`${data.netBenefit > 0 ? '+' : ''}${data.netBenefit.toFixed(0)} €`}
                     subtext={
                         data.netBenefitEvolution !== null ? (
                             <span className={`flex items-center gap-1 ${data.netBenefitEvolution >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                {data.netBenefitEvolution >= 0 ? '↗' : '↘'} {Math.abs(data.netBenefitEvolution).toFixed(1)}% <span className="text-neutral-500">vs Année précédente</span>
+                                {data.netBenefitEvolution >= 0 ? '↗' : '↘'} {Math.abs(data.netBenefitEvolution).toFixed(1)}%
                             </span>
                         ) : "Revenus - Dépenses"
                     }
                     icon={Wallet}
                     color={data.netBenefit >= 0 ? "bg-green text-green-600" : "bg-red-500 text-red-600"}
+                    className="col-span-2 md:col-span-1"
                 />
 
                 <KPICard
-                    title="Rentabilité Brute"
-                    value={`${data.yieldGross.toFixed(2)} %`}
+                    title="Revenus Totaux"
+                    value={
+                        <div className="flex items-center gap-2">
+                            {`${data.totalIncome.toFixed(0)} €`}
+                            {data.totalIncomeEvolution !== null && data.totalIncomeEvolution !== 0 && (
+                                <span className={`text-sm font-medium ${data.totalIncomeEvolution > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                    {data.totalIncomeEvolution > 0 ? '↗' : '↘'} {Math.abs(data.totalIncomeEvolution).toFixed(1)}%
+                                </span>
+                            )}
+                        </div>
+                    }
+                    subtext="Loyers + Charges"
+                    icon={ArrowDownAZ}
+                    color="bg-indigo text-indigo-600"
+                />
+
+                <KPICard
+                    title="Rendement Brute"
+                    value={
+                        <div className="flex items-center gap-2">
+                            {`${data.yieldGross.toFixed(2)} %`}
+                            {data.yieldGrossEvolution !== null && data.yieldGrossEvolution !== 0 && (
+                                <span className={`text-sm font-medium ${data.yieldGrossEvolution > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                    {data.yieldGrossEvolution > 0 ? '↗' : '↘'} {Math.abs(data.yieldGrossEvolution).toFixed(1)}%
+                                </span>
+                            )}
+                        </div>
+                    }
                     subtext={data.yieldGross === 0 ? "Prix d'achat manquant" : "Loyer HC / Prix d'achat"}
                     icon={TrendingUp}
                     color="bg-blue text-blue-600"
                 />
 
                 <KPICard
-                    title="Rentabilité Nette"
-                    value={`${data.yieldNet.toFixed(2)} %`}
+                    title="Rendement Net"
+                    value={
+                        <div className="flex items-center gap-2">
+                            {`${data.yieldNet.toFixed(2)} %`}
+                            {data.yieldNetEvolution !== null && data.yieldNetEvolution !== 0 && (
+                                <span className={`text-sm font-medium ${data.yieldNetEvolution > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                    {data.yieldNetEvolution > 0 ? '↗' : '↘'} {Math.abs(data.yieldNetEvolution).toFixed(1)}%
+                                </span>
+                            )}
+                        </div>
+                    }
                     subtext={data.yieldNet === 0 ? "Prix d'achat manquant" : "Bénéfice / Prix d'achat"}
                     icon={PiggyBank}
                     color="bg-purple text-purple-600"
                 />
 
                 <KPICard
-                    title="Revenus Totaux"
-                    value={`${data.totalIncome.toFixed(0)} €`}
-                    subtext="Loyers + Charges encaissés"
-                    icon={ArrowDownAZ}
-                    color="bg-indigo text-indigo-600"
+                    title="Rendement Net Net"
+                    value={
+                        <div className="flex items-center gap-2">
+                            {`${data.yieldNetNet.toFixed(2)} %`}
+                            {data.yieldNetNetEvolution !== null && data.yieldNetNetEvolution !== 0 && (
+                                <span className={`text-sm font-medium ${data.yieldNetNetEvolution > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                    {data.yieldNetNetEvolution > 0 ? '↗' : '↘'} {Math.abs(data.yieldNetNetEvolution).toFixed(1)}%
+                                </span>
+                            )}
+                        </div>
+                    }
+                    subtext={data.yieldNetNet === 0 ? "Estimation impossible" : "Après impôts (estim. 30%)"}
+                    icon={PiggyBank}
+                    color="bg-pink text-pink-600"
                 />
 
                 <KPICard
@@ -139,15 +193,16 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                             {/* Evolution Expenses */}
                             {data.totalExpensesEvolution !== null && (
                                 <div className={`flex items-center gap-1 mb-1 font-normal ${data.totalExpensesEvolution <= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                    {data.totalExpensesEvolution > 0 ? '↗' : '↘'} {Math.abs(data.totalExpensesEvolution).toFixed(1)}% <span className="text-neutral-500">vs Année précédente</span>
+                                    {data.totalExpensesEvolution > 0 ? '↗' : '↘'} {Math.abs(data.totalExpensesEvolution).toFixed(1)}%
                                 </div>
                             )}
-                            <span className="text-green-600 font-medium">Dont récupérable : {data.totalRecoverable.toFixed(0)} €</span>
-                            <span className="text-blue-600 font-medium">Dont déductible : {data.totalDeductible.toFixed(0)} €</span>
+                            <span className="text-green-600 font-semibold">Dont récupérable : {data.totalRecoverable.toFixed(0)} €</span>
+                            <span className="text-blue-600 font-semibold">Dont déductible : {data.totalDeductible.toFixed(0)} €</span>
                         </div>
                     }
                     icon={ArrowDownAZ}
                     color="bg-rose text-rose-600"
+                    className="col-span-2 md:col-span-1"
                 />
             </div>
         </div>
