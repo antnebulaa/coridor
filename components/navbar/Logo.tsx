@@ -6,6 +6,7 @@ import { Boldonse } from 'next/font/google';
 const font = Boldonse({
     weight: '400',
     subsets: ['latin'],
+    adjustFontFallback: false,
 });
 
 const Logo = () => {

@@ -539,15 +539,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                 </h2>
                             </div>
 
-                            {/* Desktop Add Button (Hidden on Mobile, shown in header instead) */}
-                            <div className="hidden md:flex justify-end mb-6">
-                                <Button
-                                    label="Ajouter une dépense"
-                                    icon={Plus}
-                                    onClick={() => setIsOpen(true)}
-                                    small
-                                />
-                            </div>
+
 
                             <FinancialDashboard propertyId={property.id} />
 
