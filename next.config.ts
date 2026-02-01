@@ -8,7 +8,7 @@ const nextConfig = {
       "res.cloudinary.com",
       "example.com"
     ]
-  }
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
