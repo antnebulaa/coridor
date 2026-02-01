@@ -2,12 +2,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/auth";
 import prisma from "@/libs/prismadb";
 import { SafeUser } from "@/types";
+import { cache } from "react";
 
 export async function getSession() {
     return await getServerSession(authOptions);
 }
 
-export default async function getCurrentUser(): Promise<SafeUser | null> {
+const getCurrentUser = cache(async (): Promise<SafeUser | null> => {
     try {
         const session = await getSession();
 
@@ -70,5 +71,7 @@ export default async function getCurrentUser(): Promise<SafeUser | null> {
         return safeUser;
     } catch (error: any) {
         return null;
-    }
-}
+    });
+
+export default getCurrentUser;
+

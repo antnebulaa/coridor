@@ -256,6 +256,8 @@ model Property {
 
   expenses              Expense[]
   reconciliationHistory ReconciliationHistory[]
+
+  @@index([ownerId])
 }
 
 enum RentalUnitType {
@@ -338,9 +340,10 @@ model Listing {
   furniture     Furniture?
   
   // Legacy User Link (Can be inferred via Property, but useful for fast access/queries)
-  // For now we remove direct userId to force using the Property Owner
   // userId        String
   // user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([rentalUnitId])
 }
 
 model Furniture {
