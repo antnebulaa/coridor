@@ -70,6 +70,8 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -121,6 +123,7 @@ export default async function RootLayout({
             <Suspense fallback={<div></div>}>
               <MobileMenu currentUser={currentUser} />
             </Suspense>
+            <SpeedInsights />
           </ThemeProvider>
         </AuthProvider>
       </body>
