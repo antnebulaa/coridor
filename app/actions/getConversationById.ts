@@ -43,16 +43,7 @@ const getConversationById = async (
                                 },
                                 property: {
                                     include: {
-                                        images: {
-                                            include: {
-                                                room: true
-                                            }
-                                        },
-                                        rooms: {
-                                            include: {
-                                                images: true
-                                            }
-                                        },
+                                        images: true, // Reduced recursion
                                         owner: true,
                                     }
                                 }

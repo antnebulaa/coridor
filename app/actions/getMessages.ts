@@ -10,31 +10,7 @@ const getMessages = async (
             },
             include: {
                 sender: true,
-                seen: true,
-                listing: {
-                    include: {
-                        rentalUnit: {
-                            include: {
-                                property: {
-                                    include: {
-                                        owner: true,
-                                        images: {
-                                            include: {
-                                                room: true
-                                            }
-                                        }
-                                    }
-                                },
-                                images: true,
-                                targetRoom: {
-                                    include: {
-                                        images: true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                seen: true
             },
             orderBy: {
                 createdAt: 'asc'
