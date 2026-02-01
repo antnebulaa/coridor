@@ -71,7 +71,8 @@ const getCurrentUser = cache(async (): Promise<SafeUser | null> => {
         return safeUser;
     } catch (error: any) {
         return null;
-    });
+    }
+});
 
 export default getCurrentUser;
 
