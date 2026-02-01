@@ -40,36 +40,8 @@ export default async function getProperties() {
                                 images: true
                             }
                         },
-                        property: {
-                            include: {
-                                owner: true,
-                                images: true,
-                                rooms: {
-                                    include: {
-                                        images: true
-                                    }
-                                },
-                                rentalUnits: true // Recursion break? Prisma might complain, checking
-                            }
-                        },
                         listings: {
                             include: {
-                                rentalUnit: {
-                                    include: {
-                                        property: {
-                                            include: {
-                                                owner: true,
-                                                images: true,
-                                                rooms: {
-                                                    include: {
-                                                        images: true
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        images: true
-                                    }
-                                },
                                 reservations: true,
                                 applications: {
                                     where: {

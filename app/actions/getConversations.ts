@@ -32,27 +32,20 @@ const getConversations = async () => {
                 },
                 listing: {
                     include: {
-                        rentalUnit: {
-                            include: {
-                                property: {
-                                    include: {
-                                        owner: true,
-                                        images: {
-                                            include: {
-                                                room: true
-                                            }
-                                        },
-                                        rooms: {
-                                            include: {
-                                                images: true
-                                            }
+                        include: {
+                            rentalUnit: {
+                                include: {
+                                    property: {
+                                        include: {
+                                            owner: true,
+                                            images: true // Reduced recursion
                                         }
-                                    }
-                                },
-                                images: true,
-                                targetRoom: {
-                                    include: {
-                                        images: true
+                                    },
+                                    images: true,
+                                    targetRoom: {
+                                        include: {
+                                            images: true
+                                        }
                                     }
                                 }
                             }
