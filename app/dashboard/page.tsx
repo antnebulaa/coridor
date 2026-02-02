@@ -1,7 +1,7 @@
 import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getDashboardStats from "@/app/actions/getDashboardStats";
+
 import DashboardClient from "./DashboardClient";
 
 import Link from "next/link";
@@ -9,6 +9,8 @@ import prisma from "@/libs/prismadb";
 import TenantDashboardClient from "./TenantDashboardClient";
 import getApplications from "@/app/actions/getApplications";
 import getVisits from "@/app/actions/getVisits";
+import { getFinancialAnalytics } from "@/app/actions/analytics";
+import getOperationalStats from "@/app/actions/getOperationalStats";
 
 export const dynamic = 'force-dynamic';
 
@@ -59,22 +61,17 @@ const DashboardPage = async () => {
     }
 
     // LANDLORD MODE
-    const stats = await getDashboardStats();
-
-    if (!stats) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="No data found"
-                    subtitle="Start by creating a property"
-                />
-            </ClientOnly>
-        );
-    }
+    const currentYear = new Date().getFullYear();
+    const financialData = await getFinancialAnalytics(undefined, currentYear);
+    const operationalStats = await getOperationalStats();
 
     return (
         <ClientOnly>
-            <DashboardClient stats={stats} />
+            <DashboardClient
+                currentUser={currentUser}
+                financials={financialData}
+                operationalStats={operationalStats}
+            />
         </ClientOnly>
     );
 }

@@ -3,7 +3,7 @@
 import { SafeUser } from "@/types";
 import { TenantProfile, Guarantor, Income } from "@prisma/client";
 import Avatar from "@/components/Avatar";
-import { ShieldCheck, CheckCircle, Briefcase, Users, Wallet, Home } from "lucide-react";
+import { ShieldCheck, CheckCircle, Briefcase, Users, Wallet, Home, Info } from "lucide-react";
 
 interface TenantProfilePreviewProps {
     user: SafeUser;
@@ -17,6 +17,7 @@ interface TenantProfilePreviewProps {
         rentVerified?: boolean;
         jobTitle?: string | null;
         jobType?: string | null;
+        bio?: string | null;
     };
     rent?: number;
     charges?: any; // { amount: number, included: boolean }
@@ -118,12 +119,20 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                     <div className="text-sm text-neutral-500">
                         Candidat Locataire
                     </div>
-                    <div className="mt-1 w-fit bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <CheckCircle size={12} />
-                        <span>Identité vérifiée</span>
-                    </div>
                 </div>
             </div>
+
+            {/* Bio Section */}
+            {tenantProfile.bio && (
+                <div className="flex flex-col gap-3">
+                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                        <Info size={16} /> À propos de {user.name?.split(' ')[0]}
+                    </h3>
+                    <div className="bg-white border border-neutral-200 rounded-xl p-4 text-sm text-neutral-700 italic">
+                        "{tenantProfile.bio}"
+                    </div>
+                </div>
+            )}
 
             {/* Rent Verification Badge */}
             {tenantProfile.rentVerified && (

@@ -2,7 +2,7 @@ import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getReservations from "@/app/actions/getReservations";
+import getApplications from "@/app/actions/getApplications";
 
 import RentalsClient from "./RentalsClient";
 
@@ -20,9 +20,10 @@ const RentalsPage = async () => {
         );
     }
 
-    const reservations = await getReservations({ userId: currentUser.id });
+    const applications = await getApplications();
+    const signedLeases = applications.filter((app: any) => app.leaseStatus === 'SIGNED');
 
-    if (reservations.length === 0) {
+    if (signedLeases.length === 0) {
         return (
             <ClientOnly>
                 <EmptyState
@@ -38,7 +39,7 @@ const RentalsPage = async () => {
     return (
         <ClientOnly>
             <RentalsClient
-                reservations={reservations}
+                leases={signedLeases}
                 currentUser={currentUser}
             />
         </ClientOnly>

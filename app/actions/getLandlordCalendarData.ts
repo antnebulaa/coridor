@@ -57,13 +57,17 @@ export default async function getLandlordCalendarData() {
                 listing: {
                     select: {
                         title: true,
+                        price: true, // NEW
+                        charges: true, // NEW
                         propertyAdjective: true,
                         rentalUnit: {
                             select: {
                                 property: {
                                     select: {
                                         category: true,
-                                        city: true
+                                        city: true,
+                                        address: true,
+                                        addressLine1: true
                                     }
                                 }
                             }
@@ -75,7 +79,34 @@ export default async function getLandlordCalendarData() {
                         id: true,
                         name: true,
                         image: true,
-                        email: true
+                        email: true,
+                        createdScopes: { // NEW
+                            take: 1,
+                            orderBy: { createdAt: 'desc' }
+                        },
+                        tenantProfile: {
+                            include: {
+                                guarantors: {
+                                    include: {
+                                        additionalIncomes: true
+                                    }
+                                },
+                                additionalIncomes: true
+                            }
+                        },
+                        conversations: {
+                            where: {
+                                users: {
+                                    some: {
+                                        id: currentUser.id
+                                    }
+                                }
+                            },
+                            take: 1,
+                            select: {
+                                id: true
+                            }
+                        }
                     }
                 }
             }
@@ -100,7 +131,14 @@ export default async function getLandlordCalendarData() {
             listing: {
                 ...visit.listing,
                 category: visit.listing.rentalUnit.property.category || 'Logement', // Flatten for easier usage
-                city: visit.listing.rentalUnit.property.city
+                city: visit.listing.rentalUnit.property.city,
+                address: visit.listing.rentalUnit.property.address || visit.listing.rentalUnit.property.addressLine1 || null
+            },
+            candidate: {
+                ...visit.candidate,
+                conversationId: visit.candidate.conversations?.[0]?.id || null,
+                tenantProfile: visit.candidate.tenantProfile,
+                candidateScope: visit.candidate.createdScopes?.[0] || null // NEW mapping
             }
         }));
 

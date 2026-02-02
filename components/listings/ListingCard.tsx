@@ -1,7 +1,7 @@
 'use client';
 
 import useCountries from "@/hooks/useCountries";
-import { SafeListing, SafeReservation, SafeUser } from "@/types";
+import { SafeListing, SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef } from "react";
 import { format } from 'date-fns';
@@ -16,7 +16,6 @@ import ListingCardCarousel from "./ListingCardCarousel";
 
 interface ListingCardProps {
     data: SafeListing;
-    reservation?: SafeReservation;
     onAction?: (id: string) => void;
     disabled?: boolean;
     actionLabel?: string;
@@ -57,7 +56,6 @@ const FeatureTag = ({
 
 const ListingCard: React.FC<ListingCardProps> = ({
     data,
-    reservation,
     onAction,
     disabled,
     actionLabel,
@@ -91,24 +89,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
     );
 
     const price = useMemo(() => {
-        if (reservation) {
-            return reservation.totalPrice;
-        }
-
         const chargesAmount = data.charges ? (data.charges as any).amount : 0;
         return data.price + chargesAmount;
-    }, [reservation, data.price, data.charges]);
-
-    const reservationDate = useMemo(() => {
-        if (!reservation) {
-            return null;
-        }
-
-        const start = new Date(reservation.startDate);
-        const end = new Date(reservation.endDate);
-
-        return `${format(start, 'PP')} - ${format(end, 'PP')}`;
-    }, [reservation]);
+    }, [data.price, data.charges]);
 
     const isNew = useMemo(() => {
         const created = new Date(data.createdAt);

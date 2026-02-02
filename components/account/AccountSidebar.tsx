@@ -2,13 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { switchUserMode } from "@/app/actions/switchMode";
 import { toast } from "react-hot-toast";
 import CustomToast from "@/components/ui/CustomToast";
+import Avatar from "@/components/Avatar";
 
 interface AccountSidebarProps {
     currentUser?: SafeUser | null;
@@ -45,12 +46,12 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
     }
 
     const routes = [
-        {
-            label: 'Personal info',
-            icon: User,
-            href: '/account/personal-info',
-            active: pathname === '/account/personal-info'
-        },
+        ...(currentUser?.userMode === 'LANDLORD' ? [{
+            label: 'Mes finances',
+            icon: Wallet,
+            href: '/dashboard/finances',
+            active: pathname === '/dashboard/finances'
+        }] : []),
         {
             label: 'Dossier Locataire',
             icon: FileText,
@@ -88,16 +89,58 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             active: pathname === '/account/preferences'
         },
         {
+            label: 'Abonnement',
+            icon: Sparkles,
+            href: '/pricing',
+            active: pathname === '/pricing'
+        },
+        {
             label: 'Réglages',
             icon: Settings,
             href: '/account/settings',
             active: pathname === '/account/settings'
         },
     ];
+    const names = currentUser?.name?.split(' ') || ['User'];
+    const firstName = names[0];
+    const lastInitial = names.length > 1 ? `${names[names.length - 1][0]}.` : '';
+
+    const plan = (currentUser as any)?.plan || 'FREE';
+    let planLabel = 'Gratuit';
+    let planStyles = 'bg-neutral-100 text-neutral-600 border border-neutral-200';
+
+    if (plan === 'PLUS') {
+        planLabel = 'Plus';
+        planStyles = 'bg-red-500 text-white border border-red-500';
+    } else if (plan === 'PRO') {
+        planLabel = 'Pro';
+        planStyles = 'bg-neutral-800 text-white border border-black';
+    }
 
     return (
         <div className="relative">
-            <div className="flex flex-col gap-2 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0">
+            <div className="flex flex-col gap-2 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0" >
+                <Link
+                    href="/account/personal-info"
+                    className="flex justify-between items-center p-3 sm:p-4 rounded-2xl border border-neutral-200 bg-neutral-50 hover:shadow-md transition mb-2 group cursor-pointer"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="shrink-0">
+                            <Avatar src={currentUser?.image} size={52} />
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2 flex-wrap pb-0.5">
+                                <span className="font-semibold text-neutral-900 text-xl leading-none">{firstName} {lastInitial}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${planStyles}`}>
+                                    {planLabel}
+                                </span>
+                            </div>
+                            <span className="text-sm text-neutral-500 font-normal group-hover:text-black transition">Informations personnelles</span>
+                        </div>
+                    </div>
+                    <ChevronRight size={20} className="text-neutral-400 group-hover:text-black transition" />
+                </Link>
+
                 {routes.map((route) => (
                     <Link
                         key={route.label}
@@ -116,23 +159,24 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                         `}
                     >
                         <div className="flex items-center gap-4">
-                            <route.icon size={24} className="text-foreground" />
-                            <div className="font-light text-foreground">
+                            <route.icon size={24} className="text-neutral-700" />
+                            <div className="font-medium text-neutral-700">
                                 {route.label}
                             </div>
                         </div>
-                        <ChevronRight size={20} className="text-foreground md:hidden" />
+                        <ChevronRight size={20} className="text-neutral-700 md:hidden" />
                     </Link>
                 ))}
             </div>
 
-            {currentUser && (
-                <div className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 whitespace-nowrap">
-                    <motion.button
-                        onClick={toggleMode}
-                        disabled={isLoading}
-                        whileTap={{ scale: 0.95 }}
-                        className="
+            {
+                currentUser && (
+                    <div className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 whitespace-nowrap">
+                        <motion.button
+                            onClick={toggleMode}
+                            disabled={isLoading}
+                            whileTap={{ scale: 0.95 }}
+                            className="
                             bg-card 
                             border 
                             border-border 
@@ -150,18 +194,19 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                             disabled:opacity-50
                             text-foreground
                         "
-                    >
-                        <motion.div
-                            animate={{ rotate: currentUser.userMode === 'LANDLORD' ? 0 : 360 }}
-                            transition={{ duration: 0.5, ease: "easeInOut" }}
                         >
-                            <Repeat size={16} />
-                        </motion.div>
-                        Passer en mode {currentUser.userMode === 'LANDLORD' ? 'locataire' : 'propriétaire'}
-                    </motion.button>
-                </div>
-            )}
-        </div>
+                            <motion.div
+                                animate={{ rotate: currentUser.userMode === 'LANDLORD' ? 0 : 360 }}
+                                transition={{ duration: 0.5, ease: "easeInOut" }}
+                            >
+                                <Repeat size={16} />
+                            </motion.div>
+                            Passer en mode {currentUser.userMode === 'LANDLORD' ? 'locataire' : 'propriétaire'}
+                        </motion.button>
+                    </div>
+                )
+            }
+        </div >
     );
 }
 

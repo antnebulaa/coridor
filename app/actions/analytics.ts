@@ -38,6 +38,9 @@ export interface AnalyticData {
     yieldGrossPrev: number | null;
     yieldNetPrev: number | null;
     yieldNetNetPrev: number | null;
+
+    // Additional
+    vacancyLoss: number;
 }
 
 const EXPENSE_LABELS: Record<string, string> = {
@@ -67,44 +70,38 @@ const EXPENSE_COLORS: Record<string, string> = {
     'ELECTRICITY_COMMON': '#eab308' // Yellow 500
 };
 
-export async function getFinancialAnalytics(propertyId: string, year: number): Promise<AnalyticData> {
+// Update signature
+export async function getFinancialAnalytics(propertyId: string | null | undefined, year: number): Promise<AnalyticData> {
     const currentUser = await getCurrentUser();
     if (!currentUser) throw new Error("Unauthorized");
 
-    // 1. Fetch Property (for Value)
-    const property = await prisma.property.findUnique({
-        where: { id: propertyId }
-    });
-    const propertyValue = property?.purchasePrice || 0; // Stored in Euros
-    // In seed: Purchase Price = 165000. Is it in cents? Seed says 165000. Usually prices are large.
-    // If 165k Euros, let's assume stored in Cents consistent with others? 
-    // Seed script: `purchasePrice: PURCHASE_PRICE` where const PURCHASE_PRICE = 165000.
-    // Prisma Schema: `Int?`. 
-    // If it's 165k Euros, it fits in Int. If it's cents (16.5M cents), fits in Int.
-    // But `price` in listing is just `Int`. Usually cents everywhere in app.
-    // Let's assume input was Euros in seed for properties but maybe I should have put cents?
-    // Listing price 650 is Euro input -> 65000 cents.
-    // Property Price 165000 input -> 165000 Euros? Or 165000 cents (1650€)?
-    // Usually property prices are > 100k. 
-    // Let's assume stored in Euros for Property Price in Schema to fit Int range comfortably (2 Billion limit).
-    // 165000 Euros * 100 = 16,500,000. Fits easily.
-    // Let's assume Cents for consistency.
-    // Wait, let's check seed again. `data: { purchasePrice: PURCHASE_PRICE }`. 
-    // `const PURCHASE_PRICE = 165000;`. 
-    // If I meant 165k€, and strict cents usage, I should have done 165000 * 100.
-    // I likely failed consistency in seed. I will check analytics output and adjust multiplier.
-    // Assuming Property Purchase Price is stored in EUROS (no cents) because large numbers.
-    // Okay, let's treat property.purchasePrice as Euros.
+    // 1. Determine Scope & Fetch Property Value
+    let propertyValue = 0;
+    let targetPropertyIds: string[] = [];
+
+    if (propertyId) {
+        // Single Property Mode
+        targetPropertyIds = [propertyId];
+        const property = await prisma.property.findUnique({
+            where: { id: propertyId }
+        });
+        propertyValue = property?.purchasePrice || 0;
+    } else {
+        // Global Mode (All properties)
+        const allProperties = await prisma.property.findMany({
+            where: { ownerId: currentUser.id }
+        });
+        targetPropertyIds = allProperties.map(p => p.id);
+        propertyValue = allProperties.reduce((sum, p) => sum + (p.purchasePrice || 0), 0);
+    }
 
     // 2. Calculate Income (Rent)
-    // Query LeaseFinancials history for this property (via RentalApplications -> Listing -> RentalUnit -> Property)
-    // Actually easier to query Applications linked effectively.
-    // But `LeaseFinancials` are linked to Application.
-    // Get all Applications for this Property.
     const applications = await prisma.rentalApplication.findMany({
         where: {
             listing: {
-                rentalUnit: { propertyId: propertyId }
+                rentalUnit: {
+                    propertyId: { in: targetPropertyIds }
+                }
             },
             leaseStatus: 'SIGNED'
         },
@@ -128,9 +125,7 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
                 if (monthDate < fin.startDate) continue;
                 if (fin.endDate && monthDate > fin.endDate) continue;
 
-                // Add Rent (Base + Charges) ? usually Yield is on BASE rent.
-                // Cashflow is on TOTAL rent received.
-                // Let's separate? Cashflow = Total In. 
+                // Add Rent (Base + Charges)
                 monthlyIncome[m] += (fin.baseRentCents + fin.serviceChargesCents);
             }
         }
@@ -139,7 +134,7 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
     // 3. Calculate Expenses
     const expenses = await prisma.expense.findMany({
         where: {
-            propertyId,
+            propertyId: { in: targetPropertyIds },
             dateOccurred: {
                 gte: startOfYear,
                 lte: endOfYear
@@ -220,6 +215,78 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
     let yieldNetPrev: number | null = null;
     let yieldNetNetPrev: number | null = null;
 
+    // --- NEW: Vacancy Loss Calculation (YTD) ---
+    // We calculate "Manque à Gagner" based on Time Elapsed to avoid showing future vacancy as a loss.
+
+    const now = new Date();
+    const isCurrentYear = year === now.getFullYear();
+    const isPastYear = year < now.getFullYear();
+
+    // 1. Calculate Fraction of Year Elapsed
+    let fractionOfYear = 0;
+    const daysInYear = ((year % 4 === 0 && year % 100 > 0) || year % 400 === 0) ? 366 : 365;
+
+    if (isPastYear) {
+        fractionOfYear = 1.0;
+    } else if (isCurrentYear) {
+        const startOfYear = new Date(year, 0, 1);
+        const diffTime = Math.abs(now.getTime() - startOfYear.getTime());
+        const daysElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        fractionOfYear = Math.min(daysElapsed / daysInYear, 1.0);
+    } else {
+        fractionOfYear = 0.0;
+    }
+
+    // 2. Calculate Potential Rent YTD
+    // Sum of (Monthly Listing Price * 12) * fraction
+    let totalAnnualPotential = 0;
+
+    const listings = await prisma.listing.findMany({
+        where: {
+            rentalUnit: {
+                propertyId: { in: targetPropertyIds }
+            }
+        },
+        include: { rentalUnit: true }
+    });
+
+    const processedUnits = new Set<string>();
+
+    for (const listing of listings) {
+        if (!processedUnits.has(listing.rentalUnitId)) {
+            processedUnits.add(listing.rentalUnitId);
+            if (listing.price) {
+                totalAnnualPotential += (listing.price * 100 * 12);
+            }
+        }
+    }
+
+    const potentialRentYTD = totalAnnualPotential * fractionOfYear;
+
+    // 3. Calculate Real Income YTD
+    // We approximate this from the already computed monthlyIncome array.
+    let realIncomeYTD = 0;
+
+    if (isPastYear) {
+        realIncomeYTD = totalIncomeCents; // Full year
+    } else if (isCurrentYear) {
+        // Sum full months + pro-rata current month
+        const currentMonthIndex = now.getMonth(); // 0..11
+
+        for (let i = 0; i < currentMonthIndex; i++) {
+            realIncomeYTD += monthlyIncome[i];
+        }
+
+        // Add current month pro-rata
+        const currentMonthIncome = monthlyIncome[currentMonthIndex];
+        const daysInCurrentMonth = new Date(year, currentMonthIndex + 1, 0).getDate();
+        const currentMonthRatio = Math.min(now.getDate() / daysInCurrentMonth, 1.0);
+
+        realIncomeYTD += (currentMonthIncome * currentMonthRatio);
+    }
+
+    const vacancyLossCents = Math.max(0, potentialRentYTD - realIncomeYTD);
+
     try {
         const prevYear = year - 1;
         const startPrev = new Date(prevYear, 0, 1);
@@ -247,7 +314,7 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
         // Expenses N-1
         const expensesPrev = await prisma.expense.aggregate({
             where: {
-                propertyId,
+                propertyId: { in: targetPropertyIds },
                 dateOccurred: { gte: startPrev, lte: endPrev }
             },
             _sum: { amountTotalCents: true }
@@ -335,6 +402,7 @@ export async function getFinancialAnalytics(propertyId: string, year: number): P
         totalIncomePrev,
         yieldGrossPrev: yieldGrossPrev ? parseFloat(yieldGrossPrev.toFixed(2)) : null,
         yieldNetPrev: yieldNetPrev ? parseFloat(yieldNetPrev.toFixed(2)) : null,
-        yieldNetNetPrev: yieldNetNetPrev ? parseFloat(yieldNetNetPrev.toFixed(2)) : null
+        yieldNetNetPrev: yieldNetNetPrev ? parseFloat(yieldNetNetPrev.toFixed(2)) : null,
+        vacancyLoss: vacancyLossCents / 100
     };
 }

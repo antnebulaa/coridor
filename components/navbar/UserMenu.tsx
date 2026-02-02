@@ -1,8 +1,17 @@
 'use client';
 
-import { AiOutlineMenu } from "react-icons/ai";
-import { IoSettingsOutline, IoLogOutOutline, IoHeartOutline, IoKeyOutline, IoQrCodeOutline, IoPeopleOutline } from "react-icons/io5";
-import { MessageSquare, LayoutDashboard } from "lucide-react";
+import {
+    Menu,
+    MessageSquare,
+    CircleGauge,
+    Heart,
+    Wallet,
+    Key,
+    Users,
+    QrCode,
+    Sparkles,
+    Settings
+} from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Avatar from "../Avatar";
@@ -124,7 +133,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             p-4
             md:py-1
             md:px-2
-            border-[1px] 
+            border 
             border-border 
             hidden
             md:flex 
@@ -137,7 +146,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             transition
           "
                 >
-                    <AiOutlineMenu />
+                    <Menu size={18} strokeWidth={3} />
                     {unreadCount && unreadCount > 0 ? (
                         <div className="absolute top-0 right-0 h-3 w-3 bg-primary rounded-full border-2 border-background" />
                     ) : null}
@@ -159,7 +168,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             right-0
             top-12
             text-popover-foreground
-            z-[9999]
+            z-9999
             "
                 >
                     <div className="flex flex-col">
@@ -172,9 +181,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     <button
                                         onClick={() => router.push('/account/personal-info')}
                                         className="
-                      w-full 
-                      py-2 
-                      rounded-full 
                       w-full 
                       py-2 
                       rounded-full 
@@ -192,22 +198,22 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                 <hr className="border-border w-full" />
 
                                 {/* Menu Items */}
-                                <div className="flex flex-col p-2">
+                                <div className="flex flex-col p-2 font-medium">
                                     <div
                                         onClick={() => router.push('/dashboard')}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <LayoutDashboard size={20} className="text-muted-foreground" strokeWidth={2} />
-                                        <span>Tableau de bord</span>
+                                        <CircleGauge size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Tableau de bord</span>
                                     </div>
 
                                     <div
                                         onClick={() => router.push('/inbox')}
-                                        className="flex items-center justify-between px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <MessageSquare size={20} className="text-muted-foreground" strokeWidth={2} />
-                                            <span>Messages</span>
+                                        <div className="flex items-center gap-4">
+                                            <MessageSquare size={24} className="text-neutral-700" />
+                                            <span className="font-medium text-neutral-700">Messages</span>
                                         </div>
                                         {unreadCount && unreadCount > 0 ? (
                                             <div className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -218,57 +224,74 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
                                     <div
                                         onClick={() => router.push('/favorites')}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <IoHeartOutline size={20} className="text-muted-foreground" strokeWidth="40" />
-                                        <span>Favoris</span>
+                                        <Heart size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Favoris</span>
                                     </div>
 
                                     {currentUser.userMode === 'LANDLORD' ? (
-                                        <div
-                                            onClick={() => router.push('/properties')}
-                                            className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
-                                        >
-                                            <IoKeyOutline size={20} className="text-muted-foreground" strokeWidth="40" />
-                                            <span>Mes locations</span>
-                                        </div>
+                                        <>
+                                            <div
+                                                onClick={() => router.push('/dashboard/finances')}
+                                                className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                            >
+                                                <Wallet size={24} className="text-neutral-700" />
+                                                <span className="font-medium text-neutral-700">Mes finances</span>
+                                            </div>
+                                            <div
+                                                onClick={() => router.push('/properties')}
+                                                className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                            >
+                                                <Key size={24} className="text-neutral-700" />
+                                                <span className="font-medium text-neutral-700">Mes locations</span>
+                                            </div>
+                                        </>
                                     ) : (
                                         <div
                                             onClick={() => router.push('/rentals')}
-                                            className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                            className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                         >
-                                            <IoKeyOutline size={20} className="text-muted-foreground" strokeWidth="40" />
-                                            <span>Ma location</span>
+                                            <Key size={24} className="text-neutral-700" />
+                                            <span className="font-medium text-neutral-700">Ma location</span>
                                         </div>
                                     )}
 
                                     <div
                                         onClick={() => router.push('/contacts')}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <IoPeopleOutline size={20} className="text-muted-foreground" strokeWidth="40" />
-                                        <span>Mes contacts</span>
+                                        <Users size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Mes contacts</span>
                                     </div>
 
                                     <div
                                         onClick={myCodeModal.onOpen}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <IoQrCodeOutline size={20} className="text-muted-foreground" strokeWidth="40" />
-                                        <span>Mon QR Code</span>
+                                        <QrCode size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Mon QR Code</span>
+                                    </div>
+
+                                    <div
+                                        onClick={() => router.push('/pricing')}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    >
+                                        <Sparkles size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Abonnement</span>
                                     </div>
 
                                     <div
                                         onClick={() => router.push('/account/settings')}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <IoSettingsOutline size={20} className="text-muted-foreground" strokeWidth="40" />
-                                        <span>Réglages</span>
+                                        <Settings size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Réglages</span>
                                     </div>
 
                                     {/* Mode Switch */}
-                                    <div className="flex items-center justify-between px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition">
-                                        <span>Mode</span>
+                                    <div className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl cursor-pointer transition">
+                                        <span className="font-medium text-neutral-700">Mode</span>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -281,7 +304,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                         rounded-full 
                         text-sm 
                         font-medium 
-                        border-[1px] 
+                        border 
                         border-border
                         hover:border-foreground/50
                         transition
@@ -298,9 +321,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                 <div className="p-2">
                                     <div
                                         onClick={() => signOut()}
-                                        className="flex items-center gap-3 px-3 py-2 hover:bg-secondary rounded-lg cursor-pointer transition"
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <span>Déconnexion</span>
+                                        <span className="font-medium text-neutral-700">Déconnexion</span>
                                     </div>
                                 </div>
                             </>

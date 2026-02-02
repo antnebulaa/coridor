@@ -10,12 +10,14 @@ interface HeadingProps {
 const Heading: React.FC<HeadingProps> = ({ title, subtitle, center, subtitleClassName }) => {
     return (
         <div className={center ? 'text-center' : 'text-start'}>
-            <div className="text-2xl font-medium">
+            <div className="text-3xl font-semibold">
                 {title}
             </div>
-            <div className={`font-normal text-muted-foreground whitespace-pre-wrap ${subtitleClassName || 'mt-2'}`}>
-                {subtitle}
-            </div>
+            {subtitle && (
+                <div className={`font-normal text-muted-foreground whitespace-pre-wrap ${subtitleClassName || 'mt-2'}`}>
+                    {subtitle}
+                </div>
+            )}
         </div>
     );
 };

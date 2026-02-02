@@ -85,7 +85,7 @@ model User {
   accounts     Account[]
   // listings     Listing[] // REMOVED in 3-Tier Refactor
   properties   Property[]
-  reservations Reservation[]
+
   wishlists    Wishlist[]
 
   tenantProfile TenantProfile?
@@ -104,6 +104,7 @@ model User {
   commuteLocations CommuteLocation[] // NEW: Relation to commute locations
   likes            Like[]
   visitSlots       VisitSlot[]   // Availability linked to User + Location
+  bankConnections  BankConnection[] // NEW: Banking Connectivity
 }
 
 model TenantProfile {
@@ -126,6 +127,9 @@ model TenantProfile {
   rentVerified       Boolean @default(false)
   detectedRentAmount Int?
   rentPaymentDate    Int? // Day of the month (1-31)
+
+  // Bio
+  bio               String?
 
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   guarantors        Guarantor[]
@@ -328,7 +332,7 @@ model Listing {
   rentalUnit    RentalUnit @relation(fields: [rentalUnitId], references: [id], onDelete: Cascade)
   
   // User Interactions (Commercial Links)
-  reservations  Reservation[]
+
   wishlists     Wishlist[]
   conversations Conversation[]
   visits        Visit[]
@@ -442,18 +446,7 @@ model PropertyImage {
   room         Room?       @relation(fields: [roomId], references: [id])
 }
 
-model Reservation {
-  id         String   @id @default(uuid())
-  userId     String
-  listingId  String
-  startDate  DateTime
-  endDate    DateTime
-  totalPrice Int
-  createdAt  DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
 
 model Wishlist {
   id        String   @id @default(uuid())
@@ -597,6 +590,7 @@ model RentalApplication {
   
   // Financial History
   financials         LeaseFinancials[]
+  matchedTransactions BankTransaction[]
 }
 
 model LeaseFinancials {
@@ -730,4 +724,50 @@ model RentIndex {
   publishedAt DateTime
 
   @@unique([year, quarter])
+}
+// BANKING CONNECTIVITY
+model BankConnection {
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String   @default("POWENS")
+  connectionId String?  // Powens External ID
+  
+  accessToken  String?  @db.Text
+  refreshToken String?  @db.Text
+  tokenExpiresAt DateTime?
+
+  lastSyncedAt DateTime?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions BankTransaction[]
+  
+  @@unique([userId, connectionId]) 
+}
+
+model BankTransaction {
+  id               String   @id @default(uuid())
+  bankConnectionId String
+  remoteId         String   // Powens Transaction ID
+  
+  date             DateTime
+  label            String   // Wording
+  amount           Float    // Positive = Credit, Negative = Debit
+  currency         String   @default("EUR")
+  
+  category         String?  // Powens Category
+  
+  isProcessed      Boolean  @default(false)
+  
+  // Link to Lease if we matched it (Rent Payment)
+  matchedLeaseId   String?
+  matchedLease     RentalApplication? @relation(fields: [matchedLeaseId], references: [id])
+  
+  createdAt        DateTime @default(now())
+
+  bankConnection   BankConnection @relation(fields: [bankConnectionId], references: [id], onDelete: Cascade)
+  
+  @@unique([bankConnectionId, remoteId])
 }

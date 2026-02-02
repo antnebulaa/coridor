@@ -370,6 +370,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
             {/* Sidebar / Bottom Panel */}
             <div className={`
                 fixed bottom-0 left-0 right-0 z-30 flex flex-col w-full
+                md:relative md:inset-auto md:w-[380px]
                 pointer-events-none md:pointer-events-auto
                 bg-transparent md:bg-white 
                 border-t-0 md:border-t md:border-l border-neutral-200 

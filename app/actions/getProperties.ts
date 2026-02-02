@@ -42,7 +42,7 @@ export default async function getProperties() {
                         },
                         listings: {
                             include: {
-                                reservations: true,
+
                                 applications: {
                                     where: {
                                         leaseStatus: 'SIGNED'
@@ -122,19 +122,7 @@ export default async function getProperties() {
                         totalFloors: property.totalFloors,
                         isFurnished: unit.isFurnished,
                         // ... mapped fields logic similar to getListingById
-                        reservations: (listing.reservations || []).map((reservation: any) => ({
-                            ...reservation,
-                            createdAt: reservation.createdAt?.toISOString(),
-                            startDate: reservation.startDate?.toISOString(),
-                            endDate: reservation.endDate?.toISOString(),
-                            listing: {
-                                ...listing,
-                                createdAt: listing.createdAt?.toISOString(),
-                                updatedAt: listing.updatedAt?.toISOString(),
-                                statusUpdatedAt: listing.statusUpdatedAt?.toISOString() || null,
-                                availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
-                            }
-                        })),
+
                         activeApplications: (listing.applications || []).map((app: any) => ({
                             ...app,
                             createdAt: app.createdAt?.toISOString(),

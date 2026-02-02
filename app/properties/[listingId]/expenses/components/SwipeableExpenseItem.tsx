@@ -90,7 +90,7 @@ const SwipeableExpenseItem: React.FC<SwipeableExpenseItemProps> = ({
                 animate={controls}
                 onDragEnd={handleDragEnd}
                 style={{ x, touchAction: "pan-y" }}
-                className={`relative bg-white z-10 rounded-xl shadow-sm border border-neutral-200 ${!disabled && "cursor-grab active:cursor-grabbing"}`}
+                className={`relative bg-white z-10 rounded-xl ${!disabled && "cursor-grab active:cursor-grabbing"}`}
             >
                 {children}
             </motion.div>

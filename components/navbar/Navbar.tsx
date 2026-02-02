@@ -21,7 +21,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
 
     return (
         <div
-            className={`fixed w-full z-[9999] transition-colors duration-200 pt-safe ${isHomePage ? 'bg-transparent md:bg-background' : 'bg-background'} ${!isHomePage ? 'hidden md:block' : ''}`}
+            className={`fixed w-full z-9999 transition-colors duration-200 pt-safe ${isHomePage ? 'bg-transparent md:bg-background' : 'bg-background'} ${!isHomePage ? 'hidden md:block' : ''}`}
             suppressHydrationWarning
         >
             <div className={`py-2 md:py-4 ${isHomePage ? 'border-none md:border-b' : 'border-b'} border-border`}>
@@ -73,7 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                                     <UserMenu currentUser={currentUser} unreadCount={unreadCount} />
                                 </div>
                             </div>
-                            {isHomePage && <Search />}
+                            {isHomePage && currentUser?.userMode !== 'LANDLORD' && <Search />}
                         </div>
 
                         {/* Right Side: User Menu */}

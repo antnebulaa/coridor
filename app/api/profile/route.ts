@@ -22,7 +22,8 @@ export async function POST(
         guarantors,
         additionalIncomes,
         aplAmount,
-        aplDirectPayment
+        aplDirectPayment,
+        bio
     } = body;
 
     // Upsert Tenant Profile
@@ -38,7 +39,8 @@ export async function POST(
             partnerJobTitle,
             partnerNetSalary: parseInt(partnerNetSalary, 10) || 0,
             aplAmount: parseInt(aplAmount, 10) || 0,
-            aplDirectPayment
+            aplDirectPayment,
+            bio
         },
         create: {
             userId: currentUser.id,
@@ -49,7 +51,8 @@ export async function POST(
             partnerJobTitle,
             partnerNetSalary: parseInt(partnerNetSalary, 10) || 0,
             aplAmount: parseInt(aplAmount, 10) || 0,
-            aplDirectPayment
+            aplDirectPayment,
+            bio
         }
     });
 

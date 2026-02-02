@@ -10,7 +10,7 @@ import RegisterModal from "@/components/modals/RegisterModal";
 import LoginModal from "@/components/modals/LoginModal";
 import RentModal from "@/components/modals/RentModal";
 import WishlistModal from "@/components/modals/WishlistModal";
-import LeaseModal from "@/components/modals/LeaseModal";
+
 import MyCodeModal from "@/components/modals/MyCodeModal";
 import { Toaster } from "react-hot-toast";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -112,7 +112,7 @@ export default async function RootLayout({
             <LoginModal />
             <WishlistModal />
             <MyCodeModal currentUser={currentUser} />
-            <LeaseModal currentUser={currentUser} />
+
             <Suspense fallback={<div></div>}>
               <Navbar currentUser={currentUser} />
             </Suspense>

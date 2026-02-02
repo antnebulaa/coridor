@@ -160,18 +160,7 @@ export default async function getListings(
             };
         }
 
-        if (startDate && endDate) {
-            query.NOT = {
-                reservations: {
-                    some: {
-                        OR: [
-                            { endDate: { gte: startDate }, startDate: { lte: startDate } },
-                            { startDate: { lte: endDate }, endDate: { gte: endDate } }
-                        ]
-                    }
-                }
-            };
-        }
+
 
         const rentalUnitQuery: any = {
             isActive: true

@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface KPICardsProps {
     data: {
+        year: number; // Add Year to prop
         totalIncome: number;
         totalExpenses: number;
         netBenefit: number;
@@ -25,13 +26,14 @@ interface KPICardsProps {
         yieldGrossPrev: number | null;
         yieldNetPrev: number | null;
         yieldNetNetPrev: number | null;
+
+        vacancyLoss: number;
     }
 }
 
 const KPICard = ({ title, value, subtext, icon: Icon, color, className, chart }: any) => (
     <div className={`bg-white p-3 rounded-2xl pl-3 flex flex-col gap-1 ${className}`}>
         <div className="flex items-center gap-2 mb-1">
-
             <p className="text-sm text-neutral-700 font-semibold">{title}</p>
         </div>
 
@@ -81,9 +83,11 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                 </div>
             )}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 w-full">
+
+                {/* 1. Cashflow Net (Ex Bénéfice Net) */}
                 <KPICard
-                    title="Bénéfice Net"
+                    title={`Cashflow Net ${data.year}`}
                     value={`${data.netBenefit > 0 ? '+' : ''}${data.netBenefit.toFixed(0)} €`}
                     subtext={
                         data.netBenefitEvolution !== null ? (
@@ -94,11 +98,12 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                     }
                     icon={Wallet}
                     color={data.netBenefit >= 0 ? "bg-green text-green-600" : "bg-red-500 text-red-600"}
-                    className="col-span-2 md:col-span-1"
+                    className="col-span-1"
                 />
 
+                {/* 2. Revenus Encaissés (Ex Revenus Totaux) */}
                 <KPICard
-                    title="Revenus Totaux"
+                    title={`Revenus Encaissés ${data.year}`}
                     value={
                         <div className="flex items-center gap-2">
                             {`${data.totalIncome.toFixed(0)} €`}
@@ -109,13 +114,23 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                             )}
                         </div>
                     }
-                    subtext="Loyers + Charges"
+                    subtext="Loyers + Charges perçus"
                     icon={ArrowDownAZ}
                     color="bg-indigo text-indigo-600"
                 />
 
+                {/* 3. Manque à Gagner (Vacancy Loss) - NEW */}
                 <KPICard
-                    title="Rendement Brute"
+                    title="Manque à Gagner"
+                    value={`${data.vacancyLoss.toFixed(0)} €`}
+                    subtext="Loyers potentiels non perçus"
+                    icon={Wallet}
+                    color="bg-orange text-orange-600"
+                />
+
+                {/* 4. Rendement Brut */}
+                <KPICard
+                    title="Rendement Brut"
                     value={
                         <div className="flex items-center gap-2">
                             {`${data.yieldGross.toFixed(2)} %`}
@@ -131,6 +146,7 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                     color="bg-blue text-blue-600"
                 />
 
+                {/* 5. Rendement Net */}
                 <KPICard
                     title="Rendement Net"
                     value={
@@ -143,28 +159,12 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                             )}
                         </div>
                     }
-                    subtext={data.yieldNet === 0 ? "Prix d'achat manquant" : "Bénéfice / Prix d'achat"}
+                    subtext={data.yieldNet === 0 ? "Prix d'achat manquant" : "Cashflow / Prix d'achat"}
                     icon={PiggyBank}
                     color="bg-purple text-purple-600"
                 />
 
-                <KPICard
-                    title="Rendement Net Net"
-                    value={
-                        <div className="flex items-center gap-2">
-                            {`${data.yieldNetNet.toFixed(2)} %`}
-                            {data.yieldNetNetEvolution !== null && data.yieldNetNetEvolution !== 0 && (
-                                <span className={`text-sm font-medium ${data.yieldNetNetEvolution > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                    {data.yieldNetNetEvolution > 0 ? '↗' : '↘'} {Math.abs(data.yieldNetNetEvolution).toFixed(1)}%
-                                </span>
-                            )}
-                        </div>
-                    }
-                    subtext={data.yieldNetNet === 0 ? "Estimation impossible" : "Après impôts (estim. 30%)"}
-                    icon={PiggyBank}
-                    color="bg-pink text-pink-600"
-                />
-
+                {/* 6. Dépenses (Pie Chart) */}
                 <KPICard
                     title="Dépenses Totales"
                     value={`${data.totalExpenses.toFixed(0)} €`}
@@ -202,7 +202,7 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
                     }
                     icon={ArrowDownAZ}
                     color="bg-rose text-rose-600"
-                    className="col-span-2 md:col-span-1"
+                    className="col-span-1"
                 />
             </div>
         </div>

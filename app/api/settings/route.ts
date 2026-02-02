@@ -29,7 +29,8 @@ export async function POST(
         userMode,
         measurementSystem,
         birthDate,
-        birthPlace
+        birthPlace,
+        image // NEW
     } = body;
 
     const updatedUser = await prisma.user.update({
@@ -52,7 +53,8 @@ export async function POST(
             userMode,
             measurementSystem,
             birthDate,
-            birthPlace
+            birthPlace,
+            image // NEW
         }
     });
 

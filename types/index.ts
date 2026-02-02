@@ -1,6 +1,6 @@
 import {
     Listing,
-    Reservation,
+
     User,
     Room,
     PropertyImage,
@@ -155,23 +155,14 @@ export type SafeListing = Omit<
     // Added for facade compatibility
     locationValue: string | null;
     description: string;
-    reservations?: SafeReservation[];
+
     charges?: any; // { amount: number, included: boolean }
 
     // Global Availability for Landlord Conflict Checking
     userGlobalSlots?: SafeVisitSlot[];
 };
 
-export type SafeReservation = Omit<
-    Reservation,
-    "createdAt" | "startDate" | "endDate" | "listing"
-> & {
-    createdAt: string;
-    startDate: string;
-    endDate: string;
-    listing: SafeListing;
-    user: SafeUser;
-};
+
 
 export type SafeWishlist = Omit<
     Wishlist,
@@ -248,4 +239,13 @@ export type SafeMessage = Omit<
     seen: SafeUser[];
     listing?: SafeListing | null;
     listingId?: string | null;
+};
+
+export type SafeVisit = Omit<
+    Visit,
+    "createdAt" | "date"
+> & {
+    createdAt: string;
+    date: string;
+    listing: any;
 };

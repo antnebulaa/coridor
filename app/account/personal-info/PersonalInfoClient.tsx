@@ -14,6 +14,7 @@ import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/Map
 import { Button } from "@/components/ui/Button";
 import { AlertCircle } from "lucide-react";
 import CustomToast from "@/components/ui/CustomToast";
+import ProfileGradientGenerator from "@/components/inputs/ProfileGradientGenerator";
 
 // Helper for status badges
 const StatusBadge = ({ isComplete }: { isComplete: boolean }) => (
@@ -38,6 +39,7 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
     const [isEditingEmail, setIsEditingEmail] = useState(false);
     const [isEditingPhone, setIsEditingPhone] = useState(false);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [isEditingImage, setIsEditingImage] = useState(false); // NEW
 
     // Initial Split of Name if firstName/lastName not set
     const initialSplit = currentUser?.name ? currentUser.name.split(' ') : ['', ''];
@@ -67,6 +69,7 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             country: currentUser?.country || '',
             birthDate: currentUser?.birthDate ? currentUser.birthDate.split('T')[0] : '',
             birthPlace: currentUser?.birthPlace,
+            image: currentUser?.image, // NEW
         }
     });
 
@@ -85,6 +88,8 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
         // Normalize Date
         if (data.birthDate) {
             data.birthDate = new Date(data.birthDate).toISOString();
+        } else {
+            data.birthDate = null;
         }
 
         // Reconstruct 'name' for backward compatibility
@@ -106,6 +111,7 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                 setIsEditingEmail(false);
                 setIsEditingPhone(false);
                 setIsEditingAddress(false);
+                setIsEditingImage(false); // NEW
             })
             .catch(() => {
                 toast.custom((t) => (
@@ -127,6 +133,66 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                 title="Informations personnelles"
                 subtitle="Mettez à jour vos informations et comment nous pouvons vous joindre."
             />
+
+            {/* BLOCK 0: PHOTO DE PROFIL */}
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-row justify-between items-start">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-3">
+                            <div className="text-lg font-medium dark:text-white">
+                                Photo de profil
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                            {isEditingImage ?
+                                'Personnalisez votre avatar avec un dégradé unique.' :
+                                (
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 h-16 shrink-0 rounded-full overflow-hidden border border-neutral-200">
+                                            {currentUser?.image ? (
+                                                <img src={currentUser.image} alt="Avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
+                                                    Aucune
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-neutral-500">
+                                            Votre avatar est visible par les propriétaires et les candidats.
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div>
+                    </div>
+                    <div
+                        onClick={() => setIsEditingImage(!isEditingImage)}
+                        className="text-black dark:text-white animated-underline font-medium cursor-pointer"
+                    >
+                        {isEditingImage ? 'Annuler' : 'Modifier'}
+                    </div>
+                </div>
+
+                {isEditingImage && (
+                    <div className="w-full flex flex-col gap-6">
+                        <ProfileGradientGenerator
+                            initialImage={currentUser?.image}
+                            onImageGenerated={(base64) => {
+                                setValue('image', base64, { shouldDirty: true });
+                            }}
+                        />
+                        <div className="w-full md:w-1/3">
+                            <Button
+                                label="Enregistrer mon nouvel avatar"
+                                onClick={handleSubmit(onSubmit)}
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <hr />
 
             {/* BLOCK 1: IDENTITÉ (Nom, Prénom, Naissance) */}
             <div className="flex flex-col gap-4">

@@ -5,39 +5,22 @@ import axios from "axios";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { SafeReservation, SafeUser } from "@/types";
+import { SafeUser } from "@/types";
 
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import ListingCard from "@/components/listings/ListingCard";
 
 interface RentalsClientProps {
-    reservations: SafeReservation[];
+    leases: any[]; // Use any or proper type like SafeRentalApplication
     currentUser?: SafeUser | null;
 }
 
 const RentalsClient: React.FC<RentalsClientProps> = ({
-    reservations,
+    leases,
     currentUser
 }) => {
     const router = useRouter();
-    const [deletingId, setDeletingId] = useState('');
-
-    const onCancel = useCallback((id: string) => {
-        setDeletingId(id);
-
-        axios.delete(`/api/reservations/${id}`)
-            .then(() => {
-                toast.success('Reservation cancelled');
-                router.refresh();
-            })
-            .catch((error) => {
-                toast.error(error?.response?.data?.error);
-            })
-            .finally(() => {
-                setDeletingId('');
-            })
-    }, [router]);
 
     return (
         <Container>
@@ -58,15 +41,14 @@ const RentalsClient: React.FC<RentalsClientProps> = ({
           gap-8
         "
             >
-                {reservations.map((reservation) => (
+                {leases.map((lease) => (
                     <ListingCard
-                        key={reservation.id}
-                        data={reservation.listing}
-                        reservation={reservation}
-                        actionId={reservation.id}
-                        onAction={onCancel}
-                        disabled={deletingId === reservation.id}
-                        actionLabel="Cancel reservation"
+                        key={lease.id}
+                        data={lease.listing}
+                        actionId={lease.id}
+                        onAction={() => { }}
+                        disabled={false}
+                        actionLabel=""
                         currentUser={currentUser}
                     />
                 ))}

@@ -391,7 +391,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                         `}
                         >
                             <div className={`
-                            absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all
+                            absolute top-1 w-4 h-4 rounded-full bg-white transition-all
                             ${isRecoverable ? 'left-7' : 'left-1'}
                         `} />
                         </div>
@@ -529,7 +529,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     </div>
 
                     {/* Content Box */}
-                    <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
+                    <div className="md:border md:border-neutral-200 md:rounded-xl relative bg-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
 
                         <PageBody padVertical={false} className="px-4 md:px-8 md:py-8 py-6">
                             {/* Mobile Section Title (Non-sticky) */}
@@ -577,7 +577,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                     disabled={expense.isFinalized}
                                                 >
                                                     <div className={`p-3 flex items-center justify-between ${expense.isFinalized ? 'opacity-75' : ''}`}>
-                                                        <div className="flex items-center gap-3 flex-1 min-w-0 pl-2">
+                                                        <div className="flex items-center gap-3 flex-1 min-w-0 pl-0">
                                                             {/* Icon Box */}
                                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${category?.bg || 'bg-neutral-100'}`}>
                                                                 <CategoryIcon size={20} className={category?.color || 'text-neutral-700'} />

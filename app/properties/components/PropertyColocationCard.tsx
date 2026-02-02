@@ -32,15 +32,11 @@ const PropertyColocationCard: React.FC<PropertyColocationCardProps> = ({
     const roomStates = sortedRooms.map((unit: any) => {
         const listing = unit.listings?.[0]; // Assuming 1 active listing per unit logic for now
 
-        // Check Reservation
-        const hasActiveReservation = listing?.reservations?.some((r: any) => new Date(r.endDate) > new Date());
-
         // Check Lease (Active Application)
-        // Note: listing.activeApplications is mapped in getProperties standardly, but let's be safe
         const activeLease = listing?.activeApplications?.[0];
         const hasActiveLease = !!activeLease;
 
-        const isOccupied = hasActiveReservation || hasActiveLease;
+        const isOccupied = hasActiveLease;
 
         // Rent Logic: Use Financials if lease, else listing price
         let rentAmount = listing?.price || 0;

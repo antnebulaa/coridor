@@ -20,6 +20,7 @@ import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
 import { Button } from "@/components/ui/Button";
 import SoftButton from "@/components/ui/SoftButton";
+import SoftTextArea from "@/components/inputs/SoftTextArea";
 import TenantProfilePreview from "@/components/profile/TenantProfilePreview";
 
 interface TenantProfileClientProps {
@@ -128,7 +129,8 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
         guarantors: tenantProfile?.guarantors || [],
         additionalIncomes: tenantProfile?.additionalIncomes || [],
         aplAmount: tenantProfile?.aplAmount || '',
-        aplDirectPayment: tenantProfile?.aplDirectPayment || false
+        aplDirectPayment: tenantProfile?.aplDirectPayment || false,
+        bio: tenantProfile?.bio || ''
     };
 
     const {
@@ -149,6 +151,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
     const netSalary = watch('netSalary');
     const partnerNetSalary = watch('partnerNetSalary');
     const aplAmount = watch('aplAmount');
+    const bio = watch('bio');
 
     // Calculate totals
     const totalTenantIncome = (parseInt(netSalary || '0') || 0) + (parseInt(partnerNetSalary || '0') || 0);
@@ -301,6 +304,26 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                 />
 
                 <div className="flex flex-col gap-10">
+                    {/* Bio Section */}
+                    <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 bg-primary/10 rounded-full text-primary">
+                                <Info size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-semibold">À propos de vous</h3>
+                                <p className="text-sm text-muted-foreground">Présentez-vous en quelques mots aux propriétaires (passions, mode de vie...)</p>
+                            </div>
+                        </div>
+                        <SoftTextArea
+                            id="bio"
+                            label="Votre petite bio"
+                            disabled={isLoading}
+                            register={register}
+                            errors={errors}
+                        />
+                    </div>
+
                     {/* DossierFacile Section */}
                     <div className="flex flex-col items-center text-center gap-4 p-8 border border-border rounded-xl bg-secondary/50">
                         <button
