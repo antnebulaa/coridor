@@ -51,6 +51,9 @@ const getConversations = async () => {
                     }
                 },
                 messages: {
+                    orderBy: {
+                        createdAt: 'asc'
+                    },
                     include: {
                         sender: true,
                         seen: true
@@ -128,6 +131,9 @@ const getConversations = async () => {
                     },
                     listing: true, // Shallow fetch
                     messages: {
+                        orderBy: {
+                            createdAt: 'asc'
+                        },
                         include: {
                             sender: true,
                             seen: true

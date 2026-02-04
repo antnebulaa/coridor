@@ -40,7 +40,7 @@ const FeatureTag = ({
     variant?: 'default' | 'yellow' | 'blue';
     title?: string;
 }) => {
-    const baseStyles = "flex items-center justify-center gap-1  py-5 rounded-[12px] px-3 md:px-3.5 h-8 leading-none text-sm border border-neutral-100";
+    const baseStyles = "flex items-center justify-center gap-1  py-2 rounded-[12px] px-3 md:px-3.5 h-8 leading-none text-sm border border-neutral-100";
     const variants = {
         default: "bg-secondary text-foreground",
         yellow: "bg-[#FFFE3C] text-[#282828]",

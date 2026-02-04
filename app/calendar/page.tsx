@@ -3,6 +3,8 @@ import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getVisits from "@/app/actions/getVisits";
 import EmptyState from "@/components/EmptyState";
+import LandlordCalendarClient from "../components/calendar/LandlordCalendarClient";
+import getLandlordCalendarData from "../actions/getLandlordCalendarData";
 
 const CalendarPage = async ({ searchParams }: { searchParams: { view?: string } }) => {
     const currentUser = await getCurrentUser();
@@ -18,6 +20,22 @@ const CalendarPage = async ({ searchParams }: { searchParams: { view?: string } 
         );
     }
 
+    // Landlord Mode: Show Calendar by default
+    if (currentUser.userMode === 'LANDLORD') {
+        const calendarData = await getLandlordCalendarData();
+        if (calendarData) {
+            return (
+                <ClientOnly>
+                    <LandlordCalendarClient
+                        data={calendarData}
+                        currentUser={currentUser}
+                    />
+                </ClientOnly>
+            );
+        }
+    }
+
+    // Tenant Mode or explicitly requesting visits view
     const view = searchParams?.view || 'visits';
 
     if (view === 'visits') {

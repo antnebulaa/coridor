@@ -1,6 +1,7 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import useRealtimeNotifications from "./useRealtimeNotifications";
 
 interface UserCounters {
     unreadCount: number;
@@ -17,42 +18,42 @@ const useUserCounters = (currentUser?: any) => {
 
     const router = useRouter();
 
+    const fetchCounters = useCallback(async () => {
+        if (!currentUser) {
+            setCounters(prev => ({ ...prev, isLoading: false }));
+            return;
+        }
+
+        try {
+            const { data } = await axios.get('/api/user/counters');
+            setCounters({
+                unreadCount: data.unreadCount,
+                hasPendingAlert: data.hasPendingAlert,
+                isLoading: false
+            });
+        } catch (error) {
+            console.error("Failed to fetch user counters", error);
+            setCounters(prev => ({ ...prev, isLoading: false }));
+        }
+    }, [currentUser]);
+
+    // Initial fetch
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchCounters = async () => {
-            if (!currentUser) {
-                if (isMounted) {
-                    setCounters(prev => ({ ...prev, isLoading: false }));
-                }
-                return;
-            }
-
-            try {
-                const { data } = await axios.get('/api/user/counters');
-                if (isMounted) {
-                    setCounters({
-                        unreadCount: data.unreadCount,
-                        hasPendingAlert: data.hasPendingAlert,
-                        isLoading: false
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to fetch user counters", error);
-                if (isMounted) {
-                    setCounters(prev => ({ ...prev, isLoading: false }));
-                }
-            }
-        };
-
         fetchCounters();
+    }, [fetchCounters]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [currentUser]); // Re-fetch if user changes, or add a polling interval/trigger here if needed
+    // Realtime subscription - refetch on new message
+    useRealtimeNotifications({
+        userId: currentUser?.id,
+        onNewMessage: (payload) => {
+            console.log("UserCounters: New message received, refetching counters...", payload);
+            // Refetch counters when new message arrives
+            fetchCounters();
+        },
+    });
 
     return counters;
 };
 
 export default useUserCounters;
+

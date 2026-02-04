@@ -3,6 +3,7 @@ import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { format } from "date-fns";
 import { revalidatePath } from "next/cache";
+import { broadcastNewVisit } from "@/lib/supabaseServer";
 
 export async function POST(
     request: Request
@@ -135,6 +136,28 @@ export async function POST(
                 });
             }
             revalidatePath(`/inbox/${conversationId}`);
+        }
+
+        // Get landlord ID and broadcast the new visit
+        const listingWithOwner = await prisma.listing.findUnique({
+            where: { id: listingId },
+            include: {
+                rentalUnit: {
+                    include: {
+                        property: true
+                    }
+                }
+            }
+        });
+
+        const landlordId = listingWithOwner?.rentalUnit?.property?.ownerId;
+        if (landlordId) {
+            await broadcastNewVisit(landlordId, {
+                id: visit.id,
+                date: visit.date,
+                startTime: visit.startTime,
+                listingId: visit.listingId
+            });
         }
 
         return NextResponse.json(visit);

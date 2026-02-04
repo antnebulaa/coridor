@@ -4,10 +4,13 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay, parseISO, startOfToday, isAfter, isBefore } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, MapPin, User, Clock, Calendar, List } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import VisitDetailsModal from "./VisitDetailsModal";
 import Avatar from "@/components/Avatar";
+import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 
 interface PropertyData {
     id: string;
@@ -54,13 +57,28 @@ interface LandlordCalendarClientProps {
 
 const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     data,
+    currentUser
 }) => {
+    const router = useRouter();
     const [currentDate, setCurrentDate] = useState(startOfToday());
     const [view, setView] = useState<'day' | 'agenda'>('agenda');
     const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [headerHeight, setHeaderHeight] = useState(0);
     const headerRef = useRef<HTMLDivElement>(null);
+    const NAVBAR_HEIGHT_DESKTOP = 64; // Global navbar height on desktop (hidden on mobile)
+
+    // Realtime subscription for new visit bookings
+    useRealtimeNotifications({
+        userId: currentUser?.id,
+        onNewVisit: () => {
+            toast.success("Nouvelle visite réservée !", {
+                icon: "📅",
+                duration: 5000
+            });
+            router.refresh();
+        }
+    });
 
     // Measure header height for sticky positioning
     useEffect(() => {
@@ -79,20 +97,32 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         return () => observer.disconnect();
     }, []);
 
-    // Auto-scroll to Today
+    // Auto-scroll to Today (or first future date)
     useEffect(() => {
-        if (view === 'agenda') {
-            const todayElement = document.getElementById('today-anchor');
-            if (todayElement) {
-                // Scroll with offset taking header height into account
-                const elementPosition = todayElement.getBoundingClientRect().top + window.scrollY;
-                const offsetPosition = elementPosition - headerHeight - 20; // 20px buffer
+        if (view === 'agenda' && headerHeight > 0) {
+            const timer = setTimeout(() => {
+                // Try today first, then first future date, then empty state
+                let targetElement = document.getElementById('today-anchor');
+                if (!targetElement) {
+                    targetElement = document.getElementById('first-future-anchor');
+                }
+                if (!targetElement) {
+                    targetElement = document.getElementById('empty-state-anchor');
+                }
 
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "auto"
-                });
-            }
+                if (targetElement) {
+                    const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
+                    const isMobile = window.innerWidth < 768;
+                    const navbarOffset = isMobile ? 0 : NAVBAR_HEIGHT_DESKTOP;
+                    const offsetPosition = elementPosition - navbarOffset - headerHeight - 10;
+
+                    window.scrollTo({
+                        top: Math.max(0, offsetPosition),
+                        behavior: "auto"
+                    });
+                }
+            }, 100);
+            return () => clearTimeout(timer);
         }
     }, [view, data, headerHeight]);
 
@@ -215,7 +245,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 {/* Header with Ref */}
                 <div
                     ref={headerRef}
-                    className="sticky top-0 z-30 bg-white pt-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all border-b border-transparent shadow-sm"
+                    className="sticky top-0 md:top-16 z-30 bg-white pt-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all"
                 >
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <Heading
@@ -279,23 +309,35 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
 
                     {/* AGENDA VIEW */}
                     {view === 'agenda' && (
-                        <div className="flex flex-col pb-[80vh]">
+                        <div className="flex flex-col pb-[10vh]">
                             {Object.keys(agendaEvents).length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-[400px] text-neutral-500">
+                                <div id="empty-state-anchor" className="flex flex-col items-center justify-center h-[400px] text-neutral-500">
                                     <Calendar size={48} className="mb-4 text-neutral-300" />
                                     <p>Aucun événement à venir.</p>
                                 </div>
-                            ) : (
-                                Object.entries(agendaEvents).map(([date, events]) => {
-                                    const isToday = isSameDay(parseISO(date), new Date());
+                            ) : (() => {
+                                let firstFutureFound = false;
+                                return Object.entries(agendaEvents).map(([date, events]) => {
+                                    const parsedDate = parseISO(date);
+                                    const isToday = isSameDay(parsedDate, new Date());
+                                    const isPastDate = isBefore(parsedDate, startOfToday());
+
+                                    // Mark the first non-past date as fallback anchor
+                                    const isFirstFuture = !isPastDate && !firstFutureFound && !isToday;
+                                    if (isFirstFuture) firstFutureFound = true;
+
+                                    const anchorId = isToday ? 'today-anchor' : (isFirstFuture ? 'first-future-anchor' : undefined);
+
                                     return (
-                                        <div key={date} id={isToday ? 'today-anchor' : undefined}>
+                                        <div key={date} id={anchorId}>
                                             <div
-                                                className="sticky z-20 text-lg border-neutral-200 bg-white/95 backdrop-blur-sm px-4 py-3 font-semibold text-neutral-700 flex items-center gap-2 border-b"
-                                                style={{ top: `${headerHeight - 1}px` }}
+                                                className={`sticky z-20 text-lg backdrop-blur-sm px-4 py-3 font-semibold flex items-center gap-2 border-b transition-colors
+                                                    ${isPastDate ? 'bg-white text-neutral-500 border-neutral-100' : 'bg-white/95 text-neutral-700 border-neutral-200'}
+                                                `}
+                                                style={{ top: `${headerHeight}px` }}
                                             >
-                                                <Calendar size={16} />
-                                                {format(parseISO(date), 'EEEE d MMMM yyyy', { locale: fr })}
+                                                <Calendar size={16} className={isPastDate ? "text-neutral-500" : ""} />
+                                                <span className="capitalize">{format(parsedDate, 'EEEE d MMMM yyyy', { locale: fr })}</span>
                                                 {isToday && <span className="text-xs font-normal capitalize text-red-500 px-2 py-1 rounded-2xl ml-2">Aujourd'hui</span>}
                                             </div>
                                             <div className="space-y-2 pt-1 pb-6 px-3">
@@ -304,26 +346,40 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                     if (a.type === 'VISIT' && b.type === 'SLOT') return 1;
                                                     return 0; // Keep time sort if same type
                                                 }).map((event: any) => {
+                                                    // Determine if event is passed
+                                                    const [endH, endM] = event.endTime.split(':').map(Number);
+                                                    const eventEndDateTime = new Date(parsedDate);
+                                                    eventEndDateTime.setHours(endH, endM, 0, 0);
+                                                    const isPastEvent = isBefore(eventEndDateTime, new Date());
+
                                                     if (event.type === 'VISIT') {
                                                         // VISIT: Card Style (Restored)
                                                         return (
                                                             <div
                                                                 key={`${event.type}-${event.id}`}
                                                                 onClick={() => handleEventClick(event)}
-                                                                className="group bg-white border border-neutral-500 rounded-2xl p-3 cursor-pointer hover:border-1 hover:border-neutral-400 hover:shadow-md transition flex flex-row items-center gap-4"
+                                                                className={`
+                                                                    group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-4
+                                                                    ${isPastEvent
+                                                                        ? 'bg-neutral-50 border-neutral-200 opacity-80 hover:opacity-100'
+                                                                        : 'bg-white border-neutral-500 hover:border-neutral-400 hover:shadow-md'
+                                                                    }
+                                                                `}
                                                             >
                                                                 {/* Time Block */}
-                                                                <div className="flex flex-col items-center justify-center min-w-[70px] border-r border-neutral-200 pr-4">
-                                                                    <span className="text-lg font-medium text-neutral-700">{event.startTime}</span>
-                                                                    <span className="text-sm text-neutral-500">{event.endTime}</span>
+                                                                <div className={`flex flex-col items-center justify-center min-w-[70px] border-r pr-4 ${isPastEvent ? 'border-neutral-100' : 'border-neutral-200'}`}>
+                                                                    <span className={`text-lg font-medium ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.startTime}</span>
+                                                                    <span className={`text-sm ${isPastEvent ? 'text-neutral-500' : 'text-neutral-500'}`}>{event.endTime}</span>
                                                                 </div>
 
                                                                 {/* Content */}
                                                                 <div className="flex-1 flex items-center gap-3">
-                                                                    <Avatar src={event.image} seed={event.title} size={42} />
+                                                                    <div className={`shrink-0 ${isPastEvent ? "opacity-80" : ""}`}>
+                                                                        <Avatar src={event.image} seed={event.title} size={42} />
+                                                                    </div>
                                                                     <div>
-                                                                        <h4 className="font-semibold text-neutral-700">{event.title}</h4>
-                                                                        <div className="flex items-center gap-1 text-sm text-neutral-700 mt-0.5">
+                                                                        <h4 className={`font-semibold ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.title}</h4>
+                                                                        <div className={`flex items-center gap-1 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
                                                                             <MapPin size={14} className="shrink-0" />
                                                                             <span className="line-clamp-1">{event.subtitle}</span>
                                                                         </div>
@@ -331,7 +387,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                 </div>
 
                                                                 {/* Action */}
-                                                                <div className="hidden sm:flex items-center text-neutral-400 group-hover:text-black transition pl-4">
+                                                                <div className={`hidden sm:flex items-center transition pl-4 ${isPastEvent ? 'text-neutral-300' : 'text-neutral-400 group-hover:text-black'}`}>
                                                                     <ChevronRight size={20} />
                                                                 </div>
                                                             </div>
@@ -342,13 +398,13 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                     return (
                                                         <div
                                                             key={`${event.type}-${event.id}`}
-                                                            className="flex items-center px-0 mb-2"
+                                                            className={`flex items-center px-0 mb-2 ${isPastEvent ? 'opacity-80' : ''}`}
                                                         >
-                                                            <div className="px-4 py-3 mt-1 mb-1 rounded-2xl bg-[#FBF7F2] font-medium text-sm text-neutral-700 w-full sm:w-auto text-left sm:text-left">
-                                                                <div className="font-medium text-neutral-700 text-xl">Visites</div>
+                                                            <div className={`px-4 py-3 mt-1 mb-1 rounded-2xl font-medium text-sm w-full sm:w-auto text-left sm:text-left ${isPastEvent ? 'bg-neutral-100 text-neutral-500' : 'bg-[#FBF7F2] text-neutral-700'}`}>
+                                                                <div className={`font-medium text-xl ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>Visites</div>
                                                                 <div>Créneaux ouverts de {event.startTime} à {event.endTime}</div>
                                                                 {event.subtitle && (
-                                                                    <div className="text-xs text-neutral-700 mt-0.5 flex items-left justify-left sm:justify-start gap-1">
+                                                                    <div className={`text-xs mt-0.5 flex items-left justify-left sm:justify-start gap-1 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
                                                                         <MapPin size={12} />
                                                                         au {event.subtitle}
                                                                     </div>
@@ -361,7 +417,35 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                         </div>
                                     );
                                 })
-                            )}
+                            })()}
+
+                            {/* Empty Future State */}
+                            {(() => {
+                                const hasFutureEvents = Object.values(agendaEvents).some(events =>
+                                    events.some(event => {
+                                        const parsedDate = parseISO(event.date);
+                                        if (isAfter(parsedDate, new Date())) return true;
+                                        if (isSameDay(parsedDate, new Date())) {
+                                            const [endH, endM] = event.endTime.split(':').map(Number);
+                                            const eventEndDateTime = new Date(parsedDate);
+                                            eventEndDateTime.setHours(endH, endM, 0, 0);
+                                            return isAfter(eventEndDateTime, new Date());
+                                        }
+                                        return false;
+                                    })
+                                );
+
+                                if (!hasFutureEvents && Object.keys(agendaEvents).length > 0) {
+                                    return (
+                                        <div id="empty-state-anchor" className="flex flex-col items-center justify-center p-10 mt-4 mb-4 text-neutral-600 bg-white rounded-xl mx-4 sm:mx-0">
+                                            <Calendar size={32} className="mb-3 opacity-50" />
+                                            <p className="font-medium text-lg">Aucune visite à venir</p>
+                                            <p className="text-sm opacity-75">Vos événements passés sont affichés ci-dessus.</p>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
                         </div>
                     )}
 

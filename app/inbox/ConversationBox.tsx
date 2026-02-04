@@ -60,7 +60,6 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         }
 
         return 'New conversation';
-        return 'New conversation';
     }, [lastMessage]);
 
     // Application Status Logic
@@ -136,6 +135,28 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
 
     }, [data.messages, data.users]);
 
+    // AVATAR LOGIC
+    const avatarSrc = useMemo(() => {
+        // If no listing (Support), use User Avatar based on otherUser
+        if (!data.listing) {
+            return otherUser?.image;
+        }
+
+        const listing = data.listing as any;
+        const ownerId = listing?.rentalUnit?.property?.owner?.id;
+
+        if (otherUser?.id === ownerId) {
+            // otherUser is the Owner. I am the Candidate. Show Listing Image.
+            const mainImage = listing.images?.[0]?.url;
+            return mainImage || otherUser?.image; // Fallback to avatar if no image
+        } else {
+            // otherUser is NOT the Owner (so otherUser is Candidate). I am the Owner.
+            // As an owner, I want to see the Candidate's Avatar.
+            return otherUser?.image;
+        }
+
+    }, [data.listing, otherUser]);
+
     return (
         <div
             onClick={handleClick}
@@ -154,39 +175,55 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 selected ? 'bg-secondary' : 'bg-background'
             )}
         >
-            <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} />
+            <Avatar src={avatarSrc} seed={otherUser?.email || otherUser?.name} size={52} />
             <div className="min-w-0 flex-1">
-                <div className="focus:outline-none">
-                    <div className="flex justify-between items-center">
-                        <p className="text-md font-medium text-foreground">
+                <div className="focus:outline-none flex flex-col gap-[1px]">
+                    <div className="flex justify-between items-center mb-0">
+                        <p className={clsx(`
+                            text-base 
+                            leading-tight
+                            truncate
+                            text-foreground
+                        `,
+                            hasSeen ? 'font-normal' : 'font-medium'
+                        )}>
                             {(() => {
-                                // Try to construct "Type + Adjective" title
+                                // Title Logic: Always return Other User Name formatted first
+                                if (otherUser?.name) {
+                                    const names = otherUser.name.split(' ');
+                                    if (names.length > 1) {
+                                        return `${names[0]} ${names[names.length - 1][0] ?? ''}.`;
+                                    }
+                                    return names[0];
+                                }
+
+                                // Fallback
                                 const l = data.listing as any;
                                 if (l?.category && l?.propertyAdjective) {
                                     return `${l.category} ${l.propertyAdjective}`;
                                 }
-                                // Fallback
-                                return l?.title || data.name || otherUser?.name || 'Unknown User';
+                                return l?.title || data.name || 'Unknown User';
                             })()}
                         </p>
                         {lastMessage?.createdAt && (
-                            <p className="text-xs text-muted-foreground font-light">
+                            <p className="text-sm text-muted-foreground font-normal leading-tight">
                                 {format(new Date(lastMessage.createdAt), 'p')}
                             </p>
                         )}
                     </div>
                     <p className={clsx(`
             truncate 
-            text-sm
+            text-base
+            leading-tight
           `,
                         hasSeen ? 'text-muted-foreground' : 'text-foreground font-medium'
                     )}>
                         {lastMessageText}
                     </p>
                     {applicationStatus && (
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-0">
                             <div className={clsx("w-2 h-2 rounded-full", applicationColor)}></div>
-                            <div className="text-xs text-muted-foreground font-medium">{applicationLabel}</div>
+                            <div className="text-sm text-muted-foreground font-medium leading-tight">{applicationLabel}</div>
                         </div>
                     )}
                 </div>

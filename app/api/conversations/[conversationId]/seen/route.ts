@@ -22,7 +22,7 @@ export async function POST(
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        // Find the existing conversation
+        // Find the existing conversation with all messages
         const conversation = await prisma.conversation.findUnique({
             where: {
                 id: conversationId
@@ -41,34 +41,36 @@ export async function POST(
             return new NextResponse('Invalid ID', { status: 400 });
         }
 
-        // Find the last message
-        const lastMessage = conversation.messages[conversation.messages.length - 1];
+        // Find all messages NOT seen by current user
+        const unseenMessages = conversation.messages.filter(
+            (msg) => !msg.seen.some((user) => user.id === currentUser.id)
+        );
 
-        if (!lastMessage) {
-            return NextResponse.json(conversation);
+        if (unseenMessages.length === 0) {
+            return NextResponse.json({ message: 'All messages already seen' });
         }
 
-        // Update last message to seen
-        const updatedMessage = await prisma.message.update({
-            where: {
-                id: lastMessage.id
-            },
-            include: {
-                sender: true,
-                seen: true
-            },
-            data: {
-                seen: {
-                    connect: {
-                        id: currentUser.id
+        // Mark ALL unseen messages as seen by the current user
+        // Using Promise.all with individual updates since updateMany doesn't support relation connections
+        await Promise.all(
+            unseenMessages.map((msg) =>
+                prisma.message.update({
+                    where: { id: msg.id },
+                    data: {
+                        seen: {
+                            connect: { id: currentUser.id }
+                        }
                     }
-                }
-            }
-        });
+                })
+            )
+        );
 
-        return NextResponse.json(updatedMessage);
+        return NextResponse.json({
+            message: `Marked ${unseenMessages.length} messages as seen`
+        });
     } catch (error: any) {
         console.log(error, 'ERROR_MESSAGES_SEEN');
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
+

@@ -10,7 +10,8 @@ import {
     Users,
     QrCode,
     Sparkles,
-    Settings
+    Settings,
+    Calendar
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -147,6 +148,22 @@ const UserMenu: React.FC<UserMenuProps> = ({
           "
                 >
                     <Menu size={18} strokeWidth={3} />
+                    <div className="hidden md:block">
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                console.log("Manual refresh triggered");
+                                axios.get('/api/user/counters').then((res) => {
+                                    console.log("Manual refresh result:", res.data);
+                                    window.location.reload();
+                                });
+                            }}
+                            className="bg-gray-100 hover:bg-gray-200 text-xs rounded px-1 cursor-pointer mr-2"
+                            title="Debug: Refresh Counters"
+                        >
+                            ↻
+                        </div>
+                    </div>
                     {unreadCount && unreadCount > 0 ? (
                         <div className="absolute top-0 right-0 h-3 w-3 bg-primary rounded-full border-2 border-background" />
                     ) : null}
@@ -198,7 +215,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                 <hr className="border-border w-full" />
 
                                 {/* Menu Items */}
-                                <div className="flex flex-col p-2 font-medium">
+                                <div className="flex flex-col p-2 font-medium gap-1">
                                     <div
                                         onClick={() => router.push('/dashboard')}
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
@@ -228,6 +245,14 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     >
                                         <Heart size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">Favoris</span>
+                                    </div>
+
+                                    <div
+                                        onClick={() => router.push('/calendar')}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    >
+                                        <Calendar size={24} className="text-neutral-700" />
+                                        <span className="font-medium text-neutral-700">Mon Calendrier</span>
                                     </div>
 
                                     {currentUser.userMode === 'LANDLORD' ? (
@@ -265,13 +290,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         <span className="font-medium text-neutral-700">Mes contacts</span>
                                     </div>
 
-                                    <div
-                                        onClick={myCodeModal.onOpen}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
-                                    >
-                                        <QrCode size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Mon QR Code</span>
-                                    </div>
 
                                     <div
                                         onClick={() => router.push('/pricing')}

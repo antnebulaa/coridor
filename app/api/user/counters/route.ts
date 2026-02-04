@@ -22,6 +22,8 @@ export async function GET(
             getDashboardAlerts()
         ]);
 
+        console.log(`[API Counters] Returning unreadCount: ${unreadCount}`);
+
         return NextResponse.json({
             unreadCount,
             hasPendingAlert: dashboardAlerts.hasPendingConfig

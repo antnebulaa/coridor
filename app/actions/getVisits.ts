@@ -15,15 +15,9 @@ export default async function getVisits() {
                 status: {
                     in: ['CONFIRMED', 'CANCELLED']
                 },
-                date: {
-                    gte: new Date() // Keep future dates only? Or all history? User said "Keep trace".
-                    // Usually "trace" implies history.
-                    // But maybe just future slots that were cancelled?
-                    // Let's assume future for now as it's a dashboard of "Coming up".
-                    // If they want history, we might need a separate tab or section.
-                    // Let's stick to >= Date() for now to avoid cluttering with old cancelled stuff.
-                    // Actually, if I cancel a meeting today, I want to see it today.
-                }
+                // date: {
+                //    gte: new Date() 
+                // }
             },
             include: {
                 listing: {

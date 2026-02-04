@@ -9,28 +9,33 @@ const getUnreadMessageCount = async () => {
     }
 
     try {
-        const count = await prisma.message.count({
+        // Count CONVERSATIONS with unread messages, not individual messages
+        const unreadConversationsCount = await prisma.conversation.count({
             where: {
-                conversation: {
-                    users: {
-                        some: {
-                            id: currentUser.id
-                        }
+                users: {
+                    some: {
+                        id: currentUser.id
                     }
                 },
-                senderId: {
-                    not: currentUser.id
-                },
-                seen: {
-                    none: {
-                        id: currentUser.id
+                messages: {
+                    some: {
+                        senderId: {
+                            not: currentUser.id
+                        },
+                        seen: {
+                            none: {
+                                id: currentUser.id
+                            }
+                        }
                     }
                 }
             }
         });
 
-        return count;
+        console.log(`[getUnreadMessageCount] User ${currentUser.id} has ${unreadConversationsCount} unread conversations`);
+        return unreadConversationsCount;
     } catch (error: any) {
+        console.error("[getUnreadMessageCount] Error:", error);
         return 0;
     }
 };

@@ -17,6 +17,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Modal from "@/components/modals/Modal";
 import Heading from "@/components/Heading";
+import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 
 interface ConversationClientProps {
     conversation: Conversation & {
@@ -67,6 +68,15 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     useEffect(() => {
         setMessages(initialMessages);
     }, [initialMessages]);
+
+    // Realtime subscription for new messages in this conversation
+    useRealtimeNotifications({
+        userId: currentUser?.id,
+        conversationId: conversation.id,
+        onNewMessage: () => {
+            router.refresh();
+        }
+    });
 
     const handleOptimisticMessage = useCallback((message: SafeMessage) => {
         setMessages((current) => [...current, message]);

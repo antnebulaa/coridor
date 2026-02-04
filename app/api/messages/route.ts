@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { broadcastNewMessage } from "@/lib/supabaseServer";
 
 export async function POST(
     request: Request
@@ -149,6 +150,21 @@ export async function POST(
 
             safeMessage.listing.images = aggregatedImages;
         }
+
+        // Broadcast to conversation participants for realtime updates (Fire and Forget)
+        const recipientIds = updatedConversation.users.map((u: any) => u.id);
+        console.log(`[API Messages] Triggering background broadcast to ${recipientIds.length} recipients`);
+
+        // Do NOT await this, let it run in background so API responds instantly
+        broadcastNewMessage(conversationId, recipientIds, {
+            id: newMessage.id,
+            conversationId: conversationId,
+            senderId: currentUser.id,
+            body: newMessage.body,
+            createdAt: newMessage.createdAt
+        }).catch(err => console.error("[Background Broadcast] Failed:", err));
+
+        console.log("[API Messages] Response sent to client immediately");
 
         return NextResponse.json(safeMessage);
     } catch (error: any) {

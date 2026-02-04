@@ -6,6 +6,7 @@ import { FullConversationType, SafeUser } from "@/types";
 import clsx from "clsx";
 import ConversationBox from "./ConversationBox";
 import useConversation from "@/hooks/useConversation";
+import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 
 interface ConversationListProps {
     initialItems: FullConversationType[];
@@ -24,8 +25,18 @@ const ConversationList: React.FC<ConversationListProps> = ({
     const { isOpen } = useConversation();
 
     useEffect(() => {
+        console.log("ConversationList: Initial items updated", initialItems.length);
         setItems(initialItems);
     }, [initialItems]);
+
+    // Realtime subscription for new messages - refresh list to update order and unread counts
+    useRealtimeNotifications({
+        userId: currentUser?.id,
+        onNewMessage: (payload) => {
+            console.log("ConversationList: New message received, refreshing router...");
+            router.refresh();
+        }
+    });
 
     const filteredItems = useMemo(() => {
         if (!currentUser) return [];
@@ -226,7 +237,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 pt-2">
+            <div className="flex-1 overflow-y-auto px-2 pt-2">
                 {filteredItems.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-neutral-500">
                         <p className="text-center">Aucune conversation</p>

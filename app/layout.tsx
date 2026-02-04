@@ -12,6 +12,7 @@ import RentModal from "@/components/modals/RentModal";
 import WishlistModal from "@/components/modals/WishlistModal";
 
 import MyCodeModal from "@/components/modals/MyCodeModal";
+import PushNotificationManager from "@/components/PushNotificationManager";
 import { Toaster } from "react-hot-toast";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 // Imports removed: getUnreadMessageCount, getDashboardAlerts
@@ -112,6 +113,7 @@ export default async function RootLayout({
             <LoginModal />
             <WishlistModal />
             <MyCodeModal currentUser={currentUser} />
+            <PushNotificationManager />
 
             <Suspense fallback={<div></div>}>
               <Navbar currentUser={currentUser} />

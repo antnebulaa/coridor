@@ -61,13 +61,15 @@ const Avatar: React.FC<AvatarProps> = ({ src, seed, size = 30 }) => {
     }
 
     return (
-        <Image
-            className="rounded-full"
-            height={size}
-            width={size}
-            alt="Avatar"
-            src={src}
-        />
+        <div style={{ height: size, width: size }} className="relative overflow-hidden rounded-full min-w-[30px] min-h-[30px]">
+            <Image
+                fill
+                className="object-cover"
+                alt="Avatar"
+                src={src}
+                sizes={`${size}px`}
+            />
+        </div>
     );
 }
 

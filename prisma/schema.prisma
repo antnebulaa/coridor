@@ -105,6 +105,8 @@ model User {
   likes            Like[]
   visitSlots       VisitSlot[]   // Availability linked to User + Location
   bankConnections  BankConnection[] // NEW: Banking Connectivity
+  pushSubscriptions PushSubscription[]
+  sessions         Session[] // NEW for DB Auth
 }
 
 model TenantProfile {
@@ -177,6 +179,16 @@ model Account {
 
   @@unique([provider, providerAccountId])
 }
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
 
 model Property {
   id              String   @id @default(uuid())
@@ -770,4 +782,14 @@ model BankTransaction {
   bankConnection   BankConnection @relation(fields: [bankConnectionId], references: [id], onDelete: Cascade)
   
   @@unique([bankConnectionId, remoteId])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String
+  keys      Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -2,7 +2,8 @@
 
 import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 import { BiEuro } from 'react-icons/bi';
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface SoftInputProps {
     id: string;
@@ -44,6 +45,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
     placeholder
 }) => {
     const internalRef = useRef<HTMLInputElement>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (autoFocus) {
@@ -53,6 +55,12 @@ const SoftInput: React.FC<SoftInputProps> = ({
             return () => clearTimeout(timer);
         }
     }, [autoFocus]);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const inputType = type === 'password' ? (showPassword ? 'text' : 'password') : type;
 
     const registerProps = register ? register(id, { required }) : {} as any;
 
@@ -64,6 +72,18 @@ const SoftInput: React.FC<SoftInputProps> = ({
                     className="text-muted-foreground absolute top-5 right-[15px]"
                 />
             )}
+
+            {type === 'password' && (
+                <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute top-5 right-[15px] text-muted-foreground hover:text-foreground cursor-pointer z-20 focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+            )}
+
             <input
                 id={id}
                 disabled={disabled}
@@ -93,7 +113,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
                 }}
                 value={value}
                 placeholder={placeholder || " "}
-                type={type}
+                type={inputType}
                 inputMode={inputMode}
                 pattern={pattern}
                 className={`
@@ -111,6 +131,7 @@ const SoftInput: React.FC<SoftInputProps> = ({
           disabled:opacity-70
           disabled:cursor-not-allowed
           ${formatPrice ? 'pl-3 pr-9' : 'pl-3'}
+          ${type === 'password' ? 'pr-10' : ''} 
           ${errors?.[id] ? 'border-red-500' : 'border-input'}
           ${errors?.[id] ? 'focus:border-red-500' : 'focus:border-foreground'}
           min-w-0

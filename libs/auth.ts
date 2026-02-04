@@ -80,14 +80,26 @@ export const authOptions: AuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
+            // EXTREME REDUCTION: Only store the User ID in the token.
             if (user) {
-                token.id = user.id;
+                return { sub: user.id };
             }
             return token;
         },
         async session({ session, token }) {
-            if (session?.user) {
-                session.user.id = token.id as string;
+            if (session?.user && token?.sub) {
+                session.user.id = token.sub as string;
+
+                // Fetch fresh user data from DB to avoid bloat in cookie
+                const freshUser = await prisma.user.findUnique({
+                    where: { id: token.sub as string }
+                });
+
+                if (freshUser) {
+                    session.user.name = freshUser.name;
+                    session.user.email = freshUser.email;
+                    session.user.image = freshUser.image;
+                }
             }
             return session;
         }
