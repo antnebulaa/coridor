@@ -109,20 +109,7 @@ export default function PushNotificationManager() {
     }
 
     if (subscription) {
-        return (
-            <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-green-200 z-[1001] animate-in slide-in-from-bottom flex items-center justify-between gap-4">
-                <div className="flex-1">
-                    <h3 className="font-semibold text-sm text-green-700">Notifications Actives ✅</h3>
-                    <p className="text-xs text-neutral-500">Prêt à recevoir des alertes.</p>
-                </div>
-                <button
-                    onClick={sendTestNotification}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
-                >
-                    Tester
-                </button>
-            </div>
-        );
+        return null; // Don't show anything if already subscribed
     }
 
     return (
