@@ -34,7 +34,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<ILi
     }
   }
 
-  const isSearchActive = Object.keys(resolvedParams).length > 0;
+  const isSearchActive = Object.keys(resolvedParams).filter(k => !['error', 'code', 'state'].includes(k)).length > 0;
 
   return (
     <HomeClient

@@ -80,9 +80,14 @@ export const authOptions: AuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
-            // EXTREME REDUCTION: Only store the User ID in the token.
             if (user) {
-                return { sub: user.id };
+                token.sub = user.id;
+                // Strip large fields to avoid Header Overflow (431) but keep other claims
+                delete (token as any).name;
+                delete (token as any).email;
+                delete (token as any).picture;
+                delete (token as any).image;
+                return token;
             }
             return token;
         },
