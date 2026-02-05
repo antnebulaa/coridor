@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { broadcastNewMessage } from "@/lib/supabaseServer";
+import webPush from "web-push";
+
+webPush.setVapidDetails(
+    process.env.NEXT_PUBLIC_VAPID_EMAIL || "mailto:admin@example.com",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+);
 
 export async function POST(
     request: Request
@@ -163,6 +170,44 @@ export async function POST(
             body: newMessage.body,
             createdAt: newMessage.createdAt
         }).catch(err => console.error("[Background Broadcast] Failed:", err));
+
+        // SEND PUSH NOTIFICATION (Parallel-ish)
+        const recipientUser = updatedConversation.users.find((u: any) => u.id !== currentUser.id);
+
+        if (recipientUser) {
+            (async () => {
+                try {
+                    const subscriptions = await prisma.pushSubscription.findMany({
+                        where: { userId: recipientUser.id }
+                    });
+
+                    if (subscriptions.length > 0) {
+                        const notificationPayload = JSON.stringify({
+                            title: `Nouveau message de ${currentUser.name || 'Coridor'}`,
+                            body: newMessage.body || (newMessage.image ? "📷 Photo envoyée" : "Nouveau message"),
+                            url: `/inbox/${conversationId}`,
+                            icon: "/images/logo.png"
+                        });
+
+                        await Promise.allSettled(subscriptions.map(async (sub) => {
+                            try {
+                                await webPush.sendNotification({
+                                    endpoint: sub.endpoint,
+                                    keys: sub.keys as any
+                                }, notificationPayload);
+                            } catch (error: any) {
+                                if (error.statusCode === 410 || error.statusCode === 404) {
+                                    await prisma.pushSubscription.delete({ where: { id: sub.id } });
+                                }
+                            }
+                        }));
+                        console.log(`[Push] Sent to ${subscriptions.length} devices for user ${recipientUser.id}`);
+                    }
+                } catch (pushError) {
+                    console.error("[Push] Failed:", pushError);
+                }
+            })();
+        }
 
         console.log("[API Messages] Response sent to client immediately");
 
