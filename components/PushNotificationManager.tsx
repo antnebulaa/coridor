@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useSession } from "next-auth/react";
 
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -19,6 +20,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default function PushNotificationManager() {
+    const { data: session } = useSession();
     const [isSupported, setIsSupported] = useState(false);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
@@ -79,16 +81,48 @@ export default function PushNotificationManager() {
         }
     }
 
+    async function sendTestNotification() {
+        if (!session?.user) return;
+        toast.loading("Envoi en cours...");
+        try {
+            await fetch('/api/web-push/send', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userId: (session.user as any).id,
+                    title: "🔔 Test Coridor",
+                    message: "Si vous lisez ça, le PWA fonctionne !",
+                    url: "/dashboard"
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            toast.dismiss();
+            toast.success("Notification envoyée !");
+        } catch (error) {
+            console.error(error);
+            toast.dismiss();
+            toast.error("Erreur d'envoi");
+        }
+    }
+
     if (!isSupported) {
         return null; // Don't show anything if not supported
     }
 
     if (subscription) {
-        // Already subscribed
-        return null;
-        // Or we can show a "Disabled Notifications" button?
-        // For now, hide it to avoid clutter. User wanted "like native".
-        // Native apps don't constantly ask once enabled.
+        return (
+            <div className="fixed bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/80 backdrop-blur-md shadow-xl rounded-2xl border border-green-200 z-50 animate-in slide-in-from-bottom flex items-center justify-between gap-4">
+                <div className="flex-1">
+                    <h3 className="font-semibold text-sm text-green-700">Notifications Actives ✅</h3>
+                    <p className="text-xs text-neutral-500">Prêt à recevoir des alertes.</p>
+                </div>
+                <button
+                    onClick={sendTestNotification}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
+                >
+                    Tester
+                </button>
+            </div>
+        );
     }
 
     return (
