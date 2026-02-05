@@ -110,7 +110,7 @@ export default function PushNotificationManager() {
 
     if (subscription) {
         return (
-            <div className="fixed bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/80 backdrop-blur-md shadow-xl rounded-2xl border border-green-200 z-50 animate-in slide-in-from-bottom flex items-center justify-between gap-4">
+            <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-green-200 z-[1001] animate-in slide-in-from-bottom flex items-center justify-between gap-4">
                 <div className="flex-1">
                     <h3 className="font-semibold text-sm text-green-700">Notifications Actives ✅</h3>
                     <p className="text-xs text-neutral-500">Prêt à recevoir des alertes.</p>
@@ -126,7 +126,7 @@ export default function PushNotificationManager() {
     }
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white shadow-xl rounded-2xl border border-neutral-200 z-50 animate-in slide-in-from-bottom flex items-center justify-between gap-4">
+        <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-neutral-200 z-[1001] animate-in slide-in-from-bottom flex items-center justify-between gap-4">
             <div className="flex-1">
                 <h3 className="font-semibold text-sm">Notifications</h3>
                 <p className="text-xs text-neutral-500">Recevez les alertes en temps réel sur votre mobile.</p>
