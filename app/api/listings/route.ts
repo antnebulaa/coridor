@@ -162,7 +162,7 @@ export async function POST(
                     title,
                     description,
                     price: typeof price === 'string' ? parseInt(price, 10) : price,
-                    status: isPublished ? "PUBLISHED" : "DRAFT",
+                    status: isPublished ? "PENDING_REVIEW" : "DRAFT",
                     isPublished: isPublished || false,
 
                     // category: category, // FIXED: Removed (Moved to Property)

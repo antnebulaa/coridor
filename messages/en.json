@@ -1,0 +1,1277 @@
+{
+    "rentModal": {
+        "actions": {
+            "next": "Next",
+            "back": "Back",
+            "start": "Start",
+            "finish": "Finish",
+            "create": "Create",
+            "save": "Save",
+            "publish": "Publish listing"
+        },
+        "steps": {
+            "intro": {
+                "title": "Tell us about your property",
+                "subtitle": "Let's start with the main characteristics.",
+                "description": "In this first part, we will define the type of property, its location, its surface area, and technical characteristics."
+            },
+            "category": {
+                "title": "Which of these best describes your property?",
+                "subtitle": "Choose a category"
+            },
+            "location": {
+                "title": "Where is your property located?",
+                "subtitle": "Help tenants find you!"
+            },
+            "surface": {
+                "title": "What is the surface area?",
+                "subtitle": "Indicate the living area in m²"
+            },
+            "info": {
+                "title": "How many rooms?",
+                "subtitle": "Detail the configuration of your property",
+                "titleRoom": "Characteristics of: {name}",
+                "subtitleRoom": "Tell us more about this room",
+                "roomLinked": "Linked room",
+                "linkRoom": "Link to an existing room (Optional)",
+                "linkRoomNew": "-- New room --",
+                "linkRoomChange": "Change",
+                "linkRoomHint": "Select a room created when adding the property to automatically retrieve its photos.",
+                "photosImported": "Room photos imported!"
+            },
+            "details": {
+                "title": "Additional details",
+                "subtitle": "Specify the floor and accessibility",
+                "kitchen": "Does your property have a separate kitchen?",
+                "kitchenYes": "Yes",
+                "kitchenNo": "No",
+                "totalFloors": "Total floors",
+                "floor": "Floor",
+                "constructionPeriod": "Construction period"
+            },
+            "energy": {
+                "title": "Energy Performance",
+                "subtitle": "Indicate DPE, GES, and energy details.",
+                "dpe": "Energy Performance Certificate (DPE)",
+                "ges": "Greenhouse Gas Emission (GES)",
+                "costs": "Estimated annual energy costs",
+                "min": "Minimum (€)",
+                "max": "Maximum (€)",
+                "dpeYear": "DPE Year",
+                "glazing": "Glazing type",
+                "heating": "Heating system",
+                "glazingTypes": {
+                    "double": "Double glazing",
+                    "triple": "Triple glazing",
+                    "single": "Single glazing"
+                },
+                "heatingTypes": {
+                    "electric_ind": "Individual electric",
+                    "gas_ind": "Individual gas",
+                    "collective": "Collective",
+                    "other": "Other"
+                }
+            },
+            "introAssets": {
+                "title": "Highlight your property",
+                "subtitle": "Add amenities, photos, and a detailed description.",
+                "description": "It’s time to attract tenants! List your property's assets and add beautiful photos."
+            },
+            "amenities": {
+                "title": "What amenities do you offer?",
+                "subtitle": "Select available amenities",
+                "groups": {
+                    "essentials": "Essentials",
+                    "features": "Features",
+                    "building": "Building & Security",
+                    "location": "Neighborhood"
+                },
+                "items": {
+                    "fiber": "Fiber Optic",
+                    "kitchen": "Equipped Kitchen",
+                    "laundry": "Laundry / Utility Room",
+                    "storage": "Storage",
+                    "garden": "Garden",
+                    "cross": "Dual Aspect",
+                    "south": "South Facing",
+                    "refurbished": "Refurbished",
+                    "pets": "Pets Allowed",
+                    "bike": "Bike Room",
+                    "digicode": "Digicode",
+                    "intercom": "Intercom",
+                    "caretaker": "Caretaker",
+                    "armored": "Armored Door",
+                    "transport": "Near Transport",
+                    "shops": "Near Shops",
+                    "schools": "Near Schools",
+                    "park": "Near Parks",
+                    "hospital": "Near Hospital",
+                    "quiet": "Quiet Area"
+                }
+            },
+            "images": {
+                "title": "Add photos of your property",
+                "subtitle": "Add at least 4 photos. You can always add more later."
+            },
+            "description": {
+                "title": "How would you describe your property?",
+                "subtitle": "Choose an adjective that fits best",
+                "adjectives": {
+                    "bright": "Bright",
+                    "crossing": "Dual Aspect",
+                    "haussmann": "Haussmannian",
+                    "atypical": "Atypical",
+                    "modern": "Modern",
+                    "new": "New",
+                    "renovated": "Renovated",
+                    "quiet": "Quiet",
+                    "warm": "Cozy",
+                    "family": "Family-friendly",
+                    "luxury": "Luxury"
+                }
+            },
+            "introRental": {
+                "title": "Finalize your listing",
+                "subtitle": "Define the rental type and price.",
+                "description": "Last step! Choose the contract type (Bare, Furnished, Colocation) and set the rent."
+            },
+            "rentalType": {
+                "title": "What type of rental do you offer?",
+                "subtitle": "This will determine the lease type.",
+                "options": {
+                    "bare": {
+                        "title": "Bare Rental",
+                        "desc": "Empty property rented as a primary residence."
+                    },
+                    "furnished": {
+                        "title": "Furnished Rental",
+                        "desc": "Property rented with furniture."
+                    },
+                    "colocation": {
+                        "title": "Colocation",
+                        "desc": "Rent multiple rooms in the same property."
+                    }
+                }
+            },
+            "price": {
+                "title": "Finally, set your rent",
+                "subtitle": "What is the monthly rent?",
+                "label": "Monthly rent",
+                "chargesLabel": "Charges (monthly)"
+            }
+        },
+        "rentControl": {
+            "title": "Rent Control",
+            "zone": "Zone: {zone}",
+            "max": "Ceiling: {amount} €",
+            "illegal": "Rent exceeds legal ceiling",
+            "close": "Rent close to ceiling",
+            "compliant": "Rent compliant",
+            "illegalDesc": "The rent exceeds the estimated ceiling of {amount} €. This may be illegal.",
+            "compliantDesc": "This rent is below the legal ceiling."
+        },
+        "rooms": {
+            "intro": {
+                "title": "Configure rooms",
+                "subtitle": "You indicated {count} rooms. Let's configure them one by one.",
+                "description": "For a colocation, it is important to detail each private space."
+            },
+            "details": {
+                "title": "Room {number}",
+                "subtitle": "Room characteristics.",
+                "surface": "Surface (m²)",
+                "bedType": "Bed type",
+                "single": "Single",
+                "double": "Double",
+                "description": "Description (optional)",
+                "hint": "We advise you to describe the room's location (e.g., street side, courtyard side) and its assets (bright, quiet...).",
+                "privateBath": "Private bathroom?",
+                "yes": "Yes",
+                "no": "No"
+            },
+            "recap": {
+                "title": "Rooms Recap",
+                "subtitle": "Verify everything is correct.",
+                "edit": "Edit",
+                "privateBath": "Private Bath",
+                "sharedBath": "Shared Bath"
+            }
+        },
+        "labels": {
+            "guestCount": "Guests",
+            "roomCount": "Rooms",
+            "bedroomCount": "Bedrooms",
+            "bathroomCount": "Bathrooms",
+            "privateBathroom": "Private bathroom",
+            "privateBathroomDesc": "Is there a bathroom exclusive to this room?",
+            "publish": "Publish listing",
+            "publishDesc": "The listing will be visible to tenants.",
+            "surface": "Surface",
+            "bedType": "Bed type",
+            "single": "Single",
+            "double": "Double",
+            "totalFloors": "Total floors",
+            "floor": "Floor",
+            "constructionPeriod": "Construction year"
+        },
+        "errors": {
+            "categoryRequired": "Please choose a property category",
+            "floorsRequired": "Please indicate the number of floors",
+            "floorRequired": "Please indicate the floor number",
+            "surfaceRequired": "Surface area is required",
+            "bedTypeRequired": "Bed type is required"
+        },
+        "toasts": {
+            "created": "Listing created!",
+            "updated": "Listing updated!",
+            "error": "An error occurred."
+        }
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "back": "Back",
+        "next": "Next",
+        "previous": "Previous",
+        "confirm": "Confirm",
+        "apply": "Apply",
+        "more": "See more",
+        "less": "See less",
+        "owner": "Owner",
+        "free": "Free",
+        "mandatory": "Mandatory",
+        "completed": "Completed",
+        "close": "Close",
+        "search": "Search",
+        "seeAll": "See all",
+        "noResults": "No results",
+        "yes": "Yes",
+        "no": "No",
+        "continue": "Continue"
+    },
+    "nav": {
+        "home": "Home",
+        "favorites": "Favorites",
+        "dashboard": "Activities",
+        "messages": "Messages",
+        "profile": "Profile",
+        "agenda": "Agenda",
+        "properties": "Properties",
+        "rentMyProperty": "List my property",
+        "login": "Log in",
+        "register": "Sign up",
+        "logout": "Log out",
+        "myAccount": "My account",
+        "notifications": "Notifications",
+        "admin": "Administration",
+        "myRental": "My rental",
+        "contacts": "My contacts",
+        "subscription": "Subscription",
+        "finances": "My finances",
+        "mode": "Mode",
+        "tenant": "Tenant",
+        "landlord": "Landlord",
+        "editProfile": "Edit profile",
+        "settings": "Settings"
+    },
+    "auth": {
+        "loginTitle": "Log in",
+        "loginSubtitle": "Sign in to your account",
+        "registerTitle": "Sign up",
+        "registerSubtitle": "Create your account",
+        "email": "Email address",
+        "password": "Password",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "forgotPassword": "Forgot password?",
+        "noAccount": "Don't have an account?",
+        "alreadyHaveAccount": "Already have an account?",
+        "continueWith": "Or continue with",
+        "google": "Google",
+        "github": "GitHub",
+        "name": "Full name",
+        "birthDate": "Date of birth",
+        "welcomeBack": "Welcome back",
+        "loginToAccount": "Login to your account",
+        "welcomeToCoridor": "Welcome to Coridor",
+        "createAccount": "Create an account",
+        "firstTime": "First time on Coridor?",
+        "createAccountLink": "Create an account",
+        "loginLink": "Log in",
+        "loginSuccess": "Login successful",
+        "loginError": "Login error",
+        "registerSuccess": "Registration successful",
+        "genericError": "An error occurred",
+        "continueGoogle": "Continue with Google",
+        "continueApple": "Continue with Apple",
+        "or": "Or"
+    },
+    "home": {
+        "searchPlaceholder": "Where are you looking?",
+        "allCities": "All cities",
+        "filters": "Filters",
+        "sortBy": "Sort by",
+        "priceAsc": "Price: low to high",
+        "priceDesc": "Price: high to low",
+        "newest": "Newest",
+        "noListings": "No listings found",
+        "chargesIncluded": "charges included",
+        "chargesShort": "incl.",
+        "perMonth": "/mo",
+        "new": "New",
+        "newListing": "New listing",
+        "viewListing": "View listing",
+        "hideListing": "Hide listing",
+        "alert": {
+            "title": "Don't miss out!",
+            "description": "Get new listings by email.",
+            "create": "Create alert"
+        },
+        "resumeSearch": {
+            "title": "Resume your search",
+            "lastViewed": "Last viewed property",
+            "continue": "Continue"
+        },
+        "listingsCount": "{count, plural, =0 {no listings} one {# listing} other {# listings}}",
+        "noResultsDescription": "Try expanding your search or commute area."
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "tenantSubtitle": "Welcome to your tenant space.",
+        "landlordGreeting": "Hello {name} 👋",
+        "myApplications": "My Applications",
+        "noApplications": "No active applications",
+        "applicationsCount": "{count} active application(s)",
+        "upcomingVisits": "Upcoming visits",
+        "applicationTracking": "Application tracking",
+        "viewDetails": "View details",
+        "prepareDossier": "Prepare your file to never miss a property",
+        "dossierHint": "A complete file increases your chances of getting a visit.",
+        "steps": {
+            "createAccount": "Create my account",
+            "defineProject": "Define my rental project",
+            "confirmIdentity": "Confirm my identity",
+            "completeDossier": "Complete my tenant file with DossierFacile"
+        },
+        "journey": {
+            "sent": "Sent",
+            "visit": "Visit",
+            "validation": "Review",
+            "lease": "Lease"
+        },
+        "landlord": {
+            "greetings": {
+                "0": "Ready to collect rent?",
+                "1": "Everything is running smoothly!",
+                "2": "Business is picking up!",
+                "3": "A great day to invest."
+            },
+            "addProperty": "Add a property",
+            "operations": "Operations",
+            "occupancyRate": "Occupancy rate",
+            "applications": "Applications",
+            "upcomingVisits": "Upcoming visits",
+            "managedUnits": "{count} managed units",
+            "needHelp": "Need help?",
+            "helpText": "A question or a problem? Contact our support team.",
+            "contactUs": "Contact us"
+        },
+        "applicationsPage": {
+            "title": "My Applications",
+            "subtitle": "Track the progress of your rental applications.",
+            "active": "Active",
+            "archived": "Archived",
+            "emptyTitle": "No applications",
+            "emptyActive": "You have no active applications.",
+            "emptyArchived": "Your archive is empty."
+        },
+        "visits": {
+            "cancelled": "Cancelled",
+            "confirmed": "Confirmed",
+            "cancelAppointment": "Cancel appointment",
+            "confirmCancel": "Are you sure you want to cancel this appointment?",
+            "cancelSuccess": "Appointment cancelled",
+            "cancelError": "Error cancelling appointment"
+        },
+        "finances": {
+            "title": "Finance & Rents",
+            "subtitle": "Track your collections and connect your bank",
+            "addAccount": "Add an account",
+            "connectBank": "Bank account connected!",
+            "connectError": "Bank connection failed",
+            "initializationError": "Initialization error",
+            "syncSuccess": "{count} transactions, {matches} rents detected!",
+            "syncError": "Sync error",
+            "mainAccount": "Main Account",
+            "lastSync": "Last sync: {date}",
+            "never": "Never",
+            "sync": "Sync",
+            "table": {
+                "date": "Date",
+                "label": "Label",
+                "amount": "Amount",
+                "status": "Status",
+                "noTransactions": "No recent transactions"
+            },
+            "hero": {
+                "secure": "Secure & Automated",
+                "title": "Your rents, verified <green>automatically</green>.",
+                "description": "Connect your bank account to allow Coridor to detect incoming rents and update receipts in real-time.",
+                "cta": "Connect my bank securely",
+                "footer": "SSL Encrypted • Read-only access • ACPR Authorized Partner"
+            },
+            "status": {
+                "rent": "Rent",
+                "toVerify": "To verify"
+            },
+            "features": {
+                "secureConn": "1. Secure Connection",
+                "secureConnDesc": "We connect your account in <strong>read-only</strong> mode. We only see amounts and labels, without ever being able to initiate transfers.",
+                "targetedAnalysis": "2. Targeted Analysis",
+                "targetedAnalysisDesc": "Our system searches <strong>only</strong> for strict matches between <strong>Tenant Name</strong>, <strong>Rent Amount</strong>, and <strong>Date</strong>.",
+                "simpleValidation": "3. Simple Validation",
+                "simpleValidationDesc": "If everything matches, the status changes to <strong>Paid</strong>. That's it. No other data is analyzed or stored."
+            },
+            "trust": {
+                "description": "Coridor uses <strong>Powens</strong> technology, a payment institution authorized by <strong>ACPR (Banque de France)</strong> under number 16928.<br />Your banking credentials are encrypted and never stored by Coridor."
+            }
+        }
+    },
+    "visit": {
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled",
+        "cancelVisit": "Cancel visit",
+        "cancelConfirm": "Are you sure you want to cancel this visit?",
+        "cancelSuccess": "Visit cancelled",
+        "cancelError": "Error cancelling the visit"
+    },
+    "account": {
+        "title": "My account",
+        "personalInfo": {
+            "title": "Personal information",
+            "subtitle": "Manage your personal information and contact details.",
+            "profilePhoto": {
+                "title": "Profile photo",
+                "editHint": "Edit your profile photo.",
+                "none": "None",
+                "visibility": "This photo will be visible to other users.",
+                "save": "Save photo"
+            },
+            "identity": {
+                "title": "Identity",
+                "hint": "Edit your first name, last name and date of birth.",
+                "bornAt": "Born on {date} in {place}",
+                "firstName": "First name",
+                "lastName": "Last name",
+                "birthDate": "Date of birth",
+                "birthPlace": "Place of birth"
+            },
+            "email": {
+                "title": "Email address",
+                "hint": "Edit your contact email.",
+                "label": "Email address"
+            },
+            "phone": {
+                "title": "Phone number",
+                "hint": "Add or edit your phone number.",
+                "privacy": "Your number will only be shared once the reservation is confirmed.",
+                "label": "Phone number"
+            },
+            "address": {
+                "title": "Address",
+                "hint": "Edit your primary residence address.",
+                "label": "Address",
+                "apartment": "Apartment / Floor",
+                "building": "Building / Residence",
+                "zipCode": "Zip code",
+                "city": "City"
+            },
+            "toasts": {
+                "success": "Profile updated!",
+                "error": "An error occurred."
+            }
+        },
+        "project": {
+            "title": "My Rental Project",
+            "subtitle": "Tell us more about your search",
+            "composition": {
+                "label": "Who do you want to move in with?"
+            },
+            "status": {
+                "label": "Your marital status"
+            },
+            "lease": {
+                "label": "Desired lease type"
+            },
+            "moveInDate": {
+                "label": "Desired move-in date"
+            },
+            "children": {
+                "title": "Children",
+                "subtitle": "How many children do you have?"
+            },
+            "save": "Save my project",
+            "saving": "Saving...",
+            "toasts": {
+                "success": "Project updated!",
+                "error": "An error occurred."
+            }
+        },
+        "profile": {
+            "title": "My Tenant File",
+            "subtitle": "Complete your profile to apply for listings.",
+            "download": "Download file",
+            "bio": {
+                "title": "About you",
+                "subtitle": "Introduce yourself in a few words to landlords (hobbies, lifestyle...)",
+                "label": "Your short bio"
+            },
+            "dossierFacile": {
+                "connected": "DossierFacile Connected",
+                "linked": "Your file is linked to your Coridor profile.",
+                "manage": "Manage my file on DossierFacile",
+                "description": "DossierFacile is the State's digital rental file. entirely free, compliant and secure, it protects tenants and reassures landlords."
+            },
+            "rentRevision": {
+                "title": "Rent Revision",
+                "subtitle": "Adjust rent and charges for the upcoming period.",
+                "autoTitle": "Automatic Revision",
+                "currentRentHC": "Current rent excl. charges",
+                "referenceIndex": "Reference Index",
+                "newIndex": "New Index",
+                "newLegalRent": "New Legal Rent",
+                "legalRentHC": "Excl. charges",
+                "alreadyRevised": {
+                    "title": "Rent already revised",
+                    "description": "The rent has already been revised for this period {amount} €"
+                },
+                "applyAuto": "Apply Revision",
+                "effectiveDate": "New Effective Date",
+                "newRentHC": "New Rent HC",
+                "newCharges": "New Charges",
+                "info": "ℹ️ This action will close the current financial period the day before the effective date and start a new one.",
+                "actions": {
+                    "cancel": "Cancel",
+                    "confirm": "Confirm Revision",
+                    "close": "Close"
+                },
+                "success": "Rent revised successfully!",
+                "error": "An error occurred"
+            },
+            "rentVerification": {
+                "title": "Financial Reliability",
+                "verified": "VERIFIED",
+                "successTitle": "Rent payments detected over 12 months",
+                "successDesc": "Your payment regularity is certified. This is a major asset for your file!",
+                "reset": "Reset verification",
+                "verifyTitle": "Prove my reliability",
+                "verifyDesc": "Connect your bank account to certify your rent payments. (Secured by Powens)",
+                "recipientLabel": "Beneficiary name (Optional, to help detection)",
+                "recipientPlaceholder": "Ex: Real Estate Agency, Mr. Smith...",
+                "connect": "Connect my bank",
+                "connecting": "Retrieving rents...",
+                "modal": {
+                    "title": "Rent Confirmation",
+                    "detected": "We detected regular transfers of {amount} €",
+                    "transactions": "Here are the identified transactions:",
+                    "confirmQuestion": "Is this your current rent? By confirming, you will get the \"Rent payments detected\" badge.",
+                    "confirm": "Yes, it's my rent",
+                    "cancel": "No"
+                },
+                "toasts": {
+                    "success": "Reliability confirmed!",
+                    "reset": "Verification removed.",
+                    "error": "Error during confirmation/removal.",
+                    "noRent": "No recurring rent payment detected.",
+                    "initError": "Unable to initialize connection."
+                }
+            },
+            "job": {
+                "tenantTitle": "Job & Income (You)",
+                "partnerTitle": "Job & Income (Partner)",
+                "situation": "Professional Situation",
+                "contract": "Contract Type",
+                "salary": "Monthly Net Salary (€)"
+            },
+            "additionalIncomes": {
+                "title": "Additional Income",
+                "add": "Add income",
+                "item": "Income #{index}",
+                "delete": "Delete",
+                "type": "Type",
+                "amount": "Amount (€)",
+                "empty": "No additional income added."
+            },
+            "apl": {
+                "title": "Housing Allowance (APL)",
+                "amount": "Estimated housing allowance (€)",
+                "simulation": "Not sure? <link>Do the official simulation</link>",
+                "directPayment": "Authorize direct payment of APL to the landlord (Third Party Payment)"
+            },
+            "guarantors": {
+                "title": "Guarantors",
+                "add": "Add a guarantor",
+                "item": "Guarantor #{index}",
+                "delete": "Delete",
+                "type": "Type",
+                "status": "Status",
+                "income": "Monthly Net Income (€)",
+                "additionalIncomeTitle": "Additional Income (Guarantor)",
+                "addIncome": "+ Add",
+                "empty": "No guarantor added."
+            },
+            "summary": {
+                "title": "Financial Summary",
+                "tenant": "Net Salary (You)",
+                "partner": "Net Salary (Partner)",
+                "additional": "Additional Income",
+                "apl": "Housing Allowance",
+                "totalHousehold": "Total Household",
+                "totalGuarantors": "Total Guarantors"
+            },
+            "toasts": {
+                "success": "Profile updated!",
+                "error": "An error occurred."
+            }
+        },
+        "enums": {
+            "composition": {
+                "SOLO": "Single",
+                "COUPLE": "Couple",
+                "GROUP": "Roommate"
+            },
+            "status": {
+                "NONE": "Single / Other",
+                "MARRIED": "Married",
+                "PACS": "Civil Partnership",
+                "CONCUBINAGE": "Cohabitation"
+            },
+            "lease": {
+                "ANY": "No preference",
+                "FURNISHED": "Furnished",
+                "EMPTY": "Unfurnished",
+                "MOBILITY": "Mobility"
+            },
+            "job": {
+                "PRIVATE_SECTOR": "Private sector employee",
+                "PUBLIC_SECTOR": "Public sector employee / Civil servant",
+                "FREELANCE": "Freelance / Liberal profession",
+                "MICRO_ENTREPRENEUR": "Micro-entrepreneur / Self-employed",
+                "APPRENTICE": "Apprentice",
+                "STUDENT": "Student",
+                "INTERN": "Intern / Civic service / Volunteer",
+                "JOB_SEEKER": "Job seeker",
+                "RETIRED": "Retired",
+                "HOUSEWIFE": "Stay-at-home parent",
+                "INACTIVE": "Inactive / No profession",
+                "OTHER": "Other"
+            },
+            "contract": {
+                "CDI": "Permanent contract (CDI)",
+                "CDD": "Fixed-term contract (CDD)",
+                "INTERIM": "Interim / Temp",
+                "APPRENTICESHIP": "Apprenticeship",
+                "PUBLIC": "Public servant",
+                "FREELANCE": "Freelance / Self-employed",
+                "OTHER": "Other"
+            },
+            "income": {
+                "RENTAL": "Rental Income",
+                "ALIMONY": "Alimony",
+                "SCHOLARSHIP": "Scholarship",
+                "SOCIAL_AID": "Social Aid",
+                "OTHER": "Other"
+            },
+            "guarantorType": {
+                "FAMILY": "Family",
+                "THIRD_PARTY": "Third Party",
+                "VISALE": "Visale",
+                "LEGAL_ENTITY": "Legal Entity",
+                "CAUTIONNER": "Cautioneo",
+                "GARANTME": "GarantMe"
+            },
+            "guarantorStatus": {
+                "CDI": "Permanent contract",
+                "CDD": "Fixed-term contract",
+                "RETIRED": "Retired",
+                "STUDENT": "Student",
+                "UNEMPLOYED": "Unemployed",
+                "OTHER": "Other"
+            }
+        },
+        "security": {
+            "title": "Login & Security",
+            "subtitle": "Manage your security settings and login.",
+            "sectionTitle": "Security",
+            "description": "For your security, we recommend that you log out if you are using a shared computer.",
+            "signOut": "Log out"
+        },
+        "preferences": {
+            "title": "Global Preferences",
+            "subtitle": "Manage your global settings for the application.",
+            "save": "Save Preferences",
+            "language": {
+                "title": "Language & Region",
+                "description": "Choose your interface language.",
+                "french": "French",
+                "english": "English"
+            },
+            "measurement": {
+                "title": "Measurement System",
+                "description": "Choose your preferred unit system for surface areas (m² vs sq ft).",
+                "metric": "Metric (m²)",
+                "imperial": "Imperial (sq ft)"
+            },
+            "commute": {
+                "title": "Frequent Locations & Commutes",
+                "description": "Add your frequently visited places (work, school...) to see commute times on listings automatically.",
+                "empty": "No locations saved. Add your work or school!",
+                "add": "Add a location",
+                "new": "New location",
+                "name": "Name",
+                "placeholder": "ex: Work",
+                "type": "Location type",
+                "transport": "Transport mode",
+                "address": "Address",
+                "map": "Map",
+                "showMap": "Show on map",
+                "hideMap": "Hide from map",
+                "icons": {
+                    "work": "Work",
+                    "home": "Home",
+                    "school": "School",
+                    "favorite": "Favorite",
+                    "partner": "Partner"
+                },
+                "toasts": {
+                    "deleted": "Location deleted",
+                    "deleteError": "Error deleting location",
+                    "visible": "Visible on map",
+                    "hidden": "Hidden from map",
+                    "visibilityError": "Could not update visibility",
+                    "fillAll": "Please fill in all fields",
+                    "added": "Location added!",
+                    "addError": "Error adding location"
+                }
+            },
+            "toasts": {
+                "success": "Preferences updated!",
+                "error": "Something went wrong."
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "subtitle": "Manage your notification preferences.",
+            "description": "Manage your push notification preferences",
+            "types": {
+                "title": "Notification Types",
+                "messages": {
+                    "label": "New messages",
+                    "description": "Receive a notification for each new message"
+                },
+                "visits": {
+                    "label": "Visits",
+                    "description": "Bookings and cancellations of visits"
+                },
+                "applications": {
+                    "label": "Applications",
+                    "description": "New applications and status changes"
+                },
+                "likes": {
+                    "label": "Listing Likes",
+                    "description": "Get notified when someone likes your listing"
+                }
+            },
+            "dnd": {
+                "title": "Do Not Disturb Mode",
+                "description": "Disable notifications during specific hours (optional)",
+                "start": "Start (hour)",
+                "end": "End (hour)",
+                "disabled": "Disabled",
+                "active": "📵 Notifications disabled from {start}:00 to {end}:00"
+            },
+            "save": "Save Preferences",
+            "saving": "Saving...",
+            "toasts": {
+                "loadError": "Error loading preferences",
+                "success": "Preferences saved",
+                "error": "Error while saving"
+            }
+        },
+        "alerts": {
+            "title": "My search alerts",
+            "subtitle": "Manage your alerts to never miss a new listing.",
+            "empty": "No active alerts",
+            "emptyDescription": "Create an alert to receive notifications when new listings match your criteria.",
+            "createFirst": "Create my first alert",
+            "create": "Create alert",
+            "active": "Active",
+            "paused": "Paused",
+            "frequency": {
+                "label": "Frequency",
+                "INSTANT": "Instant",
+                "DAILY": "Daily (summary)"
+            },
+            "criteria": {
+                "location": "Location: {value}",
+                "category": "Type: {value}",
+                "price": "Price: {min}€ - {max}€",
+                "priceMin": "Min price: {min}€",
+                "priceMax": "Max price: {max}€",
+                "rooms": "Rooms: {count}+"
+            },
+            "actions": {
+                "edit": "Edit",
+                "pause": "Pause",
+                "resume": "Resume",
+                "delete": "Delete"
+            },
+            "modal": {
+                "createTitle": "Create alert",
+                "editTitle": "Edit alert",
+                "description": "You will be notified by email and push notification as soon as a new listing matches your criteria.",
+                "criteriaTitle": "Search criteria",
+                "noCriteria": "No criteria selected. Would you like to create a generic alert?",
+                "save": "Create alert",
+                "saving": "Creating...",
+                "cancel": "Cancel"
+            },
+            "deleteConfirm": {
+                "title": "Delete alert?",
+                "description": "You will no longer receive notifications for this search.",
+                "confirm": "Delete",
+                "cancel": "Cancel"
+            },
+            "toasts": {
+                "created": "Alert created successfully!",
+                "updated": "Alert updated",
+                "deleted": "Alert deleted",
+                "paused": "Alert paused",
+                "resumed": "Alert resumed",
+                "error": "An error occurred",
+                "createError": "Error creating alert"
+            }
+        },
+        "navigation": {
+            "personalInfo": "Personal info",
+            "finances": "My finances",
+            "tenantProfile": "Tenant File",
+            "project": "Rental Project",
+            "security": "Login & security",
+            "notifications": "Notifications",
+            "alerts": "Search alerts",
+            "privacy": "Privacy & sharing",
+            "preferences": "Global preferences",
+            "subscription": "Subscription",
+            "settings": "Settings",
+            "plan": {
+                "free": "Free",
+                "plus": "Plus",
+                "pro": "Pro"
+            },
+            "mode": {
+                "switch": "Switch to {mode} mode",
+                "landlord": "landlord",
+                "tenant": "tenant",
+                "success": "Mode switched successfully",
+                "error": "An error occurred"
+            }
+        }
+    },
+    "admin": {
+        "dashboard": "Dashboard",
+        "toModerate": "To Moderate",
+        "pendingListings": "Pending listings",
+        "usersLabel": "Users",
+        "thisWeek": "+{count} this week",
+        "reportsLabel": "Reports",
+        "pendingReports": "Awaiting review",
+        "publishedListings": "Published Listings",
+        "onlineVisible": "Visible online",
+        "growth": "Growth",
+        "growthChart": "Growth (last 30 days)",
+        "recentListings": "Recent Listings",
+        "recentReports": "Recent Reports",
+        "newUsers": "New Users",
+        "manage": "Manage",
+        "actionRequired": "Action required",
+        "upToDate": "Up to date",
+        "urgent": "Urgent",
+        "noIssues": "No issues",
+        "ofTotal": "{percent}% of total",
+        "documentation": "Documentation",
+        "helpTitle": "Need help?",
+        "helpText": "Check the admin documentation to manage the platform.",
+        "published": "Published",
+        "pending": "Pending",
+        "rejected": "Rejected",
+        "draft": "Draft",
+        "unknown": "Unknown",
+        "noName": "No name",
+        "anonymous": "Anonymous",
+        "viewAll": "View all",
+        "view": "View",
+        "reportedBy": "Reported by {name}",
+        "onUser": "On User: {name}",
+        "onListing": "On Listing: {name}",
+        "noRecentListings": "No recent listings",
+        "createdAt": "Created on {date}",
+        "by": "By {name}",
+        "errorLoading": "Error loading statistics.",
+        "chartNewUsers": "New Users",
+        "chartNewListings": "New Listings",
+        "userManagement": {
+            "title": "User Management ({count})",
+            "search": "Search...",
+            "colUser": "User",
+            "colRole": "Role / Mode",
+            "colStatus": "Status",
+            "colRegistration": "Registration",
+            "colActions": "Actions",
+            "banned": "Banned",
+            "active": "Active",
+            "unban": "Unban",
+            "ban": "Ban",
+            "delete": "Delete",
+            "confirmBan": "Ban this user?",
+            "confirmUnban": "Unban this user?",
+            "confirmDelete": "Are you sure you want to delete this user? This action is irreversible.",
+            "toastUnbanned": "User unbanned",
+            "toastBanned": "User banned",
+            "toastDeleted": "User deleted",
+            "toastActionError": "Error during action",
+            "toastDeleteError": "Error during deletion",
+            "noResults": "No users found."
+        },
+        "listingModeration": {
+            "title": "Listing Moderation",
+            "allCities": "All cities",
+            "allStatuses": "All statuses",
+            "sortByDate": "Sort by date",
+            "colListing": "Listing ({count})",
+            "colOwner": "Owner",
+            "colStatus": "Status",
+            "colUpdated": "Updated",
+            "colActions": "Actions",
+            "viewDetails": "View Details",
+            "approve": "Approve",
+            "reject": "Reject",
+            "confirmApprove": "Confirm publication of this listing?",
+            "toastApproved": "Listing approved",
+            "toastRejected": "Listing rejected",
+            "toastApproveError": "Error during approval",
+            "toastRejectError": "Error during rejection",
+            "noResults": "No listings found with these filters.",
+            "rejectModal": {
+                "title": "Reject Listing",
+                "action": "Reject Listing",
+                "cancel": "Cancel",
+                "reasonTitle": "Rejection Reason",
+                "reasonSubtitle": "Explain why this listing does not meet the criteria.",
+                "reasonLabel": "Reason (e.g. Blurry photos, Inconsistent price...)"
+            }
+        },
+        "reports": {
+            "title": "Reports",
+            "subtitle": "Manage user reports.",
+            "colReport": "Report",
+            "colDate": "Date",
+            "colTarget": "Target",
+            "colStatus": "Status",
+            "colActions": "Actions",
+            "noDetails": "No details",
+            "byReporter": "By {name}",
+            "listing": "Listing",
+            "unknownListing": "Unknown listing",
+            "user": "User",
+            "resolve": "Mark as Resolved",
+            "dismiss": "Dismiss / Reject",
+            "resolved": "Resolved",
+            "dismissed": "Dismissed",
+            "pendingStatus": "Pending",
+            "toastUpdated": "Status updated",
+            "toastError": "Error updating status",
+            "noReports": "No reports (so far, phew!)."
+        },
+        "listingDetail": {
+            "back": "Back",
+            "currentStatus": "Current Status",
+            "rejectionReason": "Rejection reason:",
+            "approve": "Approve",
+            "reject": "Reject",
+            "archive": "Archive",
+            "deleteListing": "Delete",
+            "confirmDelete": "Are you sure you want to permanently delete this listing?",
+            "confirmArchive": "Archive this listing?",
+            "rejectPrompt": "Rejection reason:",
+            "toastDeleted": "Listing deleted",
+            "toastActionSuccess": "Action {action} successful",
+            "toastActionError": "Error during action",
+            "description": "Description",
+            "details": "Listing Details",
+            "rent": "Rent",
+            "charges": "Charges",
+            "deposit": "Security Deposit",
+            "propertyType": "Property Type",
+            "surface": "Surface",
+            "furnished": "Furnished",
+            "yes": "Yes",
+            "no": "No",
+            "owner": "Owner",
+            "phone": "Phone:",
+            "notProvided": "Not provided",
+            "verifiedAccount": "Verified account:",
+            "location": "Location"
+        }
+    },
+    "listing": {
+        "actions": {
+            "contactHost": "Contact Host",
+            "apply": "Apply Now",
+            "share": "Share",
+            "save": "Save",
+            "report": "Report this listing"
+        },
+        "status": {
+            "interested": "Interested?",
+            "contactText": "Contact the host for more information or to arrange a visit.",
+            "completeDossierText": "Have a complete file? Apply directly.",
+            "isOwner": "This is your listing"
+        },
+        "details": {
+            "hostedBy": "Hosted by {name}",
+            "joined": "Joined {date}",
+            "rooms": "{count} bedroom(s)",
+            "guests": "{count} guest(s)",
+            "bathrooms": "{count} bathroom(s)",
+            "furnished": "Furnished",
+            "unfurnished": "Unfurnished",
+            "surface": "{area} sq ft",
+            "floor": "Floor {floor}",
+            "totalFloors": "/ {total}",
+            "buildYear": "Year built: {year}"
+        },
+        "sections": {
+            "description": "About this home",
+            "amenities": "What this place offers",
+            "location": "Location",
+            "availability": "Availability",
+            "financials": "Financial Details",
+            "rentExcl": "Rent excluding charges:",
+            "charges": "Service charges:",
+            "rentIncl": "Rent including charges:",
+            "deposit": "Security deposit:",
+            "none": "None",
+            "month": "/ month"
+        },
+        "amenities": {
+            "title": "Highlights",
+            "wifi": "Fiber Optic",
+            "garden": "Garden",
+            "refurbished": "Refurbished",
+            "pets": "Pets Allowed",
+            "kitchen": "Equipped Kitchen",
+            "south": "South Facing",
+            "storage": "Storage",
+            "bikeRoom": "Bike Room",
+            "laundry": "Laundry",
+            "transport": "Near Transport",
+            "digicode": "Digicode",
+            "intercom": "Intercom",
+            "caretaker": "Caretaker",
+            "armoredDoor": "Armored Door",
+            "quietArea": "Quiet Area",
+            "greenSpace": "Green Spaces",
+            "schools": "Near Schools",
+            "shops": "Near Shops",
+            "hospital": "Near Hospital",
+            "elevator": "Elevator",
+            "accessible": "Wheelchair Accessible",
+            "automaticDoors": "Automatic Doors",
+            "lastFloor": "Top Floor",
+            "bright": "Bright",
+            "noOpposite": "Not Overlooked",
+            "view": "Clear View",
+            "quiet": "Quiet",
+            "pool": "Pool",
+            "bathtub": "Bathtub",
+            "airConditioning": "Air Conditioning",
+            "student": "Student Friendly",
+            "concierge": "Concierge"
+        },
+        "location": {
+            "title": "Location",
+            "unknown": "Unknown Location"
+        },
+        "errors": {
+            "selfContact": "You cannot contact yourself",
+            "selfApply": "You cannot apply to your own listing",
+            "incompleteProfile": "Your profile is incomplete"
+        }
+    },
+    "footer": {
+        "about": "About",
+        "contact": "Contact",
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "legal": "Legal",
+        "copyright": "© 2025 Airbnb Clone, Inc.",
+        "sitemap": "Sitemap"
+    },
+    "inbox": {
+        "title": "Messages",
+        "tabs": {
+            "all": "All",
+            "tenant": "Tenant",
+            "landlord": "Landlord",
+            "support": "Support"
+        },
+        "empty": "No conversations",
+        "conversation": {
+            "sentImage": "Sent an image",
+            "new": "New conversation",
+            "unknownUser": "Unknown User",
+            "unknownLocation": "Unknown Location",
+            "seenBy": "Seen by {names}",
+            "status": {
+                "sent": "Application sent",
+                "rejected": "Application rejected",
+                "visitProposed": "Visit proposed",
+                "visitConfirmed": "Visit confirmed",
+                "accepted": "Application accepted",
+                "pending": "Pending"
+            }
+        },
+        "form": {
+            "placeholder": "Your message...",
+            "attachment": {
+                "photoVideo": "Photo / Video",
+                "document": "Document"
+            },
+            "toasts": {
+                "copy": "Message copied!",
+                "report": "Message reported.",
+                "reaction": "Reaction {emoji} added"
+            }
+        },
+        "header": {
+            "viewDossier": "View file",
+            "viewRecap": "View recap",
+            "members": "{count} members"
+        },
+        "message": {
+            "visit": {
+                "invitation": "{name} is interested in your profile and proposes a visit.",
+                "instruction": "Please choose a slot from the available times.",
+                "chooseSlot": "Choose a slot",
+                "confirmedTitle": "Appointment confirmed",
+                "confirmedTitleYou": "You confirmed your appointment",
+                "confirmedDetails": "for a visit on {date} at {time}.",
+                "confirmedBadge": "Confirmed"
+            },
+            "application": {
+                "appliedFor": "applied for",
+                "viewDossier": "View application file",
+                "viewRecap": "View recap"
+            },
+            "attachment": {
+                "defaultName": "Attachment",
+                "defaultType": "File"
+            }
+        }
+    },
+    "language": {
+        "fr": "Français",
+        "en": "English",
+        "switchLanguage": "Switch language",
+        "select": "Language"
+    },
+    "properties": {
+        "title": "My Properties",
+        "subtitle": "Manage your properties and rentals.",
+        "addProperty": "Add Property",
+        "filters": {
+            "all": "All",
+            "vacant": "Vacant",
+            "published": "Published",
+            "occupied": "Occupied"
+        },
+        "empty": {
+            "title": "No properties found",
+            "subtitle": "Start by adding your first property to put it up for rent."
+        },
+        "card": {
+            "category": "{category} {type, select, studio {Studio} other {T{count}}}",
+            "furnished": "Furnished",
+            "unfurnished": "Unfurnished",
+            "status": {
+                "label": "STATUS",
+                "occupied": "Occupied",
+                "vacant": "Vacant"
+            },
+            "rent": {
+                "label": "RENT",
+                "review": "Review",
+                "regularize": "Regularize",
+                "paid": "Up to date",
+                "late": "Overdue",
+                "noTenant": "No tenant"
+            }
+        },
+        "colocation": {
+            "title": "Colocation",
+            "rooms": "{count, plural, =0 {room} one {room} other {rooms}}",
+            "empty": "No tenant"
+        }
+    },
+    "regularization": {
+        "title": "Charges Regularization",
+        "subtitle": "Select the tenant and the fiscal year.",
+        "steps": {
+            "select": "Tenant / Lease",
+            "year": "Fiscal Year",
+            "calculate": "Calculate",
+            "preview": "Financial Summary",
+            "completion": "Finished"
+        },
+        "details": {
+            "recoverable": "Recoverable Charges (Real)",
+            "provisions": "Provisions Received",
+            "balance": "Regularization Balance",
+            "toReimburse": "To reimburse",
+            "remaining": "remaining to regularize",
+            "expensesIncluded": "Details of included expenses ({count})",
+            "lockedInfo": "By validating, these expenses will be locked and a history will be created."
+        },
+        "categories": {
+            "coldWater": "Cold Water",
+            "hotWater": "Hot Water",
+            "electricityCommon": "Electricity (Common)",
+            "heating": "Collective Heating",
+            "tax": "Property Tax",
+            "meters": "Meters",
+            "general": "General Common Charges",
+            "building": "Building Charges",
+            "elevator": "Elevator",
+            "maintenance": "Maintenance / Cleaning",
+            "caretaker": "Caretaker"
+        },
+        "status": {
+            "sending": "Sending to tenant...",
+            "sent": "Sent via messaging",
+            "error": "Auto-sending failed.",
+            "registered": "Regularization Saved!",
+            "description": "The statement has been generated and expenses locked.",
+            "download": "Download PDF"
+        },
+        "errors": {
+            "loadLeases": "Error loading tenants",
+            "calculate": "Error calculating regularization",
+            "save": "Error saving"
+        }
+    }
+}

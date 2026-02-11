@@ -6,6 +6,7 @@ import { HiPhoto, HiCamera } from 'react-icons/hi2';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { compressImage } from '@/lib/imageCompression';
 
 interface MobileImageUploadProps {
     onUpload: (url: string) => void;
@@ -24,12 +25,16 @@ const MobileImageUpload: React.FC<MobileImageUploadProps> = ({ onUpload }) => {
         if (!file) return;
 
         setUploading(true);
-        // Toast is handled by parent usually, but we can show loading here
-        const loadingToast = toast.loading('Envoi de l\'image...');
+        const loadingToast = toast.loading('Compression de l\'image...');
 
         try {
+            // Compress image before upload
+            const compressedFile = await compressImage(file);
+
+            toast.loading('Envoi de l\'image...', { id: loadingToast });
+
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressedFile);
             formData.append('upload_preset', 'coridor-preset');
 
             const response = await axios.post(
@@ -41,7 +46,6 @@ const MobileImageUpload: React.FC<MobileImageUploadProps> = ({ onUpload }) => {
             onUpload(url);
             setIsOpen(false);
             toast.dismiss(loadingToast);
-            // toast.success('Image envoyée'); // Optional, maybe redundant with message appearing
         } catch (error) {
             console.error('Upload error:', error);
             toast.error('Erreur lors de l\'envoi');

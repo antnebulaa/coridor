@@ -11,6 +11,7 @@ import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
 import LikeButton from "../LikeButton";
 import ListingCardCarousel from "./ListingCardCarousel";
+import { useTranslations } from 'next-intl';
 
 
 
@@ -72,6 +73,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
+    const t = useTranslations('listing');
 
     const location = getByValue((data as any).locationValue);
 
@@ -112,10 +114,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
     }, [data.surface, currentUser?.measurementSystem]);
 
     const floorDisplay = useMemo(() => {
-        if (data.floor === 0) return "RDC";
+        if (data.floor === 0) return t('groundFloor');
         if (data.floor) {
-            const floorText = `${data.floor}${data.totalFloors ? '/' + data.totalFloors : ''} étage${data.floor > 1 ? 's' : ''}`;
-            const elevatorText = data.hasElevator ? "Avec ascenseur" : "Sans ascenseur";
+            const floorText = data.totalFloors
+                ? t('floorTotal', { floor: data.floor, total: data.totalFloors })
+                : t('floor', { floor: data.floor });
+            const elevatorText = data.hasElevator ? t('elevator') : t('noElevator');
 
             return (
                 <span className="flex items-center gap-1.5">
@@ -125,7 +129,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     {data.isAccessible && (
                         <>
                             <span className="text-[8px] text-neutral-400">●</span>
-                            Accès PMR
+                            {t('accessible')}
                         </>
                     )}
                 </span>
@@ -189,12 +193,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
                             {isNew && (
                                 <div className="bg-card px-2 py-2 rounded-[12px] text-[10px] font-medium shadow-sm uppercase tracking-wide text-card-foreground">
-                                    Nouveau
+                                    {t('new')}
                                 </div>
                             )}
                             {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
                                 <div className="bg-[#fbea00] px-2 py-2 rounded-[12px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
-                                    Colocation
+                                    {t('shared')}
                                 </div>
                             )}
                         </div>
@@ -208,7 +212,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
                                         <div className="font-medium text-[26px] md:text-[22px] text-[#1b1b1b] leading-tight">
-                                            {price}€<span className="text-neutral-400 font-normal text-sm ml-1">/ mois cc</span>
+                                            {price}€<span className="text-neutral-400 font-normal text-sm ml-1">{t('monthChargesIncluded')}</span>
                                         </div>
                                     </div>
                                     {showHeart && (
@@ -231,7 +235,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <div className="flex-1 min-w-0 mt-1 md:-mt-1">
                                     <div className="font-medium text-base text-foreground line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                                            ? 'Chambre en colocation'
+                                            ? t('privateRoom')
                                             : data.category}
                                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                                     </div>
@@ -239,7 +243,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                         {data.neighborhood && (
                                             <span className="font-normal text-xs md:text-sm text-neutral-700">
-                                                , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                                                , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `${t('neighborhood')} ${data.neighborhood}`}
                                             </span>
                                         )}
                                     </div>
@@ -256,7 +260,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                 {data.neighborhood && (
                                     <span className="font-normal text-sm text-neutral-500">
-                                        , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                                        , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `${t('neighborhood')} ${data.neighborhood}`}
                                     </span>
                                 )}
                             </div>
@@ -273,18 +277,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </FeatureTag>
                                 ) : data.roomCount === 1 ? (
                                     <FeatureTag>
-                                        <span className="font-medium">Studio</span>
+                                        <span className="font-medium">{t('studio')}</span>
                                     </FeatureTag>
-                                ) : (
+                                ) : data.roomCount && data.roomCount > 1 ? (
                                     <>
                                         <FeatureTag>
-                                            <span className="font-medium">{data.roomCount || 0}</span> p
+                                            <span className="font-medium">{data.roomCount} {data.roomCount === 1 ? 'pièce' : 'pièces'}</span>
                                         </FeatureTag>
                                         <FeatureTag>
-                                            <span className="font-medium">{Math.max(0, (data.roomCount || 0) - 1)}</span> ch
+                                            <span className="font-medium">{Math.max(0, data.roomCount - 1)} {Math.max(0, data.roomCount - 1) <= 1 ? 'ch' : 'ch'}</span>
                                         </FeatureTag>
                                     </>
-                                )}
+                                ) : null}
 
                                 {surfaceDisplay && (
                                     <FeatureTag>
@@ -293,7 +297,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
 
                                 <FeatureTag>
-                                    <span className="font-medium">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? 'Meublé' : 'Vide'}</span>
+                                    <span className="font-medium">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
                                 </FeatureTag>
 
                                 {data.transitData?.mainConnection && (
@@ -398,12 +402,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
                     <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
                         {isNew && (
                             <div className="bg-card px-3 py-1 rounded-full text-xs font-semibold shadow-sm text-card-foreground">
-                                Nouvelle annonce
+                                {t('newListing')}
                             </div>
                         )}
                         {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
                             <div className="bg-[#002FA7] px-3 py-1 rounded-full text-xs font-semibold shadow-sm text-white uppercase tracking-wide">
-                                Colocation
+                                {t('shared')}
                             </div>
                         )}
                     </div>
@@ -411,8 +415,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
                 <div className="flex flex-col gap-0 mt-2">
                     <div className="flex flex-row justify-between items-start w-full">
-                        <div className="font-medium text-[26px] text-[#2B2DFF]">
-                            {price}€<span className="text-muted-foreground font-normal text-sm ml-1">/mois cc</span>
+                        <div className="font-medium text-[26px] text-[#2B2DFF] leading-none">
+                            {price}€<span className="text-muted-foreground font-normal text-sm ml-1">{t('monthChargesIncluded')}</span>
                         </div>
                         {showHeart && (
                             <div className="ml-auto shrink-0 -mr-1 flex items-center gap-2">
@@ -432,33 +436,35 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         )}
                     </div>
 
-                    <div className="font-normal text-foreground mt-1 md:-mt-1">
+                    <div className="font-normal text-foreground mt-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                            ? 'Chambre en colocation'
+                            ? t('privateRoom')
                             : data.category}
                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
-                        {' '}à {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
+                        {` ${t('at')} `}{data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                         {data.neighborhood && (
                             <span className="font-normal text-sm md:text-base text-muted-foreground ml-1">
-                                {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `Quartier ${data.neighborhood}`}
+                                {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `${t('neighborhood')} ${data.neighborhood}`}
                             </span>
                         )}
                     </div>
                     {floorDisplay && (
-                        <div className="font-normal text-muted-foreground text-sm md:text-base -mt-1">
+                        <div className="font-normal text-muted-foreground text-sm md:text-base">
                             {floorDisplay}
                         </div>
                     )}
                     <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px] mb-1">
                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                            ? `Colocation • ${surfaceDisplay}`
+                            ? `${t('shared')} • ${surfaceDisplay}`
                             : data.roomCount === 1
-                                ? `Studio • ${surfaceDisplay}`
-                                : `${data.roomCount || 0} ${(data.roomCount || 0) > 1 ? 'pièces' : 'pièce'} • ${Math.max(0, (data.roomCount || 0) - 1)} ${Math.max(0, (data.roomCount || 0) - 1) > 1 ? 'chambres' : 'chambre'} • ${surfaceDisplay}`
+                                ? `${t('studio')} • ${surfaceDisplay}`
+                                : data.roomCount && data.roomCount > 1
+                                    ? `${data.roomCount} ${data.roomCount === 1 ? 'pièce' : 'pièces'} • ${Math.max(0, data.roomCount - 1)} ch • ${surfaceDisplay}`
+                                    : surfaceDisplay || ''
                         }
                         <div className="ml-2">
                             <FeatureTag>
-                                <span className="font-medium text-xs md:text-sm">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? 'Meublé' : 'Vide'}</span>
+                                <span className="font-medium text-xs md:text-sm">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
                             </FeatureTag>
                         </div>
                     </div>
@@ -508,7 +514,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         {data.hasFiber && (
                             <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                 <Wifi size={14} />
-                                <span className="text-sm font-normal">Fibre</span>
+                                <span className="text-sm font-normal">{t('fiber')}</span>
                             </div>
                         )}
 
@@ -519,7 +525,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         {data.hasBikeRoom && (
                             <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
                                 <Bike size={14} />
-                                <span className="text-sm font-normal">Local vélo</span>
+                                <span className="text-sm font-normal">{t('bikeRoom')}</span>
                             </div>
                         )}
 

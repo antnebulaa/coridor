@@ -32,12 +32,26 @@ export default function PushNotificationManager() {
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const isSecure = window.location.protocol === 'https:';
 
-            if (isLocalhost || isSecure) {
+            if ((isLocalhost || isSecure) && process.env.NODE_ENV === 'production') {
                 setIsSupported(true);
                 registerServiceWorker().catch(e => console.error("SW Registration blocked (likely non-secure):", e));
             }
         }
     }, []);
+
+    async function syncSubscription(sub: PushSubscription) {
+        try {
+            await fetch('/api/web-push/subscribe', {
+                method: 'POST',
+                body: JSON.stringify(sub),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error('Failed to sync subscription:', error);
+        }
+    }
 
     async function registerServiceWorker() {
         try {
@@ -49,6 +63,9 @@ export default function PushNotificationManager() {
 
             const sub = await registration.pushManager.getSubscription();
             setSubscription(sub);
+            if (sub) {
+                await syncSubscription(sub);
+            }
         } catch (error) {
             console.error('SW registration failed:', error);
         }
@@ -66,13 +83,7 @@ export default function PushNotificationManager() {
             setSubscription(sub);
 
             // Save to DB
-            await fetch('/api/web-push/subscribe', {
-                method: 'POST',
-                body: JSON.stringify(sub),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            await syncSubscription(sub);
 
             toast.success("Notifications activées !");
         } catch (error) {
@@ -85,7 +96,7 @@ export default function PushNotificationManager() {
         if (!session?.user) return;
         toast.loading("Envoi en cours...");
         try {
-            await fetch('/api/web-push/send', {
+            const res = await fetch('/api/web-push/send', {
                 method: 'POST',
                 body: JSON.stringify({
                     userId: (session.user as any).id,
@@ -95,12 +106,24 @@ export default function PushNotificationManager() {
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
+
+            const data = await res.json();
+
             toast.dismiss();
-            toast.success("Notification envoyée !");
+            if (res.ok && data.success && data.sent > 0) {
+                toast.success("Notification envoyée ! Checkez votre centre de notifs.");
+            } else {
+                console.warn("Test notification result:", data);
+                if (data.message === "No subscriptions found for user") {
+                    toast.error("Aucun abonnement trouvé sur le serveur. Essayez de désactiver/réactiver.");
+                } else {
+                    toast.error("Erreur: " + (data.error || "Rien envoyé"));
+                }
+            }
         } catch (error) {
             console.error(error);
             toast.dismiss();
-            toast.error("Erreur d'envoi");
+            toast.error("Erreur réseau ou serveur");
         }
     }
 
@@ -113,7 +136,7 @@ export default function PushNotificationManager() {
     }
 
     return (
-        <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-neutral-200 z-[1001] animate-in slide-in-from-bottom flex items-center justify-between gap-4">
+        <div className="fixed bottom-24 md:bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-neutral-200 z-1001 animate-in slide-in-from-bottom flex items-center justify-between gap-4">
             <div className="flex-1">
                 <h3 className="font-semibold text-sm">Notifications</h3>
                 <p className="text-xs text-neutral-500">Recevez les alertes en temps réel sur votre mobile.</p>

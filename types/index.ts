@@ -180,6 +180,7 @@ export type SafeUser = Omit<
     updatedAt: string;
     emailVerified: string | null;
     userMode: UserMode;
+    role: "USER" | "ADMIN"; // Simplified type
     plan: Plan;
     firstName: string | null;
     lastName: string | null;
@@ -196,6 +197,7 @@ export type SafeUser = Omit<
     wishlists: SafeWishlist[] | null;
     measurementSystem: string | null;
     commuteLocations: SafeCommuteLocation[] | null;
+    accounts?: any[]; // NEW: Expose accounts (using any[] for simplicity or import Account type)
     properties?: SafeProperty[];
 };
 
@@ -211,7 +213,10 @@ export type SafeCommuteLocation = Omit<
 export type FullMessageType = Message & {
     sender: User,
     seen: User[],
-    listing?: Listing | null
+    listing?: Listing | null;
+    fileUrl?: string | null;
+    fileName?: string | null;
+    fileType?: string | null;
 };
 
 export type FullConversationType = Conversation & {
@@ -239,6 +244,9 @@ export type SafeMessage = Omit<
     seen: SafeUser[];
     listing?: SafeListing | null;
     listingId?: string | null;
+    fileUrl?: string | null;
+    fileName?: string | null;
+    fileType?: string | null;
 };
 
 export type SafeVisit = Omit<

@@ -55,6 +55,34 @@ export async function POST(
                 }
             });
 
+            // Send push notification to landlord (throttled to avoid spam)
+            const listing = await prisma.listing.findUnique({
+                where: { id: listingId },
+                include: {
+                    rentalUnit: {
+                        include: {
+                            property: true
+                        }
+                    }
+                }
+            });
+
+            if (listing) {
+                const landlordId = listing.rentalUnit.property.ownerId;
+
+                // Only notify if landlord is not the one liking (shouldn't happen but safety check)
+                if (landlordId !== currentUser.id) {
+                    const { sendPushNotification } = await import("@/app/lib/sendPushNotification");
+                    sendPushNotification({
+                        userId: landlordId,
+                        title: "Votre annonce a plu !",
+                        body: `${currentUser.name || 'Quelqu\'un'} a aimé votre annonce "${listing.title}"`,
+                        url: `/properties/${listingId}/edit`,
+                        type: 'like'
+                    }).catch(err => console.error("[Push] Failed to notify landlord:", err));
+                }
+            }
+
             return NextResponse.json({
                 status: 'liked'
             });

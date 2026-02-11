@@ -10,6 +10,7 @@ import ListingTransit from './ListingTransit';
 import Avatar from '../Avatar';
 import ListingEnergy from './ListingEnergy';
 import ListingCommute from './ListingCommute';
+import { useTranslations } from 'next-intl';
 
 interface ListingInfoProps {
     user: SafeUser;
@@ -40,15 +41,16 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
 }) => {
     const { getByValue } = useCountries();
     const coordinates = getByValue(locationValue)?.latlng;
+    const t = useTranslations('listing');
 
     return (
         <div className="col-span-4 flex flex-col gap-8">
             <div className="flex flex-col gap-2">
 
                 <div className="flex flex-row items-center gap-4 font-normal text-muted-foreground">
-                    <div>{guestCount} Capacité</div>
-                    <div>{roomCount} chambres</div>
-                    <div>{bathroomCount} salles de bain</div>
+                    <div>{t('details.guests', { count: guestCount })}</div>
+                    <div>{t('details.rooms', { count: roomCount })}</div>
+                    <div>{t('details.bathrooms', { count: bathroomCount })}</div>
                 </div>
             </div>
             <hr />
@@ -73,31 +75,31 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <div className="flex flex-col gap-6">
                 <div className="text-xl font-semibold flex items-center gap-2">
                     <Home size={24} />
-                    Détails du logement
+                    {t('details.title')}
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-muted-foreground">
                     {listing.surface && (
                         <div className="flex items-center gap-2">
                             <Ruler size={20} />
-                            <span>{listing.surface} {listing.surfaceUnit === 'imperial' ? 'sq ft' : 'm²'}</span>
+                            <span>{t('details.surface', { area: listing.surface })}</span>
                         </div>
                     )}
                     {listing.floor !== null && (
                         <div className="flex items-center gap-2">
                             <Building2 size={20} />
-                            <span>Étage {listing.floor} {listing.totalFloors ? `/ ${listing.totalFloors}` : ''}</span>
+                            <span>{t('details.floor', { floor: listing.floor })} {listing.totalFloors ? t('details.totalFloors', { total: listing.totalFloors }) : ''}</span>
                         </div>
                     )}
                     {listing.buildYear && (
                         <div className="flex items-center gap-2">
                             <Calendar size={20} />
-                            <span>Année de construction : {listing.buildYear}</span>
+                            <span>{t('details.buildYear', { year: listing.buildYear })}</span>
                         </div>
                     )}
                     {listing.isFurnished !== undefined && (
                         <div className="flex items-center gap-2">
                             <Home size={20} />
-                            <span>{listing.isFurnished ? 'Meublé' : 'Non meublé'}</span>
+                            <span>{listing.isFurnished ? t('details.furnished') : t('details.unfurnished')}</span>
                         </div>
                     )}
                 </div>
@@ -109,36 +111,36 @@ const ListingInfo: React.FC<ListingInfoProps> = ({
             <div className="flex flex-col gap-6">
                 <div className="text-xl font-semibold flex items-center gap-2">
                     <Euro size={24} />
-                    Informations financières
+                    {t('sections.financials')}
                 </div>
                 {/* ... existing financial details ... */}
                 <div className="flex flex-col gap-4 text-muted-foreground">
                     <div className="flex justify-between max-w-[400px]">
-                        <span>Loyer hors charges :</span>
-                        <span className="font-medium text-black">{listing.price} € / mois</span>
+                        <span>{t('sections.rentExcl')}</span>
+                        <span className="font-medium text-black">{listing.price} € {t('sections.month')}</span>
                     </div>
                     {listing.guestCount && (
                         <div className="flex justify-between max-w-[400px]">
-                            <span>Nombre de chambres :</span>
-                            <span className="font-medium text-black">{listing.guestCount} {listing.guestCount > 1 ? 'chambres' : 'chambre'}</span>
+                            <span>{t('listing.rooms')}:</span>
+                            <span className="font-medium text-black">{t('details.rooms', { count: listing.guestCount })}</span>
                         </div>
                     )}
                     {listing.charges && (
                         <div className="flex justify-between max-w-[400px]">
-                            <span>Provisions sur charges :</span>
-                            <span className="font-medium text-black">+ {(listing.charges as any).amount} € / mois</span>
+                            <span>{t('sections.charges')}</span>
+                            <span className="font-medium text-black">+ {(listing.charges as any).amount} € {t('sections.month')}</span>
                         </div>
                     )}
                     {/* Total Display */}
                     <div className="flex justify-between max-w-[400px] border-t pt-2 mt-1">
-                        <span className="font-medium text-black">Loyer charges comprises :</span>
-                        <span className="font-bold text-black">{listing.price + (listing.charges ? (listing.charges as any).amount : 0)} € / mois</span>
+                        <span className="font-medium text-black">{t('sections.rentIncl')}</span>
+                        <span className="font-bold text-black">{listing.price + (listing.charges ? (listing.charges as any).amount : 0)} € {t('sections.month')}</span>
                     </div>
 
                     {listing.securityDeposit !== undefined && listing.securityDeposit !== null && (
                         <div className="flex justify-between max-w-[400px] mt-2 bg-neutral-50 p-2 rounded-lg">
-                            <span>Dépôt de garantie :</span>
-                            <span className="font-medium text-black">{listing.securityDeposit === 0 ? "Aucun" : `${listing.securityDeposit} €`}</span>
+                            <span>{t('sections.deposit')}</span>
+                            <span className="font-medium text-black">{listing.securityDeposit === 0 ? t('sections.none') : `${listing.securityDeposit} €`}</span>
                         </div>
                     )}
                 </div>

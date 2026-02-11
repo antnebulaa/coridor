@@ -14,7 +14,9 @@ export async function POST(
     const body = await request.json();
     const {
         listingId,
-        name
+        name,
+        imageIds, // Array of existing PropertyImage IDs to assign to this room
+        newImageUrls // Array of new image URLs to create and assign
     } = body;
 
     if (!listingId || !name) {
@@ -74,12 +76,42 @@ export async function POST(
         }
     }
 
-    const room = await prisma.room.create({
-        data: {
-            name: finalName,
-            propertyId: propertyId
+    // Transaction to create room and update/create images
+    const result = await prisma.$transaction(async (tx) => {
+        // 1. Create Room
+        const room = await tx.room.create({
+            data: {
+                name: finalName,
+                propertyId: propertyId
+            }
+        });
+
+        // 2. Assign existing images (unassigned ones)
+        if (imageIds && Array.isArray(imageIds) && imageIds.length > 0) {
+            await tx.propertyImage.updateMany({
+                where: {
+                    id: { in: imageIds },
+                    propertyId: propertyId // Security check to ensure they belong to same property
+                },
+                data: {
+                    roomId: room.id
+                }
+            });
         }
+
+        // 3. Create and assign new images
+        if (newImageUrls && Array.isArray(newImageUrls) && newImageUrls.length > 0) {
+            await tx.propertyImage.createMany({
+                data: newImageUrls.map((url: string) => ({
+                    url,
+                    propertyId: propertyId,
+                    roomId: room.id
+                }))
+            });
+        }
+
+        return room;
     });
 
-    return NextResponse.json(room);
+    return NextResponse.json(result);
 }

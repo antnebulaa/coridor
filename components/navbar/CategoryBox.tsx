@@ -23,7 +23,7 @@ const CategoryBox: React.FC<CategoryBoxProps> = ({
     const params = useSearchParams();
 
     const handleClick = useCallback(() => {
-        let currentQuery = {};
+        const currentQuery = {};
 
         if (params) {
             // currentQuery = qs.parse(params.toString());

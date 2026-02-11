@@ -4,17 +4,20 @@ import { useState } from "react";
 import { Drawer } from "vaul";
 import ListingCard from "@/components/listings/ListingCard";
 import { SafeUser } from "@/types";
+import { BellPlus } from "lucide-react";
 
 interface MobileBottomSheetProps {
     listings: any[];
     currentUser?: SafeUser | null;
     onSelectListing: (id: string) => void;
+    onAlertClick?: () => void;
 }
 
 const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
     listings,
     currentUser,
-    onSelectListing
+    onSelectListing,
+    onAlertClick
 }) => {
     // Snap points: 
     // - "130px": Collapsed view (Header only)
@@ -40,18 +43,29 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                     {/* Handle + Header */}
                     <div className="w-full bg-background flex flex-col items-center pt-4 pb-2 rounded-t-[10px] shrink-0 border-b border-border">
                         <div className="w-12 h-1.5 bg-muted-foreground/20 rounded-full mb-4" />
-                        <div className="w-full px-6 pb-2 flex justify-between items-center">
+                        <div className="w-full px-6 pb-2 flex justify-between items-center gap-2">
                             <h2 className="text-sm font-semibold text-foreground">
                                 {listings.length} {listings.length > 1 ? 'logements' : 'logement'}
                             </h2>
-                            {snap !== 1 && (
-                                <button
-                                    onClick={() => setSnap(1)}
-                                    className="text-xs text-muted-foreground font-medium bg-secondary px-3 py-1.5 rounded-full"
-                                >
-                                    Liste
-                                </button>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {onAlertClick && (
+                                    <button
+                                        onClick={onAlertClick}
+                                        className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition"
+                                    >
+                                        <BellPlus size={14} />
+                                        Alerte
+                                    </button>
+                                )}
+                                {snap !== 1 && (
+                                    <button
+                                        onClick={() => setSnap(1)}
+                                        className="text-xs text-muted-foreground font-medium bg-secondary px-3 py-1.5 rounded-full"
+                                    >
+                                        Liste
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 

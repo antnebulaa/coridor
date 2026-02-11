@@ -4,6 +4,7 @@ import Container from '../Container';
 import Logo from './Logo';
 import Search from './Search';
 import UserMenu from './UserMenu';
+import NotificationCenter from './NotificationCenter';
 
 import { usePathname } from 'next/navigation';
 
@@ -16,7 +17,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     const pathname = usePathname();
-    const isHomePage = pathname === '/';
+    const isHomePage = pathname === '/' || pathname === '/fr' || pathname === '/en';
     const { unreadCount } = useUserCounters(currentUser);
 
     return (
@@ -73,11 +74,21 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                                     <UserMenu currentUser={currentUser} unreadCount={unreadCount} />
                                 </div>
                             </div>
-                            {isHomePage && currentUser?.userMode !== 'LANDLORD' && <Search />}
+                            {isHomePage && currentUser?.userMode !== 'LANDLORD' && (
+                                <div className="flex flex-row items-center w-full gap-2 transition-all">
+                                    <div className="flex-1 min-w-0">
+                                        <Search />
+                                    </div>
+                                    <div className="md:hidden shrink-0">
+                                        <NotificationCenter currentUser={currentUser} redirectToPage />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Right Side: User Menu */}
-                        <div className="hidden md:block">
+                        <div className="hidden md:flex items-center gap-2">
+                            <NotificationCenter currentUser={currentUser} />
                             <UserMenu currentUser={currentUser} unreadCount={unreadCount} />
                         </div>
                     </div>

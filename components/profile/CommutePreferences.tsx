@@ -1,15 +1,17 @@
+'use client';
+
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import CustomToast from "@/components/ui/CustomToast";
 import { useRouter } from "next/navigation";
-import { Trash2, MapPin, Plus, Train, Car, Bike, Footprints, Briefcase, Home, GraduationCap, Star, Heart } from "lucide-react";
+import { Trash2, Plus, Train, Car, Bike, Footprints, Briefcase, Home, GraduationCap, Star, Heart } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 import { SafeUser } from "@/types";
 import { Button } from "@/components/ui/Button";
 import CommuteAddressSelect from "@/components/inputs/CommuteAddressSelect";
 import { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
-import Heading from "@/components/Heading";
 
 interface CommutePreferencesProps {
     currentUser: SafeUser;
@@ -21,6 +23,8 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
+    const t = useTranslations('account.preferences.commute');
+    const tCommon = useTranslations('common');
 
     // Form state
     const [name, setName] = useState('');
@@ -29,31 +33,31 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
     const [icon, setIcon] = useState('briefcase');
 
     const iconList = [
-        { id: 'briefcase', icon: Briefcase, label: 'Travail' },
-        { id: 'home', icon: Home, label: 'Domicile' },
-        { id: 'school', icon: GraduationCap, label: 'École' },
-        { id: 'favorite', icon: Star, label: 'Favori' },
-        { id: 'partner', icon: Heart, label: 'Partenaire' }
+        { id: 'briefcase', icon: Briefcase, label: t('icons.work') },
+        { id: 'home', icon: Home, label: t('icons.home') },
+        { id: 'school', icon: GraduationCap, label: t('icons.school') },
+        { id: 'favorite', icon: Star, label: t('icons.favorite') },
+        { id: 'partner', icon: Heart, label: t('icons.partner') }
     ];
 
     const onDelete = (id: string) => {
         setIsLoading(true);
         axios.delete('/api/user/commute', { data: { id } })
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((tToast) => (
                     <CustomToast
-                        t={t}
-                        message="Lieu supprimé"
+                        t={tToast}
+                        message={t('toasts.deleted')}
                         type="success"
                     />
                 ));
                 router.refresh();
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((tToast) => (
                     <CustomToast
-                        t={t}
-                        message="Erreur lors de la suppression"
+                        t={tToast}
+                        message={t('toasts.deleteError')}
                         type="error"
                     />
                 ));
@@ -64,27 +68,22 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
     }
 
     const onToggleMap = (id: string, newState: boolean) => {
-        // Optimistic update could be complex here without context, let's just trigger loading
-        // Or just fire and forget sort of, but loading is safer.
-        // Actually for a toggle, better to NOT block UI but show toast on error.
-        // Or use router.refresh() which might take a sec.
-
         axios.patch('/api/user/commute', { id, isShowOnMap: newState })
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((tToast) => (
                     <CustomToast
-                        t={t}
-                        message={newState ? 'Affiché sur la carte' : 'Masqué de la carte'}
+                        t={tToast}
+                        message={newState ? t('toasts.visible') : t('toasts.hidden')}
                         type="success"
                     />
                 ));
                 router.refresh();
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((tToast) => (
                     <CustomToast
-                        t={t}
-                        message="Impossible de modifier la visibilité"
+                        t={tToast}
+                        message={t('toasts.visibilityError')}
                         type="error"
                     />
                 ));
@@ -93,10 +92,10 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
 
     const onSubmit = () => {
         if (!name || !address) {
-            toast.custom((t) => (
+            toast.custom((tToast) => (
                 <CustomToast
-                    t={t}
-                    message="Veuillez remplir tous les champs"
+                    t={tToast}
+                    message={t('toasts.fillAll')}
                     type="error"
                 />
             ));
@@ -114,10 +113,10 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
             icon
         })
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((tToast) => (
                     <CustomToast
-                        t={t}
-                        message="Lieu ajouté !"
+                        t={tToast}
+                        message={t('toasts.added')}
                         type="success"
                     />
                 ));
@@ -129,10 +128,10 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                 setIcon('briefcase');
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((tToast) => (
                     <CustomToast
-                        t={t}
-                        message="Erreur lors de l'ajout"
+                        t={tToast}
+                        message={t('toasts.addError')}
                         type="error"
                     />
                 ));
@@ -145,9 +144,9 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
     return (
         <div className="flex flex-col gap-6 p-6 border border-border rounded-xl bg-card">
             <div className="flex flex-col gap-1">
-                <h3 className="text-lg font-semibold">Lieux fréquents & Trajets</h3>
+                <h3 className="text-lg font-semibold">{t('title')}</h3>
                 <p className="text-muted-foreground text-sm">
-                    Ajoutez vos lieux (travail, école...) pour voir automatiquement le temps de trajet sur les annonces.
+                    {t('description')}
                 </p>
             </div>
 
@@ -155,28 +154,6 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                 {currentUser.commuteLocations?.map((location) => {
                     // Determine Icon
                     const matchedIcon = iconList.find(i => i.id === location.icon);
-                    const DisplayIcon = matchedIcon ? matchedIcon.icon : (
-                        location.transportMode === 'd' ? Star : Star // Fallback? 
-                        // Actually let's use transport icon if no specialized icon? 
-                        // User request: "afficher sur la map le même icon que celui qui est associé au favoris"
-                        // Implies logic priority: Icon > Transport ?
-                        // Current list implementation used transport icons only. 
-                        // I will switch to showing the Semantic Icon in the list too.
-                    );
-
-                    // But wait, list currently shows Transport Mode icon to indicate "How I go there".
-                    // Maybe we should show BOTH? Or Semantic Icon replaces Transport Icon?
-                    // In Google Maps: "Home" has Home icon. "Work" has Briefcase.
-                    // Let's use Semantic Icon primarily.
-
-                    const ListIcon = matchedIcon ? matchedIcon.icon : Star; // Default fallback
-
-                    // Wait, listing transport mode is important for "Commute Type".
-                    // Maybe render semantic icon circle, and small badge for transport? 
-                    // Let's stick to Semantic Icon for the main circle as requested implicitly.
-
-                    // Actually, if I look at line 114 in original, it rendered Transport Icon.
-                    // I will change it to Semantic Icon if available.
 
                     return (
                         <div key={location.id} className="group flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-border/50 hover:border-border transition">
@@ -209,14 +186,14 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="flex flex-col items-end gap-1">
-                                    <div className="text-[10px] uppercase font-bold text-neutral-400">Carte</div>
+                                    <div className="text-[10px] uppercase font-bold text-neutral-400">{t('map')}</div>
                                     <div
                                         onClick={() => onToggleMap(location.id, !location.isShowOnMap)}
                                         className={`
                                         w-9 h-5 rounded-full relative transition cursor-pointer 
                                         ${location.isShowOnMap ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-700'}
                                     `}
-                                        title={location.isShowOnMap ? "Masquer de la carte" : "Afficher sur la carte"}
+                                        title={location.isShowOnMap ? t('hideMap') : t('showMap')}
                                     >
                                         <div className={`
                                         absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white dark:bg-black transition-transform shadow-sm
@@ -239,7 +216,7 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
 
                 {currentUser.commuteLocations?.length === 0 && !isAdding && (
                     <div className="text-center py-8 text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 text-sm">
-                        Aucun lieu enregistré. Ajoutez votre travail ou école !
+                        {t('empty')}
                     </div>
                 )}
             </div>
@@ -253,22 +230,22 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                         small
                     >
                         <Plus size={16} />
-                        <span>Ajouter un lieu</span>
+                        <span>{t('add')}</span>
                     </Button>
                 </div>
             ) : (
                 <div className="flex flex-col gap-4 p-4 border border-border rounded-lg bg-neutral-50/50 dark:bg-neutral-900/20">
                     <div className="flex justify-between items-center mb-1">
-                        <h4 className="font-medium text-sm">Nouveau lieu</h4>
+                        <h4 className="font-medium text-sm">{t('new')}</h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-2">
-                            <label className="text-xs font-semibold text-neutral-500">Nom</label>
+                            <label className="text-xs font-semibold text-neutral-500">{t('name')}</label>
                             <input
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="ex: Travail"
+                                placeholder={t('placeholder')}
                                 className="
                                     p-3 text-sm
                                     bg-neutral-100 dark:bg-neutral-800 
@@ -279,7 +256,7 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label className="text-xs font-semibold text-neutral-500">Type de lieu</label>
+                            <label className="text-xs font-semibold text-neutral-500">{t('type')}</label>
                             <div className="flex gap-2">
                                 {iconList.map((item) => (
                                     <div
@@ -299,7 +276,7 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-xs font-semibold text-neutral-500">Mode de transport</label>
+                        <label className="text-xs font-semibold text-neutral-500">{t('transport')}</label>
                         <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
                             {['TRANSIT', 'DRIVING', 'CYCLING', 'WALKING'].map((mode) => (
                                 <div
@@ -321,7 +298,7 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-xs font-semibold text-neutral-500">Adresse</label>
+                        <label className="text-xs font-semibold text-neutral-500">{t('address')}</label>
                         <CommuteAddressSelect
                             value={address || undefined}
                             onChange={(val) => setAddress(val)}
@@ -330,14 +307,14 @@ const CommutePreferences: React.FC<CommutePreferencesProps> = ({
 
                     <div className="flex justify-end gap-2 mt-2">
                         <Button
-                            label="Annuler"
+                            label={tCommon('cancel')}
                             onClick={() => setIsAdding(false)}
                             variant="ghost"
                             size="sm"
                             className="w-auto border-none hover:bg-neutral-100 dark:hover:bg-neutral-800"
                         />
                         <Button
-                            label="Enregistrer"
+                            label={tCommon('save')}
                             onClick={onSubmit}
                             disabled={isLoading}
                             size="sm"

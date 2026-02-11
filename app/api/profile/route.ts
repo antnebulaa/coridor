@@ -23,7 +23,8 @@ export async function POST(
         additionalIncomes,
         aplAmount,
         aplDirectPayment,
-        bio
+        bio,
+        landlordName
     } = body;
 
     // Upsert Tenant Profile
@@ -40,7 +41,8 @@ export async function POST(
             partnerNetSalary: parseInt(partnerNetSalary, 10) || 0,
             aplAmount: parseInt(aplAmount, 10) || 0,
             aplDirectPayment,
-            bio
+            bio,
+            landlordName
         },
         create: {
             userId: currentUser.id,
@@ -52,7 +54,8 @@ export async function POST(
             partnerNetSalary: parseInt(partnerNetSalary, 10) || 0,
             aplAmount: parseInt(aplAmount, 10) || 0,
             aplDirectPayment,
-            bio
+            bio,
+            landlordName
         }
     });
 

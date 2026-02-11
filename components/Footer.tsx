@@ -3,8 +3,11 @@
 import { usePathname } from 'next/navigation';
 import Container from './Container';
 
+import { useTranslations } from 'next-intl';
+
 const Footer = () => {
     const pathname = usePathname();
+    const t = useTranslations('footer');
 
     if (pathname !== '/') {
         return null;
@@ -16,12 +19,12 @@ const Footer = () => {
                 <Container>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0">
                         <div className="text-sm text-muted-foreground">
-                            © 2025 Airbnb Clone, Inc.
+                            {t('copyright')}
                         </div>
                         <div className="flex flex-row items-center gap-4 text-sm text-muted-foreground">
-                            <div className="cursor-pointer hover:underline">Privacy</div>
-                            <div className="cursor-pointer hover:underline">Terms</div>
-                            <div className="cursor-pointer hover:underline">Sitemap</div>
+                            <div className="cursor-pointer hover:underline">{t('privacy')}</div>
+                            <div className="cursor-pointer hover:underline">{t('terms')}</div>
+                            <div className="cursor-pointer hover:underline">{t('sitemap')}</div>
                         </div>
                     </div>
                 </Container>

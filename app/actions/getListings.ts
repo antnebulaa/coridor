@@ -55,7 +55,7 @@ export default async function getListings(
 
         // ...
 
-        let query: any = {};
+        const query: any = {};
         let commuteIds: string[] | null = null;
         let commutePoints: any[] = [];
 
@@ -259,7 +259,18 @@ export default async function getListings(
                     include: {
                         property: {
                             include: {
-                                owner: true,
+                                owner: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        image: true,
+                                        createdAt: true,
+                                        updatedAt: true,
+                                        email: true,
+                                        emailVerified: true,
+                                        birthDate: true
+                                    }
+                                },
                                 images: {
                                     include: {
                                         room: true

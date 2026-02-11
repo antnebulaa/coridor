@@ -52,6 +52,11 @@ enum Plan {
   PRO
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id             String    @id @default(uuid())
   name           String?
@@ -68,6 +73,8 @@ model User {
   lastName       String?
 
   // Coridor Fields
+  role              UserRole  @default(USER)
+  isBanned          Boolean   @default(false)
   userMode          UserMode  @default(TENANT)
   plan              Plan      @default(FREE)
   phoneNumber       String?
@@ -103,10 +110,20 @@ model User {
   contactOf  User[]  @relation("UserContacts")
   commuteLocations CommuteLocation[] // NEW: Relation to commute locations
   likes            Like[]
+
+  // Reporting
+  reports          Report[] @relation("Reporter")
+  reported         Report[] @relation("ReportedUser")
   visitSlots       VisitSlot[]   // Availability linked to User + Location
   bankConnections  BankConnection[] // NEW: Banking Connectivity
   pushSubscriptions PushSubscription[]
   sessions         Session[] // NEW for DB Auth
+  notificationPreferences NotificationPreferences?
+  
+  // Search Alerts
+  searchAlerts     SearchAlert[]
+  
+  notifications    Notification[]
 }
 
 model TenantProfile {
@@ -120,6 +137,9 @@ model TenantProfile {
   partnerJobType   String?
   partnerJobTitle  String?
   partnerNetSalary Int?
+
+  // Banking Analysis Helper (Privacy)
+  landlordName     String? // To filter transactions strictly
 
   // APL Info
   aplAmount        Int?
@@ -321,7 +341,13 @@ model Listing {
   securityDeposit Int?
   
   isPublished   Boolean  @default(false)
-  status        String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  status        String   @default("DRAFT") // DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, ARCHIVED
+  
+  // Moderation
+  rejectionReason String?
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  reports         Report[]
   
   availableFrom DateTime?
   
@@ -360,6 +386,14 @@ model Listing {
   // user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([rentalUnitId])
+  
+  // Search optimization
+  @@index([description])
+  @@index([title])
+  @@index([price])
+  @@index([roomCount])
+  @@index([createdAt])
+  @@index([status])
 }
 
 model Furniture {
@@ -409,6 +443,9 @@ model VisitSlot {
   radius      Int      @default(200) // Match radius in meters
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([date])
 }
 
 enum VisitStatus {
@@ -429,6 +466,10 @@ model Visit {
 
   listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   candidate   User    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@index([candidateId])
+  @@index([date])
 }
 
 model Room {
@@ -441,6 +482,8 @@ model Room {
   
   // Reverse relation for RentalUnit logic targeting a specific room
   rentalUnits RentalUnit[]
+
+  @@index([propertyId])
 }
 
 model PropertyImage {
@@ -456,6 +499,9 @@ model PropertyImage {
   property     Property?   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   rentalUnit   RentalUnit? @relation(fields: [rentalUnitId], references: [id], onDelete: Cascade)
   room         Room?       @relation(fields: [roomId], references: [id])
+
+  @@index([propertyId])
+  @@index([rentalUnitId])
 }
 
 
@@ -468,6 +514,8 @@ model Wishlist {
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   listings Listing[]
+
+  @@index([userId])
 }
 
 model Conversation {
@@ -484,6 +532,9 @@ model Conversation {
 
   listingId String?
   listing   Listing? @relation(fields: [listingId], references: [id])
+  
+  @@index([listingId])
+  @@index([lastMessageAt])
 }
 
 model Message {
@@ -503,6 +554,14 @@ model Message {
 
   listingId String?
   listing   Listing? @relation(fields: [listingId], references: [id])
+
+  // Attachments
+  fileUrl   String?
+  fileName  String?
+  fileType  String? // image/png, application/pdf, etc.
+  
+  @@index([conversationId])
+  @@index([senderId])
 }
 
 // model Amenity {
@@ -554,6 +613,8 @@ model TenantCandidateScope {
 
   creatorUser  User                @relation("CreatedScope", fields: [creatorUserId], references: [id], onDelete: Cascade)
   applications RentalApplication[]
+
+  @@index([creatorUserId])
 }
 
 enum ApplicationStatus {
@@ -603,6 +664,10 @@ model RentalApplication {
   // Financial History
   financials         LeaseFinancials[]
   matchedTransactions BankTransaction[]
+
+  @@index([listingId])
+  @@index([candidateScopeId])
+  @@index([status])
 }
 
 model LeaseFinancials {
@@ -618,6 +683,8 @@ model LeaseFinancials {
   createdAt            DateTime @default(now())
 
   rentalApplication    RentalApplication @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([rentalApplicationId])
 }
 
 // NEW: Commute Location Model
@@ -634,6 +701,8 @@ model CommuteLocation {
   isShowOnMap   Boolean  @default(true) // NEW: Toggle visibility on map
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Like {
@@ -646,6 +715,8 @@ model Like {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
 }
 
 // EXPENSES & RECONCILIATION
@@ -696,6 +767,10 @@ model Expense {
   rentalUnit             RentalUnit?      @relation(fields: [rentalUnitId], references: [id])
   
   reconciliationItems    ReconciliationItem[]
+
+  @@index([propertyId])
+  @@index([rentalUnitId])
+  @@index([dateOccurred])
 }
 
 model ReconciliationHistory {
@@ -717,6 +792,9 @@ model ReconciliationHistory {
   lease                 RentalApplication @relation(fields: [leaseId], references: [id], onDelete: Cascade)
   
   items                 ReconciliationItem[]
+
+  @@index([propertyId])
+  @@index([leaseId])
 }
 
 model ReconciliationItem {
@@ -727,6 +805,8 @@ model ReconciliationItem {
   expense          Expense               @relation(fields: [expenseId], references: [id], onDelete: Cascade)
 
   @@id([reconciliationId, expenseId])
+  @@index([reconciliationId])
+  @@index([expenseId])
 }
 model RentIndex {
   id          String   @id @default(uuid())
@@ -757,6 +837,7 @@ model BankConnection {
   transactions BankTransaction[]
   
   @@unique([userId, connectionId]) 
+  @@index([userId])
 }
 
 model BankTransaction {
@@ -792,4 +873,77 @@ model PushSubscription {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model NotificationPreferences {
+  id        String  @id @default(uuid())
+  userId    String  @unique
+  
+  // Notification toggles by type
+  enableMessages      Boolean @default(true)
+  enableVisits        Boolean @default(true)
+  enableApplications  Boolean @default(true)
+  enableLikes         Boolean @default(false) // Disabled by default to avoid spam
+  
+  // Do Not Disturb hours (24h format)
+  dndStartHour Int? // Example: 22 = 10pm
+  dndEndHour   Int? // Example: 8 = 8am
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id             String   @id @default(uuid())
+  reason         String
+  details        String?
+  status         String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  createdAt      DateTime @default(now())
+
+  reporter       User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reporterId     String
+
+  // Optional targets
+  listing        Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId      String?
+
+  targetUser     User?    @relation("ReportedUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+  targetUserId   String?
+}
+
+model SearchAlert {
+  id             String   @id @default(uuid())
+  createdAt      DateTime @default(now())
+
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email          String?
+
+  // Criteria
+  locationValue  String?
+  category       String?
+  minPrice       Int?
+  maxPrice       Int?
+  roomCount      Int?
+
+  frequency      String   @default("INSTANT") // INSTANT, DAILY, WEEKLY
+  isActive       Boolean  @default(true)
+
+  // Statistics
+  lastSentAt     DateTime?
+  matchCount     Int      @default(0)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // SYSTEM, MESSAGE, BOOKING, LISTING_APPROVED, etc.
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

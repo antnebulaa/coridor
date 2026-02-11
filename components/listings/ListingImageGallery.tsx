@@ -2,11 +2,13 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
-import { ChevronLeft, ChevronRight, Share, Upload, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Upload } from "lucide-react";
 import Image from "next/image";
 import HeartButton from "../HeartButton";
 import { SafeUser } from "@/types";
-import { motion, useMotionValue, animate, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import { useGesture } from "@use-gesture/react";
+import { getCloudinaryThumbnail, getCloudinaryHD } from "@/lib/cloudinaryTransforms";
 
 interface ListingImageGalleryProps {
     isOpen: boolean;
@@ -32,7 +34,13 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
     const x = useMotionValue(0);
     const containerRef = useRef<HTMLDivElement>(null);
+    const imageRef = useRef<HTMLDivElement>(null);
     const [isAnimating, setIsAnimating] = useState(false);
+
+    // Pinch-to-zoom state
+    const [scale, setScale] = useState(1);
+    const [origin, setOrigin] = useState({ x: 50, y: 50 });
+    const isZoomed = scale > 1;
 
     useEffect(() => {
         setShowGallery(isOpen);
@@ -157,17 +165,60 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
     if (!isOpen) return null;
     if (typeof window === 'undefined') return null;
 
+    // Pinch-to-zoom gesture handler
+    const bindGesture = useGesture(
+        {
+            onPinch: ({ offset: [s], origin: [ox, oy] }) => {
+                const newScale = Math.min(Math.max(s, 1), 4);
+                setScale(newScale);
+                if (imageRef.current) {
+                    const rect = imageRef.current.getBoundingClientRect();
+                    setOrigin({
+                        x: ((ox - rect.left) / rect.width) * 100,
+                        y: ((oy - rect.top) / rect.height) * 100,
+                    });
+                }
+            },
+            onPinchEnd: () => {
+                setScale(1);
+                setOrigin({ x: 50, y: 50 });
+            },
+        },
+        {
+            pinch: { scaleBounds: { min: 1, max: 4 } },
+        }
+    );
+
+    // Reset zoom when changing images
+    useEffect(() => {
+        if (selectedImageIndex !== null) {
+            setScale(1);
+            setOrigin({ x: 50, y: 50 });
+        }
+    }, [selectedImageIndex]);
+
     // Helper to render slides
     const renderSlide = (offsetIndex: number, positionClass: string) => {
         if (selectedImageIndex === null) return null;
         const index = getCircularIndex(selectedImageIndex + offsetIndex);
         const img = flattenedImages[index];
+        const isCurrent = offsetIndex === 0;
 
         return (
             <div className={`absolute top-0 w-full h-full flex items-center justify-center ${positionClass}`}>
-                <div className="relative w-full h-full max-h-[85vh] max-w-[95vw]">
+                <div
+                    ref={isCurrent ? imageRef : undefined}
+                    className="relative w-full h-full max-h-[85vh] max-w-[95vw]"
+                    {...(isCurrent ? bindGesture() : {})}
+                    style={isCurrent ? {
+                        transform: `scale(${scale})`,
+                        transformOrigin: `${origin.x}% ${origin.y}%`,
+                        transition: scale === 1 ? 'transform 0.2s ease-out' : 'none',
+                        touchAction: isZoomed ? 'none' : 'pan-y',
+                    } : {}}
+                >
                     <Image
-                        src={img.url}
+                        src={getCloudinaryHD(img.url)}
                         alt={`Slide ${index}`}
                         fill
                         className="object-contain pointer-events-none"
@@ -218,10 +269,9 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
                 <motion.div
                     className="relative w-full h-full"
                     style={{ x }}
-                    drag={flattenedImages.length > 1 ? "x" : false} // Disable drag if only 1 image
-                    dragElastic={0.2} // Reduced elasticity
+                    drag={flattenedImages.length > 1 && !isZoomed ? "x" : false} // Disable drag if zoomed or only 1 image
+                    dragElastic={0.2}
                     onDragEnd={onDragEnd}
-                // No strict constraints to allow pulling prev/next into view
                 >
                     {/* Previous Slide */}
                     {renderSlide(-1, "-left-full")}
@@ -279,9 +329,11 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
                                         `}
                                     >
                                         <Image
-                                            src={img.url}
+                                            src={getCloudinaryThumbnail(img.url, 600)}
                                             alt={`${roomName} - ${index}`}
                                             fill
+                                            loading="lazy"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                             className="object-cover hover:scale-105 transition duration-500"
                                         />
                                         <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition duration-300" />
@@ -303,9 +355,11 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
                                     className="aspect-4/3 relative overflow-hidden cursor-pointer"
                                 >
                                     <Image
-                                        src={img.url}
+                                        src={getCloudinaryThumbnail(img.url, 600)}
                                         alt={`Autre - ${index}`}
                                         fill
+                                        loading="lazy"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         className="object-cover hover:scale-105 transition duration-500"
                                     />
                                     <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition duration-300" />

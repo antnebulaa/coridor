@@ -143,6 +143,16 @@ export async function POST(
                         status: 'SENT'
                     }
                 });
+
+                // Send push notification to landlord
+                const { sendPushNotification } = await import("@/app/lib/sendPushNotification");
+                sendPushNotification({
+                    userId: ownerId,
+                    title: "Nouvelle candidature",
+                    body: `${currentUser.name || 'Un candidat'} a postulé pour votre annonce "${listing.title}"`,
+                    url: `/inbox/${conversation.id}`,
+                    type: 'application'
+                }).catch(err => console.error("[Push] Failed to notify landlord:", err));
             }
         }
 

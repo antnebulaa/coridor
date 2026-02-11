@@ -16,10 +16,14 @@ import { Button } from '../ui/Button';
 import { signIn } from 'next-auth/react';
 import CustomToast from '../ui/CustomToast';
 
+import { useTranslations } from 'next-intl';
+
 const RegisterModal = () => {
     const registerModal = useRegisterModal();
     const loginModal = useLoginModal();
     const [isLoading, setIsLoading] = useState(false);
+    const tAuth = useTranslations('auth');
+    const tCommon = useTranslations('common');
 
     const {
         register,
@@ -49,7 +53,7 @@ const RegisterModal = () => {
                 toast.custom((t) => (
                     <CustomToast
                         t={t}
-                        message="Inscription réussie"
+                        message={tAuth('registerSuccess')}
                         type="success"
                     />
                 ));
@@ -60,7 +64,7 @@ const RegisterModal = () => {
                 toast.custom((t) => (
                     <CustomToast
                         t={t}
-                        message="Une erreur est survenue"
+                        message={tAuth('genericError')}
                         type="error"
                     />
                 ));
@@ -73,12 +77,12 @@ const RegisterModal = () => {
     const bodyContent = (
         <div className="flex flex-col gap-4">
             <Heading
-                title="Welcome to Coridor"
-                subtitle="Create an account!"
+                title={tAuth('welcomeToCoridor')}
+                subtitle={tAuth('createAccount')}
             />
             <SoftInput
                 id="email"
-                label="Email"
+                label={tAuth('email')}
                 disabled={isLoading}
                 register={register}
                 errors={errors}
@@ -86,7 +90,7 @@ const RegisterModal = () => {
             />
             <SoftInput
                 id="name"
-                label="Name"
+                label={tAuth('name')}
                 disabled={isLoading}
                 register={register}
                 errors={errors}
@@ -94,7 +98,7 @@ const RegisterModal = () => {
             />
             <SoftInput
                 id="password"
-                label="Password"
+                label={tAuth('password')}
                 type="password"
                 disabled={isLoading}
                 register={register}
@@ -103,7 +107,7 @@ const RegisterModal = () => {
             />
             <SoftInput
                 id="birthDate"
-                label="Date of Birth"
+                label={tAuth('birthDate')}
                 type="date"
                 className="appearance-none !min-h-[56px] !h-[56px] !max-h-[56px]"
                 disabled={isLoading}
@@ -119,23 +123,23 @@ const RegisterModal = () => {
             <hr />
             <Button
                 variant="outline"
-                label="Continue with Google"
+                label={tAuth('continueGoogle')}
                 icon={FcGoogle}
                 onClick={() => signIn('google')}
             />
             <Button
                 variant="outline"
-                label="Continue with Apple"
+                label={tAuth('continueApple')}
                 icon={FaApple}
                 onClick={() => signIn('apple')}
             />
             <div className="text-neutral-500 text-center mt-4 font-light">
-                <p>Already have an account?
+                <p>{tAuth('alreadyHaveAccount')}
                     <span
                         onClick={onToggle}
                         className="text-neutral-800 cursor-pointer hover:underline ml-2"
                     >
-                        Log in
+                        {tAuth('loginLink')}
                     </span>
                 </p>
             </div>
@@ -146,8 +150,8 @@ const RegisterModal = () => {
         <Modal
             disabled={isLoading}
             isOpen={registerModal.isOpen}
-            title="Register"
-            actionLabel="Continue"
+            title={tAuth('registerTitle')}
+            actionLabel={tCommon('continue')}
             onClose={registerModal.onClose}
             onSubmit={handleSubmit(onSubmit)}
             body={bodyContent}

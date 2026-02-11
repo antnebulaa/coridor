@@ -205,7 +205,7 @@ export async function PUT(
                 securityDeposit: (securityDeposit !== undefined && securityDeposit !== null) ? parseInt(String(securityDeposit), 10) : undefined,
                 propertyAdjective,
                 isPublished: isPublished,
-                status: isPublished !== undefined ? (isPublished ? 'PUBLISHED' : 'DRAFT') : undefined,
+                status: isPublished !== undefined ? (isPublished ? 'PENDING_REVIEW' : 'DRAFT') : undefined,
                 statusUpdatedAt: isPublished !== undefined ? new Date() : undefined
             };
 
@@ -387,7 +387,7 @@ export async function PATCH(
         data: {
             isPublished,
             statusUpdatedAt: new Date(),
-            status: isPublished ? 'PUBLISHED' : 'DRAFT'
+            status: isPublished ? 'PENDING_REVIEW' : 'DRAFT'
         }
     });
 

@@ -1,0 +1,1311 @@
+{
+    "rentModal": {
+        "actions": {
+            "next": "Suivant",
+            "back": "Retour",
+            "start": "Commencer",
+            "finish": "Terminer",
+            "create": "Créer",
+            "save": "Enregistrer",
+            "publish": "Publier l'annonce"
+        },
+        "steps": {
+            "intro": {
+                "title": "Parlez-nous de votre logement",
+                "subtitle": "Commençons par les caractéristiques principales.",
+                "description": "Dans cette première partie, nous allons définir le type de logement, sa localisation, sa surface et ses caractéristiques techniques."
+            },
+            "category": {
+                "title": "Parmi les propositions suivantes, laquelle décrit le mieux votre logement ?",
+                "subtitle": "Choisissez une catégorie"
+            },
+            "location": {
+                "title": "Où est situé votre logement ?",
+                "subtitle": "Aidez les locataires à vous trouver !"
+            },
+            "surface": {
+                "title": "Quelle est la surface du logement ?",
+                "subtitle": "Indiquez la surface habitable en m²"
+            },
+            "info": {
+                "title": "Combien de pièces ?",
+                "subtitle": "Détaillez la configuration de votre bien",
+                "titleRoom": "Caractéristiques de : {name}",
+                "subtitleRoom": "Dites-nous en plus sur cette chambre",
+                "roomLinked": "Pièce associée",
+                "linkRoom": "Lier à une pièce existante (Optionnel)",
+                "linkRoomNew": "-- Nouvelle chambre --",
+                "linkRoomChange": "Changer",
+                "linkRoomHint": "Sélectionnez une chambre créée lors de l'ajout du bien pour récupérer ses photos automatiquement.",
+                "photosImported": "Photos de la chambre importées !"
+            },
+            "details": {
+                "title": "Détails supplémentaires",
+                "subtitle": "Précisez l'étage et l'accessibilité",
+                "kitchen": "Votre bien dispose t-il d’une cuisine séparée ?",
+                "kitchenYes": "Oui",
+                "kitchenNo": "Non",
+                "totalFloors": "Nombre d'étages",
+                "floor": "Votre étage",
+                "constructionPeriod": "Période de construction"
+            },
+            "energy": {
+                "title": "Performance énergétique",
+                "subtitle": "Indiquez le DPE, le GES et les détails énergétiques.",
+                "dpe": "Diagnostic de Performance Énergétique (DPE)",
+                "ges": "Gaz à Effet de Serre (GES)",
+                "costs": "Estimation des coûts annuels",
+                "min": "Minimum (€)",
+                "max": "Maximum (€)",
+                "dpeYear": "Année du DPE",
+                "glazing": "Type de vitrage",
+                "heating": "Système de chauffage",
+                "glazingTypes": {
+                    "double": "Double vitrage",
+                    "triple": "Triple vitrage",
+                    "single": "Simple vitrage"
+                },
+                "heatingTypes": {
+                    "electric_ind": "Individuel électrique",
+                    "gas_ind": "Individuel gaz",
+                    "collective": "Collectif",
+                    "other": "Autre"
+                }
+            },
+            "introAssets": {
+                "title": "Mettez votre bien en valeur",
+                "subtitle": "Ajoutez les équipements, les photos et une description détaillée.",
+                "description": "C’est le moment de séduire les locataires ! Listez les atouts de votre logement et ajoutez de belles photos."
+            },
+            "amenities": {
+                "title": "Quels équipements proposez-vous ?",
+                "subtitle": "Sélectionnez les équipements disponibles",
+                "groups": {
+                    "essentials": "Les indispensables",
+                    "features": "Caractéristiques",
+                    "building": "Immeuble & Sécurité",
+                    "location": "Quartier"
+                },
+                "items": {
+                    "fiber": "Fibre Optique",
+                    "kitchen": "Cuisine Équipée",
+                    "laundry": "Lave-linge / Buanderie",
+                    "storage": "Rangements",
+                    "garden": "Jardin",
+                    "cross": "Traversant",
+                    "south": "Orienté Sud",
+                    "refurbished": "Rénové",
+                    "pets": "Animaux acceptés",
+                    "bike": "Local Vélo",
+                    "digicode": "Digicode",
+                    "intercom": "Interphone",
+                    "caretaker": "Gardien",
+                    "armored": "Porte Blindée",
+                    "transport": "Proche Transports",
+                    "shops": "Proche Commerces",
+                    "schools": "Proche Écoles",
+                    "park": "Espaces Verts",
+                    "hospital": "Proche Hôpital",
+                    "quiet": "Quartier Calme"
+                }
+            },
+            "images": {
+                "title": "Ajoutez des photos de votre bien",
+                "subtitle": "Ajoutez au minimum 4 photos. Vous pourrez toujours en ajouter d'autres plus tard."
+            },
+            "description": {
+                "title": "Comment décririez-vous votre bien ?",
+                "subtitle": "Choisissez un adjectif qui le qualifie le mieux",
+                "adjectives": {
+                    "bright": "Lumineux",
+                    "crossing": "Traversant",
+                    "haussmann": "Haussmannien",
+                    "atypical": "Atypique",
+                    "modern": "Moderne",
+                    "new": "Neuf",
+                    "renovated": "Rénové",
+                    "quiet": "Calme",
+                    "warm": "Chaleureux",
+                    "family": "Familial",
+                    "luxury": "De standing"
+                }
+            },
+            "introRental": {
+                "title": "Finalisons votre annonce",
+                "subtitle": "Définissez le type de location et le prix.",
+                "description": "Dernière étape ! Choisissez le type de contrat (Nu, Meublé, Colocation) et fixez le loyer."
+            },
+            "rentalType": {
+                "title": "Quel type de location proposez-vous ?",
+                "subtitle": "Cela déterminera le type de bail.",
+                "options": {
+                    "bare": {
+                        "title": "Location Nue",
+                        "desc": "Logement loué vide à titre de résidence principale."
+                    },
+                    "furnished": {
+                        "title": "Location Meublée",
+                        "desc": "Logement loué avec meubles."
+                    },
+                    "colocation": {
+                        "title": "Colocation",
+                        "desc": "Louez plusieurs chambres dans un même logement."
+                    }
+                }
+            },
+            "price": {
+                "title": "Pour finir, fixez votre loyer",
+                "subtitle": "Quel est le loyer mensuel ?",
+                "label": "Loyer mensuel",
+                "chargesLabel": "Charges (mensuel)"
+            }
+        },
+        "roomPrice": {
+            "title": "Loyers et Charges",
+            "subtitle": "Définissez le prix pour chaque chambre.",
+            "assistant": "Assistant",
+            "rent": "Loyer HC (€)",
+            "charges": "Charges (€)",
+            "success": "Prix appliqués avec succès !"
+        },
+        "availability": {
+            "title": "Définissez vos disponibilités de visite",
+            "subtitle": "Indiquez quand vous êtes disponible pour faire visiter ce bien."
+        },
+        "success": {
+            "title": "Félicitations !",
+            "subtitle": "Votre annonce est maintenant finalisée et publiée.",
+            "updated": "Les modifications ont été enregistrées avec succès.",
+            "published": "Votre bien est visible par les locataires dès maintenant."
+        },
+        "rentControl": {
+            "title": "Encadrement des loyers",
+            "zone": "Zone : {zone}",
+            "max": "Plafond: {amount} €",
+            "illegal": "Loyer supérieur au plafond légal",
+            "close": "Loyer proche du plafond",
+            "compliant": "Loyer conforme",
+            "illegalDesc": "Le loyer dépasse le plafond estimé de {amount} €. Cela peut être illégal.",
+            "compliantDesc": "Ce loyer est en dessous du plafond légal."
+        },
+        "rooms": {
+            "intro": {
+                "title": "Configurons les chambres",
+                "subtitle": "Vous avez indiqué {count} chambres. Configurons-les une par une.",
+                "description": "Pour une colocation, il est important de détailler chaque espace privatif."
+            },
+            "details": {
+                "title": "Chambre {number}",
+                "subtitle": "Caractéristiques de la chambre.",
+                "surface": "Surface (m²)",
+                "bedType": "Type de lit",
+                "single": "Simple",
+                "double": "Double",
+                "description": "Description (optionnel)",
+                "hint": "Nous vous conseillons de décrire l'emplacement de la chambre (ex: coté rue, coté cour...) et ses atouts (lumineuse, calme...).",
+                "privateBath": "Salle de bain privée ?",
+                "yes": "Oui",
+                "no": "Non"
+            },
+            "recap": {
+                "title": "Récapitulatif des chambres",
+                "subtitle": "Vérifiez que tout est correct.",
+                "edit": "Modifier",
+                "privateBath": "SDB Privée",
+                "sharedBath": "SDB Partagée"
+            }
+        },
+        "labels": {
+            "guestCount": "Voyageurs",
+            "roomCount": "Pièces",
+            "bedroomCount": "Chambres",
+            "bathroomCount": "Salles de bain",
+            "privateBathroom": "Salle de bain privée",
+            "privateBathroomDesc": "Y a-t-il une salle de bain exclusive à cette pièce ?",
+            "publish": "Publier l'annonce",
+            "publishDesc": "L'annonce sera visible par les locataires.",
+            "surface": "Surface",
+            "bedType": "Type de lit",
+            "single": "Simple",
+            "double": "Double",
+            "totalFloors": "Nombre d'étages",
+            "floor": "Étage",
+            "constructionPeriod": "Année de construction"
+        },
+        "errors": {
+            "categoryRequired": "Veuillez choisir une catégorie de logement",
+            "floorsRequired": "Veuillez indiquer le nombre d'étages",
+            "floorRequired": "Veuillez indiquer l'étage du logement",
+            "surfaceRequired": "La surface est requise",
+            "bedTypeRequired": "Le type de lit est requis"
+        },
+        "toasts": {
+            "created": "Annonce créée !",
+            "updated": "Annonce mise à jour !",
+            "error": "Une erreur est survenue."
+        }
+    },
+    "common": {
+        "loading": "Chargement...",
+        "error": "Une erreur est survenue",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "apply": "Appliquer",
+        "more": "Voir plus",
+        "less": "Voir moins",
+        "owner": "Propriétaire",
+        "free": "Gratuit",
+        "mandatory": "Obligatoire",
+        "completed": "Renseigné",
+        "edit": "Modifier",
+        "back": "Retour",
+        "next": "Suivant",
+        "previous": "Précédent",
+        "confirm": "Confirmer",
+        "close": "Fermer",
+        "search": "Rechercher",
+        "seeAll": "Tout voir",
+        "noResults": "Aucun résultat",
+        "yes": "Oui",
+        "no": "Non",
+        "continue": "Continuer"
+    },
+    "nav": {
+        "home": "Accueil",
+        "favorites": "Favoris",
+        "dashboard": "Activités",
+        "messages": "Messages",
+        "profile": "Profil",
+        "agenda": "Agenda",
+        "properties": "Locations",
+        "rentMyProperty": "Louer mon bien",
+        "login": "Connexion",
+        "register": "Inscription",
+        "logout": "Déconnexion",
+        "myAccount": "Mon compte",
+        "notifications": "Notifications",
+        "admin": "Administration",
+        "myRental": "Ma location",
+        "contacts": "Mes contacts",
+        "subscription": "Abonnement",
+        "finances": "Mes finances",
+        "mode": "Mode",
+        "tenant": "Locataire",
+        "landlord": "Propriétaire",
+        "editProfile": "Modifier profil",
+        "settings": "Paramètres"
+    },
+    "auth": {
+        "loginTitle": "Connexion",
+        "loginSubtitle": "Connectez-vous à votre compte",
+        "registerTitle": "Inscription",
+        "registerSubtitle": "Créez votre compte",
+        "email": "Adresse email",
+        "password": "Mot de passe",
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "forgotPassword": "Mot de passe oublié ?",
+        "noAccount": "Pas encore de compte ?",
+        "alreadyHaveAccount": "Déjà un compte ?",
+        "continueWith": "Ou continuer avec",
+        "google": "Google",
+        "github": "GitHub",
+        "name": "Nom complet",
+        "birthDate": "Date de naissance",
+        "welcomeBack": "Content de vous revoir",
+        "loginToAccount": "Connectez-vous à votre compte",
+        "welcomeToCoridor": "Bienvenue sur Coridor",
+        "createAccount": "Créez un compte",
+        "firstTime": "Première fois sur Coridor ?",
+        "createAccountLink": "Créer un compte",
+        "loginLink": "Se connecter",
+        "loginSuccess": "Connexion réussie",
+        "loginError": "Erreur de connexion",
+        "registerSuccess": "Inscription réussie",
+        "genericError": "Une erreur est survenue",
+        "continueGoogle": "Continuer avec Google",
+        "continueApple": "Continuer avec Apple",
+        "or": "Ou"
+    },
+    "home": {
+        "searchPlaceholder": "Où cherchez-vous ?",
+        "allCities": "Toutes les villes",
+        "filters": "Filtres",
+        "sortBy": "Trier par",
+        "priceAsc": "Prix croissant",
+        "priceDesc": "Prix décroissant",
+        "newest": "Plus récents",
+        "noListings": "Aucune annonce trouvée",
+        "chargesIncluded": "charges comprises",
+        "chargesShort": "CC",
+        "perMonth": "/mois",
+        "new": "Nouveau",
+        "newListing": "Nouvelle annonce",
+        "viewListing": "Afficher l'annonce",
+        "hideListing": "Masquer l'annonce",
+        "alert": {
+            "title": "Ne manquez rien !",
+            "description": "Recevez les nouvelles annonces par email.",
+            "create": "Créer une alerte"
+        },
+        "resumeSearch": {
+            "title": "Reprendre votre recherche",
+            "lastViewed": "Dernier bien consulté",
+            "continue": "Continuer"
+        },
+        "listingsCount": "{count, plural, =0 {aucune annonce} one {# annonce} other {# annonces}}",
+        "noResultsDescription": "Essayez d'élargir votre recherche ou votre zone de trajet."
+    },
+    "dashboard": {
+        "title": "Tableau de bord",
+        "tenantSubtitle": "Bienvenue sur votre espace locataire.",
+        "landlordGreeting": "Bonjour {name} 👋",
+        "myApplications": "Mes Candidatures",
+        "noApplications": "Aucune candidature en cours",
+        "applicationsCount": "{count} candidature(s) en cours",
+        "upcomingVisits": "Mes rendez-vous à venir",
+        "applicationTracking": "Suivi de candidature",
+        "viewDetails": "Voir les détails",
+        "prepareDossier": "Préparez votre dossier pour ne rater aucun logement",
+        "dossierHint": "Un dossier complet multiplie vos chances d'obtenir une visite.",
+        "steps": {
+            "createAccount": "Créer mon compte",
+            "defineProject": "Définir mon projet de location",
+            "confirmIdentity": "Confirmer mon identité",
+            "completeDossier": "Compléter mon dossier locataire avec DossierFacile"
+        },
+        "journey": {
+            "sent": "Envoyé",
+            "visit": "Visite",
+            "validation": "Validation",
+            "lease": "Bail"
+        },
+        "landlord": {
+            "greetings": {
+                "0": "Prêt à encaisser des loyers ?",
+                "1": "Tout roule aujourd'hui !",
+                "2": "Les affaires reprennent !",
+                "3": "Une belle journée pour investir."
+            },
+            "addProperty": "Ajouter un bien",
+            "operations": "Opérations",
+            "occupancyRate": "Taux d'occupation",
+            "applications": "Candidatures",
+            "upcomingVisits": "Visites à venir",
+            "managedUnits": "{count} logements gérés",
+            "needHelp": "Besoin d'aide ?",
+            "helpText": "Une question ou un problème ? Contactez notre équipe support.",
+            "contactUs": "Nous contacter"
+        },
+        "applicationsPage": {
+            "title": "Mes Candidatures",
+            "subtitle": "Suivez l'avancement de vos dossiers de location.",
+            "active": "En cours",
+            "archived": "Terminées",
+            "emptyTitle": "Aucune candidature",
+            "emptyActive": "Vous n'avez aucune candidature en cours.",
+            "emptyArchived": "Vos archives sont vides."
+        },
+        "visits": {
+            "cancelled": "Annulé",
+            "confirmed": "Confirmé",
+            "cancelAppointment": "Annuler le rdv",
+            "confirmCancel": "Êtes-vous sûr de vouloir annuler ce rendez-vous ?",
+            "cancelSuccess": "Rendez-vous annulé",
+            "cancelError": "Erreur lors de l'annulation"
+        },
+        "finances": {
+            "title": "Finance & Loyers",
+            "subtitle": "Suivez vos encaissements et connectez votre banque",
+            "addAccount": "Ajouter un compte",
+            "connectBank": "Compte bancaire connecté !",
+            "connectError": "Échec de la connexion bancaire",
+            "initializationError": "Erreur d'initialisation",
+            "syncSuccess": "{count} transactions, {matches} loyers détectés !",
+            "syncError": "Erreur de synchronisation",
+            "mainAccount": "Compte Principal",
+            "lastSync": "Dernière synchro : {date}",
+            "never": "Jamais",
+            "sync": "Synchroniser",
+            "table": {
+                "date": "Date",
+                "label": "Libellé",
+                "amount": "Montant",
+                "status": "Statut",
+                "noTransactions": "Aucune transaction récente"
+            },
+            "status": {
+                "rent": "Loyer",
+                "toVerify": "À vérifier"
+            },
+            "hero": {
+                "secure": "Sécurisé & Automatisé",
+                "title": "Vos loyers, vérifiés <green>automatiquement</green>.",
+                "description": "Connectez votre compte bancaire pour permettre à Coridor de détecter vos loyers entrants et de mettre à jour vos quittances en temps réel.",
+                "cta": "Connecter ma banque en toute sécurité",
+                "footer": "Connexion chiffrée SSL • Lecture seule uniquement • Partenaire agréé ACPR"
+            },
+            "features": {
+                "secureConn": "1. Connexion Sécurisée",
+                "secureConnDesc": "Nous connectons votre compte en <strong>lecture seule</strong>. Nous ne voyons que les montants et libellés, sans jamais pouvoir initier de virement.",
+                "targetedAnalysis": "2. Analyse Ciblée",
+                "targetedAnalysisDesc": "Notre système cherche <strong>uniquement</strong> une correspondance stricte entre le <strong>Nom du locataire</strong>, le <strong>Montant du loyer</strong> et la <strong>Date</strong>.",
+                "simpleValidation": "3. Validation Simple",
+                "simpleValidationDesc": "Si tout correspond, le statut passe à <strong>Payé</strong>. C'est tout. Aucune autre donnée n'est analysée ou conservée."
+            },
+            "trust": {
+                "description": "Coridor utilise la technologie <strong>Powens</strong>, établissement de paiement agréé par l'<strong>ACPR (Banque de France)</strong> sous le numéro 16928.<br />Vos identifiants bancaires sont chiffrés et ne sont jamais stockés par Coridor."
+            }
+        },
+        "rentRevision": {
+            "title": "Révision du Loyer",
+            "subtitle": "Ajustez le loyer et les charges pour la période à venir.",
+            "autoTitle": "Révision Automatique",
+            "currentRentHC": "Loyer actuel hors charges",
+            "referenceIndex": "Indice de référence",
+            "newIndex": "Nouvel indice",
+            "newLegalRent": "Nouveau Loyer Légal",
+            "legalRentHC": "Hors charges",
+            "alreadyRevised": {
+                "title": "Loyer déjà révisé",
+                "description": "Le loyer a déjà été révisé pour cette période {amount} €"
+            },
+            "applyAuto": "Appliquer la révision",
+            "effectiveDate": "Nouvel Date d'effet",
+            "newRentHC": "Nouveau Loyer HC",
+            "newCharges": "Nouvelles Charges",
+            "info": "ℹ️ Cette action clôturera la période financière actuelle à la veille de la date d'effet et en ouvrira une nouvelle.",
+            "actions": {
+                "cancel": "Annuler",
+                "confirm": "Confirmer la révision",
+                "close": "Fermer"
+            },
+            "success": "Loyer révisé avec succès !",
+            "error": "Une erreur est survenue"
+        }
+    },
+    "visit": {
+        "confirmed": "Confirmé",
+        "cancelled": "Annulé",
+        "cancelVisit": "Annuler le rdv",
+        "cancelConfirm": "Êtes-vous sûr de vouloir annuler ce rendez-vous ?",
+        "cancelSuccess": "Rendez-vous annulé",
+        "cancelError": "Erreur lors de l'annulation"
+    },
+    "account": {
+        "title": "Mon compte",
+        "personalInfo": {
+            "title": "Informations personnelles",
+            "subtitle": "Gérez vos informations personnelles et vos coordonnées.",
+            "profilePhoto": {
+                "title": "Photo de profil",
+                "editHint": "Modifiez votre photo de profil.",
+                "none": "Aucune",
+                "visibility": "Cette photo sera visible par les autres utilisateurs.",
+                "save": "Enregistrer la photo"
+            },
+            "identity": {
+                "title": "Identité",
+                "hint": "Modifiez votre nom, prénom et date de naissance.",
+                "bornAt": "Né(e) le {date} à {place}",
+                "firstName": "Prénom",
+                "lastName": "Nom",
+                "birthDate": "Date de naissance",
+                "birthPlace": "Lieu de naissance"
+            },
+            "email": {
+                "title": "Adresse email",
+                "hint": "Modifiez votre adresse email de contact.",
+                "label": "Adresse email"
+            },
+            "phone": {
+                "title": "Numéro de téléphone",
+                "hint": "Ajoutez ou modifiez votre numéro de téléphone.",
+                "privacy": "Votre numéro ne sera partagé qu'une fois la réservation confirmée.",
+                "label": "Numéro de téléphone"
+            },
+            "address": {
+                "title": "Adresse postale",
+                "hint": "Modifiez votre adresse de résidence principale.",
+                "label": "Adresse",
+                "apartment": "Appartement / Étage",
+                "building": "Bâtiment / Résidence",
+                "zipCode": "Code postal",
+                "city": "Ville"
+            },
+            "toasts": {
+                "success": "Profil mis à jour !",
+                "error": "Une erreur est survenue."
+            }
+        },
+        "project": {
+            "title": "Mon projet de location",
+            "subtitle": "Dites-nous en plus sur votre recherche",
+            "composition": {
+                "label": "Avec qui souhaitez-vous emménager ?"
+            },
+            "status": {
+                "label": "Votre statut marital"
+            },
+            "lease": {
+                "label": "Type de bail recherché"
+            },
+            "moveInDate": {
+                "label": "Date d'emménagement souhaitée"
+            },
+            "children": {
+                "title": "Enfants",
+                "subtitle": "Combien d'enfants avez-vous ?"
+            },
+            "save": "Enregistrer mon projet",
+            "saving": "Enregistrement...",
+            "toasts": {
+                "success": "Projet mis à jour !",
+                "error": "Une erreur est survenue."
+            }
+        },
+        "profile": {
+            "title": "Mon Dossier Locataire",
+            "subtitle": "Complétez votre profil pour postuler aux annonces.",
+            "download": "Télécharger le dossier",
+            "bio": {
+                "title": "À propos de vous",
+                "subtitle": "Présentez-vous en quelques mots aux propriétaires (passions, mode de vie...)",
+                "label": "Votre petite bio"
+            },
+            "dossierFacile": {
+                "connected": "DossierFacile Connecté",
+                "linked": "Votre dossier est lié à votre profil Coridor.",
+                "manage": "Gérer mon dossier sur DossierFacile",
+                "description": "DossierFacile est le dossier de location numérique de l'Etat. Entièrement gratuit, conforme et sécurisé, il protège les locataires et rassure les propriétaires."
+            },
+            "rentVerification": {
+                "title": "Fiabilité Financière",
+                "verified": "VÉRIFIÉ",
+                "successTitle": "Paiements de loyer détectés sur 12 mois",
+                "successDesc": "Votre régularité de paiement est certifiée. C'est un atout majeur pour votre dossier !",
+                "reset": "Réinitialiser la vérification",
+                "verifyTitle": "Prouver ma fiabilité",
+                "verifyDesc": "Connectez votre compte bancaire pour certifier vos paiements de loyer. (Sécurisé par Powens)",
+                "recipientLabel": "Nom du bénéficiaire (Optionnel, pour aider la détection)",
+                "recipientPlaceholder": "Ex: Agence Immo, M. Dupont...",
+                "connect": "Connecter ma banque",
+                "connecting": "Récupération des loyers...",
+                "modal": {
+                    "title": "Confirmation de loyer",
+                    "detected": "Nous avons détecté des virements réguliers de {amount} €",
+                    "transactions": "Voici les transactions identifiées :",
+                    "confirmQuestion": "Est-ce bien votre loyer actuel ? En confirmant, vous obtiendrez le badge \"Paiements de loyer détectés\".",
+                    "confirm": "Oui, c'est mon loyer",
+                    "cancel": "Non"
+                },
+                "toasts": {
+                    "success": "Fiabilité confirmée !",
+                    "reset": "Vérification supprimée.",
+                    "error": "Erreur lors de la confirmation/suppression.",
+                    "noRent": "Aucun paiement de loyer récurrent détecté.",
+                    "initError": "Impossible d'initialiser la connexion."
+                }
+            },
+            "job": {
+                "tenantTitle": "Emploi & Revenus (Vous)",
+                "partnerTitle": "Emploi & Revenus (Conjoint·e)",
+                "situation": "Situation professionnelle",
+                "contract": "Type de contrat",
+                "salary": "Salaire Net Mensuel (€)"
+            },
+            "additionalIncomes": {
+                "title": "Revenus Complémentaires",
+                "add": "Ajouter un revenu",
+                "item": "Revenu #{index}",
+                "delete": "Supprimer",
+                "type": "Type",
+                "amount": "Montant (€)",
+                "empty": "Aucun revenu complémentaire ajouté."
+            },
+            "apl": {
+                "title": "Aides au Logement (APL)",
+                "amount": "Aides au logement estimées (€)",
+                "simulation": "Pas sûr ? <link>Faire la simulation officielle</link>",
+                "directPayment": "Autoriser le versement direct de l'APL au propriétaire (Tiers Payant)"
+            },
+            "guarantors": {
+                "title": "Garants",
+                "add": "Ajouter un garant",
+                "item": "Garant #{index}",
+                "delete": "Supprimer",
+                "type": "Type",
+                "status": "Statut",
+                "income": "Revenu Net Mensuel (€)",
+                "additionalIncomeTitle": "Revenus Complémentaires (Garant)",
+                "addIncome": "+ Ajouter",
+                "empty": "Aucun garant ajouté."
+            },
+            "summary": {
+                "title": "Récapitulatif Financier",
+                "tenant": "Salaire Net (Vous)",
+                "partner": "Salaire Net (Conjoint·e)",
+                "additional": "Revenus Complémentaires",
+                "apl": "Aides au Logement",
+                "totalHousehold": "Total Foyer",
+                "totalGuarantors": "Total Garants"
+            },
+            "toasts": {
+                "success": "Profil mis à jour !",
+                "error": "Une erreur est survenue."
+            }
+        },
+        "enums": {
+            "composition": {
+                "SOLO": "Seul(e)",
+                "COUPLE": "En couple",
+                "GROUP": "En colocation"
+            },
+            "status": {
+                "NONE": "Célibataire / Autre",
+                "MARRIED": "Marié(e)",
+                "PACS": "Pacsé(e)",
+                "CONCUBINAGE": "Concubinage"
+            },
+            "lease": {
+                "ANY": "Pas de préférences",
+                "FURNISHED": "Meublé",
+                "EMPTY": "Vide",
+                "MOBILITY": "Mobilité"
+            },
+            "job": {
+                "PRIVATE_SECTOR": "Salarié du secteur privé",
+                "PUBLIC_SECTOR": "Fonctionnaire / agent public",
+                "FREELANCE": "Indépendant / profession libérale",
+                "MICRO_ENTREPRENEUR": "Micro‑entrepreneur / auto‑entrepreneur",
+                "APPRENTICE": "Apprenti",
+                "STUDENT": "Étudiant",
+                "INTERN": "Stagiaire / service civique / volontaire",
+                "JOB_SEEKER": "Demandeur d’emploi",
+                "RETIRED": "Retraité",
+                "HOUSEWIFE": "Homme ou femme au foyer",
+                "INACTIVE": "Sans activité / sans profession",
+                "OTHER": "Autre situation professionnelle"
+            },
+            "contract": {
+                "CDI": "CDI",
+                "CDD": "CDD",
+                "INTERIM": "Intérim / mission",
+                "APPRENTICESHIP": "Apprentissage / Alternance",
+                "PUBLIC": "Fonctionnaire / agent public",
+                "FREELANCE": "Indépendant / Micro‑entrepreneur / Profession libérale",
+                "OTHER": "Autre"
+            },
+            "income": {
+                "RENTAL": "Revenus Locatifs",
+                "ALIMONY": "Pension Alimentaire",
+                "SCHOLARSHIP": "Bourse",
+                "SOCIAL_AID": "Aides Sociales (CAF...)",
+                "OTHER": "Autre"
+            },
+            "guarantorType": {
+                "FAMILY": "Famille",
+                "THIRD_PARTY": "Tiers",
+                "VISALE": "Visale",
+                "LEGAL_ENTITY": "Personne Morale",
+                "CAUTIONNER": "Cautioneo",
+                "GARANTME": "GarantMe"
+            },
+            "guarantorStatus": {
+                "CDI": "CDI",
+                "CDD": "CDD",
+                "RETIRED": "Retraité",
+                "STUDENT": "Étudiant",
+                "UNEMPLOYED": "Sans emploi",
+                "OTHER": "Autre"
+            }
+        },
+        "security": {
+            "title": "Connexion et sécurité",
+            "subtitle": "Gérez vos paramètres de sécurité et votre connexion.",
+            "sectionTitle": "Sécurité",
+            "description": "Pour votre sécurité, nous vous recommandons de vous déconnecter si vous utilisez un ordinateur partagé.",
+            "signOut": "Se déconnecter"
+        },
+        "preferences": {
+            "title": "Préférences Globales",
+            "subtitle": "Gérez vos paramètres globaux pour l'application.",
+            "save": "Enregistrer les préférences",
+            "language": {
+                "title": "Langue & Région",
+                "description": "Choisissez la langue de l'interface.",
+                "french": "Français",
+                "english": "Anglais"
+            },
+            "measurement": {
+                "title": "Système de mesure",
+                "description": "Choisissez votre système d'unité préféré pour les surfaces (m² vs sq ft).",
+                "metric": "Métrique (m²)",
+                "imperial": "Impérial (sq ft)"
+            },
+            "commute": {
+                "title": "Lieux fréquents & Trajets",
+                "description": "Ajoutez vos lieux (travail, école...) pour voir automatiquement le temps de trajet sur les annonces.",
+                "empty": "Aucun lieu enregistré. Ajoutez votre travail ou école !",
+                "add": "Ajouter un lieu",
+                "new": "Nouveau lieu",
+                "name": "Nom",
+                "placeholder": "ex: Travail",
+                "type": "Type de lieu",
+                "transport": "Mode de transport",
+                "address": "Adresse",
+                "map": "Carte",
+                "showMap": "Afficher sur la carte",
+                "hideMap": "Masquer de la carte",
+                "icons": {
+                    "work": "Travail",
+                    "home": "Domicile",
+                    "school": "École",
+                    "favorite": "Favori",
+                    "partner": "Partenaire"
+                },
+                "toasts": {
+                    "deleted": "Lieu supprimé",
+                    "deleteError": "Erreur lors de la suppression",
+                    "visible": "Affiché sur la carte",
+                    "hidden": "Masqué de la carte",
+                    "visibilityError": "Impossible de modifier la visibilité",
+                    "fillAll": "Veuillez remplir tous les champs",
+                    "added": "Lieu ajouté !",
+                    "addError": "Erreur lors de l'ajout"
+                }
+            },
+            "toasts": {
+                "success": "Préférences mises à jour !",
+                "error": "Une erreur est survenue."
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "subtitle": "Gérez vos préférences de notifications.",
+            "description": "Gérez vos préférences de notifications push",
+            "types": {
+                "title": "Types de notifications",
+                "messages": {
+                    "label": "Nouveaux messages",
+                    "description": "Recevez une notification pour chaque nouveau message"
+                },
+                "visits": {
+                    "label": "Visites",
+                    "description": "Réservations et annulations de visites"
+                },
+                "applications": {
+                    "label": "Candidatures",
+                    "description": "Nouvelles candidatures et changements de statut"
+                },
+                "likes": {
+                    "label": "Likes sur vos annonces",
+                    "description": "Soyez notifié quand quelqu'un aime votre annonce"
+                }
+            },
+            "dnd": {
+                "title": "Mode Ne Pas Déranger",
+                "description": "Désactivez les notifications pendant certaines heures (optionnel)",
+                "start": "Début (heure)",
+                "end": "Fin (heure)",
+                "disabled": "Désactivé",
+                "active": "📵 Notifications désactivées de {start}:00 à {end}:00"
+            },
+            "save": "Sauvegarder les préférences",
+            "saving": "Sauvegarde...",
+            "toasts": {
+                "loadError": "Erreur de chargement des préférences",
+                "success": "Préférences sauvegardées",
+                "error": "Erreur lors de la sauvegarde"
+            }
+        },
+        "alerts": {
+            "title": "Mes alertes de recherche",
+            "subtitle": "Gérez vos alertes pour ne manquer aucune nouvelle annonce.",
+            "empty": "Aucune alerte active",
+            "emptyDescription": "Créez une alerte pour recevoir des notifications quand de nouvelles annonces correspondent à vos critères.",
+            "createFirst": "Créer ma première alerte",
+            "create": "Créer une alerte",
+            "active": "Active",
+            "paused": "En pause",
+            "frequency": {
+                "label": "Fréquence",
+                "INSTANT": "Instantané",
+                "DAILY": "Quotidien (résumé)"
+            },
+            "criteria": {
+                "location": "Lieu : {value}",
+                "category": "Type : {value}",
+                "price": "Prix : {min}€ - {max}€",
+                "priceMin": "Prix min : {min}€",
+                "priceMax": "Prix max : {max}€",
+                "rooms": "Pièces : {count}+"
+            },
+            "actions": {
+                "edit": "Modifier",
+                "pause": "Mettre en pause",
+                "resume": "Réactiver",
+                "delete": "Supprimer"
+            },
+            "modal": {
+                "createTitle": "Créer une alerte",
+                "editTitle": "Modifier l'alerte",
+                "description": "Vous serez notifié par email et notification push dès qu'une nouvelle annonce correspond à vos critères.",
+                "criteriaTitle": "Critères de recherche",
+                "noCriteria": "Aucun critère sélectionné. Voulez-vous créer une alerte générique ?",
+                "save": "Créer l'alerte",
+                "saving": "Création...",
+                "cancel": "Annuler"
+            },
+            "deleteConfirm": {
+                "title": "Supprimer l'alerte ?",
+                "description": "Vous ne recevrez plus de notifications pour cette recherche.",
+                "confirm": "Supprimer",
+                "cancel": "Annuler"
+            },
+            "toasts": {
+                "created": "Alerte créée avec succès !",
+                "updated": "Alerte mise à jour",
+                "deleted": "Alerte supprimée",
+                "paused": "Alerte mise en pause",
+                "resumed": "Alerte réactivée",
+                "error": "Une erreur est survenue",
+                "createError": "Erreur lors de la création de l'alerte"
+            }
+        },
+        "navigation": {
+            "personalInfo": "Informations personnelles",
+            "finances": "Mes finances",
+            "tenantProfile": "Dossier Locataire",
+            "project": "Projet de location",
+            "security": "Connexion et sécurité",
+            "notifications": "Notifications",
+            "alerts": "Alertes de recherche",
+            "privacy": "Confidentialité et partage",
+            "preferences": "Préférences globales",
+            "subscription": "Abonnement",
+            "settings": "Réglages",
+            "plan": {
+                "free": "Gratuit",
+                "plus": "Plus",
+                "pro": "Pro"
+            },
+            "mode": {
+                "switch": "Passer en mode {mode}",
+                "landlord": "propriétaire",
+                "tenant": "locataire",
+                "success": "Mode changé avec succès",
+                "error": "Une erreur est survenue"
+            }
+        }
+    },
+    "admin": {
+        "dashboard": "Tableau de Bord",
+        "toModerate": "À Modérer",
+        "pendingListings": "Annonces en attente",
+        "usersLabel": "Utilisateurs",
+        "thisWeek": "+{count} cette semaine",
+        "reportsLabel": "Signalements",
+        "pendingReports": "En attente de traitement",
+        "publishedListings": "Annonces Publiées",
+        "onlineVisible": "Visibles en ligne",
+        "growth": "Croissance",
+        "growthChart": "Croissance (30 derniers jours)",
+        "recentListings": "Dernières Annonces",
+        "recentReports": "Signalements Récents",
+        "newUsers": "Nouveaux Utilisateurs",
+        "manage": "Gérer",
+        "actionRequired": "Action requise",
+        "upToDate": "À jour",
+        "urgent": "Urgent",
+        "noIssues": "Aucun souci",
+        "ofTotal": "{percent}% du total",
+        "documentation": "Documentation",
+        "helpTitle": "Besoin d'aide ?",
+        "helpText": "Consultez la documentation administrateur pour gérer la plateforme.",
+        "published": "Publié",
+        "pending": "En attente",
+        "rejected": "Rejeté",
+        "draft": "Brouillon",
+        "unknown": "Inconnu",
+        "noName": "Sans nom",
+        "anonymous": "Anonyme",
+        "viewAll": "Tout voir",
+        "view": "Voir",
+        "reportedBy": "Signalé par {name}",
+        "onUser": "Sur User: {name}",
+        "onListing": "Sur Listing: {name}",
+        "noRecentListings": "Aucune annonce récente",
+        "createdAt": "Créé le {date}",
+        "by": "Par {name}",
+        "errorLoading": "Erreur lors du chargement des statistiques.",
+        "chartNewUsers": "Nouveaux Utilisateurs",
+        "chartNewListings": "Nouvelles Annonces",
+        "userManagement": {
+            "title": "Gestion des Utilisateurs ({count})",
+            "search": "Rechercher...",
+            "colUser": "Utilisateur",
+            "colRole": "Rôle / Mode",
+            "colStatus": "Statut",
+            "colRegistration": "Inscription",
+            "colActions": "Actions",
+            "banned": "Banni",
+            "active": "Actif",
+            "unban": "Débloquer",
+            "ban": "Bannir",
+            "delete": "Supprimer",
+            "confirmBan": "Bannir cet utilisateur ?",
+            "confirmUnban": "Débloquer cet utilisateur ?",
+            "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.",
+            "toastUnbanned": "Utilisateur débloqué",
+            "toastBanned": "Utilisateur banni",
+            "toastDeleted": "Utilisateur supprimé",
+            "toastActionError": "Erreur lors de l'action",
+            "toastDeleteError": "Erreur lors de la suppression",
+            "noResults": "Aucun utilisateur trouvé."
+        },
+        "listingModeration": {
+            "title": "Modération des Annonces",
+            "allCities": "Toutes les villes",
+            "allStatuses": "Tous les statuts",
+            "sortByDate": "Trier par date",
+            "colListing": "Annonce ({count})",
+            "colOwner": "Propriétaire",
+            "colStatus": "Statut",
+            "colUpdated": "Mise à jour",
+            "colActions": "Actions",
+            "viewDetails": "Voir Détails",
+            "approve": "Approuver",
+            "reject": "Rejeter",
+            "confirmApprove": "Confirmer la publication de cette annonce ?",
+            "toastApproved": "Annonce approuvée",
+            "toastRejected": "Annonce rejetée",
+            "toastApproveError": "Erreur lors de l'approbation",
+            "toastRejectError": "Erreur lors du rejet",
+            "noResults": "Aucune annonce trouvée avec ces filtres.",
+            "rejectModal": {
+                "title": "Refuser l'annonce",
+                "action": "Refuser l'annonce",
+                "cancel": "Annuler",
+                "reasonTitle": "Motif du refus",
+                "reasonSubtitle": "Expliquez pourquoi cette annonce ne respecte pas les critères.",
+                "reasonLabel": "Motif (ex: Photos floues, Prix incohérent...)"
+            }
+        },
+        "reports": {
+            "title": "Signalements",
+            "subtitle": "Gérez les signalements des utilisateurs.",
+            "colReport": "Signalement",
+            "colDate": "Date",
+            "colTarget": "Cible",
+            "colStatus": "Statut",
+            "colActions": "Actions",
+            "noDetails": "Pas de détails",
+            "byReporter": "Par {name}",
+            "listing": "Annonce",
+            "unknownListing": "Annonce inconnue",
+            "user": "Utilisateur",
+            "resolve": "Marquer comme Résolu",
+            "dismiss": "Ignorer / Rejeter",
+            "resolved": "Résolu",
+            "dismissed": "Ignoré",
+            "pendingStatus": "En Attente",
+            "toastUpdated": "Statut mis à jour",
+            "toastError": "Erreur lors de la mise à jour",
+            "noReports": "Aucun signalement (pour l'instant, ouf !)."
+        },
+        "listingDetail": {
+            "back": "Retour",
+            "currentStatus": "Statut Actuel",
+            "rejectionReason": "Motif du rejet :",
+            "approve": "Approuver",
+            "reject": "Rejeter",
+            "archive": "Archiver",
+            "deleteListing": "Supprimer",
+            "confirmDelete": "Êtes-vous sûr de vouloir supprimer définitivement cette annonce ?",
+            "confirmArchive": "Archiver cette annonce ?",
+            "rejectPrompt": "Motif du refus :",
+            "toastDeleted": "Annonce supprimée",
+            "toastActionSuccess": "Action {action} réussie",
+            "toastActionError": "Erreur lors de l'action",
+            "description": "Description",
+            "details": "Détails de l'annonce",
+            "rent": "Loyer",
+            "charges": "Charges",
+            "deposit": "Dépôt de garantie",
+            "propertyType": "Type de bien",
+            "surface": "Surface",
+            "furnished": "Meublé",
+            "yes": "Oui",
+            "no": "Non",
+            "owner": "Propriétaire",
+            "phone": "Tel:",
+            "notProvided": "Non renseigné",
+            "verifiedAccount": "Compte vérifié:",
+            "location": "Localisation"
+        }
+    },
+    "listing": {
+        "actions": {
+            "contactHost": "Contacter l'hôte",
+            "apply": "Déposer ma candidature",
+            "share": "Partager",
+            "save": "Enregistrer",
+            "report": "Signaler cette annonce"
+        },
+        "status": {
+            "interested": "Intéressé ?",
+            "contactText": "Contactez l'hôte pour plus d'informations ou pour organiser une visite.",
+            "completeDossierText": "Vous avez un dossier complet ? Déposez votre candidature directement.",
+            "isOwner": "C'est votre annonce"
+        },
+        "details": {
+            "hostedBy": "Proposé par {name}",
+            "joined": "Membre depuis {date}"
+        },
+        "rooms": "{count, plural, =0 {pièce} one {pièce} other {pièces}}",
+        "bedrooms": "{count, plural, =0 {chambre} one {chambre} other {chambres}}",
+        "guests": "{count, plural, =0 {voyageur} one {voyageur} other {voyageurs}}",
+        "bathrooms": "{count, plural, =0 {salle de bain} one {salle de bain} other {salles de bain}}",
+        "furnished": "Meublé",
+        "unfurnished": "Non meublé",
+        "surface": "{area} m²",
+        "floor": "Étage {floor}",
+        "floorTotal": "Étage {floor}/{total}",
+        "totalFloors": "/ {total}",
+        "buildYear": "Année de construction : {year}",
+        "monthChargesIncluded": "/mois CC",
+        "new": "Nouveau",
+        "newListing": "Nouvelle annonce",
+        "shared": "Colocation",
+        "privateRoom": "Chambre privée",
+        "studio": "Studio",
+        "fiber": "Fibre",
+        "bikeRoom": "Local vélo",
+        "neighborhood": "Quartier",
+        "at": "à",
+        "elevator": "Ascenseur",
+        "noElevator": "Sans ascenseur",
+        "accessible": "Accès PMR",
+        "groundFloor": "Rez-de-chaussée",
+        "sections": {
+            "description": "À propos de ce logement",
+            "amenities": "Ce que propose ce logement",
+            "location": "Emplacement",
+            "availability": "Disponibilité",
+            "financials": "Informations financières",
+            "rentExcl": "Loyer hors charges :",
+            "charges": "Provisions sur charges :",
+            "rentIncl": "Loyer charges comprises :",
+            "deposit": "Dépôt de garantie :",
+            "none": "Aucun",
+            "month": "/ mois"
+        },
+        "amenities": {
+            "title": "Les atouts",
+            "wifi": "Fibre optique",
+            "garden": "Jardin",
+            "refurbished": "Refait à neuf",
+            "pets": "Animaux acceptés",
+            "kitchen": "Cuisine équipée",
+            "south": "Exposition Sud",
+            "storage": "Rangements",
+            "bikeRoom": "Local vélo",
+            "laundry": "Laverie / Lave-linge",
+            "transport": "Proche transports",
+            "digicode": "Digicode",
+            "intercom": "Interphone",
+            "caretaker": "Gardien",
+            "armoredDoor": "Porte blindée",
+            "quietArea": "Quartier calme",
+            "greenSpace": "Espaces verts",
+            "schools": "Écoles à proximité",
+            "shops": "Commerces à proximité",
+            "hospital": "Hôpital à proximité",
+            "elevator": "Ascenseur",
+            "accessible": "Accessible PMR",
+            "automaticDoors": "Portes automatiques",
+            "lastFloor": "Dernier étage",
+            "bright": "Lumineux",
+            "noOpposite": "Sans vis-à-vis",
+            "view": "Vue dégagée",
+            "quiet": "Calme",
+            "pool": "Piscine",
+            "bathtub": "Baignoire",
+            "airConditioning": "Climatisation",
+            "student": "Idéal étudiant",
+            "concierge": "Conciergerie"
+        },
+        "location": {
+            "title": "Emplacement",
+            "unknown": "Localisation inconnue"
+        },
+        "errors": {
+            "selfContact": "Vous ne pouvez pas vous contacter vous-même",
+            "selfApply": "Vous ne pouvez pas candidater à votre propre annonce",
+            "incompleteProfile": "Votre profil est incomplet"
+        }
+    },
+    "footer": {
+        "about": "À propos",
+        "contact": "Contact",
+        "terms": "Conditions",
+        "privacy": "Confidentialité",
+        "legal": "Mentions légales",
+        "copyright": "© 2025 Airbnb Clone, Inc.",
+        "sitemap": "Plan du site"
+    },
+    "inbox": {
+        "title": "Messages",
+        "tabs": {
+            "all": "Tous",
+            "tenant": "Locataire",
+            "landlord": "Propriétaire",
+            "support": "Assistance"
+        },
+        "empty": "Aucune conversation",
+        "conversation": {
+            "sentImage": "A envoyé une image",
+            "new": "Nouvelle conversation",
+            "unknownUser": "Utilisateur inconnu",
+            "unknownLocation": "Localisation inconnue",
+            "seenBy": "Vu par {names}",
+            "status": {
+                "sent": "Candidature envoyée",
+                "rejected": "Candidature rejetée",
+                "visitProposed": "Proposition de visite",
+                "visitConfirmed": "Visite programmée",
+                "accepted": "Dossier accepté",
+                "pending": "En attente"
+            }
+        },
+        "form": {
+            "placeholder": "Votre message...",
+            "attachment": {
+                "photoVideo": "Photo / Vidéo",
+                "document": "Document"
+            },
+            "toasts": {
+                "copy": "Message copié !",
+                "report": "Message signalé.",
+                "reaction": "Réaction {emoji} ajoutée"
+            }
+        },
+        "header": {
+            "viewDossier": "Voir dossier",
+            "viewRecap": "Voir récapitulatif",
+            "members": "{count} membres"
+        },
+        "message": {
+            "visit": {
+                "invitation": "{name} est intéressé par votre profil et vous propose une visite.",
+                "instruction": "Veuillez choisir un horaire parmi les créneaux disponibles.",
+                "chooseSlot": "Choisir un horaire",
+                "confirmedTitle": "Rendez-vous confirmé",
+                "confirmedTitleYou": "Vous avez confirmé votre rendez-vous",
+                "confirmedDetails": "pour une visite le {date} à {time}.",
+                "confirmedBadge": "Confirmé"
+            },
+            "application": {
+                "appliedFor": "a candidaté pour",
+                "viewDossier": "Voir le dossier de candidature",
+                "viewRecap": "Voir le récapitulatif"
+            },
+            "attachment": {
+                "defaultName": "Pièce jointe",
+                "defaultType": "Fichier"
+            }
+        }
+    },
+    "language": {
+        "fr": "Français",
+        "en": "English",
+        "switchLanguage": "Changer de langue",
+        "select": "Langue"
+    },
+    "properties": {
+        "title": "Mes Propriétés",
+        "subtitle": "Gérez vos biens et vos locations.",
+        "addProperty": "Ajouter un bien",
+        "filters": {
+            "all": "Tous",
+            "vacant": "Vacant",
+            "published": "Publié",
+            "occupied": "Occupé"
+        },
+        "empty": {
+            "title": "Aucune propriété trouvée",
+            "subtitle": "Commencez par ajouter votre premier bien pour le mettre en location."
+        },
+        "card": {
+            "category": "{category} {type, select, studio {Studio} other {T{count}}}",
+            "furnished": "Meublé",
+            "unfurnished": "Non meublé",
+            "status": {
+                "label": "STATUT",
+                "occupied": "Occupé",
+                "vacant": "Vacant"
+            },
+            "rent": {
+                "label": "LOYER",
+                "review": "Réviser",
+                "regularize": "Régulariser",
+                "paid": "À jour",
+                "late": "En retard",
+                "noTenant": "Pas de locataire"
+            }
+        },
+        "colocation": {
+            "title": "Colocation",
+            "rooms": "{count, plural, =0 {chambre} one {chambre} other {chambres}}",
+            "empty": "Aucun locataire"
+        }
+    },
+    "regularization": {
+        "title": "Régularisation des charges",
+        "subtitle": "Sélectionnez le locataire et l'année concernée.",
+        "steps": {
+            "select": "Locataire / Bail",
+            "year": "Année Fiscale",
+            "calculate": "Calculer",
+            "preview": "Bilan Financier",
+            "completion": "Terminé"
+        },
+        "details": {
+            "recoverable": "Charges Récupérables (Réelles)",
+            "provisions": "Provisions perçues",
+            "balance": "Solde de régularisation",
+            "toReimburse": "À rembourser",
+            "remaining": "reste à régulariser",
+            "expensesIncluded": "Détail des dépenses incluses ({count})",
+            "lockedInfo": "En validant, ces dépenses seront verrouillées et un historique sera créé."
+        },
+        "categories": {
+            "coldWater": "Eau Froide",
+            "hotWater": "Eau Chaude",
+            "electricityCommon": "Électricité (Commun)",
+            "heating": "Chauffage Collectif",
+            "tax": "Taxe Foncière",
+            "meters": "Compteurs",
+            "general": "Charges communes générales",
+            "building": "Charges bâtiment",
+            "elevator": "Ascenseur",
+            "maintenance": "Entretien / Ménage",
+            "caretaker": "Gardien"
+        },
+        "status": {
+            "sending": "Envoi au locataire...",
+            "sent": "Envoyé via la messagerie",
+            "error": "Échec de l'envoi automatique.",
+            "registered": "Régularisation Enregistrée !",
+            "description": "Le décompte a été généré et les dépenses ont été verrouillées.",
+            "download": "Télécharger le PDF"
+        },
+        "errors": {
+            "loadLeases": "Erreur chargement locataires",
+            "calculate": "Erreur calcul régularisation",
+            "save": "Erreur sauvegarde"
+        }
+    }
+}

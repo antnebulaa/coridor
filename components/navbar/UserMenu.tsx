@@ -24,7 +24,8 @@ import useMyCodeModal from "@/hooks/useMyCodeModal";
 import CustomToast from "../ui/CustomToast";
 import { SafeUser } from "@/types";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 
 interface UserMenuProps {
     currentUser?: SafeUser | null;
@@ -36,12 +37,22 @@ const UserMenu: React.FC<UserMenuProps> = ({
     unreadCount
 }) => {
     const router = useRouter();
+    const pathname = usePathname();
+    const t = useTranslations('nav');
+    const tLang = useTranslations('language');
+    const locale = useLocale();
+
     const registerModal = useRegisterModal();
     const loginModal = useLoginModal();
     const rentModal = useRentModal();
     const myCodeModal = useMyCodeModal();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const switchLanguage = useCallback((newLocale: string) => {
+        const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
+        router.push(newPath);
+    }, [pathname, locale, router]);
 
     const toggleOpen = useCallback(() => {
         setIsOpen((value) => !value);
@@ -125,7 +136,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
             cursor-pointer
           "
                 >
-                    Louer mon bien
+                    {t('rentMyProperty')}
                 </div>
                 <div
                     onClick={toggleOpen}
@@ -208,7 +219,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                       font-medium
                     "
                                     >
-                                        Modifier profil
+                                        {t('editProfile')}
                                     </button>
                                 </div>
 
@@ -221,7 +232,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
                                         <CircleGauge size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Tableau de bord</span>
+                                        <span className="font-medium text-neutral-700">{t('dashboard')}</span>
                                     </div>
 
                                     <div
@@ -230,7 +241,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     >
                                         <div className="flex items-center gap-4">
                                             <MessageSquare size={24} className="text-neutral-700" />
-                                            <span className="font-medium text-neutral-700">Messages</span>
+                                            <span className="font-medium text-neutral-700">{t('messages')}</span>
                                         </div>
                                         {unreadCount && unreadCount > 0 ? (
                                             <div className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -244,7 +255,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
                                         <Heart size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Favoris</span>
+                                        <span className="font-medium text-neutral-700">{t('favorites')}</span>
                                     </div>
 
                                     <div
@@ -252,7 +263,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
                                         <Calendar size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Mon Calendrier</span>
+                                        <span className="font-medium text-neutral-700">{t('agenda')}</span>
                                     </div>
 
                                     {currentUser.userMode === 'LANDLORD' ? (
@@ -262,14 +273,14 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                                 className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                             >
                                                 <Wallet size={24} className="text-neutral-700" />
-                                                <span className="font-medium text-neutral-700">Mes finances</span>
+                                                <span className="font-medium text-neutral-700">{t('finances')}</span>
                                             </div>
                                             <div
                                                 onClick={() => router.push('/properties')}
                                                 className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                             >
                                                 <Key size={24} className="text-neutral-700" />
-                                                <span className="font-medium text-neutral-700">Mes locations</span>
+                                                <span className="font-medium text-neutral-700">{t('properties')}</span>
                                             </div>
                                         </>
                                     ) : (
@@ -278,7 +289,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                             className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                         >
                                             <Key size={24} className="text-neutral-700" />
-                                            <span className="font-medium text-neutral-700">Ma location</span>
+                                            <span className="font-medium text-neutral-700">{t('myRental')}</span>
                                         </div>
                                     )}
 
@@ -287,7 +298,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
                                         <Users size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Mes contacts</span>
+                                        <span className="font-medium text-neutral-700">{t('contacts')}</span>
                                     </div>
 
 
@@ -296,7 +307,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
                                         <Sparkles size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Abonnement</span>
+                                        <span className="font-medium text-neutral-700">{t('subscription')}</span>
                                     </div>
 
                                     <div
@@ -304,12 +315,11 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
                                         <Settings size={24} className="text-neutral-700" />
-                                        <span className="font-medium text-neutral-700">Réglages</span>
+                                        <span className="font-medium text-neutral-700">{t('settings')}</span>
                                     </div>
 
-                                    {/* Mode Switch */}
                                     <div className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl cursor-pointer transition">
-                                        <span className="font-medium text-neutral-700">Mode</span>
+                                        <span className="font-medium text-neutral-700">{t('mode')}</span>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -328,8 +338,57 @@ const UserMenu: React.FC<UserMenuProps> = ({
                         transition
                       "
                                         >
-                                            {currentUser.userMode === 'LANDLORD' ? 'Locataire' : 'Propriétaire'}
+                                            {currentUser.userMode === 'LANDLORD' ? t('tenant') : t('landlord')}
                                         </button>
+                                    </div>
+
+                                    {/* Language Switch */}
+                                    <div className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl cursor-pointer transition">
+                                        <span className="font-medium text-neutral-700">{tLang('select')}</span>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    switchLanguage('fr');
+                                                }}
+                                                className={`
+                                                    px-2 
+                                                    py-1 
+                                                    rounded-md 
+                                                    text-xs 
+                                                    font-medium 
+                                                    border 
+                                                    transition
+                                                    ${locale === 'fr'
+                                                        ? 'bg-neutral-800 text-white border-neutral-800'
+                                                        : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400'
+                                                    }
+                                                `}
+                                            >
+                                                FR
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    switchLanguage('en');
+                                                }}
+                                                className={`
+                                                    px-2 
+                                                    py-1 
+                                                    rounded-md 
+                                                    text-xs 
+                                                    font-medium 
+                                                    border 
+                                                    transition
+                                                    ${locale === 'en'
+                                                        ? 'bg-neutral-800 text-white border-neutral-800'
+                                                        : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400'
+                                                    }
+                                                `}
+                                            >
+                                                EN
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -341,7 +400,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                         onClick={() => signOut()}
                                         className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                     >
-                                        <span className="font-medium text-neutral-700">Déconnexion</span>
+                                        <span className="font-medium text-neutral-700">{t('logout')}</span>
                                     </div>
                                 </div>
                             </>
@@ -351,13 +410,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     onClick={loginModal.onOpen}
                                     className="px-4 py-3 hover:bg-secondary rounded-lg cursor-pointer transition font-semibold"
                                 >
-                                    Connexion
+                                    {t('login')}
                                 </div>
                                 <div
                                     onClick={registerModal.onOpen}
                                     className="px-4 py-3 hover:bg-secondary rounded-lg cursor-pointer transition"
                                 >
-                                    Inscription
+                                    {t('register')}
                                 </div>
                             </div>
                         )}

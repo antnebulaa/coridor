@@ -36,7 +36,8 @@ const getCurrentUser = cache(async (): Promise<SafeUser | null> => {
                     }
                 },
                 tenantProfile: true,
-                commuteLocations: true // NEW: Fetch commute locations
+                commuteLocations: true, // NEW: Fetch commute locations
+                accounts: true // NEW: Fetch linked accounts (DossierFacile)
             }
         });
 
@@ -65,7 +66,9 @@ const getCurrentUser = cache(async (): Promise<SafeUser | null> => {
             wishlists: safeWishlists,
             commuteLocations: safeCommuteLocations, // NEW
             userMode: currentUser.userMode,
+            role: (currentUser as any).role || 'USER', // Add role
             plan: (currentUser as any).plan || 'FREE', // Fallback to FREE if missing, though it shouldn't be
+            accounts: currentUser.accounts, // NEW: Expose accounts
         };
 
         return safeUser;

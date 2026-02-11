@@ -11,11 +11,20 @@ export default async function getAllFavorites() {
 
         const favorites = await prisma.listing.findMany({
             where: {
-                wishlists: {
-                    some: {
-                        userId: currentUser.id
+                OR: [
+                    {
+                        id: {
+                            in: [...(currentUser.favoriteIds || [])]
+                        }
+                    },
+                    {
+                        wishlists: {
+                            some: {
+                                userId: currentUser.id
+                            }
+                        }
                     }
-                }
+                ]
             },
             include: {
                 rentalUnit: {

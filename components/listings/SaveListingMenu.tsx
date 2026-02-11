@@ -115,110 +115,44 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     const handleCreateWishlist = async () => {
         if (!newListName.trim()) return;
 
-        // Optimistic update for creation is harder without an ID, so we keep spinner for this one action 
-        // or generate a temp ID. For now, spinner is acceptable for meaningful creation.
         setIsLoading(true);
         try {
-            const res = await axios.post('/api/wishlists', {
+            await axios.post('/api/wishlists', {
                 name: newListName,
-                listingId
+                listingId // Ensure this is passed
             });
 
-            // Optimistic update after success but before refresh
-            const newList = res.data;
-            // The API returns the new wishlist. We need to ensure it has the listing if the API adds it.
-            // Our API logic above sends listingId, so it should be added.
-            // We can append to localWishlists to update UI immediately
-
-            // However, implementing full optimistic creation needs correct structure.
-            // Let's rely on refresh for creation as it's a rare action, but fix the lag for toggles.
-
-            toast.custom((t) => (
-                <CustomToast
-                    t={t}
-                    message="Collection créée"
-                    onUndo={async () => {
-                        await axios.delete(`/api/wishlists/${res.data.id}`);
-                        router.refresh();
-                    }}
-                />
-            ));
+            toast.success('Collection créée !');
 
             setNewListName('');
             setIsCreating(false);
             router.refresh();
         } catch (error) {
-            toast.custom((t) => (
-                <CustomToast
-                    t={t}
-                    message="Erreur lors de la création"
-                    type="error"
-                />
-            ));
+            console.error(error);
+            toast.error('Erreur lors de la création de la collection');
         } finally {
             setIsLoading(false);
         }
     };
 
     const toggleWishlist = async (wishlistId: string, hasListing: boolean) => {
-        setIsOpen(false);
-
-        // Optimistic Update
-        const previousWishlists = [...localWishlists];
-
-        setLocalWishlists(current =>
-            current.map(list => {
-                if (list.id === wishlistId) {
-                    return {
-                        ...list,
-                        listings: hasListing
-                            ? list.listings.filter((l: any) => l.id !== listingId)
-                            : [...list.listings, { id: listingId }] // Minimal mock object
-                    };
-                }
-                return list;
-            })
-        );
+        // Optimistic UI toggle could be added here if needed, but for now let's ensure stability
+        // triggering a loading state on the specific item would be ideal, but we'll use a toast
 
         try {
             if (hasListing) {
                 await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
-                toast.custom((t) => (
-                    <CustomToast
-                        t={t}
-                        message="Retiré de la collection"
-                        onUndo={async () => {
-                            await axios.post(`/api/wishlists/${wishlistId}`, { listingId });
-                            router.refresh();
-                        }}
-                    />
-                ));
+                toast.success("Retiré de la collection");
             } else {
                 await axios.post(`/api/wishlists/${wishlistId}`, {
                     listingId
                 });
-                toast.custom((t) => (
-                    <CustomToast
-                        t={t}
-                        message="Ajouté à la collection"
-                        onUndo={async () => {
-                            await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
-                            router.refresh();
-                        }}
-                    />
-                ));
+                toast.success("Ajouté à la collection");
             }
             router.refresh();
         } catch (error) {
-            // Revert on error
-            setLocalWishlists(previousWishlists);
-            toast.custom((t) => (
-                <CustomToast
-                    t={t}
-                    message="Une erreur est survenue"
-                    type="error"
-                />
-            ));
+            console.error(error);
+            toast.error("Une erreur est survenue");
         }
     };
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles, BellRing } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import { switchUserMode } from "@/app/actions/switchMode";
 import { toast } from "react-hot-toast";
 import CustomToast from "@/components/ui/CustomToast";
 import Avatar from "@/components/Avatar";
+import { useTranslations } from 'next-intl';
 
 interface AccountSidebarProps {
     currentUser?: SafeUser | null;
@@ -19,24 +20,25 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
     const pathname = usePathname();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const t = useTranslations('account.navigation');
 
     const toggleMode = async () => {
         setIsLoading(true);
         try {
             await switchUserMode();
             router.refresh();
-            toast.custom((t) => (
+            toast.custom((tToast) => (
                 <CustomToast
-                    t={t}
-                    message="Mode changé avec succès"
+                    t={tToast}
+                    message={t('mode.success')}
                     type="success"
                 />
             ));
         } catch (error) {
-            toast.custom((t) => (
+            toast.custom((tToast) => (
                 <CustomToast
-                    t={t}
-                    message="Une erreur est survenue"
+                    t={tToast}
+                    message={t('mode.error')}
                     type="error"
                 />
             ));
@@ -47,55 +49,61 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
 
     const routes = [
         ...(currentUser?.userMode === 'LANDLORD' ? [{
-            label: 'Mes finances',
+            label: t('finances'),
             icon: Wallet,
             href: '/dashboard/finances',
             active: pathname === '/dashboard/finances'
         }] : []),
         {
-            label: 'Dossier Locataire',
+            label: t('tenantProfile'),
             icon: FileText,
             href: '/account/tenant-profile',
             active: pathname === '/account/tenant-profile'
         },
         {
-            label: 'Projet de location',
+            label: t('project'),
             icon: Home,
             href: '/account/project',
             active: pathname === '/account/project'
         },
         {
-            label: 'Login & security',
+            label: t('security'),
             icon: Shield,
             href: '/account/security',
             active: pathname === '/account/security'
         },
         {
-            label: 'Notifications',
+            label: t('notifications'),
             icon: Bell,
             href: '/account/notifications',
             active: pathname === '/account/notifications'
         },
         {
-            label: 'Privacy & sharing',
+            label: t('alerts'),
+            icon: BellRing,
+            href: '/account/alerts',
+            active: pathname === '/account/alerts'
+        },
+        {
+            label: t('privacy'),
             icon: Lock,
             href: '/account/privacy',
             active: pathname === '/account/privacy'
         },
         {
-            label: 'Global preferences',
+            label: t('preferences'),
             icon: Globe,
             href: '/account/preferences',
             active: pathname === '/account/preferences'
         },
         {
-            label: 'Abonnement',
+            label: t('subscription'),
             icon: Sparkles,
             href: '/pricing',
             active: pathname === '/pricing'
         },
         {
-            label: 'Réglages',
+            label: t('settings'),
             icon: Settings,
             href: '/account/settings',
             active: pathname === '/account/settings'
@@ -106,14 +114,14 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
     const lastInitial = names.length > 1 ? `${names[names.length - 1][0]}.` : '';
 
     const plan = (currentUser as any)?.plan || 'FREE';
-    let planLabel = 'Gratuit';
+    let planLabel = t('plan.free');
     let planStyles = 'bg-neutral-100 text-neutral-600 border border-neutral-200';
 
     if (plan === 'PLUS') {
-        planLabel = 'Plus';
+        planLabel = t('plan.plus');
         planStyles = 'bg-red-500 text-white border border-red-500';
     } else if (plan === 'PRO') {
-        planLabel = 'Pro';
+        planLabel = t('plan.pro');
         planStyles = 'bg-neutral-800 text-white border border-black';
     }
 
@@ -135,7 +143,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                                     {planLabel}
                                 </span>
                             </div>
-                            <span className="text-sm text-neutral-500 font-normal group-hover:text-black transition">Informations personnelles</span>
+                            <span className="text-sm text-neutral-500 font-normal group-hover:text-black transition">{t('personalInfo')}</span>
                         </div>
                     </div>
                     <ChevronRight size={20} className="text-neutral-400 group-hover:text-black transition" />
@@ -201,7 +209,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                             >
                                 <Repeat size={16} />
                             </motion.div>
-                            Passer en mode {currentUser.userMode === 'LANDLORD' ? 'locataire' : 'propriétaire'}
+                            {t('mode.switch', { mode: currentUser.userMode === 'LANDLORD' ? t('mode.tenant') : t('mode.landlord') })}
                         </motion.button>
                     </div>
                 )

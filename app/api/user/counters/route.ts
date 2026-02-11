@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getUnreadMessageCount from "@/app/actions/getUnreadMessageCount";
 import getDashboardAlerts from "@/app/actions/getDashboardAlerts";
+import prisma from "@/libs/prismadb";
 
 export async function GET(
     request: Request
@@ -17,16 +18,23 @@ export async function GET(
         }
 
         // Run parallel fetches for efficiency
-        const [unreadCount, dashboardAlerts] = await Promise.all([
+        const [unreadCount, dashboardAlerts, notificationCount] = await Promise.all([
             getUnreadMessageCount(),
-            getDashboardAlerts()
+            getDashboardAlerts(),
+            prisma.notification.count({
+                where: {
+                    userId: currentUser.id,
+                    isRead: false
+                }
+            })
         ]);
 
-        console.log(`[API Counters] Returning unreadCount: ${unreadCount}`);
+        console.log(`[API Counters] Returning unreadCount: ${unreadCount}, notifCount: ${notificationCount}`);
 
         return NextResponse.json({
             unreadCount,
-            hasPendingAlert: dashboardAlerts.hasPendingConfig
+            hasPendingAlert: dashboardAlerts.hasPendingConfig,
+            notificationCount
         });
 
     } catch (error: any) {

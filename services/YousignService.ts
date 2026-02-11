@@ -115,4 +115,84 @@ export class YousignService {
             throw error;
         }
     }
+
+    /**
+     * Get the signed document download URL
+     */
+    static async getSignedDocumentUrl(signatureRequestId: string): Promise<string> {
+        if (!YOUSIGN_API_KEY) throw new Error("YOUSIGN_API_KEY is missing");
+
+        try {
+            // Get documents from signature request
+            const docsRes = await axios.get(
+                `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/documents`,
+                { headers: this.headers }
+            );
+
+            if (!docsRes.data || docsRes.data.length === 0) {
+                throw new Error("No documents found");
+            }
+
+            const documentId = docsRes.data[0].id;
+
+            // Get download URL for signed document
+            const downloadRes = await axios.get(
+                `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/documents/${documentId}/download`,
+                {
+                    headers: this.headers,
+                    responseType: 'arraybuffer'
+                }
+            );
+
+            // For now, we return a data URL. In production, you'd upload to cloud storage
+            const base64 = Buffer.from(downloadRes.data).toString('base64');
+            return `data:application/pdf;base64,${base64}`;
+
+        } catch (error: any) {
+            console.error("Yousign getSignedDocumentUrl Error:", error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Get signature request status and signer details
+     */
+    static async getSignatureStatus(signatureRequestId: string): Promise<{
+        status: string;
+        signers: Array<{
+            name: string;
+            email: string;
+            status: string;
+        }>;
+    }> {
+        if (!YOUSIGN_API_KEY) throw new Error("YOUSIGN_API_KEY is missing");
+
+        try {
+            const res = await axios.get(
+                `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}`,
+                { headers: this.headers }
+            );
+
+            // Get signers
+            const signersRes = await axios.get(
+                `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`,
+                { headers: this.headers }
+            );
+
+            const signers = signersRes.data.map((s: any) => ({
+                name: `${s.info.first_name} ${s.info.last_name}`,
+                email: s.info.email,
+                status: s.status
+            }));
+
+            return {
+                status: res.data.status,
+                signers
+            };
+
+        } catch (error: any) {
+            console.error("Yousign getSignatureStatus Error:", error.response?.data || error.message);
+            throw error;
+        }
+    }
 }

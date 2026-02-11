@@ -72,5 +72,18 @@ export async function DELETE(
         }
     });
 
+    // Send push notifications to both parties
+    const { sendPushNotification } = await import("@/app/lib/sendPushNotification");
+    const otherPartyId = isCandidate ? visit.listing.rentalUnit.property.ownerId : visit.candidateId;
+
+    // Notify the other party
+    sendPushNotification({
+        userId: otherPartyId,
+        title: "Visite annulée",
+        body: `La visite prévue a été annulée par ${currentUser.name || 'l\'autre partie'}`,
+        url: `/calendar`,
+        type: 'visit'
+    }).catch(err => console.error("[Push] Failed to notify:", err));
+
     return NextResponse.json(cancelledVisit);
 }

@@ -6,7 +6,7 @@ import axios from "axios";
 const PARIS_API_URL = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/logement-encadrement-des-loyers/records";
 
 // Calculate fallback locally if API fails or not eligible
-import { calculateRentControl } from "../../properties/[listingId]/edit/components/rentControlUtils";
+import { calculateRentControl } from "@/utils/rentUtils";
 
 export async function POST(request: Request) {
     try {

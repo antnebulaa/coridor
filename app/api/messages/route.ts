@@ -4,26 +4,38 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import { broadcastNewMessage } from "@/lib/supabaseServer";
 import webPush from "web-push";
 
-webPush.setVapidDetails(
-    process.env.NEXT_PUBLIC_VAPID_EMAIL || "mailto:admin@example.com",
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-);
+// Configure VAPID keys safely
+try {
+    if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+        webPush.setVapidDetails(
+            process.env.NEXT_PUBLIC_VAPID_EMAIL || "mailto:admin@example.com",
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+            process.env.VAPID_PRIVATE_KEY
+        );
+    } else {
+        console.warn("VAPID keys are missing. Push notifications will not work.");
+    }
+} catch (error) {
+    console.error("Failed to set VAPID details:", error);
+}
 
 export async function POST(
     request: Request
 ) {
     try {
-        const currentUser = await getCurrentUser();
+        const user = await getCurrentUser();
         const body = await request.json();
         const {
             message,
             image,
+            fileUrl,
+            fileName,
+            fileType,
             conversationId,
             listingId
         } = body;
 
-        if (!currentUser?.id || !currentUser?.email) {
+        if (!user?.id || !user?.email) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
@@ -31,6 +43,9 @@ export async function POST(
             data: {
                 body: message,
                 image: image,
+                fileUrl: fileUrl,
+                fileName: fileName,
+                fileType: fileType,
                 conversation: {
                     connect: {
                         id: conversationId
@@ -38,12 +53,12 @@ export async function POST(
                 },
                 sender: {
                     connect: {
-                        id: currentUser.id
+                        id: user.id
                     }
                 },
                 seen: {
                     connect: {
-                        id: currentUser.id
+                        id: user.id
                     }
                 },
                 ...(listingId && {
@@ -118,7 +133,7 @@ export async function POST(
                         creatorUserId: (await prisma.conversation.findUnique({
                             where: { id: conversationId },
                             include: { users: true }
-                        }))?.users.find((u: any) => u.id !== currentUser.id)?.id
+                        }))?.users.find((u: any) => u.id !== user!.id)?.id
                     }
                 }
             });
@@ -166,47 +181,70 @@ export async function POST(
         broadcastNewMessage(conversationId, recipientIds, {
             id: newMessage.id,
             conversationId: conversationId,
-            senderId: currentUser.id,
+            senderId: user.id,
             body: newMessage.body,
             createdAt: newMessage.createdAt
         }).catch(err => console.error("[Background Broadcast] Failed:", err));
 
         // SEND PUSH NOTIFICATION (Parallel-ish)
-        const recipientUser = updatedConversation.users.find((u: any) => u.id !== currentUser.id);
+        const recipientUser = updatedConversation.users.find((u: any) => u.id !== user.id);
 
         if (recipientUser) {
+            // Create In-App Notification
+            const { createNotification } = await import('@/libs/notifications');
+            await createNotification({
+                userId: recipientUser.id,
+                type: 'MESSAGE',
+                title: user.name || 'Nouveau message',
+                message: newMessage.body || (newMessage.image ? "📷 Photo envoyée" : (newMessage.fileUrl ? "📎 Fichier envoyé" : "Nouveau message")),
+                link: `/inbox/${conversationId}`
+            });
+
+            console.log(`[Push] Attempting to notify user ${recipientUser.id} (${recipientUser.name || 'Unknown'})`);
+
+            // Fire and forget - don't await this block
             (async () => {
                 try {
                     const subscriptions = await prisma.pushSubscription.findMany({
                         where: { userId: recipientUser.id }
                     });
 
+                    console.log(`[Push] Found ${subscriptions.length} subscriptions for user ${recipientUser.id}`);
+
                     if (subscriptions.length > 0) {
                         const notificationPayload = JSON.stringify({
-                            title: `Nouveau message de ${currentUser.name || 'Coridor'}`,
-                            body: newMessage.body || (newMessage.image ? "📷 Photo envoyée" : "Nouveau message"),
+                            title: `Nouveau message de ${user.name || 'Coridor'}`,
+                            body: newMessage.body || (newMessage.image ? "📷 Photo envoyée" : (newMessage.fileUrl ? "📎 Fichier envoyé" : "Nouveau message")),
                             url: `/inbox/${conversationId}`,
                             icon: "/images/logo.png"
                         });
 
-                        await Promise.allSettled(subscriptions.map(async (sub) => {
+                        const results = await Promise.allSettled(subscriptions.map(async (sub) => {
                             try {
                                 await webPush.sendNotification({
                                     endpoint: sub.endpoint,
                                     keys: sub.keys as any
                                 }, notificationPayload);
+                                return { status: 'fulfilled', id: sub.id };
                             } catch (error: any) {
+                                console.error(`[Push] Failed for sub ${sub.id}:`, error.statusCode, error.message);
                                 if (error.statusCode === 410 || error.statusCode === 404) {
+                                    console.log(`[Push] Deleting expired subscription ${sub.id}`);
                                     await prisma.pushSubscription.delete({ where: { id: sub.id } });
                                 }
+                                throw error;
                             }
                         }));
-                        console.log(`[Push] Sent to ${subscriptions.length} devices for user ${recipientUser.id}`);
+
+                        const fulfilled = results.filter(r => r.status === 'fulfilled').length;
+                        console.log(`[Push] Successfully sent to ${fulfilled}/${subscriptions.length} devices.`);
                     }
                 } catch (pushError) {
-                    console.error("[Push] Failed:", pushError);
+                    console.error("[Push] Global Error:", pushError);
                 }
             })();
+        } else {
+            console.log("[Push] No recipient found in conversation.");
         }
 
         console.log("[API Messages] Response sent to client immediately");

@@ -58,17 +58,19 @@ const Modal: React.FC<ModalProps> = ({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line
         setMounted(true);
     }, []);
 
     // Pull-to-close state
     const [isDragging, setIsDragging] = useState(false);
     const [translateY, setTranslateY] = useState(0);
-    const startY = useRef<number>(0);
-    const contentRef = useRef<HTMLDivElement>(null);
+    const startY = useRef<number | null>(null);
+    // const contentRef = useRef<HTMLDivElement>(null); // Removed unused ref
     const scrollRef = useRef<HTMLDivElement>(null); // To check scrollTop
 
     useEffect(() => {
+        // eslint-disable-next-line
         setShowModal(!!isOpen);
         if (isOpen) {
             document.body.style.overflow = 'hidden';
@@ -78,10 +80,8 @@ const Modal: React.FC<ModalProps> = ({
         } else {
             document.body.style.overflow = 'unset';
             // Reset drag state on close
-            setTimeout(() => {
-                setTranslateY(0);
-                setIsDragging(false);
-            }, 300);
+            setTranslateY(0);
+            setIsDragging(false);
         }
 
         return () => {
@@ -116,6 +116,8 @@ const Modal: React.FC<ModalProps> = ({
             }
             return;
         }
+
+        if (startY.current === null) return; // Add null check for startY.current
 
         const currentY = e.touches[0].clientY;
         const diff = currentY - startY.current;
@@ -174,15 +176,14 @@ const Modal: React.FC<ModalProps> = ({
                 onClick={handleClose}
                 className={`
                     justify-center 
-                    items-end
-                    md:items-center 
+                    items-center 
                     flex 
                     overflow-x-hidden 
                     overflow-hidden 
                     md:overflow-y-auto 
                     fixed
                     inset-0 
-                    z-[9999] 
+                    z-9999 
                     outline-none 
                     focus:outline-none
                     transition
@@ -216,10 +217,10 @@ const Modal: React.FC<ModalProps> = ({
                     className={`
                         relative 
                         mx-auto 
-                        h-full 
+                        h-auto
+                        max-h-dvh
                         md:h-auto 
                         lg:h-auto 
-                        md:my-6
                         ${className ? '' : ''} 
                         ${widthClass ? widthClass : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
                     `}
@@ -239,7 +240,7 @@ const Modal: React.FC<ModalProps> = ({
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-full lg:h-auto md:h-auto border-0 md:rounded-[25px] rounded-none shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none md:max-h-[85vh]">
+                        <div className="h-auto max-h-dvh border-0 rounded-[25px] shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden">
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div
@@ -270,7 +271,6 @@ const Modal: React.FC<ModalProps> = ({
                                         transition 
                                         absolute 
                                         top-6
-                                        top-6
                                         ${closeButtonPosition === 'left' ? 'left-6' : 'right-6'}
                                         ${closeButtonVariant === 'transparent-white'
                                                 ? 'bg-transparent border border-white text-white hover:bg-white/20 shadow-none'
@@ -291,13 +291,13 @@ const Modal: React.FC<ModalProps> = ({
                                 onTouchStart={onTouchStart}
                                 onTouchMove={onTouchMove}
                                 onTouchEnd={onTouchEnd}
-                                className={`relative w-full overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}
+                                className={`relative w-full flex-1 overflow-y-auto ${noBodyPadding ? 'p-0' : 'p-6'}`}
                             >
                                 {body}
                             </div>
 
                             {/* FOOTER */}
-                            <div className="flex flex-col gap-2 p-6 md:p-6 mb-12 md:mb-0">
+                            <div className="flex flex-col gap-2 p-6 pb-8 md:p-6 md:mb-0 bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800 md:border-t-0">
                                 {/* Progress Bar (Moved above buttons) */}
                                 {currentStep && totalSteps && (
                                     <div className="hidden md:flex w-full justify-center mb-2">
@@ -315,7 +315,7 @@ const Modal: React.FC<ModalProps> = ({
                                             variant="outline"
                                             disabled={isLoading} // Only disable back if loading
                                             onClick={handleSecondaryAction}
-                                            className="w-auto flex-1 rounded-full h-[50px] text-[16px] !border-neutral-200 !border-[1px] hover:!border-black"
+                                            className="w-auto flex-1 rounded-full h-[50px] text-[16px] border-neutral-200! border! hover:border-black!"
                                         >
                                             {secondaryActionLabel}
                                         </Button>
@@ -345,8 +345,6 @@ const Modal: React.FC<ModalProps> = ({
                                 </div>
                                 {footer}
                             </div>
-                            {/* Spacer to push content up on mobile if short */}
-                            <div className="flex-grow md:hidden" />
                         </div>
                     </div>
                 </div>

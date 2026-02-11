@@ -8,7 +8,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const pathname = usePathname();
-    const isMainPage = pathname === '/';
+    const isMainPage = pathname === '/' || pathname === '/fr' || pathname === '/en';
 
     // Mobile:
     // Home: Categories visible -> pt-32 (approx)
@@ -49,7 +49,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
 
     return (
-        <div className={`${paddingBottom} ${isInbox ? 'h-full w-full bg-background overflow-hidden relative' : ''}`}>
+        <div className={`${paddingBottom} ${isInbox ? 'h-full w-full bg-background overflow-hidden relative' : 'min-h-screen relative'}`}>
             <div className={paddingTop}>
                 {children}
             </div>

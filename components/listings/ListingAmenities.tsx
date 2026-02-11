@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { IconType } from 'react-icons';
 import { SafeListing } from '@/types';
+import { useTranslations } from 'next-intl';
 
 interface ListingAmenitiesProps {
     listing: SafeListing;
@@ -43,40 +44,41 @@ interface ListingAmenitiesProps {
 const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
     listing
 }) => {
+    const t = useTranslations('listing.amenities');
+
     const amenities = [
-        { label: 'Traversant', icon: ArrowLeftRight, value: listing.isTraversant },
-        { label: 'Jardin', icon: Flower2, value: listing.hasGarden },
-        { label: 'Refait à neuf', icon: Hammer, value: listing.isRefurbished },
-        { label: 'Animaux acceptés', icon: PawPrint, value: listing.petsAllowed },
-        { label: 'Cuisine équipée', icon: Utensils, value: listing.isKitchenEquipped },
-        { label: 'Exposition Sud', icon: Sun, value: listing.isSouthFacing },
-        { label: 'Rangements', icon: Box, value: listing.hasStorage },
-        { label: 'Fibre optique', icon: Wifi, value: listing.hasFiber },
-        { label: 'Local vélo', icon: Bike, value: listing.hasBikeRoom },
-        { label: 'Laverie / Lave-linge', icon: Shirt, value: listing.hasLaundry },
-        { label: 'Proche transports', icon: Train, value: listing.isNearTransport },
-        { label: 'Digicode', icon: Key, value: listing.hasDigicode },
-        { label: 'Interphone', icon: Shield, value: listing.hasIntercom },
-        { label: 'Gardien', icon: User, value: listing.hasCaretaker },
-        { label: 'Porte blindée', icon: DoorOpen, value: listing.hasArmoredDoor },
-        { label: 'Quartier calme', icon: VolumeX, value: listing.isQuietArea },
-        { label: 'Espaces verts', icon: Trees, value: listing.isNearGreenSpace },
-        { label: 'Écoles à proximité', icon: School, value: listing.isNearSchools },
-        { label: 'Commerces à proximité', icon: ShoppingBag, value: listing.isNearShops },
-        { label: 'Hôpital à proximité', icon: Stethoscope, value: listing.isNearHospital },
-        { label: 'Ascenseur', icon: ArrowUpFromLine, value: listing.hasElevator },
-        { label: 'Accessible PMR', icon: Accessibility, value: listing.isAccessible },
-        { label: 'Portes automatiques', icon: Zap, value: listing.hasAutomaticDoors },
-        { label: 'Dernier étage', icon: ArrowUpFromLine, value: listing.isLastFloor },
-        { label: 'Lumineux', icon: Sun, value: listing.isBright },
-        { label: 'Sans vis-à-vis', icon: Eye, value: listing.hasNoOpposite },
-        { label: 'Vue dégagée', icon: Eye, value: listing.hasView },
-        { label: 'Calme', icon: VolumeX, value: listing.isQuiet },
-        { label: 'Piscine', icon: Waves, value: listing.hasPool },
-        { label: 'Baignoire', icon: Bath, value: listing.hasBathtub },
-        { label: 'Climatisation', icon: ThermometerSnowflake, value: listing.hasAirConditioning },
-        { label: 'Idéal étudiant', icon: GraduationCap, value: listing.isStudentFriendly },
-        { label: 'Conciergerie', icon: ConciergeBell, value: listing.hasConcierge },
+        { label: t('wifi'), icon: Wifi, value: listing.hasFiber },
+        { label: t('garden'), icon: Flower2, value: listing.hasGarden },
+        { label: t('refurbished'), icon: Hammer, value: listing.isRefurbished },
+        { label: t('pets'), icon: PawPrint, value: listing.petsAllowed },
+        { label: t('kitchen'), icon: Utensils, value: listing.isKitchenEquipped },
+        { label: t('south'), icon: Sun, value: listing.isSouthFacing },
+        { label: t('storage'), icon: Box, value: listing.hasStorage },
+        { label: t('bikeRoom'), icon: Bike, value: listing.hasBikeRoom },
+        { label: t('laundry'), icon: Shirt, value: listing.hasLaundry },
+        { label: t('transport'), icon: Train, value: listing.isNearTransport },
+        { label: t('digicode'), icon: Key, value: listing.hasDigicode },
+        { label: t('intercom'), icon: Shield, value: listing.hasIntercom },
+        { label: t('caretaker'), icon: User, value: listing.hasCaretaker },
+        { label: t('armoredDoor'), icon: DoorOpen, value: listing.hasArmoredDoor },
+        { label: t('quietArea'), icon: VolumeX, value: listing.isQuietArea },
+        { label: t('greenSpace'), icon: Trees, value: listing.isNearGreenSpace },
+        { label: t('schools'), icon: School, value: listing.isNearSchools },
+        { label: t('shops'), icon: ShoppingBag, value: listing.isNearShops },
+        { label: t('hospital'), icon: Stethoscope, value: listing.isNearHospital },
+        { label: t('elevator'), icon: ArrowUpFromLine, value: listing.hasElevator },
+        { label: t('accessible'), icon: Accessibility, value: listing.isAccessible },
+        { label: t('automaticDoors'), icon: Zap, value: listing.hasAutomaticDoors },
+        { label: t('lastFloor'), icon: ArrowUpFromLine, value: listing.isLastFloor },
+        { label: t('bright'), icon: Sun, value: listing.isBright },
+        { label: t('noOpposite'), icon: Eye, value: listing.hasNoOpposite },
+        { label: t('view'), icon: Eye, value: listing.hasView },
+        { label: t('quiet'), icon: VolumeX, value: listing.isQuiet },
+        { label: t('pool'), icon: Waves, value: listing.hasPool },
+        { label: t('bathtub'), icon: Bath, value: listing.hasBathtub },
+        { label: t('airConditioning'), icon: ThermometerSnowflake, value: listing.hasAirConditioning },
+        { label: t('student'), icon: GraduationCap, value: listing.isStudentFriendly },
+        { label: t('concierge'), icon: ConciergeBell, value: listing.hasConcierge },
     ].filter((item) => item.value);
 
     if (amenities.length === 0) {
@@ -86,7 +88,7 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
     return (
         <div className="flex flex-col gap-6">
             <div className="text-xl font-semibold">
-                Les atouts
+                {t('title')}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {amenities.map((item) => (

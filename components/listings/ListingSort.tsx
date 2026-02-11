@@ -5,17 +5,20 @@ import { useCallback, useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 import qs from "query-string";
 
+import { useTranslations } from 'next-intl';
+
 const ListingSort = () => {
     const params = useSearchParams();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const t = useTranslations('home');
 
     const currentSort = params?.get('sort') || '';
 
     const opts = [
-        { label: 'Nouveautés', value: '' }, // Default
-        { label: 'Prix croissant', value: 'price_asc' },
-        { label: 'Prix décroissant', value: 'price_desc' },
+        { label: t('newest'), value: '' }, // Default
+        { label: t('priceAsc'), value: 'price_asc' },
+        { label: t('priceDesc'), value: 'price_desc' },
     ];
 
     const handleSort = useCallback((value: string) => {
@@ -39,7 +42,7 @@ const ListingSort = () => {
         setIsOpen(false);
     }, [router, params]);
 
-    const activeLabel = opts.find(o => o.value === currentSort)?.label || 'Trier par';
+    const activeLabel = opts.find(o => o.value === currentSort)?.label || t('sortBy');
 
     return (
         <div className="relative">

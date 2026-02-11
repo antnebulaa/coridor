@@ -11,15 +11,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { code, connectionId } = body;
+    const { code, connectionId, locale = 'fr' } = body;
 
     if (!code) {
         return NextResponse.json({ error: "Missing code" }, { status: 400 });
     }
 
     try {
-        const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        const redirectUri = `${origin}/dashboard/finances`;
+        const host = request.headers.get('host');
+        const protocol = host?.includes('localhost') ? 'http' : 'http';
+        const origin = `${protocol}://${host}`; // Force Host header
+        // Fixed URI via Bouncer
+        const redirectUri = `${origin}/api/powens/callback`;
 
         // 1. Exchange code for token
         const tokenData = await getPowensToken(code, redirectUri);
@@ -28,28 +31,96 @@ export async function POST(request: Request) {
             throw new Error("No access token received");
         }
 
-        // 2. Persist Connection
-        // If connectionId is provided (from widget), we can verify it.
-        // But for now, just store the token.
+        const accessToken = tokenData.access_token;
+        const refreshToken = tokenData.refresh_token;
+        const tokenExpiresIn = tokenData.expires_in;
+        const tokenExpiresAt = new Date(Date.now() + tokenExpiresIn * 1000);
 
-        // Check if connection already exists for this user?
-        // We'll create a new one or update active one?
-        // For MVP: Upsert based on Connection ID from token? 
-        // Powens token response might give `connection_id` or `user_id` scope.
-        // Actually, tokenData usually contains `connection_id` if flow was for specific connection?
-        // Let's assume one main connection for now or just create new.
+        // 2. Fetch Transactions (Transient - In Memory Only)
+        // We need to fetch right away to filter and save the initial batch
+        const { getPowensTransactions } = await import("@/app/lib/powens"); // Dynamic import to avoid circ dep if any
+        const transactionsData = await getPowensTransactions(accessToken);
+        const transactions = transactionsData.transactions || [];
 
-        const connection = await prisma.bankConnection.create({
-            data: {
+        // 3. Privacy Filtering (Landlord Version) 🕵️‍♂️
+        console.log(`[Sherlock Landlord] Analyzing ${transactions.length} transactions...`);
+
+        const validTransactions = transactions.filter((tx: any) => {
+            const amount = tx.value;
+            if (amount <= 0) return false; // Landlords want INCOME (Credits)
+
+            const label = (tx.custom_wording || tx.wording || tx.original_wording || '').toLowerCase();
+
+            // Rule: Explicit "Loyer"
+            // We only save incoming rent payments.
+            if (label.includes('loyer')) return true;
+
+            return false;
+        });
+
+        console.log(`[Sherlock Landlord] Found ${validTransactions.length} valid rent receipts.`);
+
+        // 4. Persistence
+
+        // A. Save Connection
+        const connection = await prisma.bankConnection.upsert({
+            where: {
+                userId_connectionId: {
+                    userId: currentUser.id,
+                    connectionId: connectionId ? String(connectionId) : 'powens_landlord'
+                }
+            },
+            update: {
+                accessToken,
+                refreshToken,
+                tokenExpiresAt,
+                lastSyncedAt: new Date(),
+                isActive: true
+            },
+            create: {
                 userId: currentUser.id,
-                accessToken: tokenData.access_token,
-                refreshToken: tokenData.refresh_token,
-                tokenExpiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000) : null,
-                connectionId: connectionId ? String(connectionId) : null
+                connectionId: connectionId ? String(connectionId) : 'powens_landlord',
+                accessToken,
+                refreshToken,
+                tokenExpiresAt,
+                lastSyncedAt: new Date(),
+                provider: 'POWENS'
             }
         });
 
-        return NextResponse.json(connection);
+        // B. Save Filtered Transactions
+        for (const tx of validTransactions) {
+            await prisma.bankTransaction.upsert({
+                where: {
+                    bankConnectionId_remoteId: {
+                        bankConnectionId: connection.id,
+                        remoteId: tx.id.toString()
+                    }
+                },
+                update: {
+                    date: new Date(tx.date || tx.rdate),
+                    label: tx.custom_wording || tx.wording || tx.original_wording,
+                    amount: tx.value,
+                    currency: tx.original_currency?.id || 'EUR',
+                    category: 'Rent Income',
+                    isProcessed: false
+                },
+                create: {
+                    bankConnectionId: connection.id,
+                    remoteId: tx.id.toString(),
+                    date: new Date(tx.date || tx.rdate),
+                    label: tx.custom_wording || tx.wording || tx.original_wording,
+                    amount: tx.value,
+                    currency: tx.original_currency?.id || 'EUR',
+                    category: 'Rent Income'
+                }
+            });
+        }
+
+        return NextResponse.json({
+            connection,
+            transactionsSaved: validTransactions.length
+        });
 
     } catch (error: any) {
         console.error("Powens Connect Error:", error);

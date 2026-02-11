@@ -6,6 +6,7 @@ import useRealtimeNotifications from "./useRealtimeNotifications";
 interface UserCounters {
     unreadCount: number;
     hasPendingAlert: boolean;
+    notificationCount: number;
     isLoading: boolean;
 }
 
@@ -13,6 +14,7 @@ const useUserCounters = (currentUser?: any) => {
     const [counters, setCounters] = useState<UserCounters>({
         unreadCount: 0,
         hasPendingAlert: false,
+        notificationCount: 0,
         isLoading: true
     });
 
@@ -29,6 +31,7 @@ const useUserCounters = (currentUser?: any) => {
             setCounters({
                 unreadCount: data.unreadCount,
                 hasPendingAlert: data.hasPendingAlert,
+                notificationCount: data.notificationCount,
                 isLoading: false
             });
         } catch (error) {

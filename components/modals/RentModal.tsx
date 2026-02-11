@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useMemo, useState, useEffect, useRef } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import useRentModal from "@/hooks/useRentModal";
@@ -20,10 +21,11 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2 } from "lucide-react";
-import { calculateRentControl } from "@/app/properties/[listingId]/edit/components/rentControlUtils";
-import VisitsSection from "@/app/properties/[listingId]/edit/components/VisitsSection";
-import PriceAssistantModal from "@/app/properties/[listingId]/edit/components/PriceAssistantModal";
+import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2 } from "lucide-react";
+import { calculateRentControl as calcRent } from "@/utils/rentUtils";
+import { useTranslations } from 'next-intl';
+import VisitsSection from "@/app/[locale]/properties/[listingId]/edit/components/VisitsSection";
+import PriceAssistantModal from "@/app/[locale]/properties/[listingId]/edit/components/PriceAssistantModal";
 import { SafeListing } from "@/types";
 import CustomToast from "../ui/CustomToast";
 import DarkActionButtonFlex from "../ui/DarkActionButtonFlex";
@@ -67,6 +69,7 @@ const RentModal = () => {
     const router = useRouter();
     const rentModal = useRentModal();
     const isRoom = !!rentModal.propertyContext || rentModal.editingListing?.rentalUnit?.type === 'PRIVATE_ROOM';
+    const t = useTranslations('rentModal');
 
     const Map = useMemo(() => dynamic(() => import('../Map'), {
         ssr: false
@@ -249,7 +252,7 @@ const RentModal = () => {
                 isFurnished: true,
             };
             const city = location?.label?.split(',')[0] || '';
-            const result = calculateRentControl(mockListing as any, city);
+            const result = calcRent(mockListing as any, city);
             setRentControlData(result);
         }
     }, [location, surfaceValue, roomCount]);
@@ -286,14 +289,14 @@ const RentModal = () => {
     const onNext = () => {
         // Validation for Category Step
         if (step === STEPS.CATEGORY && !category) {
-            return toast.error("Veuillez choisir une catégorie de logement");
+            return toast.error(t('errors.categoryRequired'));
         }
 
         // Validation for Details Step
         if (step === STEPS.DETAILS) {
             if (category === 'Appartement') {
-                if (!watch('totalFloors')) return toast.error("Veuillez indiquer le nombre d'étages");
-                if (!watch('floor')) return toast.error("Veuillez indiquer l'étage du logement");
+                if (!watch('totalFloors')) return toast.error(t('errors.floorsRequired'));
+                if (!watch('floor')) return toast.error(t('errors.floorRequired'));
             }
         }
 
@@ -323,10 +326,10 @@ const RentModal = () => {
             const currentRoomBedType = watch(`rooms.${currentRoomIndex}.bedType`);
 
             // Auto-set Name
-            setValue(`rooms.${currentRoomIndex}.name`, `Chambre ${currentRoomIndex + 1}`);
+            setValue(`rooms.${currentRoomIndex}.name`, t('rooms.details.title', { number: currentRoomIndex + 1 }));
 
-            if (!currentRoomSurface) return toast.error("La surface est requise.");
-            if (!currentRoomBedType) return toast.error("Le type de lit est requis.");
+            if (!currentRoomSurface) return toast.error(t('errors.surfaceRequired'));
+            if (!currentRoomBedType) return toast.error(t('errors.bedTypeRequired'));
 
             if (currentRoomIndex < roomCount - 1) {
                 setCurrentRoomIndex((value) => value + 1);
@@ -344,8 +347,8 @@ const RentModal = () => {
 
         setIsLoading(true);
 
-        const generatedTitle = `${data.category} à ${data.location?.label || 'Ville inconnue'}`;
-        const generatedDescription = `Bien de type ${data.category} disponible à la location. Contactez le propriétaire pour plus d'informations.`;
+        const generatedTitle = t('description.generatedTitle', { category: data.category, city: data.location?.label?.split(',')[0] || data.location?.label || '' });
+        const generatedDescription = t('description.generatedDesc', { category: data.category });
 
         const finalData = {
             ...data,
@@ -359,10 +362,10 @@ const RentModal = () => {
         if (rentModal.editingListing) {
             axios.put(`/api/listings/${rentModal.editingListing.id}`, finalData)
                 .then(() => {
-                    toast.custom((t) => (
+                    toast.custom((tToast) => (
                         <CustomToast
-                            t={t}
-                            message="Annonce mise à jour !"
+                            t={tToast}
+                            message={t('toasts.updated')}
                             type="success"
                         />
                     ));
@@ -370,10 +373,10 @@ const RentModal = () => {
                     setStep(STEPS.SUCCESS);
                 })
                 .catch((error) => {
-                    const errorMsg = error?.response?.data?.error || "Une erreur s'est produite.";
-                    toast.custom((t) => (
+                    const errorMsg = error?.response?.data?.error || t('toasts.error');
+                    toast.custom((tToast) => (
                         <CustomToast
-                            t={t}
+                            t={tToast}
                             message={errorMsg}
                             type="error"
                         />
@@ -385,10 +388,10 @@ const RentModal = () => {
         } else {
             axios.post('/api/listings', finalData)
                 .then((response) => {
-                    toast.custom((t) => (
+                    toast.custom((tToast) => (
                         <CustomToast
-                            t={t}
-                            message="Annonce créée !"
+                            t={tToast}
+                            message={t('toasts.created')}
                             type="success"
                         />
                     ));
@@ -397,10 +400,10 @@ const RentModal = () => {
                     setStep(STEPS.SUCCESS);
                 })
                 .catch((error) => {
-                    const errorMsg = error?.response?.data?.error || "Une erreur s'est produite.";
-                    toast.custom((t) => (
+                    const errorMsg = error?.response?.data?.error || t('toasts.error');
+                    toast.custom((tToast) => (
                         <CustomToast
-                            t={t}
+                            t={tToast}
                             message={errorMsg}
                             type="error"
                         />
@@ -414,20 +417,20 @@ const RentModal = () => {
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.SUCCESS) {
-            return 'Terminer';
+            return t('actions.finish');
         }
         if (step === STEPS.AVAILABILITY) {
-            return 'Terminer';
+            return t('actions.finish');
         }
         if (step === STEPS.INTRO_CHARACTERISTICS || step === STEPS.INTRO_ASSETS || step === STEPS.INTRO_RENTAL) {
-            return 'Commencer';
+            return t('actions.start');
         }
         if (step === STEPS.PRICE || step === STEPS.ROOM_PRICE || rentModal.mode === 'ROOM_CONFIG') {
-            if (isPublished) return 'Publier l\'annonce';
-            return rentModal.editingListing ? 'Enregistrer' : 'Créer';
+            if (isPublished) return t('actions.publish');
+            return rentModal.editingListing ? t('actions.save') : t('actions.create');
         }
 
-        return 'Suivant';
+        return t('actions.next');
     }, [step, rentModal.editingListing, isPublished]);
 
     const secondaryActionLabel = useMemo(() => {
@@ -447,7 +450,7 @@ const RentModal = () => {
             return undefined;
         }
 
-        return 'Retour';
+        return t('actions.back');
     }, [step, rentModal.editingListing]);
 
     let bodyContent = undefined;
@@ -456,15 +459,15 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Parlez-nous de votre logement"
-                    subtitle="Commençons par les caractéristiques principales."
+                    title={t('steps.intro.title')}
+                    subtitle={t('steps.intro.subtitle')}
                 />
                 <div className="flex flex-col items-center justify-center py-8">
                     <div className="w-[200px] h-[200px] bg-neutral-100 rounded-full flex items-center justify-center mb-6">
                         <Home size={80} className="text-neutral-400" strokeWidth={1} />
                     </div>
                     <div className="text-center text-neutral-500 max-w-md">
-                        Dans cette première partie, nous allons définir le type de logement, sa localisation, sa surface et ses caractéristiques techniques.
+                        {t('steps.intro.description')}
                     </div>
                 </div>
             </div>
@@ -475,8 +478,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Parmi les propositions suivantes, laquelle décrit le mieux votre logement ?"
-                    subtitle="Choisissez une catégorie"
+                    title={t('steps.category.title')}
+                    subtitle={t('steps.category.subtitle')}
                 />
                 <div
                     className="
@@ -564,8 +567,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Quelle est la surface du logement ?"
-                    subtitle="Indiquez la surface habitable en m²"
+                    title={t('steps.surface.title')}
+                    subtitle={t('steps.surface.subtitle')}
                 />
                 <div className="flex items-center justify-center py-10">
                     <div className="relative w-full max-w-[200px]">
@@ -615,13 +618,12 @@ const RentModal = () => {
                 <Heading
                     title={isRoom ? (
                         <>
-                            Caractéristiques de <br />
-                            <span className="text-gray-900">{rentModal.editingListing?.rentalUnit?.name || rentModal.editingListing?.title || "la chambre"}</span>
+                            {t('steps.info.titleRoom', { name: rentModal.editingListing?.rentalUnit?.name || rentModal.editingListing?.title || "la chambre" })}
                         </>
                     ) : (
-                        "Combien de pièces ?"
+                        t('steps.info.title')
                     )}
-                    subtitle={isRoom ? "Dites-nous en plus sur cette chambre" : "Détaillez la configuration de votre bien"}
+                    subtitle={isRoom ? t('steps.info.subtitleRoom') : t('steps.info.subtitle')}
                 />
 
                 {/* Link to Physical Room logic remains here for Room mode if applicable */}
@@ -629,7 +631,7 @@ const RentModal = () => {
                     <div className="flex flex-col gap-2 mb-4">
                         {watch('targetRoomId') ? (
                             <div className="bg-neutral-50 p-4 rounded-md border border-neutral-200">
-                                <div className="text-xs font-medium text-neutral-500 mb-1 uppercase tracking-wider">Pièce associée</div>
+                                <div className="text-xs font-medium text-neutral-500 mb-1 uppercase tracking-wider">{t('steps.info.roomLinked')}</div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="p-2 bg-white rounded-full border border-neutral-100">
@@ -643,15 +645,15 @@ const RentModal = () => {
                                         onClick={() => setCustomValue('targetRoomId', '')}
                                         className="text-sm text-neutral-500 hover:text-black underline cursor-pointer transition select-none"
                                     >
-                                        Changer
+                                        {t('steps.info.linkRoomChange')}
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <>
-                                <label className="font-medium">Lier à une pièce existante (Optionnel)</label>
+                                <label className="font-medium">{t('steps.info.linkRoom')}</label>
                                 <div className="text-xs text-neutral-500 mb-1">
-                                    Sélectionnez une chambre créée lors de l&apos;ajout du bien pour récupérer ses photos automatiquement.
+                                    {t('steps.info.linkRoomHint')}
                                 </div>
                                 <div className="relative">
                                     <div
@@ -661,7 +663,7 @@ const RentModal = () => {
                                         <span className={!watch('targetRoomId') ? 'text-neutral-500' : ''}>
                                             {watch('targetRoomId')
                                                 ? (rentModal.propertyContext.rooms.find((r: any) => r.id === watch('targetRoomId'))?.name)
-                                                : "-- Nouvelle chambre --"
+                                                : t('steps.info.linkRoomNew')
                                             }
                                         </span>
                                         <ChevronDown size={20} className="text-neutral-500" />
@@ -676,7 +678,7 @@ const RentModal = () => {
                                                 }}
                                                 className="p-3 hover:bg-neutral-100 cursor-pointer text-neutral-500 italic"
                                             >
-                                                -- Nouvelle chambre --
+                                                {t('steps.info.linkRoomNew')}
                                             </div>
                                             {rentModal.propertyContext.rooms.map((room: any) => (
                                                 <div
@@ -689,10 +691,10 @@ const RentModal = () => {
                                                             const roomImages = room.images.map((img: any) => img.url);
                                                             setCustomValue('imageSrcs', roomImages);
                                                             setCustomValue('imageSrcs', roomImages);
-                                                            toast.custom((t) => (
+                                                            toast.custom((tToast) => (
                                                                 <CustomToast
-                                                                    t={t}
-                                                                    message="Photos de la chambre importées !"
+                                                                    t={tToast}
+                                                                    message={t('steps.info.photosImported')}
                                                                     type="success"
                                                                 />
                                                             ));
@@ -780,14 +782,14 @@ const RentModal = () => {
                 {!isRoom && (
                     <>
                         <Counter
-                            title="Nombre de pièces"
-                            subtitle="Salon + Salle à manger + Chambres"
+                            title={t('labels.roomCount')}
+                            subtitle={t('steps.info.subtitle')}
                             value={roomCount}
                             onChange={(value) => setCustomValue('roomCount', value)}
                         />
                         <hr />
                         <Counter
-                            title="Chambres"
+                            title={t('labels.bedroomCount')}
                             subtitle="Nombre de pièces à dormir"
                             value={bedroomCount}
                             onChange={(value) => {
@@ -856,24 +858,24 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Dites-nous un peu plus sur votre bien"
-                    subtitle="Ces informations sont importantes pour les locataires."
+                    title={t('steps.details.title')}
+                    subtitle={t('steps.details.subtitle')}
                 />
 
                 <div className="flex flex-col gap-2">
-                    <label className="font-semibold text-lg">Votre bien dispose t-il d’une cuisine séparée ?</label>
+                    <label className="font-semibold text-lg">{t('steps.details.kitchen')}</label>
                     <div className="flex gap-4">
                         <div
                             onClick={() => setCustomValue('hasSeparateKitchen', true)}
                             className={`flex-1 p-4 border-2 rounded-xl flex items-center justify-center gap-2 hover:border-black transition cursor-pointer ${watch('hasSeparateKitchen') === true ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
                         >
-                            <span className="font-semibold">Oui</span>
+                            <span className="font-semibold">{t('steps.details.kitchenYes')}</span>
                         </div>
                         <div
                             onClick={() => setCustomValue('hasSeparateKitchen', false)}
                             className={`flex-1 p-4 border-2 rounded-xl flex items-center justify-center gap-2 hover:border-black transition cursor-pointer ${watch('hasSeparateKitchen') === false ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
                         >
-                            <span className="font-semibold">Non</span>
+                            <span className="font-semibold">{t('steps.details.kitchenNo')}</span>
                         </div>
                     </div>
                 </div>
@@ -885,7 +887,7 @@ const RentModal = () => {
                             <div className="w-1/2">
                                 <SoftInput
                                     id="totalFloors"
-                                    label="Nombre d'étages"
+                                    label={t('steps.details.totalFloors')}
                                     type="number"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -898,7 +900,7 @@ const RentModal = () => {
                             <div className="w-1/2">
                                 <SoftInput
                                     id="floor"
-                                    label="Votre étage"
+                                    label={t('steps.details.floor')}
                                     type="number"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -915,7 +917,7 @@ const RentModal = () => {
                 <hr />
 
                 <div className="flex flex-col gap-4">
-                    <label className="font-semibold text-lg">Période de construction</label>
+                    <label className="font-semibold text-lg">{t('steps.details.constructionPeriod')}</label>
                     <div className="grid grid-cols-2 gap-3">
                         {['Avant 1949', '1949 - 1974', '1975 - 1989', '1990 - 2005', '2005+'].map((period) => (
                             <div
@@ -960,20 +962,20 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Performance énergétique"
-                    subtitle="Indiquez le DPE, le GES et les détails énergétiques."
+                    title={t('steps.energy.title')}
+                    subtitle={t('steps.energy.subtitle')}
                 />
 
                 {/* DPE */}
                 <div>
-                    <label className="block text-lg font-medium mb-4">Diagnostic de Performance Énergétique (DPE)</label>
+                    <label className="block text-lg font-medium mb-4">{t('steps.energy.dpe')}</label>
                     <div className="grid grid-cols-7 gap-2">
                         {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
                             <div
                                 key={grade}
                                 onClick={() => setCustomValue('dpe', grade)}
                                 className={`
-                                    aspect-square rounded-xl border-1 flex items-center justify-center cursor-pointer transition font-bold text-xl
+                                    aspect-square rounded-xl border flex items-center justify-center cursor-pointer transition font-bold text-xl
                                     ${watch('dpe') === grade
                                         ? dpeColors[grade]
                                         : 'border-neutral-200 hover:border-neutral-400 text-neutral-600'}
@@ -987,14 +989,14 @@ const RentModal = () => {
 
                 {/* GES */}
                 <div>
-                    <label className="block text-lg font-medium mb-4">Gaz à Effet de Serre (GES)</label>
+                    <label className="block text-lg font-medium mb-4">{t('steps.energy.ges')}</label>
                     <div className="grid grid-cols-7 gap-2">
                         {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((grade) => (
                             <div
                                 key={grade}
                                 onClick={() => setCustomValue('ges', grade)}
                                 className={`
-                                    aspect-square rounded-xl border-1 flex items-center justify-center cursor-pointer transition font-bold text-xl
+                                    aspect-square rounded-xl border flex items-center justify-center cursor-pointer transition font-bold text-xl
                                     ${watch('ges') === grade
                                         ? gesColors[grade]
                                         : 'border-neutral-200 hover:border-neutral-400 text-neutral-600'}
@@ -1008,12 +1010,12 @@ const RentModal = () => {
 
                 {/* Energy Costs */}
                 <div>
-                    <label className="block text-lg font-medium mb-4">Estimation des coûts annuels</label>
+                    <label className="block text-lg font-medium mb-4">{t('steps.energy.costs')}</label>
                     <div className="flex items-center gap-4">
                         <div className="w-1/2">
                             <SoftInput
                                 id="energy_cost_min"
-                                label="Minimum (€)"
+                                label={t('steps.energy.min')}
                                 type="number"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
@@ -1025,7 +1027,7 @@ const RentModal = () => {
                         <div className="w-1/2">
                             <SoftInput
                                 id="energy_cost_max"
-                                label="Maximum (€)"
+                                label={t('steps.energy.max')}
                                 type="number"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
@@ -1042,7 +1044,7 @@ const RentModal = () => {
                 {/* Technical Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-2 md:col-span-1">
-                        <label className="block text-sm font-medium text-neutral-500 mb-2">Année du DPE</label>
+                        <label className="block text-sm font-medium text-neutral-500 mb-2">{t('steps.energy.dpeYear')}</label>
                         <SoftInput
                             id="dpe_year"
                             label=""
@@ -1059,18 +1061,22 @@ const RentModal = () => {
                     <hr />
 
                     <div className="col-span-2 md:col-span-1">
-                        <label className="block text-sm font-medium text-neutral-500 mb-2">Type de vitrage</label>
+                        <label className="block text-sm font-medium text-neutral-500 mb-2">{t('steps.energy.glazing')}</label>
                         <div className="flex flex-col gap-2">
-                            {['Double vitrage', 'Triple vitrage', 'Simple vitrage'].map((type) => (
+                            {[
+                                { label: t('steps.energy.glazingTypes.double'), value: 'Double vitrage' },
+                                { label: t('steps.energy.glazingTypes.triple'), value: 'Triple vitrage' },
+                                { label: t('steps.energy.glazingTypes.single'), value: 'Simple vitrage' }
+                            ].map((item) => (
                                 <div
-                                    key={type}
-                                    onClick={() => setCustomValue('glazingType', type)}
+                                    key={item.value}
+                                    onClick={() => setCustomValue('glazingType', item.value)}
                                     className={`
                                         p-3 border rounded-lg cursor-pointer transition text-sm font-medium
-                                        ${watch('glazingType') === type ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}
+                                        ${watch('glazingType') === item.value ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}
                                     `}
                                 >
-                                    {type}
+                                    {item.label}
                                 </div>
                             ))}
                         </div>
@@ -1078,18 +1084,23 @@ const RentModal = () => {
                 </div>
 
                 <div className="col-span-2">
-                    <label className="block text-lg font-semibold mb-4">Système de chauffage</label>
+                    <label className="block text-lg font-semibold mb-4">{t('steps.energy.heating')}</label>
                     <div className="grid grid-cols-2 gap-3">
-                        {['Individuel électrique', 'Individuel gaz', 'Collectif', 'Autre'].map((sys) => (
+                        {[
+                            { label: t('steps.energy.heatingTypes.electric_ind'), value: 'Individuel électrique' },
+                            { label: t('steps.energy.heatingTypes.gas_ind'), value: 'Individuel gaz' },
+                            { label: t('steps.energy.heatingTypes.collective'), value: 'Collectif' },
+                            { label: t('steps.energy.heatingTypes.other'), value: 'Autre' }
+                        ].map((item) => (
                             <div
-                                key={sys}
-                                onClick={() => setCustomValue('heatingSystem', sys)}
+                                key={item.value}
+                                onClick={() => setCustomValue('heatingSystem', item.value)}
                                 className={`
                                     p-4 border-2 rounded-xl cursor-pointer transition font-medium text-center
-                                    ${watch('heatingSystem') === sys ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}
+                                    ${watch('heatingSystem') === item.value ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-neutral-300'}
                                 `}
                             >
-                                {sys}
+                                {item.label}
                             </div>
                         ))}
                     </div>
@@ -1103,24 +1114,24 @@ const RentModal = () => {
     // DESCRIPTION STEP - Adjective
     if (step === STEPS.DESCRIPTION) {
         const adjectives = [
-            { label: "Lumineux", icon: Sun },
-            { label: "Traversant", icon: ArrowRightLeft },
-            { label: "Haussmannien", icon: Landmark },
-            { label: "Atypique", icon: Star },
-            { label: "Moderne", icon: Zap },
-            { label: "Neuf", icon: Sparkles },
-            { label: "Rénové", icon: Paintbrush },
-            { label: "Calme", icon: Leaf },
-            { label: "Chaleureux", icon: Flame },
-            { label: "Familial", icon: Users },
-            { label: "De standing", icon: Gem }
+            { label: t('steps.description.adjectives.bright'), icon: Sun },
+            { label: t('steps.description.adjectives.crossing'), icon: ArrowRightLeft },
+            { label: t('steps.description.adjectives.haussmann'), icon: Landmark },
+            { label: t('steps.description.adjectives.atypical'), icon: Star },
+            { label: t('steps.description.adjectives.modern'), icon: Zap },
+            { label: t('steps.description.adjectives.new'), icon: Sparkles },
+            { label: t('steps.description.adjectives.renovated'), icon: Paintbrush },
+            { label: t('steps.description.adjectives.quiet'), icon: Leaf },
+            { label: t('steps.description.adjectives.warm'), icon: Flame },
+            { label: t('steps.description.adjectives.family'), icon: Users },
+            { label: t('steps.description.adjectives.luxury'), icon: Gem }
         ];
 
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Comment décririez-vous votre bien ?"
-                    subtitle="Choisissez un adjectif qui le qualifie le mieux"
+                    title={t('steps.description.title')}
+                    subtitle={t('steps.description.subtitle')}
                 />
                 <div className="flex flex-wrap gap-3 items-center justify-center">
                     {adjectives.map((item) => (
@@ -1169,15 +1180,15 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Mettez votre bien en valeur"
-                    subtitle="Ajoutez les équipements, les photos et une description détaillée."
+                    title={t('steps.introAssets.title')}
+                    subtitle={t('steps.introAssets.subtitle')}
                 />
                 <div className="flex flex-col items-center justify-center py-8">
                     <div className="w-[200px] h-[200px] bg-neutral-100 rounded-full flex items-center justify-center mb-6">
                         <Sparkles size={80} className="text-neutral-400" strokeWidth={1} />
                     </div>
                     <div className="text-center text-neutral-500 max-w-md">
-                        C’est le moment de séduire les locataires ! Listez les atouts de votre logement et ajoutez de belles photos.
+                        {t('steps.introAssets.description')}
                     </div>
                 </div>
             </div>
@@ -1187,43 +1198,43 @@ const RentModal = () => {
     if (step === STEPS.AMENITIES) {
         const amenityGroups = [
             {
-                title: "Les indispensables",
+                title: t('steps.amenities.groups.essentials'),
                 items: [
-                    { key: 'hasFiber', label: 'Fibre Optique', icon: Zap },
-                    { key: 'isKitchenEquipped', label: 'Cuisine Équipée', icon: Utensils },
-                    { key: 'hasLaundry', label: 'Lave-linge / Buanderie', icon: Shirt },
-                    { key: 'hasStorage', label: 'Rangements', icon: Package },
+                    { key: 'hasFiber', label: t('steps.amenities.items.fiber'), icon: Zap },
+                    { key: 'isKitchenEquipped', label: t('steps.amenities.items.kitchen'), icon: Utensils },
+                    { key: 'hasLaundry', label: t('steps.amenities.items.laundry'), icon: Shirt },
+                    { key: 'hasStorage', label: t('steps.amenities.items.storage'), icon: Package },
                 ]
             },
             {
-                title: "Caractéristiques",
+                title: t('steps.amenities.groups.features'),
                 items: [
-                    { key: 'hasGarden', label: 'Jardin', icon: Leaf },
-                    { key: 'isTraversant', label: 'Traversant', icon: ArrowRightLeft },
-                    { key: 'isSouthFacing', label: 'Orienté Sud', icon: Sun },
-                    { key: 'isRefurbished', label: 'Rénové', icon: Paintbrush },
-                    { key: 'petsAllowed', label: 'Animaux acceptés', icon: PawPrint },
+                    { key: 'hasGarden', label: t('steps.amenities.items.garden'), icon: Leaf },
+                    { key: 'isTraversant', label: t('steps.amenities.items.cross'), icon: ArrowRightLeft },
+                    { key: 'isSouthFacing', label: t('steps.amenities.items.south'), icon: Sun },
+                    { key: 'isRefurbished', label: t('steps.amenities.items.refurbished'), icon: Paintbrush },
+                    { key: 'petsAllowed', label: t('steps.amenities.items.pets'), icon: PawPrint },
                 ]
             },
             {
-                title: "Immeuble & Sécurité",
+                title: t('steps.amenities.groups.building'),
                 items: [
-                    { key: 'hasBikeRoom', label: 'Local Vélo', icon: Bike },
-                    { key: 'hasDigicode', label: 'Digicode', icon: KeyRound },
-                    { key: 'hasIntercom', label: 'Interphone', icon: Phone },
-                    { key: 'hasCaretaker', label: 'Gardien', icon: ShieldCheck },
-                    { key: 'hasArmoredDoor', label: 'Porte Blindée', icon: ShieldCheck },
+                    { key: 'hasBikeRoom', label: t('steps.amenities.items.bike'), icon: Bike },
+                    { key: 'hasDigicode', label: t('steps.amenities.items.digicode'), icon: KeyRound },
+                    { key: 'hasIntercom', label: t('steps.amenities.items.intercom'), icon: Phone },
+                    { key: 'hasCaretaker', label: t('steps.amenities.items.caretaker'), icon: ShieldCheck },
+                    { key: 'hasArmoredDoor', label: t('steps.amenities.items.armored'), icon: ShieldCheck },
                 ]
             },
             {
-                title: "Quartier",
+                title: t('steps.amenities.groups.location'),
                 items: [
-                    { key: 'isNearTransport', label: 'Proche Transports', icon: TrainFront },
-                    { key: 'isNearShops', label: 'Proche Commerces', icon: Star },
-                    { key: 'isNearSchools', label: 'Proche Écoles', icon: GraduationCap },
-                    { key: 'isNearGreenSpace', label: 'Espaces Verts', icon: TreePine },
-                    { key: 'isNearHospital', label: 'Proche Hôpital', icon: Stethoscope },
-                    { key: 'isQuietArea', label: 'Quartier Calme', icon: Moon },
+                    { key: 'isNearTransport', label: t('steps.amenities.items.transport'), icon: TrainFront },
+                    { key: 'isNearShops', label: t('steps.amenities.items.shops'), icon: Star },
+                    { key: 'isNearSchools', label: t('steps.amenities.items.schools'), icon: GraduationCap },
+                    { key: 'isNearGreenSpace', label: t('steps.amenities.items.park'), icon: TreePine },
+                    { key: 'isNearHospital', label: t('steps.amenities.items.hospital'), icon: Stethoscope },
+                    { key: 'isQuietArea', label: t('steps.amenities.items.quiet'), icon: Moon },
                 ]
             }
         ];
@@ -1231,8 +1242,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Quels sont les atouts de votre logement ?"
-                    subtitle="Sélectionnez les équipements disponibles."
+                    title={t('steps.amenities.title')}
+                    subtitle={t('steps.amenities.subtitle')}
                 />
 
                 <div className="flex flex-col gap-6">
@@ -1268,8 +1279,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Ajoutez des photos de votre bien"
-                    subtitle="Ajoutez au minimum 4 photos. Vous pourrez toujours en ajouter d'autres plus tard."
+                    title={t('steps.images.title')}
+                    subtitle={t('steps.images.subtitle')}
                 />
                 <MultiImageUpload
                     value={imageSrcs}
@@ -1284,15 +1295,15 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Finalisons votre annonce"
-                    subtitle="Définissez le type de location et le prix."
+                    title={t('steps.introRental.title')}
+                    subtitle={t('steps.introRental.subtitle')}
                 />
                 <div className="flex flex-col items-center justify-center py-8">
                     <div className="w-[200px] h-[200px] bg-neutral-100 rounded-full flex items-center justify-center mb-6">
                         <KeyRound size={80} className="text-neutral-400" strokeWidth={1} />
                     </div>
                     <div className="text-center text-neutral-500 max-w-md">
-                        Dernière étape ! Choisissez le type de contrat (Nu, Meublé, Colocation) et fixez le loyer.
+                        {t('steps.introRental.description')}
                     </div>
                 </div>
             </div>
@@ -1303,8 +1314,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Quel type de location proposez-vous ?"
-                    subtitle="Cela déterminera le type de bail."
+                    title={t('steps.rentalType.title')}
+                    subtitle={t('steps.rentalType.subtitle')}
                 />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div
@@ -1329,8 +1340,8 @@ const RentModal = () => {
                         `}
                     >
                         <Home size={30} />
-                        <div className="font-semibold">Location Nue</div>
-                        <div className="text-sm text-neutral-500">Logement loué vide à titre de résidence principale.</div>
+                        <div className="font-semibold">{t('steps.rentalType.options.bare.title')}</div>
+                        <div className="text-sm text-neutral-500">{t('steps.rentalType.options.bare.desc')}</div>
                     </div>
 
                     <div
@@ -1345,8 +1356,8 @@ const RentModal = () => {
                         `}
                     >
                         <Sparkles size={30} />
-                        <div className="font-semibold">Location Meublée</div>
-                        <div className="text-sm text-neutral-500">Logement loué avec meubles.</div>
+                        <div className="font-semibold">{t('steps.rentalType.options.furnished.title')}</div>
+                        <div className="text-sm text-neutral-500">{t('steps.rentalType.options.furnished.desc')}</div>
                     </div>
 
                     <div
@@ -1359,8 +1370,8 @@ const RentModal = () => {
                         `}
                     >
                         <Users size={30} />
-                        <div className="font-semibold">Colocation</div>
-                        <div className="text-sm text-neutral-500">Louez plusieurs chambres dans un même logement.</div>
+                        <div className="font-semibold">{t('steps.rentalType.options.colocation.title')}</div>
+                        <div className="text-sm text-neutral-500">{t('steps.rentalType.options.colocation.desc')}</div>
                     </div>
                 </div>
             </div>
@@ -1371,88 +1382,87 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Pour finir, fixez votre loyer"
-                    subtitle="Quel est le loyer mensuel ?"
+                    title={t('steps.price.title')}
+                    subtitle={t('steps.price.subtitle')}
                 />
                 <SoftInput
                     id="price"
-                    label="Loyer mensuel"
-                    formatPrice
+                    label={t('steps.price.label')}
                     type="number"
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    formatPrice
                     disabled={isLoading}
                     register={register}
                     errors={errors}
                     required
                 />
-                <hr />
                 <SoftInput
                     id="charges"
-                    label="Charges (mensuel)"
+                    label={t('steps.price.chargesLabel')}
                     type="number"
-                    formatPrice
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    formatPrice
                     disabled={isLoading}
                     register={register}
                     errors={errors}
-                    required
                 />
-                {/* Rent Control Section - Restored */}
-                {rentControlData?.isEligible && (
-                    <div className="bg-neutral-50 p-6 rounded-xl border border-neutral-200 flex flex-col gap-4">
-                        <div className="flex flex-row items-center justify-between">
-                            <h4 className="font-semibold flex items-center gap-2">
-                                <Info size={18} />
-                                Encadrement des loyers
-                            </h4>
-                            <span className="text-xs font-medium bg-neutral-200 px-2 py-1 rounded">
-                                {rentControlData.zone}
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <div className="flex justify-between text-sm text-neutral-600">
-                                <span>0 €</span>
-                                <span>Plafond: {rentControlData.maxRent} €</span>
-                                <span>+</span>
+                {rentControlData && (
+                    <div className="p-4 bg-neutral-100 rounded-xl flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                            <div className="font-semibold text-neutral-800">
+                                {t('rentControl.title')}
                             </div>
-                            <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden relative">
-                                <div
-                                    className={`h-full transition-all duration-500 rounded-full ${price > rentControlData.maxRent ? 'bg-primary' :
-                                        price >= rentControlData.maxRent * 0.95 ? 'bg-orange-500' : 'bg-emerald-500'
-                                        }`}
-                                    style={{ width: `${Math.min((price / (rentControlData.maxRent * 1.2)) * 100, 100)}%` }}
-                                />
-                                <div
-                                    className="absolute top-0 bottom-0 w-1 bg-black opacity-30"
-                                    style={{ left: `${(rentControlData.maxRent / (rentControlData.maxRent * 1.2)) * 100}%` }}
-                                />
+                            <div className="text-xs font-medium px-2 py-1 bg-white rounded-md border border-neutral-200 text-neutral-600">
+                                {t('rentControl.zone', { zone: rentControlData.zone })}
                             </div>
                         </div>
 
-                        <div className={`text-sm p-3 rounded-lg flex items-start gap-3 ${price > rentControlData.maxRent ? 'bg-rose-100 text-rose-800' :
-                            price >= rentControlData.maxRent * 0.95 ? 'bg-orange-100 text-orange-800' : 'bg-emerald-100 text-emerald-800'
-                            }`}>
-                            {price > rentControlData.maxRent ? <AlertTriangle className="shrink-0 mt-0.5" size={18} /> :
-                                price >= rentControlData.maxRent * 0.95 ? <Info className="shrink-0 mt-0.5" size={18} /> :
-                                    <CheckCircle className="shrink-0 mt-0.5" size={18} />}
-
-                            <div className="flex flex-col gap-1">
-                                <span className="font-medium">
-                                    {price > rentControlData.maxRent ? 'Loyer supérieur au plafond légal' :
-                                        price >= rentControlData.maxRent * 0.95 ? 'Loyer proche du plafond' : 'Loyer conforme'}
-                                </span>
-                                <span className="opacity-90">
-                                    {price > rentControlData.maxRent
-                                        ? `Le loyer dépasse le plafond estimé de ${rentControlData.maxRent} €. Cela peut être illégal.`
-                                        : `Ce loyer est en dessous du plafond légal.`}
-                                </span>
+                        <div className="flex justify-between items-end mt-1">
+                            <div className="text-sm text-neutral-500">
+                                {t('rentControl.max', { amount: rentControlData.maxRent })}
                             </div>
                         </div>
 
-                        <div className="text-xs text-neutral-400 mt-2">
-                            {rentControlData.message}
-                        </div>
+                        {/* Analysis based on current input */}
+                        {price && (
+                            <div className={`mt-3 pt-3 border-t border-neutral-200 flex items-start gap-2 text-sm ${parseFloat(price) > rentControlData.maxRent ? 'text-rose-600' :
+                                parseFloat(price) > rentControlData.maxRent * 0.9 ? 'text-amber-600' : 'text-emerald-600'
+                                }`}>
+                                {parseFloat(price) > rentControlData.maxRent ? (
+                                    <>
+                                        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                                        <div>
+                                            <div className="font-semibold">{t('rentControl.illegal')}</div>
+                                            <div className="text-xs mt-0.5 opacity-80">
+                                                {t('rentControl.illegalDesc', { amount: rentControlData.maxRent })}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : parseFloat(price) > rentControlData.maxRent * 0.9 ? (
+                                    <>
+                                        <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                                        <div>
+                                            <div className="font-semibold">{t('rentControl.close')}</div>
+                                            <div className="text-xs mt-0.5 opacity-80">
+                                                {t('rentControl.compliantDesc')}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle size={16} className="mt-0.5 shrink-0" />
+                                        <div>
+                                            <div className="font-semibold">{t('rentControl.compliant')}</div>
+                                            <div className="text-xs mt-0.5 opacity-80">
+                                                {t('rentControl.compliantDesc')}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -1463,15 +1473,15 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Configurons les chambres"
-                    subtitle={`Vous avez indiqué ${roomCount} chambres. Configurons-les une par une.`}
+                    title={t('rooms.intro.title')}
+                    subtitle={t('rooms.intro.subtitle', { count: roomCount })}
                 />
                 <div className="flex flex-col items-center justify-center py-8">
                     <div className="w-[200px] h-[200px] bg-neutral-100 rounded-full flex items-center justify-center mb-6">
                         <DoorOpen size={80} className="text-neutral-400" strokeWidth={1} />
                     </div>
                     <div className="text-center text-neutral-500 max-w-md">
-                        Pour une colocation, il est important de détailler chaque espace privatif.
+                        {t('rooms.intro.description')}
                     </div>
                 </div>
             </div>
@@ -1480,88 +1490,95 @@ const RentModal = () => {
 
     if (step === STEPS.ROOM_DETAILS) {
         bodyContent = (
-            <div key={currentRoomIndex} className="flex flex-col gap-8">
+            <div className="flex flex-col gap-8">
                 <Heading
-                    title={`Chambre ${currentRoomIndex + 1}`}
-                    subtitle="Caractéristiques de la chambre."
+                    title={t('rooms.details.title', { number: currentRoomIndex + 1 })}
+                    subtitle={t('rooms.details.subtitle')}
                 />
 
-                <div className="flex flex-col gap-6">
-                    <div className="flex flex-col gap-6">
+                <SoftInput
+                    id={`rooms.${currentRoomIndex}.name`}
+                    label={t('steps.info.titleRoom', { name: `Chambre ${currentRoomIndex + 1}` })}
+                    disabled={isLoading}
+                    register={register}
+                    errors={errors}
+                    required
+                />
+
+                <div className="flex gap-4">
+                    <div className="w-1/2">
                         <SoftInput
                             id={`rooms.${currentRoomIndex}.surface`}
-                            label="Surface (m²)"
+                            label={t('rooms.details.surface')}
                             type="number"
                             inputMode="numeric"
                             pattern="[0-9]*"
                             disabled={isLoading}
                             register={register}
                             errors={errors}
-                            required={true}
+                            required
                         />
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-neutral-500 pl-1">Type de lit</label>
-                            <div className="flex gap-2">
-                                <div
-                                    onClick={() => setValue(`rooms.${currentRoomIndex}.bedType`, 'Lit simple', { shouldValidate: true, shouldDirty: true })}
-                                    className={`
-                                    flex-1 border rounded-xl cursor-pointer text-center text-sm transition flex items-center justify-center h-[56px]
-                                    ${watch(`rooms.${currentRoomIndex}.bedType`) === 'Lit simple' ? 'border-black bg-neutral-50 font-medium' : 'border-neutral-200'}
-                                `}
-                                >
-                                    Simple
-                                </div>
-                                <div
-                                    onClick={() => setValue(`rooms.${currentRoomIndex}.bedType`, 'Lit double', { shouldValidate: true, shouldDirty: true })}
-                                    className={`
-                                    flex-1 border rounded-xl cursor-pointer text-center text-sm transition flex items-center justify-center h-[56px]
-                                    ${watch(`rooms.${currentRoomIndex}.bedType`) === 'Lit double' ? 'border-black bg-neutral-50 font-medium' : 'border-neutral-200'}
-                                `}
-                                >
-                                    Double
-                                </div>
+                    </div>
+                    <div className="w-1/2 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-neutral-500">{t('rooms.details.bedType')}</label>
+                        <div className="flex gap-2">
+                            <div
+                                onClick={() => setValue(`rooms.${currentRoomIndex}.bedType`, 'single')}
+                                className={`flex-1 p-3 border rounded-lg cursor-pointer text-center text-sm font-medium transition ${watch(`rooms.${currentRoomIndex}.bedType`) === 'single' ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
+                            >
+                                {t('rooms.details.single')}
+                            </div>
+                            <div
+                                onClick={() => setValue(`rooms.${currentRoomIndex}.bedType`, 'double')}
+                                className={`flex-1 p-3 border rounded-lg cursor-pointer text-center text-sm font-medium transition ${watch(`rooms.${currentRoomIndex}.bedType`) === 'double' ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
+                            >
+                                {t('rooms.details.double')}
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div className="flex flex-col gap-3">
-                            <div className="flex items-start gap-3 p-3 bg-neutral-50 border border-neutral-100 rounded-xl">
-                                <Info size={16} className="text-neutral-400 mt-0.5 shrink-0" />
-                                <div className="text-xs text-neutral-500">
-                                    Nous vous conseillons de décrire l&apos;emplacement de la chambre (ex: coté rue, coté cour...) et ses atouts (lumineuse, calme...).
-                                </div>
-                            </div>
-                            <SoftInput
-                                id={`rooms.${currentRoomIndex}.description`}
-                                label="Description (optionnel)"
-                                disabled={isLoading}
-                                register={register}
-                                errors={errors}
-                            />
+                <div>
+                    <label className="block text-sm font-medium text-neutral-500 mb-2">{t('rooms.details.description')}</label>
+                    <textarea
+                        disabled={isLoading}
+                        {...register(`rooms.${currentRoomIndex}.description`)}
+                        placeholder={t('rooms.details.hint')}
+                        className="
+                            peer
+                            w-full
+                            p-4
+                            pt-6
+                            font-light
+                            bg-white
+                            border-2
+                            rounded-md
+                            outline-none
+                            transition
+                            disabled:opacity-70
+                            disabled:cursor-not-allowed
+                            pl-4
+                            border-neutral-200
+                            focus:border-black
+                            min-h-[100px]
+                        "
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label className="font-semibold">{t('rooms.details.privateBath')}</label>
+                    <div className="flex gap-4">
+                        <div
+                            onClick={() => setValue(`rooms.${currentRoomIndex}.hasPrivateBathroom`, true)}
+                            className={`flex-1 p-4 border-2 rounded-xl flex items-center justify-center gap-2 hover:border-black transition cursor-pointer ${watch(`rooms.${currentRoomIndex}.hasPrivateBathroom`) === true ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
+                        >
+                            <span className="font-semibold">{t('rooms.details.yes')}</span>
                         </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-neutral-500 pl-1">Salle de bain privée ?</label>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div
-                                    onClick={() => setValue(`rooms.${currentRoomIndex}.hasPrivateBathroom`, true, { shouldValidate: true, shouldDirty: true })}
-                                    className={`
-                                    p-3 border rounded-xl cursor-pointer text-center text-sm transition flex items-center justify-center h-[48px]
-                                    ${watch(`rooms.${currentRoomIndex}.hasPrivateBathroom`) ? 'border-black bg-neutral-50 font-medium' : 'border-neutral-200'}
-                                `}
-                                >
-                                    Oui
-                                </div>
-                                <div
-                                    onClick={() => setValue(`rooms.${currentRoomIndex}.hasPrivateBathroom`, false, { shouldValidate: true, shouldDirty: true })}
-                                    className={`
-                                    p-3 border rounded-xl cursor-pointer text-center text-sm transition flex items-center justify-center h-[48px]
-                                    ${!watch(`rooms.${currentRoomIndex}.hasPrivateBathroom`) && watch(`rooms.${currentRoomIndex}.hasPrivateBathroom`) !== undefined ? 'border-black bg-neutral-50 font-medium' : 'border-neutral-200'}
-                                `}
-                                >
-                                    Non
-                                </div>
-                            </div>
+                        <div
+                            onClick={() => setValue(`rooms.${currentRoomIndex}.hasPrivateBathroom`, false)}
+                            className={`flex-1 p-4 border-2 rounded-xl flex items-center justify-center gap-2 hover:border-black transition cursor-pointer ${watch(`rooms.${currentRoomIndex}.hasPrivateBathroom`) === false ? 'border-black bg-neutral-50' : 'border-neutral-200'}`}
+                        >
+                            <span className="font-semibold">{t('rooms.details.no')}</span>
                         </div>
                     </div>
                 </div>
@@ -1573,18 +1590,23 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Récapitulatif des chambres"
-                    subtitle="Vérifiez que tout est correct."
+                    title={t('rooms.recap.title')}
+                    subtitle={t('rooms.recap.subtitle')}
                 />
                 <div className="flex flex-col gap-4">
                     {watch('rooms')?.map((room: any, index: number) => (
-                        <div key={index} className="p-4 border rounded-xl flex justify-between items-center bg-white">
-                            <div>
-                                <div className="font-semibold">{room.name || `Chambre ${index + 1}`}</div>
-                                <div className="text-sm text-neutral-500">{room.surface} m² • {room.hasPrivateBathroom ? 'SDB Privée' : 'SDB Partagée'}</div>
+                        <div key={index} className="flex items-center justify-between p-4 border rounded-xl hover:bg-neutral-50 transition group">
+                            <div className="flex flex-col">
+                                <span className="font-semibold">{room.name || t('steps.info.titleRoom', { name: `Chambre ${index + 1}` })}</span>
+                                <span className="text-sm text-neutral-500">
+                                    {room.surface}m² • {room.bedType === 'double' ? t('rooms.details.double') : t('rooms.details.single')} • {room.hasPrivateBathroom ? t('rooms.recap.privateBath') : t('rooms.recap.sharedBath')}
+                                </span>
                             </div>
-                            <div className="cursor-pointer font-semibold underline text-sm" onClick={() => { setCurrentRoomIndex(index); setStep(STEPS.ROOM_DETAILS); }}>
-                                Modifier
+                            <div
+                                onClick={() => setCurrentRoomIndex(index)}
+                                className="text-sm font-semibold underline cursor-pointer opacity-0 group-hover:opacity-100 transition"
+                            >
+                                {t('rooms.recap.edit')}
                             </div>
                         </div>
                     ))}
@@ -1598,25 +1620,25 @@ const RentModal = () => {
             <div className="flex flex-col gap-8">
                 <div className="flex justify-between items-start">
                     <Heading
-                        title="Loyers et Charges"
-                        subtitle="Définissez le prix pour chaque chambre."
+                        title={t('steps.roomPrice.title')}
+                        subtitle={t('steps.roomPrice.subtitle')}
                     />
                     <div
                         onClick={() => setIsPriceAssistantOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-full cursor-pointer hover:bg-indigo-100 transition text-sm font-medium"
                     >
                         <Wand2 size={16} />
-                        Assistant
+                        {t('steps.roomPrice.assistant')}
                     </div>
                 </div>
                 <div className="flex flex-col gap-6 max-h-[50vh] overflow-y-auto pr-2">
                     {watch('rooms')?.map((room: any, index: number) => (
                         <div key={index} className="flex flex-col gap-4 p-4 border rounded-xl bg-white shadow-sm">
-                            <div className="font-semibold">{room.name || `Chambre ${index + 1}`}</div>
+                            <div className="font-semibold">{room.name || t('steps.info.titleRoom', { name: `Chambre ${index + 1}` })}</div>
                             <div className="grid grid-cols-2 gap-4">
                                 <SoftInput
                                     id={`rooms.${index}.price`}
-                                    label="Loyer HC (€)"
+                                    label={t('steps.roomPrice.rent')}
                                     type="number"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -1628,7 +1650,7 @@ const RentModal = () => {
                                 />
                                 <SoftInput
                                     id={`rooms.${index}.charges`}
-                                    label="Charges (€)"
+                                    label={t('steps.roomPrice.charges')}
                                     type="number"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
@@ -1650,7 +1672,7 @@ const RentModal = () => {
                         prices.forEach(({ index, price }) => {
                             setValue(`rooms.${index}.price`, price, { shouldDirty: true, shouldValidate: true });
                         });
-                        toast.success("Prix appliqués avec succès !");
+                        toast.success(t('steps.roomPrice.success'));
                     }}
                 />
             </div>
@@ -1672,8 +1694,8 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-4">
                 <Heading
-                    title="Définissez vos disponibilités de visite"
-                    subtitle="Indiquez quand vous êtes disponible pour faire visiter ce bien."
+                    title={t('steps.availability.title')}
+                    subtitle={t('steps.availability.subtitle')}
                 />
                 <div className="h-[500px] overflow-hidden rounded-xl border border-neutral-200">
                     <VisitsSection listing={safeListing as any} className="h-full" />
@@ -1686,15 +1708,15 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title="Félicitations !"
-                    subtitle="Votre annonce est maintenant finalisée et publiée."
+                    title={t('steps.success.title')}
+                    subtitle={t('steps.success.subtitle')}
                 />
                 <div className="flex flex-col items-center justify-center py-8">
                     <div className="w-[200px] h-[200px] bg-green-100 rounded-full flex items-center justify-center mb-6">
                         <CheckCircle size={100} className="text-green-600" strokeWidth={1} />
                     </div>
                     <div className="text-center text-neutral-500 max-w-md">
-                        {rentModal.editingListing ? "Les modifications ont été enregistrées avec succès." : "Votre bien est visible par les locataires dès maintenant."}
+                        {rentModal.editingListing ? t('steps.success.updated') : t('steps.success.published')}
                     </div>
                 </div>
             </div>

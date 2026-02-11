@@ -3,6 +3,7 @@
 import useCountries from "@/hooks/useCountries";
 import { SafeUser, SafeListing } from "@/types";
 import { useMemo, useState } from "react";
+import { useTranslations } from 'next-intl';
 
 import Heading from "../Heading";
 import HeartButton from "../HeartButton";
@@ -28,6 +29,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
     listing
 }) => {
     const { getByValue } = useCountries();
+    const t = useTranslations('listing');
 
     const location = getByValue(locationValue);
 
@@ -45,7 +47,7 @@ const ListingHead: React.FC<ListingHeadProps> = ({
 
             // Neighborhood
             if (listing.neighborhood) {
-                parts.push(`Quartier ${listing.neighborhood}`);
+                parts.push(`${t('listing.neighborhood')} ${listing.neighborhood}`);
             }
 
             // Country (fallback to Hook region if not in listing specific)
@@ -63,8 +65,8 @@ const ListingHead: React.FC<ListingHeadProps> = ({
             return `${location?.region}, ${location?.label}`;
         }
 
-        return location?.label || "Localisation inconnue";
-    }, [location, listing]);
+        return location?.label || t('location.unknown');
+    }, [location, listing, t]);
 
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 

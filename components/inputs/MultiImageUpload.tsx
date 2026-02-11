@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import CustomToast from "@/components/ui/CustomToast";
 import { Button } from "../ui/Button";
+import { compressImage } from '@/lib/imageCompression';
 import {
     DndContext,
     closestCenter,
@@ -40,6 +41,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 }) => {
     const [uploading, setUploading] = useState(false);
     const [uploadCount, setUploadCount] = useState(0);
+    const [uploadStatus, setUploadStatus] = useState<string>('');
 
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -53,9 +55,16 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         const newUrls: string[] = [];
 
         try {
-            for (const file of acceptedFiles) {
+            for (let i = 0; i < acceptedFiles.length; i++) {
+                const file = acceptedFiles[i];
+
+                // Compress image before upload
+                setUploadStatus(`Compression ${i + 1}/${acceptedFiles.length}...`);
+                const compressedFile = await compressImage(file);
+
+                setUploadStatus(`Envoi ${i + 1}/${acceptedFiles.length}...`);
                 const formData = new FormData();
-                formData.append('file', file);
+                formData.append('file', compressedFile);
                 formData.append('upload_preset', 'airbnb-clone');
 
                 const response = await axios.post(
@@ -86,6 +95,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         } finally {
             setUploading(false);
             setUploadCount(0);
+            setUploadStatus('');
         }
     }, [onChange, value]);
 
@@ -148,7 +158,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         <div className="font-medium text-lg text-neutral-500 animate-pulse">
-                            Téléchargement de {uploadCount} photo{uploadCount > 1 ? 's' : ''}...
+                            {uploadStatus || `Téléchargement de ${uploadCount} photo${uploadCount > 1 ? 's' : ''}...`}
                         </div>
                     </div>
                 ) : (

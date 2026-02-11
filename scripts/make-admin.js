@@ -1,0 +1,39 @@
+
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
+
+async function main() {
+    const email = process.argv[2];
+
+    if (!email) {
+        console.error('Please provide an email address as an argument.');
+        process.exit(1);
+    }
+
+    // Check if user exists first
+    const existingUser = await prisma.user.findUnique({
+        where: { email },
+    });
+
+    if (!existingUser) {
+        console.error(`User with email ${email} not found.`);
+        process.exit(1);
+    }
+
+    const user = await prisma.user.update({
+        where: { email },
+        data: { role: 'ADMIN' },
+    });
+
+    console.log(`SUCCESS: User ${user.email} is now an ADMIN.`);
+}
+
+main()
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });

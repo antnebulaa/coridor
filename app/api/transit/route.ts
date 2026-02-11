@@ -91,8 +91,8 @@ export async function GET(request: Request) {
         let championObs: any = null;
         let mainConnection = null;
 
-        let stationsA = (await fetchStations(1200, 50)).stations || [];
-        let heavyA = stationsA.filter((s: any) => s.transports?.some((t: any) => isHeavy(t.mode)));
+        const stationsA = (await fetchStations(1200, 50)).stations || [];
+        const heavyA = stationsA.filter((s: any) => s.transports?.some((t: any) => isHeavy(t.mode)));
 
         // NEW: Scoring Logic
         const getScore = (station: any) => {
@@ -127,12 +127,12 @@ export async function GET(request: Request) {
         if (heavyA.length > 0) {
             championObs = heavyA[0];
         } else {
-            let stationsB = (await fetchStations(5000, 10)).stations || [];
-            let heavyB = stationsB.filter((s: any) => s.transports?.some((t: any) => isHeavy(t.mode)));
+            const stationsB = (await fetchStations(5000, 10)).stations || [];
+            const heavyB = stationsB.filter((s: any) => s.transports?.some((t: any) => isHeavy(t.mode)));
             if (heavyB.length > 0) {
                 championObs = heavyB[0];
             } else {
-                let stationsC = (await fetchStations(400, 20)).stations || [];
+                const stationsC = (await fetchStations(400, 20)).stations || [];
                 if (stationsC.length > 0) {
                     championObs = stationsC[0];
                 }
@@ -162,7 +162,7 @@ export async function GET(request: Request) {
                 const sameLineModes = modesToConsider.filter((m: any) => m.name === championMode.name && m.mode === championMode.mode);
                 const uniqueHeadsigns = Array.from(new Set(sameLineModes.map((m: any) => m.headsign)));
                 const combinedHeadsign = uniqueHeadsigns.slice(0, 3).join(" / ");
-                let walkTime = Math.ceil(distMeters / 80) + 2;
+                const walkTime = Math.ceil(distMeters / 80) + 2;
 
                 mainConnection = {
                     name: championObs.name || championObs.place?.name || "Station Inconnue",
@@ -179,7 +179,7 @@ export async function GET(request: Request) {
 
         // --- Step 2: Proximity List ---
 
-        let stationsProximity = (await fetchStations(800, 50)).stations || [];
+        const stationsProximity = (await fetchStations(800, 50)).stations || [];
         const nearbyMap = new Map();
 
         stationsProximity.forEach((station: any) => {

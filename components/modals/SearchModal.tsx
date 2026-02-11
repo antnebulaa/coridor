@@ -250,7 +250,7 @@ const SearchModal = () => {
             return onNext();
         }
 
-        let currentQuery = {};
+        const currentQuery = {};
 
         if (params) {
             // currentQuery = qs.parse(params.toString());

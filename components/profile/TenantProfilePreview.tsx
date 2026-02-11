@@ -29,6 +29,7 @@ interface TenantProfilePreviewProps {
         targetMoveInDate?: string | null;
         childCount: number;
     } | null;
+    showFullDossierLink?: boolean;
 }
 
 const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
@@ -36,7 +37,8 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
     tenantProfile,
     rent,
     charges,
-    candidateScope
+    candidateScope,
+    showFullDossierLink
 }) => {
     if (!tenantProfile) return null;
 
@@ -141,6 +143,35 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                     <div>
                         <div className="font-bold text-sm">Paiements de loyer certifiés</div>
                         <div className="text-xs">Ce candidat a prouvé sa régularité de paiement sur les 12 derniers mois.</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Access to Full Dossier (Conditionally Shown) */}
+            {showFullDossierLink && (
+                <div className="flex flex-col gap-3">
+                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                        <ShieldCheck size={16} /> Dossier Complet
+                    </h3>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-3">
+                        <div className="text-sm text-blue-900">
+                            Puisque vous avez proposé une visite, vous avez accès au dossier complet certifié par l'État.
+                        </div>
+                        <a
+                            href="https://proprietaire.dossierfacile.fr" // Ideally deep link if possible, or just the portal
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="
+                                flex items-center justify-center gap-2
+                                w-full py-3 px-4 
+                                bg-blue-600 hover:bg-blue-700 
+                                text-white font-medium rounded-lg 
+                                transition
+                            "
+                        >
+                            <img src="/images/dossier-facile-logo.png" alt="DF" className="w-5 h-5 object-contain brightness-0 invert" />
+                            Voir le dossier complet
+                        </a>
                     </div>
                 </div>
             )}

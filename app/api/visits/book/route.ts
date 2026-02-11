@@ -158,6 +158,16 @@ export async function POST(
                 startTime: visit.startTime,
                 listingId: visit.listingId
             });
+
+            // Send push notification to landlord
+            const { sendPushNotification } = await import("@/app/lib/sendPushNotification");
+            sendPushNotification({
+                userId: landlordId,
+                title: "Nouvelle visite réservée",
+                body: `${currentUser.name || 'Un candidat'} a réservé une visite le ${format(new Date(date), 'dd/MM/yyyy')} à ${startTime}`,
+                url: `/dashboard`,
+                type: 'visit'
+            }).catch(err => console.error("[Push] Failed to notify landlord:", err));
         }
 
         return NextResponse.json(visit);

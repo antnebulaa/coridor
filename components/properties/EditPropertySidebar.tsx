@@ -1,8 +1,8 @@
 'use client';
 
-import { TabType, SectionType } from "@/app/properties/[listingId]/edit/EditPropertyClient";
+import { TabType, SectionType } from "@/app/[locale]/properties/[listingId]/edit/EditPropertyClient";
 import { Building2, Calendar, FileText, Image as ImageIcon, LayoutDashboard, Settings, Users, ChartBar } from "lucide-react";
-import { sidebarTabs, sidebarLinks } from "@/app/properties/[listingId]/edit/constants";
+import { sidebarTabs, sidebarLinks } from "@/app/[locale]/properties/[listingId]/edit/constants";
 
 interface EditPropertySidebarProps {
     activeTab: TabType;

@@ -11,16 +11,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { code, recipientName } = body;
+    const { code, recipientName, locale = 'fr' } = body;
 
     if (!code) {
         return NextResponse.json({ error: "Missing code" }, { status: 400 });
     }
 
     try {
-        // Construct redirect URI to match init
-        const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        const redirectUri = `${origin}/account/tenant-profile`;
+        // Construct redirect URI to match init (Fixed Bouncer URI)
+        const host = request.headers.get('host');
+        const protocol = host?.includes('localhost') ? 'http' : 'http';
+        const origin = `${protocol}://${host}`; // Force Host header
+        const redirectUri = `${origin}/api/powens/callback`;
 
         // 1. Exchange code for token
         const tokenData = await getPowensToken(code, redirectUri);
@@ -30,38 +32,119 @@ export async function POST(request: Request) {
         }
 
         const accessToken = tokenData.access_token;
+        const refreshToken = tokenData.refresh_token;
+        const tokenExpiresIn = tokenData.expires_in;
+        const tokenExpiresAt = new Date(Date.now() + tokenExpiresIn * 1000);
 
-        // 2. Fetch transactions
+        // 2. Fetch Transactions (Transient - In Memory Only)
+        // Note: In analyze/route, we might just be looking for ONE rent payment for verification,
+        // BUT to be consistent with the "connect bank" feature, we should save the connection.
+
         const transactionsData = await getPowensTransactions(accessToken);
         const transactions = transactionsData.transactions || [];
 
-        // 3. Run Sherlock Holmes Algorithm
-        console.log(`[Sherlock] Analyzing ${transactions.length} transactions...`);
+        // 3. Privacy Filtering (Sherlock v2) 🕵️‍♂️
+        let validTransactions: any[] = [];
 
-        if (transactions.length > 0) {
-            const dates = transactions.map((t: any) => new Date(t.date || t.rdate).getTime());
-            const minDate = new Date(Math.min(...dates));
-            const maxDate = new Date(Math.max(...dates));
-            console.log(`[Sherlock] Date range: ${minDate.toISOString()} to ${maxDate.toISOString()}`);
+        // Fetch TenantProfile to get landlordName
+        const tenantProfile = await prisma.tenantProfile.findUnique({
+            where: { userId: currentUser.id }
+        });
+        const landlordName = tenantProfile?.landlordName?.toLowerCase();
+
+        console.log(`[Sherlock] Analyzing ${transactions.length} txs for landlord: ${landlordName}`);
+
+        validTransactions = transactions.filter((tx: any) => {
+            const amount = tx.value;
+            if (amount >= 0) return false; // Ignore income
+
+            const label = (tx.custom_wording || tx.wording || tx.original_wording || '').toLowerCase();
+
+            // Rule 1: Explicit "Loyer"
+            if (label.includes('loyer')) return true;
+
+            // Rule 2: Matches Landlord Name (if provided)
+            if (landlordName && label.includes(landlordName)) return true;
+
+            return false;
+        });
+
+        // 4. Persistence
+
+        // A. Save Connection (So we don't ask again ?)
+        const connection = await prisma.bankConnection.upsert({
+            where: {
+                userId_connectionId: {
+                    userId: currentUser.id,
+                    connectionId: 'powens_connection' // We might need a real ID from Powens if multiple
+                }
+            },
+            update: {
+                accessToken,
+                refreshToken,
+                tokenExpiresAt,
+                lastSyncedAt: new Date(),
+                isActive: true
+            },
+            create: {
+                userId: currentUser.id,
+                connectionId: 'powens_connection',
+                accessToken,
+                refreshToken,
+                tokenExpiresAt,
+                lastSyncedAt: new Date(),
+                provider: 'POWENS'
+            }
+        });
+
+        // B. Save Filtered Transactions
+        for (const tx of validTransactions) {
+            await prisma.bankTransaction.upsert({
+                where: {
+                    bankConnectionId_remoteId: {
+                        bankConnectionId: connection.id,
+                        remoteId: tx.id.toString()
+                    }
+                },
+                update: {
+                    date: new Date(tx.date || tx.rdate),
+                    label: tx.custom_wording || tx.wording || tx.original_wording,
+                    amount: tx.value,
+                    currency: tx.original_currency?.id || 'EUR',
+                    category: 'Rent',
+                    isProcessed: false
+                },
+                create: {
+                    bankConnectionId: connection.id,
+                    remoteId: tx.id.toString(),
+                    date: new Date(tx.date || tx.rdate),
+                    label: tx.custom_wording || tx.wording || tx.original_wording,
+                    amount: tx.value,
+                    currency: tx.original_currency?.id || 'EUR',
+                    category: 'Rent'
+                }
+            });
         }
 
-        const analysis = analyzeTransactions(transactions, recipientName);
-        console.log(`[Sherlock] Result:`, analysis);
+        // Return found verification data
+        if (validTransactions.length > 0) {
+            // Find most recent
+            const recentTx = validTransactions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
-        if (analysis.found) {
-            // Update profile with detected rent (pending confirmation)
+            // Update verification status
             await prisma.tenantProfile.update({
                 where: { userId: currentUser.id },
                 data: {
-                    detectedRentAmount: Math.round(analysis.amount),
-                    rentPaymentDate: analysis.date,
+                    detectedRentAmount: Math.round(Math.abs(recentTx.value)),
+                    rentPaymentDate: new Date(recentTx.date || recentTx.rdate).getDate(),
                     rentVerified: false
                 }
             });
+
             return NextResponse.json({
                 found: true,
-                amount: analysis.amount,
-                transactions: analysis.transactions
+                amount: Math.abs(recentTx.value),
+                transactions: validTransactions.slice(0, 5) // Send back a few for confirmation
             });
         } else {
             return NextResponse.json({ found: false });

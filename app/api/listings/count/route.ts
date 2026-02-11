@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         const minSurface = searchParams.get('minSurface');
         const maxSurface = searchParams.get('maxSurface');
 
-        let query: any = {
+        const query: any = {
             isPublished: true
         };
 
