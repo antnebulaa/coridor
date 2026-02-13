@@ -6,8 +6,9 @@ import EmptyState from "@/components/EmptyState";
 import LandlordCalendarClient from "../components/calendar/LandlordCalendarClient";
 import getLandlordCalendarData from "@/app/actions/getLandlordCalendarData";
 
-const CalendarPage = async ({ searchParams }: { searchParams: { view?: string } }) => {
+const CalendarPage = async ({ searchParams }: { searchParams: Promise<{ view?: string }> }) => {
     const currentUser = await getCurrentUser();
+    const resolvedParams = await searchParams;
 
     if (!currentUser) {
         return (
@@ -36,7 +37,7 @@ const CalendarPage = async ({ searchParams }: { searchParams: { view?: string } 
     }
 
     // Tenant Mode or explicitly requesting visits view
-    const view = searchParams?.view || 'visits';
+    const view = resolvedParams?.view || 'visits';
 
     if (view === 'visits') {
         const visits = await getVisits();

@@ -13,7 +13,7 @@ export default async function getVisits() {
             where: {
                 candidateId: currentUser.id,
                 status: {
-                    in: ['CONFIRMED', 'CANCELLED']
+                    in: ['PENDING', 'CONFIRMED', 'CANCELLED']
                 },
                 // date: {
                 //    gte: new Date() 

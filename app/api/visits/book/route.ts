@@ -94,7 +94,7 @@ export async function POST(
                 date: new Date(date),
                 startTime,
                 endTime,
-                status: 'CONFIRMED'
+                status: 'PENDING'
             }
         });
 
@@ -111,7 +111,7 @@ export async function POST(
         if (application) {
             await prisma.rentalApplication.update({
                 where: { id: application.id },
-                data: { status: 'VISIT_CONFIRMED' }
+                data: { status: 'VISIT_PROPOSED' }
             });
         }
 
@@ -129,7 +129,7 @@ export async function POST(
             });
 
             if (lastInvitation) {
-                const updatedBody = `VISIT_CONFIRMED|${visit.date.toISOString()}|${visit.startTime}`;
+                const updatedBody = `VISIT_PENDING|${visit.date.toISOString()}|${visit.startTime}`;
                 await prisma.message.update({
                     where: { id: lastInvitation.id },
                     data: { body: updatedBody }
@@ -164,10 +164,20 @@ export async function POST(
             sendPushNotification({
                 userId: landlordId,
                 title: "Nouvelle visite réservée",
-                body: `${currentUser.name || 'Un candidat'} a réservé une visite le ${format(new Date(date), 'dd/MM/yyyy')} à ${startTime}`,
-                url: `/dashboard`,
+                body: `${currentUser.name || 'Un candidat'} a réservé une visite le ${format(new Date(date), 'dd/MM/yyyy')} à ${startTime}. En attente de confirmation.`,
+                url: `/calendar`,
                 type: 'visit'
             }).catch(err => console.error("[Push] Failed to notify landlord:", err));
+
+            // Send in-app notification to candidate to remind them to confirm
+            const { createNotification } = await import("@/libs/notifications");
+            createNotification({
+                userId: currentUser.id,
+                type: 'visit',
+                title: 'Confirmez votre visite',
+                message: `N'oubliez pas de confirmer votre visite du ${format(new Date(date), 'dd/MM/yyyy')} à ${startTime}. Vous avez 24h pour confirmer.`,
+                link: '/dashboard'
+            }).catch(err => console.error("[Notification] Failed:", err));
         }
 
         return NextResponse.json(visit);

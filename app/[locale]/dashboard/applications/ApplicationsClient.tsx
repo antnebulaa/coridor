@@ -5,17 +5,27 @@ import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
 import { useState } from "react"; // Only useState needed if no complex effects
 import { useTranslations } from 'next-intl';
+import { BarChart3, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import ApplicationCard from "./components/ApplicationCard";
 import EmptyState from "@/components/EmptyState";
+
+interface EvaluatedListing {
+    listingId: string;
+    listingTitle: string;
+    evaluatedCount: number;
+}
 
 interface ApplicationsClientProps {
     currentUser: SafeUser;
     applications: any[];
+    evaluatedListings?: EvaluatedListing[];
 }
 
 const ApplicationsClient: React.FC<ApplicationsClientProps> = ({
     currentUser,
-    applications = []
+    applications = [],
+    evaluatedListings = []
 }) => {
     const t = useTranslations('dashboard.applicationsPage');
     const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
@@ -73,6 +83,33 @@ const ApplicationsClient: React.FC<ApplicationsClientProps> = ({
                             {t('archived')}
                         </button>
                     </div>
+
+                    {/* Compare candidates banner (landlords with evaluations) */}
+                    {evaluatedListings.length > 0 && (
+                        <div className="mb-6 space-y-2">
+                            {evaluatedListings.map((el) => (
+                                <Link
+                                    key={el.listingId}
+                                    href={`/selection/${el.listingId}`}
+                                    className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-amber-100 text-amber-600 rounded-full group-hover:bg-amber-200 transition">
+                                            <BarChart3 size={18} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-neutral-900">{el.listingTitle}</p>
+                                            <p className="text-xs text-neutral-500">{el.evaluatedCount} candidats evalues</p>
+                                        </div>
+                                    </div>
+                                    <span className="flex items-center gap-1 text-sm font-medium text-amber-700 group-hover:text-amber-800">
+                                        Comparer
+                                        <ArrowRight size={14} />
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Content */}
                     {filteredApplications.length === 0 ? (

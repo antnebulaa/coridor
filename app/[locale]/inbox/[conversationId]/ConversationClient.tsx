@@ -19,6 +19,13 @@ import { toast } from "react-hot-toast";
 import Modal from "@/components/modals/Modal";
 import Heading from "@/components/Heading";
 import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
+import { XCircle } from "lucide-react";
+
+const REJECTION_REASONS = [
+    "Le logement a déjà trouvé preneur",
+    "Votre dossier ne correspond pas aux critères requis",
+    "Un autre candidat a été retenu",
+] as const;
 
 interface ConversationClientProps {
     conversation: Conversation & {
@@ -39,6 +46,8 @@ interface ConversationClientProps {
     } | null;
     listing?: (SafeListing & { user?: SafeUser }) | null;
     applicationId?: string | null;
+    applicationStatus?: string | null;
+    applicationRejectionReason?: string | null;
     conversationId?: string;
     confirmedVisit?: {
         id: string;
@@ -58,17 +67,24 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     listing,
     candidateScope,
     applicationId,
+    applicationStatus: initialApplicationStatus,
+    applicationRejectionReason: initialRejectionReason,
     conversationId,
     confirmedVisit
 }) => {
     const router = useRouter();
 
     const [messages, setMessages] = useState(initialMessages);
-    const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE' || m.body?.startsWith('VISIT_CONFIRMED|'));
+    const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE' || m.body?.startsWith('VISIT_CONFIRMED|') || m.body?.startsWith('VISIT_PENDING|'));
+    const [applicationStatus, setApplicationStatus] = useState(initialApplicationStatus);
 
     useEffect(() => {
         setMessages(initialMessages);
     }, [initialMessages]);
+
+    useEffect(() => {
+        setApplicationStatus(initialApplicationStatus);
+    }, [initialApplicationStatus]);
 
     // Realtime subscription for new messages in this conversation
     useRealtimeNotifications({
@@ -84,8 +100,13 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     }, []);
 
     const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
+    const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false);
+    const [selectedReason, setSelectedReason] = useState<string>('');
+    const [customReason, setCustomReason] = useState('');
+    const [isDeclining, setIsDeclining] = useState(false);
 
-    // Check if listing has availability defined
+    const isRejected = applicationStatus === 'REJECTED';
+
     // Check if listing has availability defined
     const [hasAvailability, setHasAvailability] = useState(() => {
         if (!listing || !listing.visitSlots) return false;
@@ -94,8 +115,6 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
     useEffect(() => {
         if (listing?.id) {
-            // Double check with API to handle Back-button navigation (stale props)
-            // AND to ensure we have *future* slots available.
             axios.get(`/api/listings/${listing.id}/available-visits`)
                 .then((response) => {
                     if (response.data && response.data.length > 0) {
@@ -123,17 +142,40 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
     const handleOpenVisitSelection = useCallback(() => {
         setIsVisitSelectionOpen(true);
-        // Ensure dossier is closed if we open visit selection (though they are mutually exclusive in render logic usually)
-        if (showDossier) {
-            // If showDossier is true (owner view), this handler shouldn't strictly be called by candidate logic, 
-            // but just in case. 
-            // Actually, candidate view is !showDossier.
-        }
-    }, [showDossier]);
+    }, []);
 
     const handleOpenListingRecap = useCallback(() => {
         setIsMobileRecapOpen(true);
     }, []);
+
+    const handleDecline = useCallback(async () => {
+        const reason = selectedReason === 'other' ? customReason.trim() : selectedReason;
+        if (!reason) {
+            toast.error('Veuillez sélectionner un motif');
+            return;
+        }
+        if (!applicationId) {
+            toast.error('Aucune candidature trouvée');
+            return;
+        }
+
+        setIsDeclining(true);
+        try {
+            await axios.patch(`/api/applications/${applicationId}`, {
+                status: 'REJECTED',
+                rejectionReason: reason,
+                conversationId: conversation.id
+            });
+            toast.success('Candidature déclinée');
+            setIsDeclineModalOpen(false);
+            setApplicationStatus('REJECTED');
+            router.refresh();
+        } catch {
+            toast.error('Erreur lors du rejet');
+        } finally {
+            setIsDeclining(false);
+        }
+    }, [applicationId, selectedReason, customReason, conversation.id, router]);
 
     const isImperial = currentUser?.measurementSystem === 'imperial';
     const surface = listing?.surface;
@@ -175,6 +217,17 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             }
         ];
 
+        if (isRejected) {
+            steps.push({
+                title: "Candidature non retenue",
+                description: initialRejectionReason
+                    ? `Motif : ${initialRejectionReason}`
+                    : "Le propriétaire a décliné votre candidature.",
+                completed: true
+            });
+            return steps;
+        }
+
         if (hasProposedVisit) {
             steps.push({
                 title: "Proposition de visite",
@@ -211,7 +264,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         }
 
         return steps;
-    }, [hasProposedVisit, confirmedVisit, getCalendarEvent]);
+    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason]);
 
     return (
         <div className="h-full flex flex-row">
@@ -253,17 +306,24 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     <div className="
                         flex-none
                         bg-white dark:bg-neutral-900
-                        w-full 
-                        flex 
-                        border-b 
+                        w-full
+                        flex
+                        border-b
                         border-gray-200 dark:border-neutral-800
-                        py-3 
-                        px-6 
+                        py-3
+                        px-6
                         items-center
                         justify-between
                         h-[73px]
                     ">
-                        <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
+                            {isRejected && (
+                                <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                    Déclinée
+                                </span>
+                            )}
+                        </div>
                         <button
                             onClick={() => setIsDossierOpen(false)}
                             className="xl:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
@@ -275,7 +335,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div className={clsx("flex-1 overflow-y-auto p-6", isRejected && "opacity-50 grayscale")}>
                         <TenantProfilePreview
                             user={otherUser}
                             tenantProfile={otherUser.tenantProfile as any}
@@ -283,56 +343,148 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                             charges={listing?.charges}
                             candidateScope={candidateScope}
                             showFullDossierLink={
-                                // Show ONLY if visit proposed AND user has DossierFacile connected
                                 hasProposedVisit &&
                                 otherUser.accounts?.some((acc: any) => acc.provider === 'dossier-facile')
                             }
                         />
                     </div>
-                    <div className="
-                        flex-none
-                        bg-white dark:bg-neutral-900
-                        border-t
-                        border-gray-200 dark:border-neutral-800
-                        p-4
-                    ">
-                        <Button
-                            disabled={!listing}
-                            label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
-                            onClick={() => {
-                                if (!listing) return;
 
-                                if (hasProposedVisit) {
-                                    // Generate Lease Action
-                                    if (applicationId) {
-                                        // Open proper viewer page
-                                        window.open(`/leases/${applicationId}`, '_blank');
-                                    } else {
-                                        toast.error("Aucune demande de location trouvée pour ce dossier.");
+                    {/* Action buttons - hidden when rejected */}
+                    {!isRejected && (
+                        <div className="
+                            flex-none
+                            bg-white dark:bg-neutral-900
+                            border-t
+                            border-gray-200 dark:border-neutral-800
+                            p-4
+                            flex flex-col gap-2
+                        ">
+                            <Button
+                                disabled={!listing}
+                                label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
+                                onClick={() => {
+                                    if (!listing) return;
+
+                                    if (hasProposedVisit) {
+                                        if (applicationId) {
+                                            window.open(`/leases/${applicationId}`, '_blank');
+                                        } else {
+                                            toast.error("Aucune demande de location trouvée pour ce dossier.");
+                                        }
+                                        return;
                                     }
-                                    return;
-                                }
 
-                                if (!hasAvailability) {
-                                    setIsAvailabilityModalOpen(true);
-                                    return;
-                                }
+                                    if (!hasAvailability) {
+                                        setIsAvailabilityModalOpen(true);
+                                        return;
+                                    }
 
-                                axios.post('/api/messages', {
-                                    message: 'INVITATION_VISITE',
-                                    conversationId: conversation.id,
-                                    listingId: listing.id
-                                })
-                                    .then(() => {
-                                        toast.success('Invitation envoyée');
-                                        router.refresh();
+                                    axios.post('/api/messages', {
+                                        message: 'INVITATION_VISITE',
+                                        conversationId: conversation.id,
+                                        listingId: listing.id
                                     })
-                                    .catch(() => toast.error('Erreur lors de l\'envoi'));
-                            }}
-                        />
-                    </div>
+                                        .then(() => {
+                                            toast.success('Invitation envoyée');
+                                            router.refresh();
+                                        })
+                                        .catch(() => toast.error('Erreur lors de l\'envoi'));
+                                }}
+                            />
+                            <button
+                                onClick={() => {
+                                    setSelectedReason('');
+                                    setCustomReason('');
+                                    setIsDeclineModalOpen(true);
+                                }}
+                                className="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
+                            >
+                                Décliner la candidature
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Rejected state footer */}
+                    {isRejected && (
+                        <div className="flex-none border-t border-gray-200 dark:border-neutral-800 p-4">
+                            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg p-3">
+                                <XCircle size={16} className="shrink-0" />
+                                <span>Candidature déclinée</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
+
+            {/* Decline Modal */}
+            <Modal
+                isOpen={isDeclineModalOpen}
+                onClose={() => setIsDeclineModalOpen(false)}
+                title="Décliner la candidature"
+                actionLabel={isDeclining ? "..." : "Confirmer le refus"}
+                onSubmit={handleDecline}
+                disabled={isDeclining || (!selectedReason || (selectedReason === 'other' && !customReason.trim()))}
+                body={
+                    <div className="flex flex-col gap-4">
+                        <p className="text-neutral-500 text-sm">
+                            Sélectionnez un motif pour informer le candidat. Coridor protège contre les discriminations en proposant des motifs respectueux et objectifs.
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            {REJECTION_REASONS.map((reason) => (
+                                <label
+                                    key={reason}
+                                    className={clsx(
+                                        "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition",
+                                        selectedReason === reason
+                                            ? "border-red-300 bg-red-50"
+                                            : "border-gray-200 hover:border-gray-300"
+                                    )}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="rejectionReason"
+                                        value={reason}
+                                        checked={selectedReason === reason}
+                                        onChange={() => setSelectedReason(reason)}
+                                        className="accent-red-600"
+                                    />
+                                    <span className="text-sm text-neutral-800">{reason}</span>
+                                </label>
+                            ))}
+                            <label
+                                className={clsx(
+                                    "flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition",
+                                    selectedReason === 'other'
+                                        ? "border-red-300 bg-red-50"
+                                        : "border-gray-200 hover:border-gray-300"
+                                )}
+                            >
+                                <input
+                                    type="radio"
+                                    name="rejectionReason"
+                                    value="other"
+                                    checked={selectedReason === 'other'}
+                                    onChange={() => setSelectedReason('other')}
+                                    className="accent-red-600 mt-1"
+                                />
+                                <div className="flex-1">
+                                    <span className="text-sm text-neutral-800">Autre raison</span>
+                                    {selectedReason === 'other' && (
+                                        <textarea
+                                            value={customReason}
+                                            onChange={(e) => setCustomReason(e.target.value)}
+                                            placeholder="Précisez le motif..."
+                                            rows={2}
+                                            maxLength={200}
+                                            className="mt-2 w-full text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-red-300"
+                                        />
+                                    )}
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                }
+            />
 
             <Modal
                 isOpen={isAvailabilityModalOpen}
@@ -340,7 +492,6 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 title="Définissez vos disponibilités"
                 actionLabel="Définir mes créneaux"
                 onSubmit={() => {
-                    // Link to the visit section of the edit page
                     if (listing) {
                         router.push(`/properties/${listing.id}/edit?section=visits`);
                     }
@@ -379,12 +530,12 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         <div className="
                         flex-none
                         bg-white dark:bg-neutral-900
-                        w-full 
-                        flex 
-                        border-b 
+                        w-full
+                        flex
+                        border-b
                         border-gray-200 dark:border-neutral-800
-                        py-3 
-                        px-6 
+                        py-3
+                        px-6
                         items-center
                         justify-between
                         h-[73px]
@@ -449,6 +600,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                 <div className="flex flex-col">
                                                     {timelineSteps.map((step, index) => {
                                                         const isLast = index === timelineSteps.length - 1;
+                                                        const isRejectedStep = step.title === "Candidature non retenue";
                                                         return (
                                                             <div key={index} className="relative pl-6 pb-8 last:pb-0">
                                                                 {/* Line */}
@@ -461,12 +613,18 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
                                                                 {/* Dot */}
                                                                 <div
-                                                                    className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-neutral-900 dark:bg-white z-10"
+                                                                    className={clsx(
+                                                                        "absolute left-0 top-1.5 h-2 w-2 rounded-full z-10",
+                                                                        isRejectedStep ? "bg-red-500" : "bg-neutral-900 dark:bg-white"
+                                                                    )}
                                                                     aria-hidden="true"
                                                                 />
 
                                                                 <div className="flex flex-col gap-1">
-                                                                    <div className="font-medium text-base text-neutral-900 dark:text-white leading-none mt-0.5">
+                                                                    <div className={clsx(
+                                                                        "font-medium text-base leading-none mt-0.5",
+                                                                        isRejectedStep ? "text-red-600" : "text-neutral-900 dark:text-white"
+                                                                    )}>
                                                                         {step.title}
                                                                     </div>
                                                                     <div className="text-sm text-neutral-500 dark:text-neutral-400">

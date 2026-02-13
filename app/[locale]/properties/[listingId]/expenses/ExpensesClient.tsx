@@ -30,7 +30,8 @@ import {
     Car,
     FileCheck2,
     ChevronLeft,
-    ArrowLeft
+    ArrowLeft,
+    RotateCcw
 } from "lucide-react";
 
 import Container from "@/components/Container";
@@ -43,7 +44,7 @@ import ImageUpload from "@/components/inputs/ImageUpload";
 import PageBody from "@/components/ui/PageBody";
 import CircleButton from "@/components/ui/CircleButton";
 import DarkActionButton from "@/components/ui/DarkActionButton";
-import SwipeableExpenseItem from "./components/SwipeableExpenseItem"; // Assuming this exists based on EditPropertyClient
+import SwipeableExpenseItem from "./components/SwipeableExpenseItem";
 
 // Enums mapping
 const EXPENSE_CATEGORIES = [
@@ -71,6 +72,8 @@ const FREQUENCIES = [
     { value: 'QUARTERLY', label: 'Trimestriel' },
     { value: 'YEARLY', label: 'Annuel' },
 ];
+
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 interface ExpensesClientProps {
     property: SafeProperty & { expenses: SafeExpense[], rentalUnits: SafeRentalUnit[] };
@@ -111,6 +114,56 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
     const [selectedCategory, setSelectedCategory] = useState('');
     const [proofUrl, setProofUrl] = useState('');
 
+    // Edit Mode State
+    const [editingExpense, setEditingExpense] = useState<SafeExpense | null>(null);
+
+    // Filter State
+    const currentYear = new Date().getFullYear();
+    const [filterCategories, setFilterCategories] = useState<string[]>([]);
+    const [filterRecoverable, setFilterRecoverable] = useState<'all' | 'recoverable' | 'non-recoverable'>('all');
+    const [filterMonth, setFilterMonth] = useState<number | null>(null);
+    const [filterYear, setFilterYear] = useState<number>(currentYear);
+
+    // Filtered expenses (client-side)
+    const filteredExpenses = useMemo(() => {
+        return property.expenses.filter((expense) => {
+            if (filterCategories.length > 0 && !filterCategories.includes(expense.category)) {
+                return false;
+            }
+            if (filterRecoverable === 'recoverable' && !expense.isRecoverable) return false;
+            if (filterRecoverable === 'non-recoverable' && expense.isRecoverable) return false;
+            const expenseDate = new Date(expense.dateOccurred);
+            if (expenseDate.getFullYear() !== filterYear) return false;
+            if (filterMonth !== null && expenseDate.getMonth() !== filterMonth) return false;
+            return true;
+        });
+    }, [property.expenses, filterCategories, filterRecoverable, filterMonth, filterYear]);
+
+    // Summary indicators
+    const summaryStats = useMemo(() => {
+        const total = filteredExpenses.reduce((sum, e) => sum + e.amountTotalCents, 0);
+        const recoverable = filteredExpenses.reduce((sum, e) => sum + (e.amountRecoverableCents || 0), 0);
+        const nonRecoverable = total - recoverable;
+        const deductible = filteredExpenses.reduce((sum, e) => sum + (e.amountDeductibleCents || 0), 0);
+        return {
+            total: total / 100,
+            recoverable: recoverable / 100,
+            nonRecoverable: nonRecoverable / 100,
+            deductible: deductible / 100,
+            count: filteredExpenses.length,
+            recoverablePercent: total > 0 ? Math.round((recoverable / total) * 100) : 0,
+        };
+    }, [filteredExpenses]);
+
+    const hasActiveFilters = filterCategories.length > 0 || filterRecoverable !== 'all' || filterMonth !== null || filterYear !== currentYear;
+
+    const resetFilters = () => {
+        setFilterCategories([]);
+        setFilterRecoverable('all');
+        setFilterMonth(null);
+        setFilterYear(currentYear);
+    };
+
     const onBack = () => {
         setStep((value) => value - 1);
     };
@@ -144,8 +197,25 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
             setSelectedCategory('');
             setProofUrl('');
             setDate(new Date().toISOString().split('T')[0]);
+            setEditingExpense(null);
         }, 300);
     }
+
+    const handleEdit = useCallback((expense: SafeExpense) => {
+        setCategory(expense.category);
+        setLabel(expense.label);
+        setAmount(String(expense.amountTotalCents / 100));
+        setDate(expense.dateOccurred.split('T')[0]);
+        setFrequency(expense.frequency);
+        setIsRecoverable(expense.isRecoverable);
+        setRecoverableAmount(String((expense.amountRecoverableCents || 0) / 100));
+        setDeductibleAmount(String((expense.amountDeductibleCents || 0) / 100));
+        setRentalUnitId(expense.rentalUnitId || '');
+        setProofUrl(expense.proofUrl || '');
+        setEditingExpense(expense);
+        setStep(STEPS.DETAILS);
+        setIsOpen(true);
+    }, [STEPS.DETAILS]);
 
     const onSidebarTabChange = useCallback((tab: string) => {
         router.push(`/properties/${listingId}/edit`);
@@ -159,7 +229,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
     const hasWarning = useMemo(() => {
         if ((category === 'INSURANCE' || category === 'ELECTRICITY_PRIVATE') && isRecoverable) {
-            return "Attention, cette charge n'est légalement pas récupérable sur le locataire.";
+            return "Attention, cette charge n\'est légalement pas récupérable sur le locataire.";
         }
         return null;
     }, [category, isRecoverable]);
@@ -169,7 +239,6 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         const parsedAmount = parseFloat(amount || '0');
         const parsedRecoverable = parseFloat(recoverableAmount || '0');
         const parsedDeductible = parseFloat(deductibleAmount || '0');
-
 
         if (isNaN(parsedAmount) || (isRecoverable && isNaN(parsedRecoverable)) || isNaN(parsedDeductible)) {
             toast.error('Veuillez entrer des montants valides');
@@ -190,7 +259,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
         const computedRatio = amountCents > 0 ? amountRecoverableCents / amountCents : 0;
 
-        axios.post(`/api/properties/${property.id}/expenses`, {
+        const payload = {
             category,
             label,
             amountTotalCents: amountCents,
@@ -201,25 +270,33 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
             amountRecoverableCents,
             amountDeductibleCents: Math.round(parsedDeductible * 100),
             rentalUnitId: rentalUnitId || null,
-            propertyId: property.id,
             proofUrl
-        })
+        };
+
+        const request = editingExpense
+            ? axios.patch(`/api/expenses/${editingExpense.id}`, payload)
+            : axios.post(`/api/properties/${property.id}/expenses`, { ...payload, propertyId: property.id });
+
+        request
             .then(() => {
-                toast.success('Dépense ajoutée !');
+                toast.success(editingExpense ? 'Dépense modifiée !' : 'Dépense ajoutée !');
                 setIsOpen(false);
                 router.refresh();
-                setLabel('');
-                setAmount('');
-                setProofUrl('');
-                setStep(STEPS.CATEGORY);
+                setTimeout(() => {
+                    setLabel('');
+                    setAmount('');
+                    setProofUrl('');
+                    setStep(STEPS.CATEGORY);
+                    setEditingExpense(null);
+                }, 300);
             })
             .catch(() => {
-                toast.error('Erreur lors de l\'ajout');
+                toast.error(editingExpense ? 'Erreur lors de la modification' : 'Erreur lors de l\'ajout');
             })
             .finally(() => {
                 setIsLoading(false);
             });
-    }, [property.id, category, label, amount, date, frequency, isRecoverable, recoverableAmount, rentalUnitId, router]);
+    }, [property.id, category, label, amount, date, frequency, isRecoverable, recoverableAmount, deductibleAmount, rentalUnitId, router, editingExpense, proofUrl, STEPS.CATEGORY]);
 
     const handleDelete = useCallback((id: string) => {
         if (!window.confirm('Supprimer cette dépense ?')) return;
@@ -238,10 +315,10 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
             return 'Continuer';
         }
         if (step === STEPS.PROOF) {
-            return 'Ajouter';
+            return editingExpense ? 'Enregistrer' : 'Ajouter';
         }
         return undefined;
-    }, [step]);
+    }, [step, editingExpense, STEPS.DETAILS, STEPS.PROOF]);
 
     const secondaryActionLabel = useMemo(() => {
         if (step === STEPS.DETAILS || step === STEPS.PROOF) {
@@ -264,7 +341,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         return handleSubmit();
     }, [step, handleSubmit]);
 
-    // ... Modal Body Content Construction (Same as before) ...
+    // ... Modal Body Content Construction ...
     let bodyContent = (
         <div className="flex flex-col gap-4">
             <Heading title="Type de dépense" subtitle="De quoi s'agit-il ?" />
@@ -294,7 +371,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
     if (step === STEPS.DETAILS) {
         bodyContent = (
             <div className="flex flex-col gap-4">
-                <Heading title="Détails" subtitle="Complétez les informations" />
+                <Heading title={editingExpense ? "Modifier la dépense" : "Détails"} subtitle={editingExpense ? "Modifiez les informations" : "Complétez les informations"} />
 
                 <div className="flex items-center gap-3 p-3 bg-neutral-100 rounded-xl mb-2">
                     {(() => {
@@ -417,7 +494,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                         />
                     )}
 
-                    {/* Deductible Amount Input - Always visible or conditional? Usually always relevant for taxes. */}
+                    {/* Deductible Amount Input */}
                     <div className="mt-4 pt-4 border-t border-dashed border-neutral-200">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="text-sm font-medium text-neutral-700">Déductibilité Fiscale</span>
@@ -453,7 +530,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                 />
 
                 <div className="bg-neutral-50 p-4 rounded-xl mb-4 text-sm text-neutral-500">
-                    <p>💡 Prenez en photo votre facture ou ticket de caisse. C'est utile pour les impôts et pour justifier les charges aux locataires.</p>
+                    <p>Prenez en photo votre facture ou ticket de caisse. C&#39;est utile pour les impots et pour justifier les charges aux locataires.</p>
                 </div>
 
                 <ImageUpload
@@ -506,7 +583,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             <ArrowLeft size={24} />
                         </button>
                         <div className="text-2xl font-medium">
-                            Modification d'annonce
+                            Modification d&#39;annonce
                         </div>
                     </div>
 
@@ -515,7 +592,6 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                         activeSection="expenses"
                         onChangeTab={onSidebarTabChange}
                         onChangeSection={onSidebarSectionChange}
-                    // Reuse the same logic for titles if possible, or simplified for now since we are in a specific page
                     />
                 </div>
 
@@ -539,13 +615,126 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                 </h2>
                             </div>
 
-
-
                             <FinancialDashboard propertyId={property.id} />
 
+                            {/* ===== FILTER BAR ===== */}
+                            {property.expenses.length > 0 && (
+                                <div className="flex flex-col gap-3 mb-6 mt-6">
+                                    {/* Year Pills */}
+                                    <div className="flex gap-2 bg-white dark:bg-neutral-800 p-1.5 rounded-2xl overflow-x-auto max-w-full">
+                                        {[currentYear, currentYear - 1, currentYear - 2].map(y => (
+                                            <button
+                                                key={y}
+                                                onClick={() => { setFilterYear(y); setFilterMonth(null); }}
+                                                className={`px-4 py-2 rounded-2xl text-sm font-medium transition whitespace-nowrap
+                                                    ${filterYear === y ? 'bg-neutral-900 text-white shadow-sm' : 'text-neutral-500 hover:text-black dark:hover:text-white'}`}
+                                            >
+                                                {y}
+                                            </button>
+                                        ))}
+                                    </div>
 
+                                    {/* Month Pills */}
+                                    <div className="flex gap-1.5 overflow-x-auto pb-1">
+                                        <button
+                                            onClick={() => setFilterMonth(null)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap
+                                                ${filterMonth === null ? 'bg-neutral-900 text-white' : 'bg-white dark:bg-neutral-800 text-neutral-600 hover:bg-neutral-200'}`}
+                                        >
+                                            Tous
+                                        </button>
+                                        {MONTH_LABELS.map((m, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setFilterMonth(i)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap
+                                                    ${filterMonth === i ? 'bg-neutral-900 text-white' : 'bg-white dark:bg-neutral-800 text-neutral-600 hover:bg-neutral-200'}`}
+                                            >
+                                                {m}
+                                            </button>
+                                        ))}
+                                    </div>
 
-                            {/* Empty State */}
+                                    {/* Recoverable Toggle */}
+                                    <div className="flex gap-2">
+                                        {([
+                                            { value: 'all' as const, label: 'Toutes' },
+                                            { value: 'recoverable' as const, label: 'Récupérables' },
+                                            { value: 'non-recoverable' as const, label: 'Non récup.' }
+                                        ]).map(opt => (
+                                            <button
+                                                key={opt.value}
+                                                onClick={() => setFilterRecoverable(opt.value)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition
+                                                    ${filterRecoverable === opt.value
+                                                        ? 'bg-neutral-900 text-white'
+                                                        : 'bg-white dark:bg-neutral-800 text-neutral-600 hover:bg-neutral-200'}`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Category Multi-Select Pills */}
+                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                        {EXPENSE_CATEGORIES.map(cat => {
+                                            const isActive = filterCategories.includes(cat.value);
+                                            return (
+                                                <button
+                                                    key={cat.value}
+                                                    onClick={() => {
+                                                        setFilterCategories(prev =>
+                                                            isActive ? prev.filter(c => c !== cat.value) : [...prev, cat.value]
+                                                        );
+                                                    }}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition whitespace-nowrap
+                                                        ${isActive ? `${cat.bg} ${cat.color} ring-1 ring-current` : 'bg-white dark:bg-neutral-800 text-neutral-500 hover:bg-neutral-200'}`}
+                                                >
+                                                    <cat.icon size={14} />
+                                                    {cat.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ===== SUMMARY INDICATORS ===== */}
+                            {filteredExpenses.length > 0 && (
+                                <>
+                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                        <div className="bg-white dark:bg-neutral-800 p-3 rounded-2xl">
+                                            <p className="text-xs text-neutral-500 font-medium">Total</p>
+                                            <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{summaryStats.total.toFixed(0)}&#8239;&#8364;</p>
+                                            <p className="text-xs text-neutral-400">{summaryStats.count} dépense{summaryStats.count > 1 ? 's' : ''}</p>
+                                        </div>
+                                        <div className="bg-white dark:bg-neutral-800 p-3 rounded-2xl">
+                                            <p className="text-xs text-green-600 font-medium">Récupérable</p>
+                                            <p className="text-lg font-semibold text-green-700">{summaryStats.recoverable.toFixed(0)}&#8239;&#8364;</p>
+                                            <p className="text-xs text-neutral-400">{summaryStats.recoverablePercent}% du total</p>
+                                        </div>
+                                        <div className="bg-white dark:bg-neutral-800 p-3 rounded-2xl">
+                                            <p className="text-xs text-red-500 font-medium">Non récup.</p>
+                                            <p className="text-lg font-semibold text-red-600">{summaryStats.nonRecoverable.toFixed(0)}&#8239;&#8364;</p>
+                                            <p className="text-xs text-neutral-400">{100 - summaryStats.recoverablePercent}% du total</p>
+                                        </div>
+                                    </div>
+                                    {summaryStats.total > 0 && (
+                                        <div className="h-2 w-full rounded-full flex overflow-hidden mb-6">
+                                            <div
+                                                className="h-full bg-green-500 transition-all duration-300"
+                                                style={{ width: `${summaryStats.recoverablePercent}%` }}
+                                            />
+                                            <div
+                                                className="h-full bg-red-400 transition-all duration-300"
+                                                style={{ width: `${100 - summaryStats.recoverablePercent}%` }}
+                                            />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* ===== EXPENSE LIST ===== */}
                             {property.expenses.length === 0 ? (
                                 <div className="p-10 flex flex-col items-center justify-center text-center border-dashed border-2 border-neutral-200 rounded-xl">
                                     <div className="p-4 bg-neutral-100 rounded-full mb-4">
@@ -555,14 +744,25 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                     <p className="text-neutral-500 max-w-sm mt-2 mb-6">Ajoutez vos factures pour suivre la rentabilité et préparer les régularisations.</p>
                                     <Button label="Ajouter ma première dépense" onClick={() => setIsOpen(true)} variant="outline" />
                                 </div>
+                            ) : filteredExpenses.length === 0 ? (
+                                <div className="p-8 flex flex-col items-center justify-center text-center border-dashed border-2 border-neutral-200 rounded-xl">
+                                    <p className="text-neutral-500 mb-4">Aucune dépense ne correspond à ces filtres</p>
+                                    <button
+                                        onClick={resetFilters}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition"
+                                    >
+                                        <RotateCcw size={14} />
+                                        Réinitialiser les filtres
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="flex flex-col gap-4">
-                                    {property.expenses.map((expense) => {
-                                        const category = EXPENSE_CATEGORIES.find(c => c.value === expense.category);
-                                        const CategoryIcon = category?.icon || HelpCircle;
+                                    {filteredExpenses.map((expense) => {
+                                        const expCat = EXPENSE_CATEGORIES.find(c => c.value === expense.category);
+                                        const CategoryIcon = expCat?.icon || HelpCircle;
                                         return (
                                             <div key={expense.id} className="py-0 flex flex-col gap-2">
-                                                {/* Date Line - Fixed, doesn't slide */}
+                                                {/* Date Line */}
                                                 <div className="text-xs text-neutral-500 font-medium px-1 uppercase tracking-wider">
                                                     {format(new Date(expense.dateOccurred), 'dd MMM yyyy', { locale: fr })}
                                                 </div>
@@ -574,13 +774,14 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                         setStep(STEPS.PROOF);
                                                         setIsOpen(true);
                                                     }}
+                                                    onEdit={() => handleEdit(expense)}
                                                     disabled={expense.isFinalized}
                                                 >
                                                     <div className={`p-3 flex items-center justify-between ${expense.isFinalized ? 'opacity-75' : ''}`}>
                                                         <div className="flex items-center gap-3 flex-1 min-w-0 pl-0">
                                                             {/* Icon Box */}
-                                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${category?.bg || 'bg-neutral-100'}`}>
-                                                                <CategoryIcon size={20} className={category?.color || 'text-neutral-700'} />
+                                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${expCat?.bg || 'bg-neutral-100'}`}>
+                                                                <CategoryIcon size={20} className={expCat?.color || 'text-neutral-700'} />
                                                             </div>
 
                                                             {/* Text Info */}
@@ -596,12 +797,12 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                                 <div className="flex flex-wrap items-center gap-2 mt-0.5">
                                                                     {expense.isRecoverable && (expense.amountRecoverableCents || 0) > 0 && (
                                                                         <div className="text-xs text-green-600 font-base bg-green-50 px-1.5 py-0.5 rounded-md">
-                                                                            {((expense.amountRecoverableCents || 0) / 100).toFixed(0)}€ récup.
+                                                                            {((expense.amountRecoverableCents || 0) / 100).toFixed(0)}&#8364; récup.
                                                                         </div>
                                                                     )}
                                                                     {(expense.amountDeductibleCents || 0) > 0 && (
                                                                         <div className="text-xs text-purple-600 font-base bg-purple-50 px-1.5 py-0.5 rounded-md">
-                                                                            {((expense.amountDeductibleCents || 0) / 100).toFixed(0)}€ déduct.
+                                                                            {((expense.amountDeductibleCents || 0) / 100).toFixed(0)}&#8364; déduct.
                                                                         </div>
                                                                     )}
                                                                     {(!expense.isRecoverable || (expense.amountRecoverableCents || 0) <= 0) && (expense.amountDeductibleCents || 0) === 0 && (
@@ -617,7 +818,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                         <div className="flex items-center gap-3 pl-2">
                                                             <div className="flex flex-col items-end">
                                                                 <span className="font-medium text-neutral-900 whitespace-nowrap text-base">
-                                                                    {(expense.amountTotalCents / 100).toFixed(2)}€
+                                                                    {(expense.amountTotalCents / 100).toFixed(2)}&#8364;
                                                                 </span>
                                                             </div>
                                                         </div>

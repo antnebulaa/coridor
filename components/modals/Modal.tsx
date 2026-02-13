@@ -215,13 +215,11 @@ const Modal: React.FC<ModalProps> = ({
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className={`
-                        relative 
-                        mx-auto 
-                        h-auto
+                        relative
+                        mx-auto
+                        h-dvh
+                        md:h-auto
                         max-h-dvh
-                        md:h-auto 
-                        lg:h-auto 
-                        ${className ? '' : ''} 
                         ${widthClass ? widthClass : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
                     `}
                 >
@@ -235,12 +233,12 @@ const Modal: React.FC<ModalProps> = ({
                             ease-[cubic-bezier(0.32,0.72,0,1)]
                             h-full
                             md:h-auto
-                            ${!skipTranslateAnimation ? (showModal ? 'translate-y-0' : 'translate-y-full') : ''}
-                            ${showModal ? 'opacity-100' : 'opacity-0'}
+                            ${!skipTranslateAnimation ? (showModal ? 'translate-y-0' : 'translate-y-full md:translate-y-0') : ''}
+                            ${showModal ? 'opacity-100' : 'opacity-0 md:opacity-0'}
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-auto max-h-dvh border-0 rounded-[25px] shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden">
+                        <div className="h-dvh md:h-auto max-h-dvh border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden pt-safe md:pt-0">
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div

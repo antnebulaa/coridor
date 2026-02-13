@@ -126,11 +126,11 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
 
             {/* Bio Section */}
             {tenantProfile.bio && (
-                <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-                        <Info size={16} /> À propos de {user.name?.split(' ')[0]}
+                <div className="flex flex-col gap-6 mt-5">
+                    <h3 className="text-2xl font-medium text-neutral-900 flex items-center gap-2">
+                         À propos de {user.name?.split(' ')[0]}
                     </h3>
-                    <div className="bg-white border border-neutral-200 rounded-xl p-4 text-sm text-neutral-700 italic">
+                    <div className="bg-white border border-neutral-200 rounded-xl p-4 text-base text-neutral-700 italic">
                         "{tenantProfile.bio}"
                     </div>
                 </div>
@@ -178,9 +178,9 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
 
             {/* Rental Project Section */}
             {candidateScope && (
-                <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-                        <Home size={16} /> Projet de location
+                <div className="flex flex-col gap-6 mt-5">
+                    <h3 className="text-2xl font-medium text-neutral-900 flex items-center gap-2">
+                         Projet de location
                     </h3>
                     <div className="bg-neutral-100 rounded-2xl p-4 flex flex-col gap-3 text-sm">
                         <div className="flex justify-between">
@@ -212,20 +212,20 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             )}
 
             {/* Professional Situation */}
-            <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-                    <Briefcase size={16} /> Situation Professionnelle
+            <div className="flex flex-col gap-6 mt-5">
+                <h3 className="text-2xl font-medium text-neutral-900 flex items-center gap-2">
+                     Situation Professionnelle
                 </h3>
                 <div className="bg-neutral-100 rounded-xl p-4 flex flex-col gap-3">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center text-sm">
                         <span className="text-neutral-600">Poste</span>
                         <span className="font-medium text-neutral-900">{tenantProfile.jobTitle || "Non renseigné"}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center text-sm">
                         <span className="text-neutral-600">Contrat</span>
                         <span className="font-medium text-neutral-900">{tenantProfile.jobType || "Non renseigné"}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center text-sm">
                         <span className="text-neutral-600">Revenus Nets</span>
                         <span className="font-medium text-neutral-900">{netSalary} € / mois</span>
                     </div>
@@ -235,11 +235,11 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                         <>
                             <hr className="my-1" />
                             <div className="text-sm font-bold text-neutral-900 mt-1">Conjoint·e</div>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center text-sm">
                                 <span className="text-neutral-600">Poste</span>
                                 <span className="font-medium text-neutral-900">{tenantProfile.partnerJobTitle || "Non renseigné"}</span>
                             </div>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center text-sm">
                                 <span className="text-neutral-600">Revenus Nets</span>
                                 <span className="font-medium text-neutral-900">{partnerNetSalary} € / mois</span>
                             </div>
@@ -251,10 +251,10 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             {/* Guarantors */}
             {tenantProfile.guarantors && tenantProfile.guarantors.length > 0 && (
                 <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-base font-medium text-neutral-900 flex items-center gap-2">
                         <Users size={16} /> Garants ({tenantProfile.guarantors.length})
                     </h3>
-                    <div className="bg-neutral-50 rounded-xl p-4 flex flex-col gap-4">
+                    <div className="bg-neutral-50 rounded-xl p-4 flex flex-col gap-0 text-sm">
                         {tenantProfile.guarantors.map((g, i) => {
                             const typeTranslations: Record<string, string> = {
                                 FAMILY: 'Garant Familial',
@@ -275,18 +275,19 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                             };
 
                             return (
-                                <div key={i} className="flex justify-between items-center border-b last:border-0 pb-2 last:pb-0">
+                                <div key={i} className="flex justify-between items-center pb-2 last:pb-0 text-sm">
                                     <div>
                                         <div className="font-medium">{typeTranslations[g.type] || g.type}</div>
-                                        <div className="text-xs text-neutral-500">{statusTranslations[g.status] || g.status}</div>
+                                        <div className="text-neutral-500">{statusTranslations[g.status] || g.status}</div>
                                     </div>
-                                    <div className="font-bold text-neutral-700">
+                                    <div className="font-medium text-neutral-700">
                                         {g.netIncome} €
                                     </div>
                                 </div>
                             );
                         })}
-                        <div className="flex justify-between items-center pt-2 font-bold text-neutral-900">
+                        <hr className="border-neutral-300 mb-4" />
+                        <div className="flex justify-between items-center text-lg font-medium text-neutral-900">
                             <span>Total Garants</span>
                             <span>{totalGuarantorIncome} €</span>
                         </div>
@@ -295,9 +296,9 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             )}
 
             {/* Financial Summary */}
-            <div className="flex flex-col gap-3">
-                <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-                    <Wallet size={16} /> Synthèse Financière
+            <div className="flex flex-col gap-6 mt-5">
+                <h3 className="text-2xl font-medium text-neutral-900 flex items-center gap-2">
+                     Synthèse Financière
                 </h3>
                 <div className="bg-neutral-50 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2 text-sm">
@@ -322,9 +323,9 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
 
             {/* Effort Rate / Solvency */}
             {rent && (
-                <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-                        <Home size={16} /> Solvabilité
+                <div className="flex flex-col gap-6 mt-5">
+                    <h3 className="text-2xl font-medium text-neutral-900 flex items-center gap-2">
+                         Solvabilité
                     </h3>
                     <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-4">
                         <div className="flex justify-between items-start">
@@ -354,7 +355,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                                 />
                                 {/* Remaining Income */}
                                 <div
-                                    className="h-full bg-green-500"
+                                    className="h-full bg-neutral-500"
                                     style={{ width: `${Math.max(0, 100 - effortRate)}%` }}
                                 />
                             </div>

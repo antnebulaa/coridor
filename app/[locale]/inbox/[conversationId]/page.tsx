@@ -161,6 +161,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
 
     // Fetch Status and Application ID
     let applicationId = null;
+    let applicationStatus: string | null = null;
+    let applicationRejectionReason: string | null = null;
     let confirmedVisit = null;
 
     if (safeListing && otherUser) {
@@ -172,9 +174,11 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                     creatorUserId: otherUser.id
                 }
             },
-            select: { id: true }
+            select: { id: true, status: true, rejectionReason: true }
         });
         applicationId = application?.id || null;
+        applicationStatus = application?.status || null;
+        applicationRejectionReason = application?.rejectionReason || null;
 
         // Fetch valid visit (confirmed)
         // We check if EITHER the current user OR the other user is the candidate for this listing.
@@ -214,6 +218,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 listing={safeListing}
                 candidateScope={safeScope}
                 applicationId={applicationId}
+                applicationStatus={applicationStatus}
+                applicationRejectionReason={applicationRejectionReason}
                 conversationId={conversation.id}
                 confirmedVisit={confirmedVisit}
             />

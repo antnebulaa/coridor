@@ -484,7 +484,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             {/* Desktop Popover using Portal */}
             {!isMobile && isOpen && mounted && createPortal(
                 <div
-                    className="fixed inset-0 z-[9999] cursor-default"
+                    className="fixed inset-0 z-9999 cursor-default"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -495,7 +495,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     }}
                 >
                     <div
-                        className="fixed z-[9999] animate-in fade-in zoom-in-95 duration-200"
+                        className="fixed z-9999 animate-in fade-in zoom-in-95 duration-200"
                         style={popoverStyle}
                         onClick={(e) => e.stopPropagation()}
                     >

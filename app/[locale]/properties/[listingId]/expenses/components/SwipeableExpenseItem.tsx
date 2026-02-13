@@ -8,6 +8,7 @@ interface SwipeableExpenseItemProps {
     children: React.ReactNode;
     onDelete: () => void;
     onAddProof: () => void;
+    onEdit?: () => void;
     disabled?: boolean;
 }
 
@@ -15,6 +16,7 @@ const SwipeableExpenseItem: React.FC<SwipeableExpenseItemProps> = ({
     children,
     onDelete,
     onAddProof,
+    onEdit,
     disabled
 }) => {
     const x = useMotionValue(0);
@@ -85,10 +87,13 @@ const SwipeableExpenseItem: React.FC<SwipeableExpenseItemProps> = ({
             {/* Foreground Content Layer */}
             <motion.div
                 drag={disabled ? false : "x"}
-                dragConstraints={{ left: 0, right: 0 }} // This creates the resistance!
-                dragElastic={disabled ? 0 : 0.7} // Allow pulling significantly past constraints
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={disabled ? 0 : 0.7}
                 animate={controls}
                 onDragEnd={handleDragEnd}
+                onTap={() => {
+                    if (!disabled && onEdit) onEdit();
+                }}
                 style={{ x, touchAction: "pan-y" }}
                 className={`relative bg-white z-10 rounded-xl ${!disabled && "cursor-grab active:cursor-grabbing"}`}
             >

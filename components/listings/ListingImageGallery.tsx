@@ -230,7 +230,7 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
     };
 
     const slideshowContent = selectedImageIndex !== null && (
-        <div className="fixed inset-0 z-10000 bg-black flex flex-col animate-in fade-in duration-300 touch-none">
+        <div className="fixed inset-0 z-10000 bg-black flex flex-col animate-in fade-in duration-300 touch-none pt-safe">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 text-white bg-black/50 absolute top-0 w-full z-20">
                 <button
@@ -287,7 +287,7 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
     );
 
     const galleryContent = (
-        <div className="fixed inset-0 z-9999 bg-white dark:bg-neutral-900 overflow-y-auto">
+        <div className="fixed inset-0 z-9999 bg-white dark:bg-neutral-900 overflow-y-auto pt-safe">
             {/* Header */}
             <div className="sticky top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm flex items-center justify-between px-4 py-3 md:px-8 border-b border-neutral-200 dark:border-neutral-800">
                 <button

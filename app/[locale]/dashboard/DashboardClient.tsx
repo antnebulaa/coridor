@@ -5,21 +5,30 @@ import Container from "@/components/Container";
 import KPICards from "@/app/[locale]/properties/components/analytics/KPICards";
 import CashflowChart from "@/app/[locale]/properties/components/analytics/CashflowChart";
 import { HiOutlineHome, HiOutlineUserGroup, HiOutlineClipboard, HiOutlineKey } from "react-icons/hi2";
-import { Plus } from "lucide-react";
+import { Plus, Trophy, Users, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { SafeUser } from "@/types";
+
+interface SelectionStat {
+    listingId: string;
+    listingTitle: string;
+    evaluated: number;
+    shortlisted: number;
+}
 
 interface DashboardClientProps {
     currentUser: SafeUser;
     financials: any;
     operationalStats: any;
+    selectionStats?: SelectionStat[];
 }
 import { useTranslations } from 'next-intl';
 
 const DashboardClient: React.FC<DashboardClientProps> = ({
     currentUser,
     financials,
-    operationalStats
+    operationalStats,
+    selectionStats = []
 }) => {
     const t = useTranslations('dashboard');
     const greetingIndex = Math.floor(Math.random() * 4);
@@ -113,6 +122,43 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                         </div>
                     </div>
                 </div>
+
+                {/* Selection Widget */}
+                {selectionStats.length > 0 && (
+                    <section className="bg-white p-5 rounded-xl border border-neutral-200">
+                        <h3 className="font-medium text-neutral-800 flex items-center gap-2 mb-4">
+                            <Trophy className="w-5 h-5 text-amber-500" />
+                            Selection en cours
+                        </h3>
+                        <div className="space-y-3">
+                            {selectionStats.map((stat) => (
+                                <div key={stat.listingId} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition group">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-neutral-900 truncate">{stat.listingTitle}</p>
+                                        <p className="text-xs text-neutral-500 mt-0.5">
+                                            <span className="inline-flex items-center gap-1">
+                                                <Users size={12} />
+                                                {stat.evaluated} evalue{stat.evaluated > 1 ? 's' : ''}
+                                            </span>
+                                            {stat.shortlisted > 0 && (
+                                                <span className="ml-2 text-green-600">
+                                                    {stat.shortlisted} shortliste{stat.shortlisted > 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href={`/selection/${stat.listingId}`}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 text-white text-xs font-medium rounded-full hover:opacity-90 transition shrink-0 ml-3"
+                                    >
+                                        Comparer
+                                        <ArrowRight size={12} />
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* Bottom Row: Activity */}
                 {/* Bottom Row: Quick Actions only or Empty if nothing else */}

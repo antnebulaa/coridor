@@ -19,7 +19,8 @@ export async function getIsochrone(coordinates: number[], transportMode: string,
     // 'TRANSIT' is not supported by standard Isochrone API. Fallback or Error? 
     // Plan said: "On commencera avec les modes supportés par défaut"
     let profile = 'driving';
-    const mode = transportMode.toLowerCase();
+    const safeMode = typeof transportMode === 'string' ? transportMode : 'driving';
+    const mode = safeMode.toLowerCase();
 
     if (mode === 'cycling') profile = 'cycling';
     if (mode === 'walking') profile = 'walking';

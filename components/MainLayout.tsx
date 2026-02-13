@@ -42,10 +42,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
     let paddingTop = 'pt-0';
     if (isMainPage) {
-        paddingTop = 'pt-0 md:pt-20';
+        paddingTop = 'pt-0 md:pt-20'; // Home: map immersive, Navbar (fixed) handles its own pt-safe
     } else {
-        // Not Home
-        paddingTop = 'md:pt-20'; // Hidden on mobile, block on desktop
+        // Non-home: Navbar hidden on mobile, need safe area padding
+        paddingTop = 'pt-safe md:pt-20';
     }
 
     return (

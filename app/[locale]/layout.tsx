@@ -78,6 +78,7 @@ export const viewport = {
     userScalable: false,
     interactiveWidget: 'resizes-content',
     viewportFit: 'cover',
+    themeColor: '#ffffff',
 };
 
 export function generateStaticParams() {
@@ -106,6 +107,10 @@ export default async function LocaleLayout({
 
     return (
         <html lang={locale} suppressHydrationWarning>
+            <head>
+                <meta name="apple-mobile-web-app-capable" content="yes" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+            </head>
             <body className={font.className}>
                 <AuthProvider>
                     <NextIntlClientProvider messages={messages}>

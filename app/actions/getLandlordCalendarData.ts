@@ -56,10 +56,13 @@ export default async function getLandlordCalendarData() {
             include: {
                 listing: {
                     select: {
+                        id: true,
                         title: true,
-                        price: true, // NEW
-                        charges: true, // NEW
+                        price: true,
+                        charges: true,
                         propertyAdjective: true,
+                        leaseType: true,
+                        availableFrom: true,
                         rentalUnit: {
                             select: {
                                 property: {
@@ -80,7 +83,7 @@ export default async function getLandlordCalendarData() {
                         name: true,
                         image: true,
                         email: true,
-                        createdScopes: { // NEW
+                        createdScopes: {
                             take: 1,
                             orderBy: { createdAt: 'desc' }
                         },
@@ -108,6 +111,11 @@ export default async function getLandlordCalendarData() {
                             }
                         }
                     }
+                },
+                evaluation: {
+                    include: {
+                        scores: true
+                    }
                 }
             }
         });
@@ -130,16 +138,23 @@ export default async function getLandlordCalendarData() {
             createdAt: visit.createdAt.toISOString(),
             listing: {
                 ...visit.listing,
-                category: visit.listing.rentalUnit.property.category || 'Logement', // Flatten for easier usage
+                category: visit.listing.rentalUnit.property.category || 'Logement',
                 city: visit.listing.rentalUnit.property.city,
-                address: visit.listing.rentalUnit.property.address || visit.listing.rentalUnit.property.addressLine1 || null
+                address: visit.listing.rentalUnit.property.address || visit.listing.rentalUnit.property.addressLine1 || null,
+                availableFrom: visit.listing.availableFrom?.toISOString() || null,
             },
             candidate: {
                 ...visit.candidate,
                 conversationId: visit.candidate.conversations?.[0]?.id || null,
                 tenantProfile: visit.candidate.tenantProfile,
-                candidateScope: visit.candidate.createdScopes?.[0] || null // NEW mapping
-            }
+                candidateScope: visit.candidate.createdScopes?.[0] || null
+            },
+            evaluation: visit.evaluation ? {
+                id: visit.evaluation.id,
+                decision: visit.evaluation.decision,
+                compositeScore: visit.evaluation.compositeScore,
+                scores: visit.evaluation.scores || []
+            } : null
         }));
 
         return {

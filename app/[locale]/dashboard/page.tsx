@@ -65,12 +65,59 @@ const DashboardPage = async () => {
     const financialData = await getFinancialAnalytics(undefined, currentYear);
     const operationalStats = await getOperationalStats();
 
+    // Fetch selection stats: listings with evaluated candidates
+    let selectionStats: { listingId: string; listingTitle: string; evaluated: number; shortlisted: number }[] = [];
+    try {
+        const listingsWithEvals = await prisma.listing.findMany({
+            where: {
+                rentalUnit: {
+                    property: {
+                        ownerId: currentUser.id
+                    }
+                },
+                applications: {
+                    some: {
+                        evaluation: { isNot: null }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                title: true,
+                applications: {
+                    where: {
+                        evaluation: { isNot: null }
+                    },
+                    select: {
+                        evaluation: {
+                            select: {
+                                decision: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        selectionStats = listingsWithEvals.map((l) => ({
+            listingId: l.id,
+            listingTitle: l.title,
+            evaluated: l.applications.length,
+            shortlisted: l.applications.filter(
+                (a) => a.evaluation?.decision === 'SHORTLISTED'
+            ).length,
+        }));
+    } catch (error) {
+        console.error("Error fetching selection stats:", error);
+    }
+
     return (
         <ClientOnly>
             <DashboardClient
                 currentUser={currentUser}
                 financials={financialData}
                 operationalStats={operationalStats}
+                selectionStats={selectionStats}
             />
         </ClientOnly>
     );

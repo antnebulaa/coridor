@@ -37,6 +37,8 @@ interface VisitData {
     startTime: string;
     endTime: string;
     date: string;
+    status?: string;
+    applicationId?: string | null;
     listing: {
         title: string;
     };
@@ -44,6 +46,11 @@ interface VisitData {
         name: string;
         image: string | null;
     };
+    evaluation?: {
+        decision: string;
+        compositeScore: number;
+        scores?: { criterion: string; score: number }[];
+    } | null;
 }
 
 interface LandlordCalendarClientProps {
@@ -136,10 +143,15 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         startTime: item.startTime,
         endTime: item.endTime,
         date: item.date,
+        status: type === 'VISIT' ? (item.status || 'CONFIRMED') : null,
         image: type === 'VISIT' ? item.candidate.image : null,
         candidate: type === 'VISIT' ? item.candidate : null,
         listing: type === 'VISIT' ? item.listing : null,
-        color: type === 'VISIT' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'
+        applicationId: type === 'VISIT' ? (item.applicationId || null) : null,
+        evaluation: type === 'VISIT' ? (item.evaluation || null) : null,
+        color: type === 'VISIT'
+            ? (item.status === 'PENDING' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-200 text-red-700')
+            : 'bg-blue-50 border-blue-200 text-blue-700'
     });
 
     // Filter events for the current day (Day View)
@@ -238,6 +250,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 event={selectedEvent}
+                onEvaluationSaved={() => router.refresh()}
             />
 
             <div className="flex flex-col gap-6">
@@ -378,7 +391,25 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                         <Avatar src={event.image} seed={event.title} size={42} />
                                                                     </div>
                                                                     <div>
-                                                                        <h4 className={`font-semibold ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.title}</h4>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <h4 className={`font-semibold ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.title}</h4>
+                                                                            {event.status === 'PENDING' && (
+                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">En attente</span>
+                                                                            )}
+                                                                            {event.status === 'CONFIRMED' && !event.evaluation && (
+                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase">Confirmee</span>
+                                                                            )}
+                                                                            {/* Evaluation decision badge */}
+                                                                            {event.evaluation?.decision === 'SHORTLISTED' && (
+                                                                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Shortliste" />
+                                                                            )}
+                                                                            {event.evaluation?.decision === 'UNDECIDED' && (
+                                                                                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title="Indecis" />
+                                                                            )}
+                                                                            {event.evaluation?.decision === 'ELIMINATED' && (
+                                                                                <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" title="Ecarte" />
+                                                                            )}
+                                                                        </div>
                                                                         <div className={`flex items-center gap-1 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
                                                                             <MapPin size={14} className="shrink-0" />
                                                                             <span className="line-clamp-1">{event.subtitle}</span>

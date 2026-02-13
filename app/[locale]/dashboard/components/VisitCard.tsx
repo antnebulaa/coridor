@@ -6,10 +6,10 @@ import axios from "axios";
 import { SafeUser } from "@/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MapPin, User, MessageCircle } from "lucide-react";
+import { MapPin, User, MessageCircle, CheckCircle, Clock, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useTranslations, useFormatter } from 'next-intl';
 
 interface VisitCardProps {
@@ -24,6 +24,7 @@ const VisitCard: React.FC<VisitCardProps> = ({
     const tListing = useTranslations('listing');
     const tCommon = useTranslations('common');
     const format = useFormatter();
+    const [isConfirming, setIsConfirming] = useState(false);
 
     const listing = visit.listing;
     const property = listing.rentalUnit.property;
@@ -64,7 +65,6 @@ const VisitCard: React.FC<VisitCardProps> = ({
         if (visit.conversationId) {
             router.push(`/inbox/${visit.conversationId}`);
         } else {
-            // Fallback if no conversation found (should imply starting one)
             router.push(`/listings/${listing.id}`);
         }
     };
@@ -82,24 +82,75 @@ const VisitCard: React.FC<VisitCardProps> = ({
                     toast.error(t('cancelError'));
                 });
         }
+    }, [visit.id, router, t]);
+
+    const handleConfirm = useCallback(async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsConfirming(true);
+
+        try {
+            await axios.post(`/api/visits/${visit.id}/confirm`);
+            toast.success('Visite confirmée !');
+            router.refresh();
+        } catch {
+            toast.error('Erreur lors de la confirmation');
+        } finally {
+            setIsConfirming(false);
+        }
     }, [visit.id, router]);
 
-    return (
-        <div className="bg-white border border-gray-200 rounded-2xl transition flex flex-col gap-2">
-
-            {/* Header: Date */}
-            <div className="flex items-center gap-3 p-3 rounded-t-2xl bg-neutral-100 border-b border-gray-100">
-                {visit.status === 'CANCELLED' ? (
-                    <div className="font-medium px-3 py-1 rounded-sm text-xs uppercase">
-                        {t('cancelled')}
+    const statusBadge = () => {
+        switch (visit.status) {
+            case 'PENDING':
+                return (
+                    <div className="bg-amber-100 text-amber-800 font-medium px-3 py-1 rounded-sm text-xs uppercase flex items-center gap-1">
+                        <Clock size={12} />
+                        En attente
                     </div>
-                ) : (
-                    <div className="bg-green-100 text-green-800 font-medium px-3 py-1 rounded-sm text-xs uppercase">
+                );
+            case 'CONFIRMED':
+                return (
+                    <div className="bg-green-100 text-green-800 font-medium px-3 py-1 rounded-sm text-xs uppercase flex items-center gap-1">
+                        <CheckCircle size={12} />
                         {t('confirmed')}
                     </div>
-                )}
+                );
+            case 'CANCELLED':
+                return (
+                    <div className="bg-red-100 text-red-700 font-medium px-3 py-1 rounded-sm text-xs uppercase flex items-center gap-1">
+                        <XCircle size={12} />
+                        {t('cancelled')}
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
-                <div className={`font-bold text-neutral-800 uppercase px-3 py-1 rounded-sm text-sm ${visit.status === 'CANCELLED' ? 'bg-neutral-100' : 'bg-neutral-100'}`}>
+    return (
+        <div className={`bg-white border rounded-2xl transition flex flex-col gap-2 ${visit.status === 'PENDING' ? 'border-amber-300' : 'border-gray-200'}`}>
+
+            {/* Confirmation Banner for PENDING visits */}
+            {visit.status === 'PENDING' && (
+                <div className="bg-amber-50 border-b border-amber-200 rounded-t-2xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-amber-800 text-sm">
+                        <Clock size={16} className="shrink-0" />
+                        <span className="font-medium">Confirmez votre présence (24h)</span>
+                    </div>
+                    <button
+                        onClick={handleConfirm}
+                        disabled={isConfirming}
+                        className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50 shrink-0"
+                    >
+                        {isConfirming ? '...' : 'Confirmer'}
+                    </button>
+                </div>
+            )}
+
+            {/* Header: Date */}
+            <div className="flex items-center gap-3 p-3 bg-neutral-100 border-b border-gray-100" style={visit.status !== 'PENDING' ? { borderTopLeftRadius: '1rem', borderTopRightRadius: '1rem' } : {}}>
+                {statusBadge()}
+                <div className={`font-bold text-neutral-800 uppercase px-3 py-1 rounded-sm text-sm bg-neutral-100`}>
                     {dateStr} - {timeStr}
                 </div>
             </div>

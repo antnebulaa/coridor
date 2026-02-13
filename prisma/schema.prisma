@@ -455,21 +455,29 @@ enum VisitStatus {
 }
 
 model Visit {
-  id          String      @id @default(uuid())
-  listingId   String      // REMAINS: Candidate visits a specific Listing offer
-  candidateId String
-  date        DateTime
-  startTime   String
-  endTime     String
-  status      VisitStatus @default(PENDING)
-  createdAt   DateTime    @default(now())
+  id              String      @id @default(uuid())
+  listingId       String
+  candidateId     String
+  date            DateTime
+  startTime       String
+  endTime         String
+  status          VisitStatus @default(PENDING)
+  confirmedAt     DateTime?
+  reminderSentAt  DateTime?
+  createdAt       DateTime    @default(now())
+
+  applicationId   String?
+  application     RentalApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   candidate   User    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  evaluation  CandidateEvaluation?
 
   @@index([listingId])
   @@index([candidateId])
   @@index([date])
+  @@index([status])
+  @@index([applicationId])
 }
 
 model Room {
@@ -623,7 +631,30 @@ enum ApplicationStatus {
   REJECTED
   VISIT_PROPOSED
   VISIT_CONFIRMED
+  SHORTLISTED
+  FINALIST
+  SELECTED
   ACCEPTED
+}
+
+enum EvaluationCriterion {
+  PUNCTUALITY
+  FILE_COMPLETENESS
+  INCOME_ADEQUACY
+  GUARANTOR_QUALITY
+  LEASE_COMPATIBILITY
+  MOVE_IN_FLEXIBILITY
+  INTEREST_LEVEL
+  QUESTIONS_ASKED
+  CONDITIONS_GRASPED
+  RENTAL_PROJECT
+  COUP_DE_COEUR
+}
+
+enum EvaluationDecision {
+  SHORTLISTED
+  UNDECIDED
+  ELIMINATED
 }
 
 enum LeaseStatus {
@@ -645,6 +676,8 @@ model RentalApplication {
   status               ApplicationStatus    @default(SENT)
   specificLeaseRequest SpecificLeaseRequest @default(DEFAULT)
   appliedAt            DateTime             @default(now())
+  rejectionReason      String?
+  rejectedAt           DateTime?
 
   // Lease & Signature
   leaseStatus        LeaseStatus @default(DRAFT)
@@ -658,12 +691,16 @@ model RentalApplication {
 
   listing        Listing              @relation(fields: [listingId], references: [id], onDelete: Cascade)
   candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
-  
+
   reconciliationHistory ReconciliationHistory[]
-  
+
   // Financial History
   financials         LeaseFinancials[]
   matchedTransactions BankTransaction[]
+
+  // Selection
+  visits             Visit[]
+  evaluation         CandidateEvaluation?
 
   @@index([listingId])
   @@index([candidateScopeId])
@@ -946,4 +983,33 @@ model Notification {
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CandidateEvaluation {
+  id              String              @id @default(uuid())
+  visitId         String              @unique
+  applicationId   String              @unique
+  decision        EvaluationDecision
+  compositeScore  Float               @default(0)
+  evaluatedAt     DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  visit           Visit               @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  application     RentalApplication   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  scores          EvaluationScore[]
+
+  @@index([applicationId])
+  @@index([compositeScore])
+}
+
+model EvaluationScore {
+  id              String              @id @default(uuid())
+  evaluationId    String
+  criterion       EvaluationCriterion
+  score           Int
+
+  evaluation      CandidateEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluationId, criterion])
+  @@index([evaluationId])
 }

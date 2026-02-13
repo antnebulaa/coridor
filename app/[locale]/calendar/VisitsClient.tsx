@@ -7,7 +7,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, CheckCircle, XCircle } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface VisitsClientProps {
     visits: SafeVisit[];
@@ -59,8 +63,52 @@ const VisitsClient: React.FC<VisitsClientProps> = ({
 }
 
 const VisitCard = ({ visit }: { visit: SafeVisit }) => {
+    const router = useRouter();
+    const [isConfirming, setIsConfirming] = useState(false);
+
+    const handleConfirm = async () => {
+        setIsConfirming(true);
+        try {
+            await axios.post(`/api/visits/${visit.id}/confirm`);
+            toast.success('Visite confirmée !');
+            router.refresh();
+        } catch {
+            toast.error('Erreur lors de la confirmation');
+        } finally {
+            setIsConfirming(false);
+        }
+    };
+
+    const statusBadge = () => {
+        switch (visit.status) {
+            case 'PENDING':
+                return (
+                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 flex items-center gap-1">
+                        <Clock size={12} />
+                        En attente
+                    </span>
+                );
+            case 'CONFIRMED':
+                return (
+                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 flex items-center gap-1">
+                        <CheckCircle size={12} />
+                        Confirmée
+                    </span>
+                );
+            case 'CANCELLED':
+                return (
+                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 flex items-center gap-1">
+                        <XCircle size={12} />
+                        Annulée
+                    </span>
+                );
+            default:
+                return null;
+        }
+    };
+
     return (
-        <div className="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition group h-full flex flex-col">
+        <div className={`bg-white border rounded-xl overflow-hidden hover:shadow-lg transition group h-full flex flex-col ${visit.status === 'PENDING' ? 'border-amber-300' : ''}`}>
             <div className="aspect-video relative w-full overflow-hidden">
                 <Image
                     fill
@@ -76,15 +124,26 @@ const VisitCard = ({ visit }: { visit: SafeVisit }) => {
                 </div>
                 <div className="flex items-center gap-2 text-neutral-500 text-sm">
                     <Clock size={16} />
-                    {format(new Date(visit.date), 'HH:mm')}
+                    {visit.startTime || format(new Date(visit.date), 'HH:mm')}
                 </div>
                 <div className="font-semibold text-lg line-clamp-1">
                     {visit.listing.title}
                 </div>
                 <div className="flex items-center gap-2 text-neutral-500 text-sm line-clamp-1">
                     <MapPin size={16} />
-                    {visit.listing.rentalUnit.property.city}
+                    {visit.listing.rentalUnit?.property?.city}
                 </div>
+
+                {/* Confirm button for PENDING visits */}
+                {visit.status === 'PENDING' && (
+                    <button
+                        onClick={handleConfirm}
+                        disabled={isConfirming}
+                        className="mt-2 w-full py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                        {isConfirming ? 'Confirmation...' : 'Confirmer ma présence'}
+                    </button>
+                )}
 
                 <div className="flex-1"></div>
                 <hr className="my-2" />
@@ -94,11 +153,9 @@ const VisitCard = ({ visit }: { visit: SafeVisit }) => {
                         href={`/listings/${visit.listing.id}`}
                         className="text-sm font-medium underline"
                     >
-                        Voir l'annonce
+                        Voir l&apos;annonce
                     </Link>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${visit.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {visit.status === 'CONFIRMED' ? 'Confirmée' : 'Annulée'}
-                    </span>
+                    {statusBadge()}
                 </div>
             </div>
         </div>

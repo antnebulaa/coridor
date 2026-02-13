@@ -398,6 +398,23 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}
                                     </div>
                                 </div>
+                            ) : data.body?.startsWith('APPLICATION_REJECTED|') ? (
+                                (() => {
+                                    const reason = data.body?.split('|').slice(1).join('|') || '';
+                                    return (
+                                        <div className="flex flex-col gap-2 bg-red-50 border border-red-200 p-4 rounded-2xl max-w-xs">
+                                            <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
+                                                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Candidature déclinée
+                                            </div>
+                                            <div className="text-sm text-red-600">
+                                                {reason}
+                                            </div>
+                                        </div>
+                                    );
+                                })()
                             ) : (
                                 <div>
                                     {(() => {

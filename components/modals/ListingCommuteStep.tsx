@@ -97,7 +97,7 @@ const ListingCommuteStep: React.FC<ListingCommuteStepProps> = ({
                                 label: value.label
                             });
                         }}
-                        placeholder="On cherche où ?"
+                        placeholder="Chercher autour de..."
                         autoFocus={true}
                         renderAsList={true}
                         clearOnSelect
