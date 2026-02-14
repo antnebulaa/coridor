@@ -45,15 +45,14 @@ const Header: React.FC<HeaderProps> = ({
         border-b
         border-gray-200 dark:border-neutral-800
         sm:px-4
-        pt-safe
-        pb-3
+        py-3
         px-4
         lg:px-6
         justify-between
         items-center
         relative
         z-10
-        min-h-[73px]
+        h-[73px]
       ">
                 <div className="flex gap-3 items-center">
                     <Link
