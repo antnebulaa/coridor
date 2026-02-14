@@ -289,7 +289,7 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
     const galleryContent = (
         <div className="fixed inset-0 z-9999 bg-white dark:bg-neutral-900 overflow-y-auto pt-safe">
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm flex items-center justify-between px-4 py-3 md:px-8 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="sticky top-safe md:top-0 z-50 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm flex items-center justify-between px-4 py-3 md:px-8 border-b border-neutral-200 dark:border-neutral-800">
                 <button
                     onClick={onClose}
                     className="p-2 -ml-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition"

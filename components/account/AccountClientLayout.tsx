@@ -39,7 +39,7 @@ const AccountHeader = () => {
     };
 
     return (
-        <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-200 md:hidden">
+        <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-neutral-200 md:hidden pt-safe">
             <div className="flex items-center h-14 px-4">
                 <button
                     onClick={handleBack}

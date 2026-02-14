@@ -295,7 +295,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
 
                     return (
                         <div key={monthIdx} className="mb-8">
-                            <h2 className="text-lg md:text-xl font-medium capitalize mb-4 sticky top-0 bg-white py-2 z-10 text-neutral-900">
+                            <h2 className="text-lg md:text-xl font-medium capitalize mb-4 sticky top-safe md:top-0 bg-white py-2 z-10 text-neutral-900">
                                 {format(monthDate, 'MMMM yyyy', { locale: fr })}
                             </h2>
 

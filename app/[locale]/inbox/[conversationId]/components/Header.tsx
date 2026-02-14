@@ -40,19 +40,20 @@ const Header: React.FC<HeaderProps> = ({
         <>
             <div className="
         bg-white dark:bg-neutral-900
-        w-full 
-        flex 
-        border-b 
+        w-full
+        flex
+        border-b
         border-gray-200 dark:border-neutral-800
-        sm:px-4 
-        py-3 
-        px-4 
-        lg:px-6 
-        justify-between 
-        items-center 
+        sm:px-4
+        pt-safe
+        pb-3
+        px-4
+        lg:px-6
+        justify-between
+        items-center
         relative
         z-10
-        h-[73px]
+        min-h-[73px]
       ">
                 <div className="flex gap-3 items-center">
                     <Link

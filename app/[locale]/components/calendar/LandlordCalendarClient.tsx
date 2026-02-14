@@ -258,7 +258,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 {/* Header with Ref */}
                 <div
                     ref={headerRef}
-                    className="sticky top-0 md:top-16 z-30 bg-white pt-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all"
+                    className="sticky top-safe md:top-16 z-30 bg-white pt-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all"
                 >
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <Heading
