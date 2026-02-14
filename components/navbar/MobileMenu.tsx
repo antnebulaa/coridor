@@ -92,7 +92,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     return (
         <div
             id="bottom-nav"
-            className="fixed bottom-safe-6 w-full z-2000 md:hidden px-4 pointer-events-none"
+            className="fixed bottom-6 w-full z-2000 md:hidden px-4 pointer-events-none"
         >
             <div className="flex flex-row items-center justify-center max-w-[400px] mx-auto">
                 {/* Main Menu Pill */}

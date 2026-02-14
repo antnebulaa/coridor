@@ -132,10 +132,6 @@ hr {
     top: env(safe-area-inset-top);
   }
 
-  .bottom-safe-6 {
-    bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem));
-  }
-
   .container-custom {
     @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;
   }
