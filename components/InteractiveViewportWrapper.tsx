@@ -18,9 +18,18 @@ const InteractiveViewportWrapper: React.FC<InteractiveViewportWrapperProps> = ({
 
             const viewport = window.visualViewport;
 
-            // Direct DOM manipulation
-            containerRef.current.style.height = `${viewport.height}px`;
-            containerRef.current.style.top = `${viewport.offsetTop}px`;
+            // Detect keyboard: visual viewport significantly smaller than layout viewport
+            const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
+
+            if (isKeyboardOpen) {
+                // Keyboard open — shrink to visual viewport to keep input visible
+                containerRef.current.style.height = `${viewport.height}px`;
+                containerRef.current.style.top = `${viewport.offsetTop}px`;
+            } else {
+                // Keyboard closed — full viewport including safe areas
+                containerRef.current.style.height = '100%';
+                containerRef.current.style.top = '0';
+            }
 
             // Force scroll to top to prevent layout viewport wandering
             if (window.scrollY > 0) {

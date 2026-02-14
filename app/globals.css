@@ -132,6 +132,11 @@ hr {
     top: env(safe-area-inset-top);
   }
 
+  /* Home page: content must clear the fixed navbar (pt-safe + navbar content height) */
+  .pt-safe-navbar {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 5rem);
+  }
+
   .container-custom {
     @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;
   }
