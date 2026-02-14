@@ -119,7 +119,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             `bg-background border-r border-border flex flex-col`,
 
             /* Mobile Styles */
-            isOpen ? 'hidden lg:flex' : 'absolute inset-0 z-40 w-full pb-20 lg:pb-0 pt-safe lg:pt-0',
+            isOpen ? 'hidden lg:flex' : 'absolute inset-0 z-40 w-full pb-32 lg:pb-0 pt-[env(safe-area-inset-top)] lg:pt-0',
 
             /* Desktop Styles */
             `lg:static 
@@ -129,7 +129,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
              lg:h-full
              lg:block`
         )}>
-            <div className="px-5 pt-4 pb-2 flex-none bg-background z-10">
+            <div className="px-5 pt-6 pb-2 flex-none bg-background z-10">
                 <div className="flex justify-between mb-4">
                     <div className="text-2xl font-medium text-foreground">
                         {t('title')}

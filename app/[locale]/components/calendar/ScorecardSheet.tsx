@@ -940,7 +940,7 @@ const DecisionStep: React.FC<{
     return (
         <div className="flex flex-col items-center pt-2">
             {/* ── Recap Card ── */}
-            <div className="w-full rounded-3xl bg-neutral-800/60 border border-neutral-700/50 p-4 mb-8">
+            <div className="w-full rounded-3xl bg-neutral-800/60 p-4 mb-8">
                 {/* Avatar + Name + Grade */}
                 <div className="flex items-center gap-3 mb-4">
                     <div
@@ -951,7 +951,7 @@ const DecisionStep: React.FC<{
                     </div>
                     <div className="flex-1">
                         <div className="text-white font-medium text-xl">{displayName}</div>
-                        {coupDeCoeur && rawGrade !== grade && (
+                        {coupDeCoeur && (
                             <div className="flex items-center gap-1 mt-0.5">
                                 <Heart size={12} className="text-rose-400" fill="currentColor" />
                                 <span className="text-[10px] text-rose-400">Coup de coeur</span>

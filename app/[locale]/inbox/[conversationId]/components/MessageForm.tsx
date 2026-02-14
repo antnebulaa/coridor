@@ -141,7 +141,7 @@ const MessageForm: React.FC<FormProps> = ({
     return (
         <div className="
        p-4 
-       pb-12  // Increased bottom padding for mobile thumb reach
+       pb-[calc(env(safe-area-inset-bottom)+1rem)]
        lg:pb-4 // Reset for desktop
        bg-white 
        border-t 

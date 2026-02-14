@@ -127,10 +127,10 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
 
     return (
         <div className="relative">
-            <div className="flex flex-col gap-2 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0" >
+            <div className="flex flex-col gap-3 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0" >
                 <Link
                     href="/account/personal-info"
-                    className="flex justify-between items-center p-3 sm:p-4 rounded-2xl border border-neutral-200 bg-neutral-50 hover:shadow-md transition mb-2 group cursor-pointer"
+                    className="flex justify-between items-center p-5 sm:p-4 rounded-3xl bg-neutral-50 hover:shadow-md transition mb-2 group cursor-pointer"
                 >
                     <div className="flex items-center gap-4">
                         <div className="shrink-0">
@@ -138,8 +138,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                         </div>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-2 flex-wrap pb-0.5">
-                                <span className="font-semibold text-neutral-900 text-xl leading-none">{firstName} {lastInitial}</span>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${planStyles}`}>
+                                <span className="font-medium text-neutral-900 text-xl leading-none">{firstName} {lastInitial}</span>
+                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${planStyles}`}>
                                     {planLabel}
                                 </span>
                             </div>
