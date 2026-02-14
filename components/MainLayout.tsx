@@ -41,8 +41,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // Other Pages: Visible on Desktop Only.
 
     let paddingTop = 'pt-0';
-    if (isMainPage) {
-        paddingTop = 'pt-0 md:pt-20'; // Home: map immersive, Navbar (fixed) handles its own pt-safe
+    if (isMainPage || isInbox) {
+        // Home: map immersive, Navbar (fixed) handles its own pt-safe
+        // Inbox: h-full layout, components handle their own safe area internally
+        paddingTop = 'pt-0 md:pt-20';
     } else {
         // Non-home: Navbar hidden on mobile, need safe area padding
         paddingTop = 'pt-safe md:pt-20';

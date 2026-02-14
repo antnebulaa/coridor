@@ -269,7 +269,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     return (
         <div className="h-full flex flex-row">
             <div className="h-full flex flex-col flex-1 min-w-0">
-                <div className="flex-none">
+                <div className="flex-none pt-safe bg-white dark:bg-neutral-900">
                     <Header
                         conversation={conversation}
                         onToggleDossier={toggleDossier}
