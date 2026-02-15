@@ -26,11 +26,9 @@ const criterionLabels: Record<string, string> = {
     HOUSING_ADEQUACY: 'Adequation logement',
 };
 
-/** Map a 1-5 score to 1=bon, 2=moyen, 3=faible for display */
+/** Scores are already 1=bon, 2=moyen, 3=faible — pass through */
 function mapScoreToDisplay(score: number): number {
-    if (score >= 4) return 1; // bon
-    if (score >= 3) return 2; // moyen
-    return 3; // faible
+    return score;
 }
 
 const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
@@ -185,8 +183,9 @@ const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
                 label: criterionLabels[s.criterion] || s.criterion,
             }));
 
-        // Composite score: scale to 0-10
-        const compositeScore = Math.min(10, Math.round(evaluation.compositeScore * 10) / 10);
+        // Composite score: normalize from raw range [1,3] to [0,10]
+        const rawScore = evaluation.compositeScore; // avg of (4 - score), range 1.0-3.0
+        const compositeScore = Math.min(10, Math.max(0, Math.round(((rawScore - 1) / 2) * 100) / 10));
 
         // Visit date
         const visitDate = evaluation.visit?.date
