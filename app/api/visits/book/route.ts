@@ -87,6 +87,16 @@ export async function POST(
         }
         // ---------------------------------
 
+        // Find application first to link it to the visit
+        const application = await prisma.rentalApplication.findFirst({
+            where: {
+                listingId: listingId,
+                candidateScope: {
+                    creatorUserId: currentUser.id
+                }
+            }
+        });
+
         const visit = await prisma.visit.create({
             data: {
                 listingId,
@@ -94,17 +104,8 @@ export async function POST(
                 date: new Date(date),
                 startTime,
                 endTime,
-                status: 'PENDING'
-            }
-        });
-
-        // Update application status
-        const application = await prisma.rentalApplication.findFirst({
-            where: {
-                listingId: listingId,
-                candidateScope: {
-                    creatorUserId: currentUser.id
-                }
+                status: 'PENDING',
+                ...(application ? { applicationId: application.id } : {})
             }
         });
 

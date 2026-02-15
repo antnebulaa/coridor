@@ -20,15 +20,37 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { visitId, applicationId, decision, scores } = body as {
+    let { visitId, applicationId, decision, scores } = body as {
         visitId: string;
         applicationId: string;
         decision: string;
         scores: Record<string, number>;
     };
 
-    if (!visitId || !applicationId || !decision || !scores) {
+    if (!visitId || !decision || !scores) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Resolve applicationId from visit if not provided (legacy visits without link)
+    if (!applicationId) {
+        const visit = await prisma.visit.findUnique({
+            where: { id: visitId },
+            select: { applicationId: true, listingId: true, candidateId: true }
+        });
+        if (visit?.applicationId) {
+            applicationId = visit.applicationId;
+        } else if (visit) {
+            const app = await prisma.rentalApplication.findFirst({
+                where: {
+                    listingId: visit.listingId,
+                    candidateScope: { creatorUserId: visit.candidateId }
+                }
+            });
+            if (app) applicationId = app.id;
+        }
+        if (!applicationId) {
+            return NextResponse.json({ error: "Could not resolve application for this visit" }, { status: 400 });
+        }
     }
 
     if (!VALID_DECISIONS.includes(decision)) {
