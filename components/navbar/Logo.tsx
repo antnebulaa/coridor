@@ -19,8 +19,8 @@ const Logo = () => {
                 hidden
                 md:block
                 cursor-pointer
-                text-lg
-                text-[#FE3C08]
+                text-[16px]
+                text-[#151515]
                 ${font.className}
             `}
         >

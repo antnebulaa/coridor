@@ -784,6 +784,10 @@
                 "likes": {
                     "label": "Listing Likes",
                     "description": "Get notified when someone likes your listing"
+                },
+                "legalReminders": {
+                    "label": "Legal reminders",
+                    "description": "Reminders for your landlord legal obligations"
                 }
             },
             "dnd": {

@@ -802,6 +802,10 @@
                 "likes": {
                     "label": "Likes sur vos annonces",
                     "description": "Soyez notifié quand quelqu'un aime votre annonce"
+                },
+                "legalReminders": {
+                    "label": "Rappels légaux",
+                    "description": "Rappels pour vos obligations légales de propriétaire"
                 }
             },
             "dnd": {

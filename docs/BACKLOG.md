@@ -194,11 +194,11 @@
 - [✅] Résumé du dossier candidat dans la conversation (TenantProfilePreview)
 
 ### Notifications
-- [🔧] Notifications in-app (`Notification`, polling 60s, `NotificationCenter.tsx`)
-- [🔧] Push notifications (`PushSubscription`, `PushNotificationManager.tsx`, `sw.js`) — conditionnel HTTPS/localhost
-- [🔧] Préférences par type + DND (`NotificationPreferences` avec heures 24h)
-- [🔧] Realtime (`hooks/useRealtimeNotifications.ts`) — Supabase Broadcast
-- [🔧] Centre de notifications (`components/navbar/NotificationCenter.tsx`) — dropdown + non lus
+- [✅] Notifications in-app (`Notification`, polling 60s, `NotificationCenter.tsx`)
+- [✅] Push notifications (`PushSubscription`, `PushNotificationManager.tsx`, `sw.js`) — conditionnel HTTPS/localhost
+- [✅] Préférences par type + DND (`NotificationsClient.tsx`, `/api/settings/notifications`) — toggles par type, rappels légaux (landlord), mode Ne Pas Déranger
+- [✅] Realtime (`hooks/useRealtimeNotifications.ts`) — Supabase Broadcast, intégré dans `ConversationList` + `ConversationClient`
+- [✅] Centre de notifications (`components/navbar/NotificationCenter.tsx`) — dropdown + non lus
 
 ### Contacts
 - [✅] Système de contacts par code unique (`uniqueCode`, `contacts`)

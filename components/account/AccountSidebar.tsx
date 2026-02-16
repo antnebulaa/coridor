@@ -145,7 +145,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
 
     return (
         <div className="relative">
-            <div className="flex flex-col gap-3 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0" >
+            <div className="flex flex-col gap-1 pt-6 md:pt-4 -mx-1 md:mx-0 pb-24 md:pb-0" >
                 <Link
                     href="/account/personal-info"
                     className="flex justify-between items-center p-5 sm:p-4 rounded-3xl bg-neutral-50 hover:shadow-md transition mb-2 group cursor-pointer"
@@ -176,17 +176,18 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                             items-center 
                             justify-between
                             gap-4 
-                            p-[9px] 
+                            py-[8px]
+                            px-3 
                             hover:bg-secondary 
                             transition 
-                            rounded-xl
+                            rounded-2xl
                             w-full
                             ${route.active ? 'bg-secondary' : ''}
                         `}
                     >
                         <div className="flex items-center gap-4">
-                            <route.icon size={24} className="text-neutral-700" />
-                            <div className="font-medium text-neutral-700">
+                            <route.icon size={20} className="text-neutral-700" />
+                            <div className="font-mono text-neutral-700">
                                 {route.label}
                             </div>
                         </div>

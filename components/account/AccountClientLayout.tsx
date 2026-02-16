@@ -81,12 +81,14 @@ const AccountClientLayout: React.FC<AccountClientLayoutProps> = ({
                 pb-24 md:pb-8
             `}>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-y-6 md:gap-10">
-                    {/* Sidebar - hidden on mobile for subpages */}
+                    {/* Sidebar - hidden on mobile for subpages, sticky on desktop */}
                     <div className={`
                         col-span-1
                         ${!isMainPage ? 'hidden md:block' : 'block'}
                     `}>
-                        {sidebar}
+                        <div className="md:sticky md:top-[88px] md:max-h-[calc(100vh-88px)] md:overflow-y-auto md:scrollbar-none">
+                            {sidebar}
+                        </div>
                     </div>
 
                     {/* Content area - hidden on mobile for main page */}

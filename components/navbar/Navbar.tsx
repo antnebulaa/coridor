@@ -48,26 +48,24 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                                     <Logo />
                                     {currentUser?.plan === 'PLUS' && (
                                         <div className="
-                                        bg-primary
-                                        text-white
-                                        text-[10px]
-                                        font-bold
+                                         text-black
+                                        text-[12px]
+                                        font-medium
                                         px-2
                                         py-0.5
-                                        rounded-full
                                     ">
                                             PLUS
                                         </div>
                                     )}
                                     {currentUser?.plan === 'PRO' && (
                                         <div className="
-                                        bg-black
-                                        text-white
-                                        text-[10px]
-                                        font-bold
+                                    
+                                        text-black
+                                        text-[12px]
+                                        font-medium
                                         px-2
                                         py-0.5
-                                        rounded-full
+                                        
                                     ">
                                             PRO
                                         </div>

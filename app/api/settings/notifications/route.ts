@@ -49,6 +49,8 @@ export async function POST(request: Request) {
             enableVisits,
             enableApplications,
             enableLikes,
+            enableLegalReminders,
+            legalReminderLeadDays,
             dndStartHour,
             dndEndHour
         } = body;
@@ -61,6 +63,8 @@ export async function POST(request: Request) {
                 enableVisits: enableVisits ?? true,
                 enableApplications: enableApplications ?? true,
                 enableLikes: enableLikes ?? false,
+                enableLegalReminders: enableLegalReminders ?? true,
+                legalReminderLeadDays: legalReminderLeadDays ?? 30,
                 dndStartHour,
                 dndEndHour
             },
@@ -70,6 +74,8 @@ export async function POST(request: Request) {
                 enableVisits: enableVisits ?? true,
                 enableApplications: enableApplications ?? true,
                 enableLikes: enableLikes ?? false,
+                enableLegalReminders: enableLegalReminders ?? true,
+                legalReminderLeadDays: legalReminderLeadDays ?? 30,
                 dndStartHour,
                 dndEndHour
             }
