@@ -86,7 +86,7 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
 
     return (
         <Container>
-            <div className="pt-24 pb-10">
+            <div className="pt-6 pb-10">
                 <div className="flex flex-row items-center justify-between mb-8">
                     <Heading
                         title={t('title')}

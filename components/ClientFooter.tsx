@@ -6,8 +6,9 @@ import Footer from "./Footer";
 const ClientFooter = () => {
     const pathname = usePathname();
     const isHomepage = pathname === '/';
+    const isAdmin = pathname?.includes('/admin');
 
-    if (isHomepage) {
+    if (isHomepage || isAdmin) {
         return null;
     }
 

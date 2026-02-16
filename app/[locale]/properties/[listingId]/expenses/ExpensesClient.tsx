@@ -1,7 +1,7 @@
 'use client';
 
 import { SafeUser, SafeProperty, SafeExpense, SafeRentalUnit } from "@/types";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter, useParams } from "next/navigation";
@@ -66,6 +66,25 @@ const EXPENSE_CATEGORIES = [
     { value: 'OTHER', label: 'Autre', icon: HelpCircle, recoverable: false, ratio: 0, color: 'text-slate-600', bg: 'bg-slate-100' },
 ];
 
+const DEDUCTIBILITY_RULES: Record<string, 'FULL' | 'PARTIAL' | 'NONE' | 'MANUAL'> = {
+    TAX_PROPERTY: 'FULL',
+    INSURANCE: 'FULL',
+    INSURANCE_GLI: 'FULL',
+    MAINTENANCE: 'FULL',
+    CARETAKER: 'PARTIAL',
+    ELEVATOR: 'PARTIAL',
+    GENERAL_CHARGES: 'PARTIAL',
+    BUILDING_CHARGES: 'PARTIAL',
+    ELECTRICITY_COMMON: 'PARTIAL',
+    HEATING_COLLECTIVE: 'PARTIAL',
+    COLD_WATER: 'NONE',
+    HOT_WATER: 'NONE',
+    ELECTRICITY_PRIVATE: 'NONE',
+    METERS: 'NONE',
+    PARKING: 'NONE',
+    OTHER: 'MANUAL',
+};
+
 const FREQUENCIES = [
     { value: 'ONCE', label: 'Ponctuel' },
     { value: 'MONTHLY', label: 'Mensuel' },
@@ -113,6 +132,27 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
     const [rentalUnitId, setRentalUnitId] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [proofUrl, setProofUrl] = useState('');
+
+    // Auto-calculate deductible amount based on category
+    useEffect(() => {
+        const rule = DEDUCTIBILITY_RULES[category];
+        if (!rule || rule === 'MANUAL') return; // Don't auto-set for OTHER
+
+        const parsedAmount = parseFloat(amount || '0');
+        const parsedRecoverable = parseFloat(recoverableAmount || '0');
+        const amountCents = Math.round(parsedAmount * 100);
+        const recoverableCents = Math.round(parsedRecoverable * 100);
+
+        let deductibleCents = 0;
+        if (rule === 'FULL') {
+            deductibleCents = amountCents;
+        } else if (rule === 'PARTIAL') {
+            deductibleCents = Math.max(0, amountCents - recoverableCents);
+        }
+        // NONE: stays 0
+
+        setDeductibleAmount(String(deductibleCents / 100));
+    }, [category, amount, recoverableAmount]);
 
     // Edit Mode State
     const [editingExpense, setEditingExpense] = useState<SafeExpense | null>(null);
@@ -513,8 +553,14 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             formatPrice
                             value={deductibleAmount}
                             onChange={(e) => setDeductibleAmount(e.target.value)}
-                            disabled={isLoading}
+                            disabled={isLoading || DEDUCTIBILITY_RULES[category] !== 'MANUAL'}
                         />
+                        <p className="text-xs text-neutral-500 mt-1">
+                            {DEDUCTIBILITY_RULES[category] === 'FULL' && "100% déductible de vos revenus fonciers"}
+                            {DEDUCTIBILITY_RULES[category] === 'PARTIAL' && "Montant non récupérable = déductible"}
+                            {DEDUCTIBILITY_RULES[category] === 'NONE' && "Non déductible (charge récupérable)"}
+                            {DEDUCTIBILITY_RULES[category] === 'MANUAL' && "Saisissez le montant déductible manuellement"}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -702,7 +748,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             {/* ===== SUMMARY INDICATORS ===== */}
                             {filteredExpenses.length > 0 && (
                                 <>
-                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                                         <div className="bg-white dark:bg-neutral-800 p-3 rounded-2xl">
                                             <p className="text-xs text-neutral-500 font-medium">Total</p>
                                             <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{summaryStats.total.toFixed(0)}&#8239;&#8364;</p>
@@ -717,6 +763,11 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                             <p className="text-xs text-red-500 font-medium">Non récup.</p>
                                             <p className="text-lg font-semibold text-red-600">{summaryStats.nonRecoverable.toFixed(0)}&#8239;&#8364;</p>
                                             <p className="text-xs text-neutral-400">{100 - summaryStats.recoverablePercent}% du total</p>
+                                        </div>
+                                        <div className="bg-white dark:bg-neutral-800 p-3 rounded-2xl">
+                                            <p className="text-xs text-purple-600 font-medium">Déductible</p>
+                                            <p className="text-lg font-semibold text-purple-700">{summaryStats.deductible.toFixed(0)}&#8239;&#8364;</p>
+                                            <p className="text-xs text-neutral-400">{summaryStats.total > 0 ? Math.round((summaryStats.deductible / summaryStats.total) * 100) : 0}% du total</p>
                                         </div>
                                     </div>
                                     {summaryStats.total > 0 && (

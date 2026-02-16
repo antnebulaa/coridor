@@ -24,6 +24,7 @@ import ApplicationModal from "../modals/ApplicationModal";
 import { useCallback } from "react";
 import ListingMobileFooter from "./ListingMobileFooter";
 import IncompleteProfileModal from "../modals/IncompleteProfileModal";
+import PollResults from "./PollResults";
 
 const MapComponent = dynamic(() => import('../Map'), {
     ssr: false
@@ -353,13 +354,13 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                     </>
                 )}
 
-                {/* Neighborhood Score Section */}
-                {/* {listing.latitude && listing.longitude && (
-                    <NeighborhoodScore
-                        latitude={listing.latitude}
-                        longitude={listing.longitude}
+                {/* Poll Results */}
+                <div className={isMobileModal ? 'px-6' : ''}>
+                    <PollResults
+                        city={listing.city}
+                        zipCode={listing.zipCode}
                     />
-                )} */}
+                </div>
 
             </div >
 

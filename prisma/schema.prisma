@@ -52,6 +52,13 @@ enum Plan {
   PRO
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  GIFTED
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -122,8 +129,19 @@ model User {
   
   // Search Alerts
   searchAlerts     SearchAlert[]
-  
+
   notifications    Notification[]
+
+  // Community Polls
+  createdPolls     NeighborhoodPoll[] @relation("PollCreator")
+  pollVotes        PollResponse[]     @relation("PollVotes")
+
+  // Subscriptions
+  subscriptions       Subscription[]
+  giftedSubscriptions Subscription[] @relation("GiftedSubscriptions")
+  invoices            Invoice[]
+
+  legalReminders      LegalReminder[]
 }
 
 model TenantProfile {
@@ -149,6 +167,13 @@ model TenantProfile {
   rentVerified       Boolean @default(false)
   detectedRentAmount Int?
   rentPaymentDate    Int? // Day of the month (1-31)
+
+  // Badge Payeur Exemplaire
+  badgeLevel         String?   // "BRONZE", "SILVER", "GOLD" or null
+  verifiedMonths     Int       @default(0)
+  punctualityRate    Float?    // 0-100
+  lastVerifiedAt     DateTime?
+  verificationStatus String?   // "PENDING", "VERIFIED", "FAILED", "EXPIRED"
 
   // Bio
   bio               String?
@@ -263,7 +288,17 @@ model Property {
   energy_cost_max Int?
   heatingSystem   String?
   glazingType     String?
-  
+
+  // ---- DIAGNOSTICS IMMOBILIERS ----
+  dpeDate                   DateTime? @db.Date
+  dpeExpiryDate             DateTime? @db.Date
+  electricalDiagnosticDate  DateTime? @db.Date
+  electricalInstallYear     Int?
+  gasDiagnosticDate         DateTime? @db.Date
+  gasInstallYear            Int?
+  hasGasInstallation        Boolean   @default(false)
+  erpDate                   DateTime? @db.Date
+
   // Physical Characteristics (Moved from RentalUnit)
   totalFloors     Int?
   floor           Int? // Floor of the property
@@ -292,6 +327,8 @@ model Property {
 
   expenses              Expense[]
   reconciliationHistory ReconciliationHistory[]
+
+  legalReminders      LegalReminder[]
 
   @@index([ownerId])
 }
@@ -688,6 +725,11 @@ model RentalApplication {
   indexationQuarter  Int?    // 1, 2, 3, or 4
   baseIndexValue     Float?  // Index value at lease signature
 
+  // ---- RAPPELS LEGAUX ----
+  leaseEndDate              DateTime? @db.Date
+  keysReturnDate            DateTime?
+  tenantInsuranceLastDate   DateTime?
+  tenantInsuranceDocUrl     String?
 
   listing        Listing              @relation(fields: [listingId], references: [id], onDelete: Cascade)
   candidateScope TenantCandidateScope @relation(fields: [candidateScopeId], references: [id], onDelete: Cascade)
@@ -697,6 +739,10 @@ model RentalApplication {
   // Financial History
   financials         LeaseFinancials[]
   matchedTransactions BankTransaction[]
+  rentReceipts       RentReceipt[]
+
+  legalReminders      LegalReminder[]
+  rentPaymentTrackings RentPaymentTracking[]
 
   // Selection
   visits             Visit[]
@@ -721,6 +767,30 @@ model LeaseFinancials {
 
   rentalApplication    RentalApplication @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
 
+  @@index([rentalApplicationId])
+}
+
+model RentReceipt {
+  id                  String   @id @default(uuid())
+  rentalApplicationId String
+
+  periodStart         DateTime @db.Date
+  periodEnd           DateTime @db.Date
+
+  rentAmountCents     Int      // Loyer HC payé
+  chargesAmountCents  Int      // Charges payées
+  totalAmountCents    Int      // Total payé
+
+  isPartialPayment    Boolean  @default(false)
+
+  pdfUrl              String?
+  sentAt              DateTime?
+
+  createdAt           DateTime @default(now())
+
+  rentalApplication   RentalApplication @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalApplicationId, periodStart])
   @@index([rentalApplicationId])
 }
 
@@ -925,7 +995,10 @@ model NotificationPreferences {
   // Do Not Disturb hours (24h format)
   dndStartHour Int? // Example: 22 = 10pm
   dndEndHour   Int? // Example: 8 = 8am
-  
+
+  enableLegalReminders      Boolean @default(true)
+  legalReminderLeadDays     Int     @default(30)
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1012,4 +1085,233 @@ model EvaluationScore {
 
   @@unique([evaluationId, criterion])
   @@index([evaluationId])
+}
+
+// ── Community Neighborhood Polls ─────────────────────────────────────────
+
+enum PollCategory {
+  NOISE_LEVEL
+  SAFETY
+  TRANSPORT
+  SHOPPING
+  SCHOOLS
+  PARKING
+  GREEN_SPACES
+  COMMUNITY_SPIRIT
+}
+
+enum PollStatus {
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+model NeighborhoodPoll {
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  category      PollCategory
+  status        PollStatus   @default(ACTIVE)
+  option1       String
+  option2       String
+  option3       String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  closedAt      DateTime?
+
+  createdById   String
+  createdBy     User         @relation("PollCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  responses     PollResponse[]
+
+  @@index([status])
+  @@index([category])
+  @@index([createdById])
+}
+
+model PollResponse {
+  id             String   @id @default(uuid())
+  selectedOption Int
+  neighborhood   String?
+  city           String?
+  zipCode        String?
+  pollId         String
+  poll           NeighborhoodPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation("PollVotes", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([pollId, userId])
+  @@index([pollId])
+  @@index([userId])
+  @@index([city])
+  @@index([zipCode])
+}
+
+// ── Subscription Management ─────────────────────────────────────────
+
+model Subscription {
+  id          String             @id @default(uuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan
+  status      SubscriptionStatus @default(ACTIVE)
+  startDate   DateTime           @default(now())
+  endDate     DateTime?
+  isGifted    Boolean            @default(false)
+  giftedById  String?
+  giftedBy    User?              @relation("GiftedSubscriptions", fields: [giftedById], references: [id], onDelete: SetNull)
+  giftReason  String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  invoices    Invoice[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([endDate])
+}
+
+model Invoice {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+  amountCents     Int
+  description     String
+  status          String        @default("PAID")
+  invoiceDate     DateTime      @default(now())
+  pdfUrl          String?
+  createdAt       DateTime      @default(now())
+
+  @@index([userId])
+  @@index([invoiceDate])
+}
+
+// ── Legal Reminders ─────────────────────────────────────────
+
+enum LegalReminderType {
+  DPE_EXPIRY
+  ELECTRICAL_DIAGNOSTIC_EXPIRY
+  GAS_DIAGNOSTIC_EXPIRY
+  ERP_EXPIRY
+  RENT_FREEZE_DPE_FG
+  LEASE_END_NOTICE_LANDLORD
+  RENT_REVISION_IRL
+  CHARGES_REGULARIZATION
+  DEPOSIT_RETURN_DEADLINE
+  TENANT_INSURANCE_CHECK
+  TAX_DECLARATION_DEADLINE
+  CUSTOM
+}
+
+enum LegalReminderStatus {
+  PENDING
+  UPCOMING
+  NOTIFIED
+  COMPLETED
+  DISMISSED
+  OVERDUE
+}
+
+enum LegalReminderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model LegalReminder {
+  id                    String                @id @default(uuid())
+
+  userId                String
+  propertyId            String?
+  rentalApplicationId   String?
+
+  type                  LegalReminderType
+  priority              LegalReminderPriority @default(MEDIUM)
+  title                 String
+  description           String?
+  legalReference        String?
+  actionUrl             String?
+
+  dueDate               DateTime
+  reminderDate          DateTime
+  secondReminderDate    DateTime?
+  recurrenceRule        String?
+  nextOccurrence        DateTime?
+
+  status                LegalReminderStatus   @default(PENDING)
+  completedAt           DateTime?
+  dismissedAt           DateTime?
+  dismissReason         String?
+
+  notifiedAt            DateTime?
+  secondNotifiedAt      DateTime?
+
+  isAutoGenerated       Boolean               @default(true)
+  sourceField           String?
+  metadata              Json?
+
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property              Property?             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentalApplication     RentalApplication?    @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([propertyId])
+  @@index([rentalApplicationId])
+  @@index([dueDate])
+  @@index([reminderDate])
+  @@index([status])
+  @@index([type])
+  @@index([userId, status])
+}
+
+// ── Rent Payment Tracking ─────────────────────────────────────
+
+enum RentPaymentStatus {
+  PENDING
+  PAID
+  LATE
+  REMINDER_SENT
+  OVERDUE
+  CRITICAL
+  MANUALLY_CONFIRMED
+  IGNORED
+}
+
+model RentPaymentTracking {
+  id                  String   @id @default(uuid())
+  rentalApplicationId String
+
+  periodMonth         Int      // 1-12
+  periodYear          Int      // 2026
+
+  expectedAmountCents Int      // Montant attendu
+  expectedDate        DateTime @db.Date
+
+  detectedAmountCents Int?
+  detectedDate        DateTime?
+  transactionId       String?
+  isPartialPayment    Boolean  @default(false)
+
+  status              RentPaymentStatus @default(PENDING)
+
+  reminderSentAt      DateTime?
+  overdueNotifiedAt   DateTime?
+  manuallyConfirmedAt DateTime?
+  ignoreReason        String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  rentalApplication   RentalApplication @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalApplicationId, periodMonth, periodYear])
+  @@index([rentalApplicationId])
+  @@index([status])
+  @@index([expectedDate])
 }

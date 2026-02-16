@@ -18,6 +18,9 @@ const PAGE_TITLES: Record<string, string> = {
     '/account/preferences': 'Préférences',
     '/account/notifications': 'Notifications',
     '/account/project': 'Mon projet',
+    '/account/privacy': 'Confidentialité',
+    '/account/pricing': 'Abonnement',
+    '/account/alerts': 'Alertes',
     '/account/settings': 'Paramètres',
 };
 

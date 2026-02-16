@@ -4,6 +4,7 @@ import { SafeUser } from "@/types";
 import { TenantProfile, Guarantor, Income } from "@prisma/client";
 import Avatar from "@/components/Avatar";
 import { ShieldCheck, CheckCircle, Briefcase, Users, Wallet, Home, Info } from "lucide-react";
+import PaymentBadge from "@/components/profile/PaymentBadge";
 
 interface TenantProfilePreviewProps {
     user: SafeUser;
@@ -18,6 +19,9 @@ interface TenantProfilePreviewProps {
         jobTitle?: string | null;
         jobType?: string | null;
         bio?: string | null;
+        badgeLevel?: string | null;
+        verifiedMonths?: number;
+        punctualityRate?: number | null;
     };
     rent?: number;
     charges?: any; // { amount: number, included: boolean }
@@ -112,11 +116,13 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                 <div className="flex flex-col">
                     <div className="text-lg font-bold flex items-center gap-2">
                         {user.name}
-                        {tenantProfile.rentVerified && (
+                        {tenantProfile.badgeLevel ? (
+                            <PaymentBadge badgeLevel={tenantProfile.badgeLevel} compact />
+                        ) : tenantProfile.rentVerified ? (
                             <span className="text-green-600" title="Loyer vérifié">
                                 <ShieldCheck size={18} />
                             </span>
-                        )}
+                        ) : null}
                     </div>
                     <div className="text-sm text-neutral-500">
                         Candidat Locataire
@@ -136,8 +142,14 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                 </div>
             )}
 
-            {/* Rent Verification Badge */}
-            {tenantProfile.rentVerified && (
+            {/* Payment Badge */}
+            {tenantProfile.badgeLevel ? (
+                <PaymentBadge
+                    badgeLevel={tenantProfile.badgeLevel}
+                    verifiedMonths={tenantProfile.verifiedMonths}
+                    punctualityRate={tenantProfile.punctualityRate}
+                />
+            ) : tenantProfile.rentVerified ? (
                 <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">
                     <CheckCircle size={24} className="shrink-0" />
                     <div>
@@ -145,7 +157,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                         <div className="text-xs">Ce candidat a prouvé sa régularité de paiement sur les 12 derniers mois.</div>
                     </div>
                 </div>
-            )}
+            ) : null}
 
             {/* Access to Full Dossier (Conditionally Shown) */}
             {showFullDossierLink && (

@@ -19,6 +19,7 @@ import ApplicationModal from "@/components/modals/ApplicationModal";
 import IncompleteProfileModal from "@/components/modals/IncompleteProfileModal";
 import ListingMobileFooter from "@/components/listings/ListingMobileFooter";
 import ReportButton from "@/components/reports/ReportButton";
+import PollResults from "@/components/listings/PollResults";
 
 interface ListingClientProps {
     listing: SafeListing & {
@@ -142,6 +143,10 @@ const ListingClient: React.FC<ListingClientProps> = ({
                         <div className="mt-4">
                             <ReportButton listingId={listing.id} label={t('actions.report')} />
                         </div>
+                        <PollResults
+                            city={listing.city}
+                            zipCode={listing.zipCode}
+                        />
                         <div className="order-first mb-10 md:order-last md:col-span-3">
                             <div className="bg-card border border-border overflow-hidden rounded-xl p-4 flex flex-col gap-4 sticky top-28">
                                 <div className="text-xl font-semibold">

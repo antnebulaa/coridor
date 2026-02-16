@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPowensToken, getPowensTransactions } from "@/app/lib/powens";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { PaymentVerificationService } from "@/services/PaymentVerificationService";
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
@@ -140,6 +141,14 @@ export async function POST(request: Request) {
                     rentVerified: false
                 }
             });
+
+            // Trigger badge analysis after saving transactions
+            try {
+                await PaymentVerificationService.updateBadge(currentUser.id);
+            } catch (badgeError) {
+                console.error("[Badge] Auto-analysis failed:", badgeError);
+                // Non-blocking: badge failure should not prevent the response
+            }
 
             return NextResponse.json({
                 found: true,

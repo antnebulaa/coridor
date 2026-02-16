@@ -126,7 +126,7 @@ const PricingClient: React.FC<PricingClientProps> = ({
     return (
         <div className="bg-white pb-20">
             {/* Header Section */}
-            <div className="pt-24 pb-12 text-center max-w-3xl mx-auto px-4">
+            <div className="pt-8 pb-12 text-center max-w-3xl mx-auto px-4">
                 <h1 className="text-4xl md:text-4xl font-semibold text-neutral-900 mb-6 tracking-tight">
                     Gérez votre location <br />  sans stress.
                 </h1>

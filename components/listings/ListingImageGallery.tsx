@@ -162,10 +162,7 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
     }, [selectedImageIndex, handleNext, handlePrev]);
 
 
-    if (!isOpen) return null;
-    if (typeof window === 'undefined') return null;
-
-    // Pinch-to-zoom gesture handler
+    // Pinch-to-zoom gesture handler (must be before early returns to respect Rules of Hooks)
     const bindGesture = useGesture(
         {
             onPinch: ({ offset: [s], origin: [ox, oy] }) => {
@@ -196,6 +193,9 @@ const ListingImageGallery: React.FC<ListingImageGalleryProps> = ({
             setOrigin({ x: 50, y: 50 });
         }
     }, [selectedImageIndex]);
+
+    if (!isOpen) return null;
+    if (typeof window === 'undefined') return null;
 
     // Helper to render slides
     const renderSlide = (offsetIndex: number, positionClass: string) => {

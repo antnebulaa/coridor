@@ -8,6 +8,9 @@ import { HiOutlineHome, HiOutlineUserGroup, HiOutlineClipboard, HiOutlineKey } f
 import { Plus, Trophy, Users, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { SafeUser } from "@/types";
+import LegalRemindersWidget from "@/components/dashboard/LegalRemindersWidget";
+import RentCollectionWidget from "@/components/dashboard/RentCollectionWidget";
+import FiscalWidget from "@/components/dashboard/FiscalWidget";
 
 interface SelectionStat {
     listingId: string;
@@ -159,6 +162,15 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                         </div>
                     </section>
                 )}
+
+                {/* Legal Reminders Widget */}
+                <LegalRemindersWidget />
+
+                {/* Rent Collection Widget */}
+                <RentCollectionWidget />
+
+                {/* Fiscal Widget (April-June only) */}
+                <FiscalWidget />
 
                 {/* Bottom Row: Activity */}
                 {/* Bottom Row: Quick Actions only or Empty if nothing else */}

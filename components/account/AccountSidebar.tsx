@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles, BellRing } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles, BellRing, Receipt, Scale, Calculator } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -54,6 +54,18 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             href: '/dashboard/finances',
             active: pathname === '/dashboard/finances'
         }] : []),
+        ...(currentUser?.userMode === 'LANDLORD' ? [{
+            label: 'Rappels legaux',
+            icon: Scale,
+            href: '/account/reminders',
+            active: pathname === '/account/reminders'
+        }] : []),
+        ...(currentUser?.userMode === 'LANDLORD' ? [{
+            label: 'Recap fiscal',
+            icon: Calculator,
+            href: '/account/fiscal',
+            active: pathname === '/account/fiscal'
+        }] : []),
         {
             label: t('tenantProfile'),
             icon: FileText,
@@ -85,6 +97,12 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             active: pathname === '/account/alerts'
         },
         {
+            label: t('receipts'),
+            icon: Receipt,
+            href: '/account/receipts',
+            active: pathname === '/account/receipts'
+        },
+        {
             label: t('privacy'),
             icon: Lock,
             href: '/account/privacy',
@@ -99,8 +117,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
         {
             label: t('subscription'),
             icon: Sparkles,
-            href: '/pricing',
-            active: pathname === '/pricing'
+            href: '/account/subscription',
+            active: pathname === '/account/subscription'
         },
         {
             label: t('settings'),

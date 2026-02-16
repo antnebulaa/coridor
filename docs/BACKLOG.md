@@ -61,8 +61,8 @@
 - [✅] Workflow bail : DRAFT → PENDING_SIGNATURE → SIGNED
 - [✅] Server action `markLeaseAsSigned.ts`
 - [✅] Page baux (`app/[locale]/leases/[applicationId]/`) — viewer + signature
-- [❌] Quittances automatiques
-- [❌] Rappels légaux automatiques
+- [✅] Quittances automatiques — model `RentReceipt`, `RentReceiptService.ts`, cron mensuel (`app/api/cron/generate-receipts/`), API CRUD (`app/api/receipts/`), PDF `@react-pdf/renderer` (`RentReceiptDocument.tsx`), page locataire (`account/receipts/`), section propriétaire (`LeaseReceiptsSection.tsx`), notification + email
+- [✅] Rappels légaux automatiques V1 — model `LegalReminder` (12 types, 6 statuts, 4 priorités), `ReminderEngine.ts` orchestrateur, calculateurs (`DiagnosticReminders`, `LeaseReminders`, `TaxReminders`), cron quotidien (`app/api/cron/legal-reminders/`), API CRUD (`app/api/reminders/`), page rappels (`account/reminders/`), widget dashboard (`LegalRemindersWidget`), formulaire diagnostics (`DiagnosticsSection`), notification + email
 
 ### Gestion financière
 - [✅] Gestionnaire dépenses/charges (`Expense`, `app/api/expenses/`) — CRUD complet (GET/POST/PATCH/DELETE)
@@ -75,23 +75,23 @@
 - [✅] Server action `regularization.ts` (preview + commit + eligible leases)
 - [✅] Révision IRL automatique (`RentIndex`, `calculateRevision.ts` — formule Loyer × NouvelIndice/AncienIndice)
 - [✅] Historique financier du bail (`LeaseFinancials` : loyer + charges par période)
-- [🔧] Montants déductibles des impôts (`amountDeductibleCents`) — champ existe, pas de logique fiscale
+- [✅] Montants déductibles des impôts (`amountDeductibleCents`) — `FiscalService.ts` (calculateDeductible + generateFiscalSummary + generateAllPropertiesSummary), auto-calcul à la création/modification d'une dépense, DEDUCTIBILITY_RULES par catégorie (FULL/PARTIAL/NONE/MANUAL), API fiscal (`/api/fiscal/summary`, `/api/fiscal/summary-all`), page récap fiscal (`account/fiscal/FiscalClient.tsx`) avec sélecteur année/bien + tableau déclaration 2044, FiscalWidget dashboard (avril-juin), lien TaxReminders → `/account/fiscal`, indicateur déductible dans ExpensesClient
 - [✅] Page rentals (`app/[locale]/rentals/`) — affiche les baux signés
 
 ### Banking & Paiements (Powens)
 - [✅] Connexion bancaire (`BankConnection`, `app/lib/powens.ts`, `app/api/powens/`) — OAuth + sync
 - [✅] Import de transactions (`BankTransaction`)
 - [🔧] Matching paiement ↔ bail (`matchedLeaseId`) — champ existe, logique de matching à compléter
-- [❌] Badge Payeur Exemplaire (`rentVerified`, `detectedRentAmount`, `rentPaymentDate`)
-- [❌] Relance impayés automatique
-- [🔧] Dashboard de suivi des paiements — getOperationalStats référence unpaidRents, incomplet
+- [✅] Badge Payeur Exemplaire — `PaymentVerificationService.ts` (analyse transactions bancaires, ponctualité, niveaux Bronze/Silver/Gold), champs TenantProfile (`badgeLevel`, `verifiedMonths`, `punctualityRate`, `lastVerifiedAt`, `verificationStatus`), API (`/api/profile/badge`, `/api/profile/verify-badge`), auto-analyse via Powens analyze, composant `PaymentBadge.tsx` (compact + full), intégré dans `TenantProfilePreview` + conversation inbox + page tenant-profile (progression vers niveau suivant)
+- [✅] Relance impayés automatique — model `RentPaymentTracking` (8 statuts), `RentCollectionService.ts` (génération mensuelle, détection paiements, workflow relance J+5/J+10/J+15/J+30), cron quotidien (`app/api/cron/rent-collection/`), API CRUD (`app/api/rent-tracking/`), rappel amiable via messagerie, section suivi loyers dans Rentals (`RentTrackingSection`), widget dashboard (`RentCollectionWidget`), mode manuel sans Powens
+- [✅] Dashboard de suivi des paiements — `RentCollectionWidget` dans le dashboard + `RentTrackingSection` dans la page baux
 
 ### Dashboard & KPI
 - [✅] Page dashboard (`app/[locale]/dashboard/`) — mode propriétaire + locataire
 - [✅] Server actions : `getDashboardAlerts.ts`, `getOperationalStats.ts`, `analytics.ts`
 - [✅] Rendement brut/net/net-net (calculé dans `analytics.ts`)
 - [✅] Bénéfice net (calculé dans `analytics.ts`)
-- [🔧] Alertes (IRL, échéances, impayés) — getDashboardAlerts existe mais limité (vérifie seulement la config)
+- [✅] Alertes (IRL, échéances, diagnostics) — `LegalRemindersWidget` dans le dashboard + `ReminderEngine` avec rappels automatiques
 
 ### Admin
 - [✅] Dashboard admin (`app/[locale]/admin/`, `app/api/admin/`)
@@ -99,6 +99,29 @@
 - [✅] Modération des annonces (approve/reject/archive endpoints + UI)
 - [✅] Ban utilisateurs (`isBanned` — PATCH endpoint)
 - [✅] Signalements (`Report` — model + admin status update)
+- [✅] KPIs avancés (`getAdminAdvancedStats.ts`) — users actifs, taux rétention, répartition modes, top annonces, métriques abonnements
+- [✅] API stats avancées (`app/api/admin/advanced-stats/`) — endpoint centralisé pour le dashboard
+- [✅] Gestion utilisateurs enrichie (`app/[locale]/admin/users/`, `UserManagementClient.tsx`) — table avec badges plan/statut/mode, filtres (plan, statut abo, mode), recherche, tri, pagination
+- [✅] Fiche utilisateur détaillée (`app/[locale]/admin/users/[userId]/`, `UserDetailClient.tsx`) — identité, abonnement actuel, timeline abonnements, stats activité, biens/annonces
+- [✅] API détail utilisateur (`app/api/admin/users/[userId]/detail/`) — données complètes avec stats agrégées
+- [✅] Offrir un abonnement (`app/api/admin/users/[userId]/gift-subscription/`) — création abo + notification + email + facture auto
+- [✅] Changer le plan d'un utilisateur (`app/api/admin/users/[userId]/change-plan/`) — avec annulation des abos actifs si downgrade
+- [✅] Widget KPIs abonnements dans le dashboard (`SubscriptionMetrics.tsx`) — actifs, MRR, churn, offerts, expirations, breakdown par plan
+
+### Abonnements & Facturation
+- [✅] Model Prisma `Subscription` (plan, status ACTIVE/EXPIRED/CANCELLED/GIFTED, isGifted, giftedBy, giftReason, dates)
+- [✅] Model Prisma `Invoice` (amountCents, description, status PAID/PENDING/FAILED, pdfUrl)
+- [✅] Enum `SubscriptionStatus` (ACTIVE, EXPIRED, CANCELLED, GIFTED)
+- [✅] Helper centralisé `lib/plan-features.ts` — PLAN_INFO (FREE/PLUS/PRO avec prix, features, highlights) + ALL_FEATURES (18 fonctionnalités)
+- [✅] API utilisateur `GET /api/account/subscription` — plan actuel, progression, historique, features incluses, factures
+- [✅] Page abonnement utilisateur (`app/[locale]/account/subscription/`) — résumé plan, barre de progression, factures, moyen de paiement (placeholder Stripe), features (accordéon), historique (accordéon), actions
+- [✅] Lien sidebar compte mis à jour vers `/account/subscription`
+- [✅] Cron expiration (`app/api/cron/check-subscriptions/`) — expire les abos passés, downgrade FREE, alertes J-7 et J-1 (notification + email)
+- [✅] Email cadeau d'abonnement via `EmailTemplate` + Resend
+- [✅] Facture auto à 0€ lors d'un cadeau d'abonnement
+- [✅] Annulation d'abonnement côté utilisateur (`POST /api/account/subscription/cancel`) — marque CANCELLED, notification, l'abo reste actif jusqu'à endDate
+- [❌] Intégration Stripe (paiement, renouvellement auto, moyen de paiement)
+- [❌] Génération PDF de factures
 
 ---
 
@@ -197,25 +220,39 @@
 - [✅] Report annonce ou utilisateur (`Report`, `components/reports/ReportButton.tsx`) — modal avec raison/détails
 - [✅] API (`app/api/reports/`) — création + admin status update
 
+### Sondages communautaires (V2 — globaux, 3 options, géolocalisation auto)
+- [✅] Model `NeighborhoodPoll` avec `option1/option2/option3` (plus de neighborhood/city sur le poll)
+- [✅] Model `PollResponse` avec `selectedOption` (1-3) + `city/zipCode` (géoloc depuis profil utilisateur)
+- [✅] API admin (`app/api/admin/polls/`) — CRUD avec option1/2/3
+- [✅] API vote (`app/api/polls/[pollId]/respond/`) — selectedOption + résultats par zone (zipCode → city → global)
+- [✅] API sondages actifs (`app/api/polls/active/`) — global, sondage non répondu par l'utilisateur
+- [✅] API résultats par zone (`app/api/polls/results/`) — agrégation par zipCode/city avec seuil minimum
+- [✅] PollBanner (`components/listings/PollBanner.tsx`) — 3 boutons vote, barres de pourcentage, flow "needsAddress"
+- [✅] PollResults (`components/listings/PollResults.tsx`) — résultats zone en lecture seule sur les annonces
+- [✅] Page admin sondages (`app/[locale]/admin/polls/PollManagementClient.tsx`) — formulaire + table avec options
+
 ---
 
 ## ❌ À FAIRE (features non encore implémentées)
 
 ### Priorité haute (avant lancement)
-- [ ] Quittances automatiques (génération PDF mensuelle)
-- [ ] Rappels légaux automatiques (échéances bail, diagnostics)
+- [x] ~~Quittances automatiques (génération PDF mensuelle)~~ (fait)
+- [x] ~~Rappels légaux automatiques (échéances bail, diagnostics)~~ (fait)
 - [x] ~~Relances automatiques visites non confirmées~~ (fait)
 - [x] ~~Annulation auto visites non confirmées~~ (fait)
-- [ ] Relance impayés automatique
-- [ ] Badge Payeur Exemplaire (logique + UI)
+- [x] ~~Relance impayés automatique~~ (fait)
+- [x] ~~Badge Payeur Exemplaire (logique + UI)~~ (fait)
+- [ ] Intégration Stripe (paiement abonnements, renouvellement auto, moyen de paiement)
 
 ### Priorité moyenne
-- [ ] Alertes dashboard avancées (IRL, échéances, impayés) — base existe, à enrichir
-- [ ] Matching automatique paiement ↔ bail (logique) — champ existe
-- [ ] Dashboard suivi des paiements complet
+- [x] ~~Alertes dashboard avancées (IRL, échéances, impayés)~~ (fait — LegalRemindersWidget + RentCollectionWidget)
+- [x] ~~Matching automatique paiement ↔ bail (logique)~~ (fait — RentCollectionService.checkPayments)
+- [x] ~~Dashboard suivi des paiements complet~~ (fait — RentTrackingSection + RentCollectionWidget)
 - [ ] Suggestions de prix
 - [ ] Anonymisation renforcée dans les candidatures côté UI
-- [ ] Logique fiscale pour montants déductibles
+- [x] ~~Logique fiscale pour montants déductibles~~ (fait)
+- [x] ~~Sondages V2 (globaux, 3 options, géolocalisation auto)~~ (fait)
+- [ ] Génération PDF de factures
 
 ### Pistes futures
 - [ ] Module fiscal (aide déclaration revenus fonciers)
@@ -231,7 +268,7 @@
 
 ## ⚠️ Notes déploiement
 
-- **Cron jobs désactivés** : Les routes `/api/cron/visit-reminders/` et `/api/cron/check-alerts/` existent mais ne sont pas configurées dans `vercel.json` (nécessite Vercel Pro). À réactiver quand on passe sur un plan payant.
+- **Cron jobs désactivés** : Les routes `/api/cron/visit-reminders/`, `/api/cron/check-alerts/` et `/api/cron/check-subscriptions/` existent mais ne sont pas configurées dans `vercel.json` (nécessite Vercel Pro). À réactiver quand on passe sur un plan payant.
 
 ---
 

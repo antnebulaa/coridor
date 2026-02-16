@@ -18,11 +18,14 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     const pathname = usePathname();
     const isHomePage = pathname === '/' || pathname === '/fr' || pathname === '/en';
+    const isAdmin = pathname?.includes('/admin');
     const { unreadCount } = useUserCounters(currentUser);
+
+    if (isAdmin) return null;
 
     return (
         <div
-            className={`fixed w-full z-9999 transition-colors duration-200 pt-safe ${isHomePage ? 'bg-transparent md:bg-background' : 'bg-background'} ${!isHomePage ? 'hidden md:block' : ''}`}
+            className={`${isHomePage ? 'fixed' : 'sticky top-0'} w-full z-9999 transition-colors duration-200 pt-safe ${isHomePage ? 'bg-transparent md:bg-background' : 'bg-background'} ${!isHomePage ? 'hidden md:block' : ''}`}
             suppressHydrationWarning
         >
             <div className={`py-2 md:py-4 ${isHomePage ? 'border-none md:border-b' : 'border-b'} border-border`}>

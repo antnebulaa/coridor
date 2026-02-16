@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { FiscalService } from "@/services/FiscalService";
 
 interface IParams {
     expenseId: string;
@@ -78,6 +79,18 @@ export async function PATCH(
     }
 
     const body = await request.json();
+
+    // Auto-calculate deductible if category or amounts change and deductible not explicitly provided
+    if (body.amountDeductibleCents === undefined && (body.category !== undefined || body.amountTotalCents !== undefined || body.amountRecoverableCents !== undefined)) {
+        const mergedExpense = {
+            category: body.category ?? expense.category,
+            amountTotalCents: body.amountTotalCents ?? expense.amountTotalCents,
+            amountRecoverableCents: body.amountRecoverableCents ?? expense.amountRecoverableCents,
+            recoverableRatio: body.recoverableRatio ?? expense.recoverableRatio,
+            isRecoverable: body.isRecoverable ?? expense.isRecoverable,
+        };
+        body.amountDeductibleCents = FiscalService.calculateDeductible(mergedExpense);
+    }
 
     const updatedExpense = await prisma.expense.update({
         where: { id: expenseId },

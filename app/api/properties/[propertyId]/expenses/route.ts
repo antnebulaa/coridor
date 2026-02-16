@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { FiscalService } from "@/services/FiscalService";
 
 interface IParams {
     propertyId: string;
@@ -68,7 +69,13 @@ export async function POST(
                 proofUrl,
                 isFinalized,
                 amountRecoverableCents,
-                amountDeductibleCents
+                amountDeductibleCents: amountDeductibleCents ?? FiscalService.calculateDeductible({
+                    category,
+                    amountTotalCents: Math.round(parseFloat(String(amountTotalCents))),
+                    amountRecoverableCents,
+                    recoverableRatio,
+                    isRecoverable,
+                })
             }
         });
         return NextResponse.json(expense);

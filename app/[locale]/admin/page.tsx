@@ -6,6 +6,7 @@ import { HiUser, HiHome, HiExclamationTriangle, HiDocumentCheck } from "react-ic
 import Link from "next/link";
 import AnalyticsChart from "./components/AnalyticsChart";
 import StatsCard from "./components/StatsCard";
+import DashboardAdvancedSection from "./components/DashboardAdvancedSection";
 import { getTranslations } from "next-intl/server";
 
 export default async function AdminDashboard() {
@@ -150,7 +151,7 @@ export default async function AdminDashboard() {
                         <div className="divide-y divide-slate-100">
                             {recentUsers.map((user: any) => (
                                 <div key={user.id} className="p-4 flex items-center gap-3 hover:bg-slate-50 transition">
-                                    <div className="h-10 w-10 rounded-full bg-slate-200 overflow-hidden shrink-0">
+                                    <div className="relative h-10 w-10 rounded-full bg-slate-200 overflow-hidden shrink-0">
                                         {user.image ? (
                                             <Image
                                                 src={user.image}
@@ -185,6 +186,9 @@ export default async function AdminDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Advanced Metrics Section */}
+            <DashboardAdvancedSection />
         </div>
     );
 }

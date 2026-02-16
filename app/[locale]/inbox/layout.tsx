@@ -15,7 +15,7 @@ export default async function InboxLayout({
 
     return (
         <InteractiveViewportWrapper>
-            <div className="h-full flex flex-col md:flex-row pt-0 md:pt-20">
+            <div className="h-full flex flex-col md:flex-row">
                 <ConversationList
                     initialItems={conversations}
                     currentUser={currentUser}

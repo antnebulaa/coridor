@@ -22,6 +22,7 @@ import ListingSort from "@/components/listings/ListingSort";
 import { useSearchParams } from "next/navigation";
 import { getIsochrone } from "@/app/libs/mapbox"; // Import utility
 import SearchAlertModal from "@/components/modals/SearchAlertModal";
+import PollBanner from "@/components/listings/PollBanner";
 
 interface HomeClientProps {
     listings: any[]; // SafeListing + relation
@@ -452,6 +453,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 currentUser={currentUser}
                 currentSearch={currentSearch}
             />
+
+            <PollBanner currentUser={currentUser} />
         </div>
     );
 };

@@ -34,20 +34,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // const paddingTop = isMainPage ? 'pt-32 md:pt-24' : 'pt-20 md:pt-24'; // Removed
 
     const isInbox = pathname?.includes('/inbox');
-    const paddingBottom = (isInbox || isMainPage) ? 'pb-0' : 'pb-20';
+    const isAdmin = pathname?.includes('/admin');
+    const paddingBottom = (isInbox || isMainPage || isAdmin) ? 'pb-0' : 'pb-20';
 
-    // Navbar is fixed now. We need top padding.
-    // HomePage: Visible on Mobile & Desktop.
-    // Other Pages: Visible on Desktop Only.
+    // Navbar positioning:
+    // - Home page: Navbar is FIXED (transparent overlay on map) → needs padding
+    // - All other pages: Navbar is STICKY (in document flow) → NO padding needed
+    // - Admin: No main Navbar at all
+    // - Mobile (non-home): Navbar hidden, bottom nav used → pt-safe for notch
 
     let paddingTop = 'pt-0';
-    if (isMainPage || isInbox) {
-        // Home: map immersive, Navbar (fixed) handles its own pt-safe
-        // Inbox: h-full layout, components handle their own safe area internally
+    if (isAdmin) {
+        paddingTop = 'pt-0';
+    } else if (isMainPage) {
+        // Home: Navbar is fixed + transparent over map
         paddingTop = 'pt-0 md:pt-20';
     } else {
-        // Non-home: Navbar hidden on mobile, need safe area padding
-        paddingTop = 'pt-safe md:pt-20';
+        // All other pages: Navbar is sticky on desktop (no compensation needed)
+        // Mobile: Navbar hidden, just need safe area padding for notch
+        paddingTop = 'pt-safe md:pt-0';
     }
 
     return (
