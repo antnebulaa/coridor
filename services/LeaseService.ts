@@ -28,14 +28,23 @@ export interface LeaseConfig {
         name: string;
         address: string;
         email: string;
+        phone: string;
         birthDate?: string;
         birthPlace?: string;
+        legal_status?: string;  // PERSONNE_PHYSIQUE, SCI, PERSONNE_MORALE
+        siren?: string;
+        siege?: string;
+        nationality?: string;
     };
     tenants: Array<{
         name: string;
         email: string;
+        phone: string;
+        firstName: string;
+        lastName: string;
         birthDate?: string;
         birthPlace?: string;
+        nationality?: string;
     }>;
 
     // Property
@@ -49,6 +58,7 @@ export interface LeaseConfig {
         constructionDate?: number; // Build Year
         heatingType?: string;
         waterHeatingType?: string; // Hot water
+        legal_regime?: string;  // COPROPRIETE, MONOPROPRIETE
 
         // NEW FIELDS
         fiber_optics: boolean; // Technologie
@@ -73,6 +83,8 @@ export interface LeaseConfig {
         agency_fees_amount: number; // Honoraires (0 if direct)
         recent_works_amount: number; // Travaux récents
         recent_works_description: string;
+        indexation_quarter?: number;  // Trimestre IRL de référence (1-4)
+        base_index_value?: number;    // Valeur IRL de base
     };
 
     // Agency Fees (Section IX)
@@ -87,11 +99,41 @@ export interface LeaseConfig {
         };
     };
 
+    // Rent Control (Encadrement des loyers)
+    rent_control?: {
+        is_applicable: boolean;
+        reference_rent: number;
+        reference_rent_increased: number;
+        rent_supplement?: number;
+        rent_supplement_justification?: string;
+    };
+
+    mobility_reason?: string;
+
+    diagnostics?: {
+        dpe?: { date: string; rating: string; expiryDate?: string };
+        erp?: { date: string };
+        electrical?: { date: string; installYear?: number };
+        gas?: { date: string; installYear?: number; hasInstallation: boolean };
+        lead?: { date: string; result: string };
+        asbestos?: { date: string; result: string };
+        noise?: { date: string; result: string };
+    };
+
     dynamic_legal_texts: {
         solidarity_clause: string | null;
         termination_clause: string;
         resolutory_clause: string;
+        subletting_clause: string;
+        insurance_clause: string;
+        preemption_clause: string | null;
     };
+
+    furniture_inventory?: {
+        items: Array<{ label: string; present: boolean; }>;
+    };
+    guarantor_names?: string[];
+
     // Additional data passed through for PDF
     listing_id: string;
     application_id: string;
@@ -153,6 +195,7 @@ export class LeaseService {
             include: {
                 listing: {
                     include: {
+                        furniture: true,
                         rentalUnit: {
                             include: {
                                 property: {
@@ -187,22 +230,32 @@ export class LeaseService {
         // Fetch full profiles of all members
         let members = await prisma.user.findMany({
             where: { id: { in: scope.membersIds } },
-            include: { tenantProfile: true }
+            include: { tenantProfile: { include: { guarantors: true } } }
         });
 
         // FALLBACK: If members list is empty, use the creator (Solo application case or data migration issue)
         if (members.length === 0 && scope.creatorUser) {
-            members = [scope.creatorUser];
+            members = [scope.creatorUser as any];
+        }
+
+        // Validate required identity fields (décret 2015-587)
+        if (!landlord.birthDate || !landlord.birthPlace) {
+            throw new Error("Date et lieu de naissance du bailleur requis pour la génération du bail. Veuillez compléter votre profil.");
+        }
+        for (const member of members) {
+            if (!member.birthDate || !member.birthPlace) {
+                throw new Error(`Date et lieu de naissance requis pour ${member.firstName || member.name || 'un locataire'}. Le locataire doit compléter son profil.`);
+            }
         }
 
         // 2. Determine Lease Type (Rule 1)
-        const leaseTemplateId = this.determineLeaseTemplate(rentalUnit as any, application, scope, members);
+        const leaseTemplateId = this.determineLeaseTemplate(rentalUnit as any, application, scope, members as any);
 
         // 3. Determine Solidarity (Rule 2)
         const isSolidarityActive = this.determineSolidarity(scope);
 
         // 4. Calculate Contract Data (Duration, Deposit)
-        const contractData = this.calculateContractData(leaseTemplateId, rentalUnit as any, application);
+        const contractData = this.calculateContractData(leaseTemplateId, application.listing, application, scope.targetMoveInDate);
 
         // 5. Select Legal Texts
         const legalTexts = this.getLegalClauses(leaseTemplateId, isSolidarityActive, scope.compositionType);
@@ -247,6 +300,9 @@ export class LeaseService {
             return map[code] || code;
         };
 
+        // Determine if furnished
+        const isFurnished = leaseTemplateId !== "BAIL_NU_LOI_89";
+
         return {
             lease_template_id: leaseTemplateId,
             is_solidarity_clause_active: isSolidarityActive,
@@ -255,41 +311,62 @@ export class LeaseService {
                 name: formatName(landlord),
                 address: formatAddress(landlord),
                 email: landlord.email || "",
+                phone: landlord.phoneNumber || "",
                 birthDate: formatDate(landlord.birthDate),
-                birthPlace: landlord.birthPlace || undefined
+                birthPlace: landlord.birthPlace || undefined,
+                legal_status: property.ownerLegalStatus || "PERSONNE_PHYSIQUE",
+                siren: property.ownerSiren || undefined,
+                siege: property.ownerSiege || undefined,
+                nationality: landlord.nationality || undefined,
             },
             tenants: members.map(m => ({
                 name: formatName(m),
                 address: formatAddress(m), // Using Tenant address if available (usually needed for "Domicile" if different, but typically in Lease it's "Domicilié à [Current Address]")
                 email: m.email || "",
+                phone: (m as any).phoneNumber || "",
+                firstName: (m as any).firstName || m.name?.split(' ')[0] || "",
+                lastName: (m as any).lastName || m.name?.split(' ').slice(1).join(' ') || "",
                 birthDate: formatDate(m.birthDate),
-                birthPlace: m.birthPlace || undefined
+                birthPlace: m.birthPlace || undefined,
+                nationality: (m as any).nationality || undefined,
             })),
 
             property: {
                 address: propertyAddress,
                 city: property.city || "",
                 surface: rentalUnit.surface || 0,
-                roomCount: property.roomCount,
+                roomCount: rentalUnit.roomCount || application.listing.roomCount || 0,
                 type: property.category,
-                description: property.description,
+                description: application.listing.description || '',
                 constructionDate: property.buildYear || undefined,
                 heatingType: mapHeating(property.heatingSystem),
-                waterHeatingType: mapHeating("IND_ELEC"), // Fallback if not in model, or assume Individual Electric
+                waterHeatingType: mapHeating(property.waterHeatingSystem || property.heatingSystem),
+                legal_regime: property.legalRegime || undefined,
 
-                // NEW DEFAULTS
-                fiber_optics: true, // Assume yes for modern listings or add to schema later
-                ancillary_premises: [], // Populate if available
-                common_areas: ["Ascenseur (si applicable)"]
+                // Dynamic fields from property
+                fiber_optics: property.hasFiber ?? false,
+                ancillary_premises: [
+                    ...(property.hasCave ? [`Cave${property.caveReference ? ` (${property.caveReference})` : ''}`] : []),
+                    ...(property.hasParking ? [`Parking${property.parkingReference ? ` (${property.parkingReference})` : ''}`] : []),
+                    ...(property.hasGarage ? [`Garage${property.garageReference ? ` (${property.garageReference})` : ''}`] : []),
+                ],
+                common_areas: [
+                    ...(property.hasElevator ? ["Ascenseur"] : []),
+                    ...(property.hasBikeRoom ? ["Local vélos"] : []),
+                    ...(property.hasDigicode ? ["Digicode"] : []),
+                    ...(property.hasIntercom ? ["Interphone"] : []),
+                    ...(property.hasCaretaker ? ["Gardien / Concierge"] : []),
+                    ...(property.hasPool ? ["Piscine"] : []),
+                ],
             },
 
             contract_data: {
                 ...contractData,
-                // NEW DEFAULTS
+                // Dynamic fields
                 previous_rent_amount: undefined, // To be filled manually or from history logic later
                 agency_fees_amount: 0,
-                recent_works_amount: 0,
-                recent_works_description: "Néant"
+                recent_works_amount: (application.listing.recentWorksAmountCents || 0) / 100,
+                recent_works_description: application.listing.recentWorksDescription || "Néant",
             },
 
             agency_fees: {
@@ -303,7 +380,98 @@ export class LeaseService {
                 }
             },
 
+            // Rent control (encadrement des loyers)
+            rent_control: property.isZoneTendue ? {
+                is_applicable: true,
+                reference_rent: property.referenceRent || 0,
+                reference_rent_increased: property.referenceRentIncreased || 0,
+                rent_supplement: property.rentSupplement || undefined,
+                rent_supplement_justification: property.rentSupplementJustification || undefined,
+            } : undefined,
+
+            mobility_reason: (application as any).mobilityReason || undefined,
+
+            diagnostics: {
+                dpe: property.dpeDate ? {
+                    date: formatDate(property.dpeDate) as string,
+                    rating: property.dpe || '',
+                    expiryDate: formatDate(property.dpeExpiryDate) || undefined,
+                } : undefined,
+                erp: property.erpDate ? {
+                    date: formatDate(property.erpDate) as string,
+                } : undefined,
+                electrical: property.electricalDiagnosticDate ? {
+                    date: formatDate(property.electricalDiagnosticDate) as string,
+                    installYear: property.electricalInstallYear || undefined,
+                } : undefined,
+                gas: property.gasDiagnosticDate ? {
+                    date: formatDate(property.gasDiagnosticDate) as string,
+                    installYear: property.gasInstallYear || undefined,
+                    hasInstallation: property.hasGasInstallation ?? false,
+                } : undefined,
+                lead: property.leadDiagnosticDate ? {
+                    date: formatDate(property.leadDiagnosticDate) as string,
+                    result: property.leadDiagnosticResult || '',
+                } : undefined,
+                asbestos: property.asbestosDiagnosticDate ? {
+                    date: formatDate(property.asbestosDiagnosticDate) as string,
+                    result: property.asbestosDiagnosticResult || '',
+                } : undefined,
+                noise: property.noiseDiagnosticDate ? {
+                    date: formatDate(property.noiseDiagnosticDate) as string,
+                    result: property.noiseDiagnosticResult || '',
+                } : undefined,
+            },
+
             dynamic_legal_texts: legalTexts,
+
+            // Furniture inventory (only for furnished leases)
+            furniture_inventory: isFurnished && (application.listing as any).furniture ? (() => {
+                const f = (application.listing as any).furniture;
+                const FURNITURE_LABELS: Record<string, string> = {
+                    bedding: "Literie (couette ou couverture)",
+                    curtains: "Dispositif d'occultation des fenêtres (rideaux/volets)",
+                    hob: "Plaques de cuisson",
+                    oven: "Four ou four à micro-ondes",
+                    fridge: "Réfrigérateur",
+                    freezer: "Congélateur ou compartiment congélation",
+                    dishes: "Vaisselle en nombre suffisant",
+                    utensils: "Ustensiles de cuisine",
+                    table: "Table",
+                    seats: "Sièges (chaises)",
+                    shelves: "Étagères de rangement",
+                    lights: "Luminaires",
+                    vacuum: "Matériel d'entretien ménager",
+                };
+                return {
+                    items: Object.entries(FURNITURE_LABELS).map(([key, label]) => ({
+                        label,
+                        present: !!f[key],
+                    })),
+                };
+            })() : undefined,
+
+            // Guarantors (for annexe mention)
+            guarantor_names: (() => {
+                const names: string[] = [];
+                for (const m of members) {
+                    if ((m as any).tenantProfile?.guarantors) {
+                        for (const g of (m as any).tenantProfile.guarantors) {
+                            // Use type to build label
+                            const typeLabels: Record<string, string> = {
+                                FAMILY: 'Garant familial',
+                                THIRD_PARTY: 'Garant tiers',
+                                VISALE: 'Garantie Visale',
+                                LEGAL_ENTITY: 'Personne morale',
+                                CAUTIONNER: 'Cautionner',
+                            };
+                            names.push(typeLabels[g.type] || 'Garant');
+                        }
+                    }
+                }
+                return names.length > 0 ? names : undefined;
+            })(),
+
             listing_id: application.listingId,
             application_id: application.id,
             metadata: {
@@ -380,36 +548,37 @@ export class LeaseService {
      */
     private static calculateContractData(
         templateId: LeaseTemplateId,
-        rentalUnit: any,
-        application: RentalApplication
+        listing: any,
+        application: RentalApplication,
+        targetMoveInDate: Date | null
     ) {
         let duration = 12; // months
         let deposit = 0;
 
         // --- NEW LOGIC START ---
-        // Rent Excluding Charges
-        const rentHC = rentalUnit.price;
+        // Rent Excluding Charges (price is on Listing, not RentalUnit)
+        const rentHC = listing.price;
 
-        // Extract Charges
+        // Extract Charges (charges is on Listing, not RentalUnit)
         let chargesAmount = 0;
-        if (rentalUnit.charges) {
+        if (listing.charges) {
             // Check if it's a number directly
-            if (typeof rentalUnit.charges === 'number') {
-                chargesAmount = rentalUnit.charges;
+            if (typeof listing.charges === 'number') {
+                chargesAmount = listing.charges;
             }
             // Check if it looks like a string number
-            else if (typeof rentalUnit.charges === 'string' && !isNaN(parseFloat(rentalUnit.charges))) {
-                chargesAmount = parseFloat(rentalUnit.charges);
+            else if (typeof listing.charges === 'string' && !isNaN(parseFloat(listing.charges))) {
+                chargesAmount = parseFloat(listing.charges);
             }
-            // If it's an object, we rely on a convention. 
-            // For now, assume if object it might be { amount: number } or similar, 
-            // but user said "column charges", implying value. 
+            // If it's an object, we rely on a convention.
+            // For now, assume if object it might be { amount: number } or similar,
+            // but user said "column charges", implying value.
             // Let's safe cast if we find simple properties or fallback to 0.
-            else if (typeof rentalUnit.charges === 'object') {
+            else if (typeof listing.charges === 'object') {
                 // @ts-ignore
-                if (rentalUnit.charges?.amount) chargesAmount = Number(rentalUnit.charges.amount);
+                if (listing.charges?.amount) chargesAmount = Number(listing.charges.amount);
                 // @ts-ignore
-                else if (rentalUnit.charges?.value) chargesAmount = Number(rentalUnit.charges.value);
+                else if (listing.charges?.value) chargesAmount = Number(listing.charges.value);
             }
         }
 
@@ -419,44 +588,56 @@ export class LeaseService {
 
         switch (templateId) {
             case "BAIL_NU_LOI_89":
-                duration = 36; // 3 years standard
+                duration = (application as any).leaseDurationMonths || 36; // 3 years standard
                 deposit = rentHC * 1; // 1 month HC (of rent without charges)
                 break;
 
             case "BAIL_MEUBLE_LOI_89":
-                duration = 12; // 1 year automatic renewal
+                duration = (application as any).leaseDurationMonths || 12; // 1 year automatic renewal
                 deposit = rentHC * 2; // 2 months HC
                 break;
 
             case "BAIL_ETUDIANT":
-                duration = 9;
+                duration = (application as any).leaseDurationMonths || 9;
                 deposit = rentHC * 2;
                 break;
 
             case "BAIL_MOBILITE":
-                duration = 10;
+                duration = (application as any).leaseDurationMonths || 10;
+                if (duration < 1 || duration > 10) {
+                    throw new Error("La durée du bail mobilité doit être comprise entre 1 et 10 mois");
+                }
                 deposit = 0; // Forbidden in Bail Mobilité
                 break;
         }
 
-        // Adjust deposit if stored in listing explicitly
-        if (rentalUnit.securityDeposit !== null && rentalUnit.securityDeposit !== undefined) {
+        // Adjust deposit if stored in listing explicitly (securityDeposit is on Listing)
+        if (listing.securityDeposit !== null && listing.securityDeposit !== undefined) {
             if (templateId === "BAIL_MOBILITE") {
                 deposit = 0;
             } else {
-                deposit = rentalUnit.securityDeposit;
+                deposit = listing.securityDeposit;
             }
         }
 
         return {
-            effective_date: new Date().toISOString().split('T')[0],
+            effective_date: (targetMoveInDate || new Date()).toISOString().split('T')[0],
             duration_months: duration,
             security_deposit: deposit,
             rent_excluding_charges: rentHC,
             charges_amount: chargesAmount,
             total_rent: totalRent,
-            payment_date: 1, // 1st of month
-            payment_method: "Virement Bancaire"
+            payment_date: listing.paymentDay || 1,
+            payment_method: (() => {
+                const map: Record<string, string> = {
+                    'VIREMENT': 'Virement Bancaire',
+                    'CHEQUE': 'Chèque',
+                    'PRELEVEMENT': 'Prélèvement Automatique',
+                    'ESPECES': 'Espèces (dans la limite légale)',
+                    'LIBRE': 'tout moyen à sa convenance',
+                };
+                return map[listing.paymentMethod] || 'Virement Bancaire';
+            })(),
         };
     }
 
@@ -489,10 +670,27 @@ export class LeaseService {
         // Resolutory (Standard for all)
         const resolutoryText = LEASE_CLAUSES.RESOLUTORY.STANDARD;
 
+        // Subletting (always applicable)
+        const sublettingText = LEASE_CLAUSES.SUBLETTING.STANDARD;
+
+        // Insurance (always applicable)
+        const insuranceText = LEASE_CLAUSES.INSURANCE.STANDARD;
+
+        // Preemption (only for vide and meublé, NOT mobilité or étudiant)
+        let preemptionText: string | null = null;
+        if (templateId === "BAIL_NU_LOI_89") {
+            preemptionText = LEASE_CLAUSES.PREEMPTION.EMPTY;
+        } else if (templateId === "BAIL_MEUBLE_LOI_89") {
+            preemptionText = LEASE_CLAUSES.PREEMPTION.FURNISHED;
+        }
+
         return {
             solidarity_clause: solidarityText,
             termination_clause: terminationText,
-            resolutory_clause: resolutoryText
+            resolutory_clause: resolutoryText,
+            subletting_clause: sublettingText,
+            insurance_clause: insuranceText,
+            preemption_clause: preemptionText,
         };
     }
 

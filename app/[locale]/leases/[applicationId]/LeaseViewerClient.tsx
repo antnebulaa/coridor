@@ -39,8 +39,9 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
             await axios.post(`/api/leases/${leaseConfig.application_id}/sign`);
             toast.success("Procédure de signature lancée (Yousign)");
             setStatus("PENDING_SIGNATURE");
-        } catch (error) {
-            toast.error("Erreur lors de l'envoi");
+        } catch (error: any) {
+            const message = error?.response?.data?.error || "Erreur lors de l'envoi";
+            toast.error(message);
             console.error(error);
         } finally {
             setLoading(false);
@@ -112,6 +113,22 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
                     <p className="text-sm text-blue-700">
                         Vérifiez les clauses générées automatiquement avant d'envoyer le bail pour signature.
                     </p>
+                </div>
+
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                    <h3 className="font-bold text-amber-900 mb-1">Notice d&apos;information</h3>
+                    <p className="text-sm text-amber-700 mb-3">
+                        La notice d&apos;information relative aux droits et obligations des locataires et des bailleurs doit être remise au locataire lors de la signature du bail.
+                    </p>
+                    <a
+                        href="/documents/notice-information-locataire.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 text-sm font-medium rounded-lg transition"
+                    >
+                        <HiArrowDownTray size={16} />
+                        Télécharger la notice
+                    </a>
                 </div>
 
                 {/* Signers Progress */}

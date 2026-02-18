@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles, BellRing, Receipt, Scale, Calculator } from "lucide-react";
+import { User, Shield, Lock, Bell, FileText, Globe, ChevronRight, Home, Repeat, Settings, Wallet, Sparkles, BellRing, Receipt, Scale, Calculator, Award } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -66,11 +66,23 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             href: '/account/fiscal',
             active: pathname === '/account/fiscal'
         }] : []),
+        ...(currentUser?.userMode === 'LANDLORD' ? [{
+            label: 'Simulateur fiscal',
+            icon: Calculator,
+            href: '/account/tax-simulator',
+            active: pathname === '/account/tax-simulator'
+        }] : []),
         {
             label: t('tenantProfile'),
             icon: FileText,
             href: '/account/tenant-profile',
             active: pathname === '/account/tenant-profile'
+        },
+        {
+            label: t('passport'),
+            icon: Award,
+            href: '/account/passport',
+            active: pathname === '/account/passport'
         },
         {
             label: t('project'),

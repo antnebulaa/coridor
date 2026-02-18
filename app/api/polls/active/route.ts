@@ -6,23 +6,16 @@ export async function GET() {
     try {
         const currentUser = await getCurrentUser();
 
-        if (!currentUser) {
-            return NextResponse.json({ poll: null });
+        // Find the most recent ACTIVE poll
+        const where: any = { status: 'ACTIVE' };
+
+        // If user is logged in, exclude polls they already answered
+        if (currentUser) {
+            where.responses = { none: { userId: currentUser.id } };
         }
 
-        // If user has no city in their profile, signal the frontend
-        if (!currentUser.city) {
-            return NextResponse.json({ poll: null, needsAddress: true });
-        }
-
-        // Find the most recent ACTIVE poll not yet answered by this user
         const poll = await prisma.neighborhoodPoll.findFirst({
-            where: {
-                status: 'ACTIVE',
-                responses: {
-                    none: { userId: currentUser.id }
-                }
-            },
+            where,
             include: {
                 _count: {
                     select: { responses: true }

@@ -2,9 +2,12 @@ import prisma from "@/libs/prismadb";
 
 interface AnalysisResult {
   found: boolean;
+  /** @deprecated Badge levels (GOLD/SILVER/BRONZE) are no longer used in V1 UI. Kept for backward compat. */
   badgeLevel?: string | null;
   verifiedMonths?: number;
   punctualityRate?: number;
+  /** Regularity rate: % of expected months with a detected payment */
+  regularityRate?: number;
   avgAmount?: number;
   paymentDay?: number;
 }
@@ -94,7 +97,19 @@ export class PaymentVerificationService {
 
     const punctualityRate = (onTimePays / totalPays) * 100;
 
-    // 6. Determine badge level
+    // 6. Calculate regularity: % of expected months that have a detected payment
+    // expectedMonths = months between first and last transaction
+    const firstTxDate = new Date(transactions[0].date);
+    const lastTxDate = new Date(transactions[transactions.length - 1].date);
+    const expectedMonths = Math.max(
+      1,
+      (lastTxDate.getFullYear() - firstTxDate.getFullYear()) * 12 +
+        (lastTxDate.getMonth() - firstTxDate.getMonth()) + 1
+    );
+    const regularityRate = Math.min(100, (verifiedMonths / expectedMonths) * 100);
+
+    // Deprecated: badge levels (GOLD/SILVER/BRONZE) are no longer used in the UI.
+    // Kept for backward compatibility with existing DB records.
     let badgeLevel: string | null = null;
     if (verifiedMonths >= 24) {
       badgeLevel = "GOLD";
@@ -121,16 +136,22 @@ export class PaymentVerificationService {
 
     return {
       found: true,
-      badgeLevel,
+      badgeLevel, // deprecated — kept for backward compat
       verifiedMonths,
       punctualityRate: Math.round(punctualityRate * 100) / 100,
+      regularityRate: Math.round(regularityRate * 100) / 100,
       avgAmount: Math.round(avgAmount),
       paymentDay,
     };
   }
 
   /**
-   * Analyze payment history and update the TenantProfile with badge info.
+   * Analyze payment history and update the TenantProfile with payment verification info.
+   *
+   * Key fields (V1):
+   * - verifiedMonths: number of months with detected payments
+   * - punctualityRate: % paid before 15th (secondary metric)
+   * - badgeLevel: deprecated — still written to DB for backward compat, but UI shows "Payeur verifie — X mois"
    */
   static async updateBadge(userId: string) {
     const result = await PaymentVerificationService.analyzePaymentHistory(userId);
@@ -140,11 +161,12 @@ export class PaymentVerificationService {
       punctualityRate: result.punctualityRate ?? null,
       lastVerifiedAt: new Date(),
       verificationStatus: result.found ? "VERIFIED" : "FAILED",
+      // Deprecated: badgeLevel kept for backward compat, UI no longer uses medal levels
       badgeLevel: result.found ? (result.badgeLevel ?? null) : null,
     };
 
-    // If a badge is earned, mark rent as verified
-    if (result.found && result.badgeLevel) {
+    // Mark rent as verified if we found at least 3 months of payment data
+    if (result.found && (result.verifiedMonths ?? 0) >= 3) {
       updateData.rentVerified = true;
     }
 
@@ -154,7 +176,7 @@ export class PaymentVerificationService {
     });
 
     return {
-      badgeLevel: updated.badgeLevel,
+      badgeLevel: updated.badgeLevel, // deprecated
       verifiedMonths: updated.verifiedMonths,
       punctualityRate: updated.punctualityRate,
       lastVerifiedAt: updated.lastVerifiedAt,

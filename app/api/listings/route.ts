@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { getMaxProperties } from '@/lib/features';
+
 
 export async function POST(
     request: Request,
@@ -10,6 +12,19 @@ export async function POST(
     if (!currentUser) {
         return NextResponse.error();
     }
+
+    // Check maxProperties limit
+    const currentPropertyCount = await prisma.property.count({
+      where: { ownerId: currentUser.id },
+    });
+    const maxProperties = await getMaxProperties(currentUser.id);
+    if (currentPropertyCount >= maxProperties) {
+      return NextResponse.json(
+        { error: `Vous avez atteint la limite de ${maxProperties} bien(s) pour votre plan. Passez à un plan supérieur.` },
+        { status: 403 }
+      );
+    }
+
 
     const body = await request.json();
     console.log("RECEIVED BODY:", body);

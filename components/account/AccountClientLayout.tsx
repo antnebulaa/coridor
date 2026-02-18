@@ -22,6 +22,7 @@ const PAGE_TITLES: Record<string, string> = {
     '/account/pricing': 'Abonnement',
     '/account/alerts': 'Alertes',
     '/account/settings': 'Paramètres',
+    '/account/tax-simulator': 'Simulateur fiscal',
 };
 
 const AccountHeader = () => {

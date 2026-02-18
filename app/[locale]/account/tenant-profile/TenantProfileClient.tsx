@@ -9,7 +9,7 @@ import { SafeUser } from "@/types";
 import { generateDossierHtml } from "@/utils/dossierGenerator";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { Info, ShieldCheck, CheckCircle, Eye, Sparkles, TrendingUp, Lock, CreditCard, ArrowRight, Plus, Trash2, Download } from "lucide-react";
+import { Info, ShieldCheck, CheckCircle, Eye, Sparkles, Lock, CreditCard, ArrowRight, Plus, Trash2, Download } from "lucide-react";
 import Modal from "@/components/modals/Modal";
 
 import Container from "@/components/Container";
@@ -441,65 +441,34 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                         </button>
                                     </div>
 
-                                    {/* Badge display */}
-                                    {tenantProfile.badgeLevel && (
-                                        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-5">
+                                    {/* Verified payer display */}
+                                    {tenantProfile.verifiedMonths > 0 && (
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-200 dark:border-emerald-800 p-5">
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl ${
-                                                    tenantProfile.badgeLevel === 'GOLD' ? 'bg-yellow-100 dark:bg-yellow-900/30' :
-                                                    tenantProfile.badgeLevel === 'SILVER' ? 'bg-gray-100 dark:bg-gray-800' :
-                                                    'bg-orange-100 dark:bg-orange-900/30'
-                                                }`}>
-                                                    {tenantProfile.badgeLevel === 'GOLD' ? '\uD83E\uDD47' :
-                                                     tenantProfile.badgeLevel === 'SILVER' ? '\uD83E\uDD48' : '\uD83E\uDD49'}
+                                                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30">
+                                                    <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className="font-bold text-neutral-900 dark:text-neutral-100">
-                                                        Payeur Exemplaire — {
-                                                            tenantProfile.badgeLevel === 'GOLD' ? 'Or' :
-                                                            tenantProfile.badgeLevel === 'SILVER' ? 'Argent' : 'Bronze'
-                                                        }
+                                                    <div className="font-bold text-emerald-900 dark:text-emerald-100">
+                                                        {tenantProfile.verifiedMonths >= 3 ? 'Payeur v\u00e9rifi\u00e9 \u2713' : 'V\u00e9rification en cours'}
                                                     </div>
-                                                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                                                        {tenantProfile.verifiedMonths} mois vérifiés · Ponctualité {Math.round(tenantProfile.punctualityRate || 0)}%
+                                                    <div className="text-sm text-emerald-700 dark:text-emerald-400">
+                                                        {tenantProfile.verifiedMonths} mois v{'\u00e9'}rifi{'\u00e9'}s
+                                                        {tenantProfile.punctualityRate != null && ` \u00b7 ${Math.round(tenantProfile.punctualityRate)}% r\u00e9gulier`}
                                                     </div>
                                                 </div>
                                             </div>
-                                            {/* Progress to next level */}
-                                            {tenantProfile.badgeLevel !== 'GOLD' && (
-                                                <div className="mt-4">
-                                                    <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                                                        <span>Progression vers {tenantProfile.badgeLevel === 'BRONZE' ? 'Argent' : 'Or'}</span>
-                                                        <span>{tenantProfile.verifiedMonths} / {tenantProfile.badgeLevel === 'BRONZE' ? 12 : 24} mois</span>
-                                                    </div>
-                                                    <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                                        <div
-                                                            className={`h-full rounded-full ${
-                                                                tenantProfile.badgeLevel === 'BRONZE' ? 'bg-gray-400' : 'bg-yellow-400'
-                                                            }`}
-                                                            style={{ width: `${Math.min(100, (tenantProfile.verifiedMonths / (tenantProfile.badgeLevel === 'BRONZE' ? 12 : 24)) * 100)}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* No badge yet but verified */}
-                                    {!tenantProfile.badgeLevel && tenantProfile.verifiedMonths > 0 && (
-                                        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-5">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-700">
-                                                    <TrendingUp className="w-7 h-7 text-neutral-400 dark:text-neutral-500" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-neutral-900 dark:text-neutral-100">En route vers le badge Bronze</div>
-                                                    <div className="text-sm text-neutral-500 dark:text-neutral-400">{tenantProfile.verifiedMonths} mois vérifiés sur 6 requis</div>
-                                                </div>
-                                            </div>
+                                            {/* Progressive gauge — max visual at 24 months */}
                                             <div className="mt-4">
-                                                <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
-                                                    <div className="h-full rounded-full bg-orange-400" style={{ width: `${Math.min(100, (tenantProfile.verifiedMonths / 6) * 100)}%` }} />
+                                                <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400 mb-1">
+                                                    <span>{tenantProfile.verifiedMonths} mois</span>
+                                                    <span>24+ mois</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full bg-emerald-500 transition-all duration-1000 ease-out"
+                                                        style={{ width: `${Math.min(100, (tenantProfile.verifiedMonths / 24) * 100)}%` }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

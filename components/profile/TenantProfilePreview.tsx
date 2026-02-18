@@ -5,6 +5,7 @@ import { TenantProfile, Guarantor, Income } from "@prisma/client";
 import Avatar from "@/components/Avatar";
 import { ShieldCheck, CheckCircle, Briefcase, Users, Wallet, Home, Info } from "lucide-react";
 import PaymentBadge from "@/components/profile/PaymentBadge";
+import PassportPreview from "@/components/passport/PassportPreview";
 
 interface TenantProfilePreviewProps {
     user: SafeUser;
@@ -116,8 +117,8 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                 <div className="flex flex-col">
                     <div className="text-lg font-bold flex items-center gap-2">
                         {user.name}
-                        {tenantProfile.badgeLevel ? (
-                            <PaymentBadge badgeLevel={tenantProfile.badgeLevel} compact />
+                        {tenantProfile.verifiedMonths && tenantProfile.verifiedMonths >= 3 ? (
+                            <PaymentBadge verifiedMonths={tenantProfile.verifiedMonths} compact />
                         ) : tenantProfile.rentVerified ? (
                             <span className="text-green-600" title="Loyer vérifié">
                                 <ShieldCheck size={18} />
@@ -143,9 +144,8 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             )}
 
             {/* Payment Badge */}
-            {tenantProfile.badgeLevel ? (
+            {tenantProfile.verifiedMonths && tenantProfile.verifiedMonths >= 3 ? (
                 <PaymentBadge
-                    badgeLevel={tenantProfile.badgeLevel}
                     verifiedMonths={tenantProfile.verifiedMonths}
                     punctualityRate={tenantProfile.punctualityRate}
                 />
@@ -158,6 +158,9 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                     </div>
                 </div>
             ) : null}
+
+            {/* Passport Locatif */}
+            <PassportPreview userId={user.id} />
 
             {/* Access to Full Dossier (Conditionally Shown) */}
             {showFullDossierLink && (

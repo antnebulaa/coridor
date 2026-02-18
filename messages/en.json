@@ -860,6 +860,169 @@
                 "createError": "Error creating alert"
             }
         },
+        "passport": {
+            "title": "Rental Passport",
+            "subtitle": "Your verifiable and portable rental history",
+            "score": {
+                "title": "Overall Score",
+                "outOf": "/ 100",
+                "badge": "Verified Payments",
+                "tenure": "Rental History",
+                "reviews": "Reviews",
+                "completeness": "Profile Completeness",
+                "weight": "{weight}%",
+                "privateNotice": "This score is personal and private. It helps you improve your profile. Landlords only see the factual information you choose to share."
+            },
+            "confidence": {
+                "HIGH": "Score based on verified data",
+                "MEDIUM": "Some data is self-declared",
+                "LOW": "Little verified data available"
+            },
+            "enable": {
+                "label": "Enable my Passport",
+                "description": "By enabling your Passport, you authorize sharing your information with landlords during your applications."
+            },
+            "history": {
+                "title": "My rental history",
+                "empty": "No rental history yet. Add your first rental.",
+                "addAdvice": "Add your previous rentals to improve your score",
+                "verified": "Verified",
+                "manual": "Self-declared",
+                "hidden": "Hidden",
+                "visible": "Visible",
+                "current": "Current",
+                "months": "{count} months",
+                "addEntry": "Add a rental",
+                "editEntry": "Edit",
+                "deleteEntry": "Delete",
+                "deleteConfirm": "Delete this entry?",
+                "form": {
+                    "title": "Add a rental",
+                    "editTitle": "Edit rental",
+                    "city": "City",
+                    "zipCode": "Zip code",
+                    "propertyType": "Property type",
+                    "startDate": "Move-in date",
+                    "endDate": "Move-out date (empty if current)",
+                    "rentAmount": "Monthly rent (EUR)",
+                    "landlordName": "Landlord / agency name",
+                    "save": "Save",
+                    "saving": "Saving...",
+                    "cancel": "Cancel"
+                },
+                "propertyTypes": {
+                    "APARTMENT": "Apartment",
+                    "HOUSE": "House",
+                    "STUDIO": "Studio",
+                    "COLOCATION_ROOM": "Shared room",
+                    "OTHER": "Other"
+                }
+            },
+            "evaluations": {
+                "title": "My evaluations",
+                "empty": "You have not received any evaluations from landlords yet. Evaluations are filled at the end of a lease.",
+                "share": "Share this evaluation",
+                "unshare": "Hide this evaluation",
+                "composite": "Composite score",
+                "criteria": {
+                    "PAYMENT_REGULARITY": "Payment regularity",
+                    "PROPERTY_CONDITION": "Property condition",
+                    "COMMUNICATION": "Communication",
+                    "WOULD_RECOMMEND": "Recommendation"
+                },
+                "ratings": {
+                    "POSITIVE": "Positive",
+                    "NEUTRAL": "Neutral",
+                    "NEGATIVE": "Negative"
+                }
+            },
+            "sharing": {
+                "title": "Sharing settings",
+                "description": "Choose what information you want to share with landlords.",
+                "showPaymentBadge": {
+                    "label": "Verified Payer",
+                    "description": "Show your verified payer status and month gauge"
+                },
+                "showRentalHistory": {
+                    "label": "Rental history",
+                    "description": "Share your rental history"
+                },
+                "showLandlordReviews": {
+                    "label": "Landlord evaluations",
+                    "description": "Share evaluations from your former landlords"
+                },
+                "showFinancialSummary": {
+                    "label": "Financial summary",
+                    "description": "Share your income, guarantors and allowances"
+                },
+                "showVerifiedMonths": {
+                    "label": "Verified months",
+                    "description": "Show the number of verified payment months"
+                },
+                "rgpdNotice": "In accordance with GDPR, you can change these choices at any time. Your data is only shared with your explicit consent.",
+                "export": "Export my passport",
+                "exportPdf": "Export as PDF",
+                "exportJson": "Export as JSON"
+            },
+            "toasts": {
+                "settingsUpdated": "Settings updated",
+                "historyAdded": "Rental added",
+                "historyUpdated": "Rental updated",
+                "historyDeleted": "Rental deleted",
+                "visibilityUpdated": "Visibility updated",
+                "consentUpdated": "Consent updated",
+                "error": "An error occurred",
+                "exportStarted": "Export in progress..."
+            },
+            "review": {
+                "title": "Tenant Evaluation",
+                "subtitle": "Evaluate your tenant on factual and objective criteria.",
+                "instructions": "This factual evaluation will help your tenant build their trust profile for future rental searches.",
+                "criteria": {
+                    "PAYMENT_REGULARITY": {
+                        "label": "Payment regularity",
+                        "question": "Was the rent paid every month during the lease?",
+                        "POSITIVE": "Yes, the rent was paid every month, even if there were a few minor delays",
+                        "NEUTRAL": "Generally yes, but with frequent delays requiring regular reminders",
+                        "NEGATIVE": "No, there were significant unpaid amounts or months left unpaid"
+                    },
+                    "PROPERTY_CONDITION": {
+                        "label": "Property condition",
+                        "question": "Did the property suffer intentional or negligent damage?",
+                        "POSITIVE": "No, the property was returned in good condition considering the length of stay — normal wear and tear, minor everyday incidents",
+                        "NEUTRAL": "Some damage beyond normal wear and tear, settled through the security deposit",
+                        "NEGATIVE": "Intentional damage or significant negligence requiring major repairs"
+                    },
+                    "COMMUNICATION": {
+                        "label": "Communication",
+                        "question": "How was the communication with your tenant during the lease?",
+                        "POSITIVE": "Smooth — the tenant was reachable and responsive when needed",
+                        "NEUTRAL": "Acceptable — basic but functional communication, sometimes a bit slow to respond",
+                        "NEGATIVE": "Difficult — frequent non-responses, impossible to reach when needed"
+                    },
+                    "WOULD_RECOMMEND": {
+                        "label": "Recommendation",
+                        "question": "Would you recommend this tenant to another landlord?",
+                        "POSITIVE": "Yes, without reservation",
+                        "NEUTRAL": "Yes, with some reservations",
+                        "NEGATIVE": "No"
+                    }
+                },
+                "submit": "Submit evaluation",
+                "submitting": "Submitting...",
+                "success": "Evaluation submitted successfully!",
+                "error": "Error submitting evaluation"
+            },
+            "preview": {
+                "title": "Rental Passport",
+                "noPassport": "This tenant has not enabled their Rental Passport.",
+                "score": "Score",
+                "rentalHistory": "Rental history",
+                "evaluations": "Landlord evaluations",
+                "verifiedMonths": "verified months",
+                "paymentBadge": "Payment Badge"
+            }
+        },
         "navigation": {
             "personalInfo": "Personal info",
             "finances": "My finances",
@@ -872,6 +1035,7 @@
             "privacy": "Privacy & sharing",
             "preferences": "Global preferences",
             "subscription": "Subscription",
+            "passport": "Rental Passport",
             "settings": "Settings",
             "plan": {
                 "free": "Free",

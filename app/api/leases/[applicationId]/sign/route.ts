@@ -7,6 +7,8 @@ import { YousignService } from "@/services/YousignService";
 import ReactPDF from '@react-pdf/renderer';
 import LeaseDocument from "@/components/documents/LeaseDocument";
 import { LeaseConfig } from "@/services/LeaseService";
+import { hasFeature } from '@/lib/features';
+
 
 // Helper to render PDF to Buffer
 const renderToBuffer = async (element: React.ReactElement): Promise<Buffer> => {
@@ -27,6 +29,16 @@ export async function POST(
         const params = await props.params;
         const currentUser = await getCurrentUser();
         if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        // Check feature access
+        const canGenerate = await hasFeature(currentUser.id, 'LEASE_GENERATION');
+        if (!canGenerate) {
+          return NextResponse.json(
+            { error: 'La génération de baux nécessite un abonnement Essentiel ou Pro.' },
+            { status: 403 }
+          );
+        }
+
 
         const applicationId = params.applicationId;
 
@@ -60,22 +72,28 @@ export async function POST(
         const pdfBuffer = await renderToBuffer(React.createElement(LeaseDocument, { data: leaseConfig }));
 
         // 4. Prepare Signers
-        // Tenant(s)
-        const signers = leaseConfig.tenants.map((t: any) => ({
-            first_name: t.name.split(' ')[0] || "Locataire",
-            last_name: t.name.split(' ').slice(1).join(' ') || "Inconnu",
-            email: t.email,
-            phone_number: "+33612345678" // MOCK PHONE for Sandbox! Real phone needed for PROD.
-            // Note: In Sandbox, all phones must be valid. We use a test number or the real one if provided.
-            // Using a hardcoded test number for now to avoid errors with bad user data.
-        }));
+        // Tenant(s) - use real phone from LeaseConfig
+        const signers = leaseConfig.tenants.map((t: any) => {
+            if (!t.phone) {
+                throw new Error(`Le locataire ${t.name} n'a pas de numéro de téléphone renseigné. Le numéro est requis pour la signature électronique (OTP SMS).`);
+            }
+            return {
+                first_name: t.firstName || t.name.split(' ')[0] || "Locataire",
+                last_name: t.lastName || t.name.split(' ').slice(1).join(' ') || "Inconnu",
+                email: t.email,
+                phone_number: t.phone
+            };
+        });
 
         // Landlord
+        if (!leaseConfig.landlord.phone) {
+            throw new Error(`Le bailleur ${leaseConfig.landlord.name} n'a pas de numéro de téléphone renseigné.`);
+        }
         signers.push({
             first_name: leaseConfig.landlord.name.split(' ')[0] || "Bailleur",
             last_name: leaseConfig.landlord.name.split(' ').slice(1).join(' ') || "Inconnu",
             email: leaseConfig.landlord.email,
-            phone_number: "+33612345678" // MOCK
+            phone_number: leaseConfig.landlord.phone
         });
 
         // 5. Initiate via Yousign

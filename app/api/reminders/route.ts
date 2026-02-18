@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { LegalReminderStatus, LegalReminderType } from "@prisma/client";
+import { hasFeature } from '@/lib/features';
+
 
 /**
  * GET /api/reminders
@@ -21,6 +23,16 @@ export async function GET(request: Request) {
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Check feature access
+    const canAccessReminders = await hasFeature(currentUser.id, 'LEGAL_REMINDERS');
+    if (!canAccessReminders) {
+      return NextResponse.json(
+        { error: 'Les rappels légaux nécessitent un abonnement Essentiel ou Pro.' },
+        { status: 403 }
+      );
+    }
+
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");

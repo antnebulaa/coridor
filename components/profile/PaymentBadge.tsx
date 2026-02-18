@@ -3,69 +3,60 @@
 import { ShieldCheck } from "lucide-react";
 
 interface PaymentBadgeProps {
-    badgeLevel: string | null;      // "BRONZE", "SILVER", "GOLD" or null
-    verifiedMonths?: number;
+    verifiedMonths: number;
     punctualityRate?: number | null;
-    compact?: boolean;              // For inline display (just icon + label)
+    compact?: boolean;
 }
 
 const PaymentBadge: React.FC<PaymentBadgeProps> = ({
-    badgeLevel,
     verifiedMonths,
     punctualityRate,
     compact = false
 }) => {
-    if (!badgeLevel) return null;
+    // Not yet verified — need at least 3 months
+    if (verifiedMonths < 3) return null;
 
-    const config = {
-        GOLD: {
-            label: 'Payeur Or',
-            emoji: '\uD83E\uDD47',
-            bg: 'bg-yellow-50 border-yellow-200',
-            text: 'text-yellow-800',
-            iconColor: 'text-yellow-600',
-        },
-        SILVER: {
-            label: 'Payeur Argent',
-            emoji: '\uD83E\uDD48',
-            bg: 'bg-gray-50 border-gray-200',
-            text: 'text-gray-700',
-            iconColor: 'text-gray-500',
-        },
-        BRONZE: {
-            label: 'Payeur Bronze',
-            emoji: '\uD83E\uDD49',
-            bg: 'bg-orange-50 border-orange-200',
-            text: 'text-orange-800',
-            iconColor: 'text-orange-500',
-        }
-    };
-
-    const c = config[badgeLevel as keyof typeof config];
-    if (!c) return null;
+    // Gauge fills proportionally, max visual at 24+ months
+    const gaugePercent = Math.min((verifiedMonths / 24) * 100, 100);
 
     if (compact) {
         return (
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${c.bg} ${c.text}`}>
-                <span>{c.emoji}</span>
-                <span>{c.label}</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-700">
+                <ShieldCheck size={12} />
+                <span>{'\u2713'} V{'\u00e9'}rifi{'\u00e9'} {'\u00b7'} {verifiedMonths} mois</span>
             </span>
         );
     }
 
     return (
-        <div className={`flex items-center gap-3 p-3 rounded-xl border ${c.bg}`}>
-            <div className="text-2xl">{c.emoji}</div>
-            <div className="flex-1 min-w-0">
-                <div className={`font-semibold text-sm ${c.text}`}>{c.label}</div>
-                {verifiedMonths && (
-                    <div className="text-xs text-neutral-500">
-                        {verifiedMonths} mois v{'\u00e9'}rifi{'\u00e9'}s
-                        {punctualityRate != null && ` \u00B7 ${Math.round(punctualityRate)}% ponctuel`}
+        <div className="flex flex-col gap-3 p-4 rounded-xl border bg-emerald-50 border-emerald-200">
+            {/* Header row */}
+            <div className="flex items-center gap-3">
+                <ShieldCheck size={20} className="text-emerald-600 shrink-0" />
+                <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-emerald-800">
+                        Payeur v{'\u00e9'}rifi{'\u00e9'} {'\u2713'}
                     </div>
-                )}
+                    <div className="text-xs text-emerald-700">
+                        {verifiedMonths} mois v{'\u00e9'}rifi{'\u00e9'}s
+                        {punctualityRate != null && ` \u00b7 ${Math.round(punctualityRate)}% r\u00e9gulier`}
+                    </div>
+                </div>
             </div>
-            <ShieldCheck size={18} className={c.iconColor} />
+
+            {/* Progress gauge */}
+            <div className="flex flex-col gap-1">
+                <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${gaugePercent}%` }}
+                    />
+                </div>
+                <div className="flex items-center justify-between text-xs text-emerald-700">
+                    <span>3 mois</span>
+                    <span>24+ mois</span>
+                </div>
+            </div>
         </div>
     );
 };

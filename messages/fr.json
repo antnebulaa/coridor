@@ -878,6 +878,169 @@
                 "createError": "Erreur lors de la création de l'alerte"
             }
         },
+        "passport": {
+            "title": "Passeport Locatif",
+            "subtitle": "Votre historique locatif verifiable et portable",
+            "score": {
+                "title": "Score global",
+                "outOf": "/ 100",
+                "badge": "Paiements verifies",
+                "tenure": "Anciennete locative",
+                "reviews": "Evaluations",
+                "completeness": "Completude du dossier",
+                "weight": "{weight}%",
+                "privateNotice": "Ce score est personnel et prive. Il vous aide a ameliorer votre profil. Les proprietaires ne voient que les informations factuelles que vous choisissez de partager."
+            },
+            "confidence": {
+                "HIGH": "Score base sur des donnees verifiees",
+                "MEDIUM": "Certaines donnees sont declaratives",
+                "LOW": "Peu de donnees verifiees disponibles"
+            },
+            "enable": {
+                "label": "Activer mon Passeport",
+                "description": "En activant votre Passeport, vous autorisez le partage de vos informations avec les proprietaires lors de vos candidatures."
+            },
+            "history": {
+                "title": "Mon historique locatif",
+                "empty": "Aucun historique locatif pour le moment. Ajoutez votre premiere location.",
+                "addAdvice": "Ajoutez vos anciennes locations pour ameliorer votre score",
+                "verified": "Verifie",
+                "manual": "Declaratif",
+                "hidden": "Masque",
+                "visible": "Visible",
+                "current": "En cours",
+                "months": "{count} mois",
+                "addEntry": "Ajouter une location",
+                "editEntry": "Modifier",
+                "deleteEntry": "Supprimer",
+                "deleteConfirm": "Supprimer cette entree ?",
+                "form": {
+                    "title": "Ajouter une location",
+                    "editTitle": "Modifier la location",
+                    "city": "Ville",
+                    "zipCode": "Code postal",
+                    "propertyType": "Type de bien",
+                    "startDate": "Date d'entree",
+                    "endDate": "Date de sortie (vide si en cours)",
+                    "rentAmount": "Loyer mensuel (EUR)",
+                    "landlordName": "Nom du proprietaire / agence",
+                    "save": "Enregistrer",
+                    "saving": "Enregistrement...",
+                    "cancel": "Annuler"
+                },
+                "propertyTypes": {
+                    "APARTMENT": "Appartement",
+                    "HOUSE": "Maison",
+                    "STUDIO": "Studio",
+                    "COLOCATION_ROOM": "Chambre en colocation",
+                    "OTHER": "Autre"
+                }
+            },
+            "evaluations": {
+                "title": "Mes evaluations",
+                "empty": "Vous n'avez pas encore recu d'evaluations de proprietaires. Les evaluations sont remplies en fin de bail.",
+                "share": "Partager cette evaluation",
+                "unshare": "Masquer cette evaluation",
+                "composite": "Score composite",
+                "criteria": {
+                    "PAYMENT_REGULARITY": "Regularite des paiements",
+                    "PROPERTY_CONDITION": "Etat du logement",
+                    "COMMUNICATION": "Communication",
+                    "WOULD_RECOMMEND": "Recommandation"
+                },
+                "ratings": {
+                    "POSITIVE": "Positif",
+                    "NEUTRAL": "Neutre",
+                    "NEGATIVE": "Negatif"
+                }
+            },
+            "sharing": {
+                "title": "Parametres de partage",
+                "description": "Choisissez les informations que vous souhaitez partager avec les proprietaires.",
+                "showPaymentBadge": {
+                    "label": "Payeur verifie",
+                    "description": "Afficher votre statut de payeur verifie et la jauge de mois verifies"
+                },
+                "showRentalHistory": {
+                    "label": "Historique des baux",
+                    "description": "Partager votre historique de locations"
+                },
+                "showLandlordReviews": {
+                    "label": "Evaluations proprietaires",
+                    "description": "Partager les evaluations de vos anciens proprietaires"
+                },
+                "showFinancialSummary": {
+                    "label": "Synthese financiere",
+                    "description": "Partager vos revenus, garants et aides"
+                },
+                "showVerifiedMonths": {
+                    "label": "Mois verifies",
+                    "description": "Afficher le nombre de mois de paiement verifies"
+                },
+                "rgpdNotice": "Conformement au RGPD, vous pouvez modifier ces choix a tout moment. Vos donnees ne sont partagees qu'avec votre consentement explicite.",
+                "export": "Exporter mon passeport",
+                "exportPdf": "Exporter en PDF",
+                "exportJson": "Exporter en JSON"
+            },
+            "toasts": {
+                "settingsUpdated": "Preferences mises a jour",
+                "historyAdded": "Location ajoutee",
+                "historyUpdated": "Location modifiee",
+                "historyDeleted": "Location supprimee",
+                "visibilityUpdated": "Visibilite modifiee",
+                "consentUpdated": "Consentement mis a jour",
+                "error": "Une erreur est survenue",
+                "exportStarted": "Export en cours..."
+            },
+            "review": {
+                "title": "Evaluation du locataire",
+                "subtitle": "Evaluez votre locataire sur des criteres factuels et objectifs.",
+                "instructions": "Cette evaluation factuelle aidera votre locataire a construire son profil de confiance pour ses futures recherches.",
+                "criteria": {
+                    "PAYMENT_REGULARITY": {
+                        "label": "Regularite des paiements",
+                        "question": "Le loyer a-t-il ete paye chaque mois pendant la duree du bail ?",
+                        "POSITIVE": "Oui, le loyer a ete paye chaque mois, meme s'il y a eu quelques legers retards ponctuels",
+                        "NEUTRAL": "Globalement oui, mais avec des retards frequents ayant necessite des relances regulieres",
+                        "NEGATIVE": "Non, il y a eu des impayes significatifs ou des mois non regles"
+                    },
+                    "PROPERTY_CONDITION": {
+                        "label": "Etat du logement",
+                        "question": "Le logement a-t-il subi des degradations volontaires ou par negligence ?",
+                        "POSITIVE": "Non, le logement a ete restitue en bon etat compte tenu de la duree d'occupation — usure normale, petits accidents du quotidien",
+                        "NEUTRAL": "Quelques degradations au-dela de l'usure normale, reglees via le depot de garantie",
+                        "NEGATIVE": "Degradations volontaires ou negligence importante ayant necessite des travaux significatifs"
+                    },
+                    "COMMUNICATION": {
+                        "label": "Communication",
+                        "question": "Comment etait la communication avec votre locataire pendant le bail ?",
+                        "POSITIVE": "Fluide — le locataire etait joignable et reactif quand necessaire",
+                        "NEUTRAL": "Correct — communication basique mais fonctionnelle, parfois un peu lent a repondre",
+                        "NEGATIVE": "Difficile — non-reponses frequentes, impossible de le joindre quand necessaire"
+                    },
+                    "WOULD_RECOMMEND": {
+                        "label": "Recommandation",
+                        "question": "Recommanderiez-vous ce locataire a un autre proprietaire ?",
+                        "POSITIVE": "Oui, sans reserve",
+                        "NEUTRAL": "Oui, avec quelques reserves",
+                        "NEGATIVE": "Non"
+                    }
+                },
+                "submit": "Soumettre l'evaluation",
+                "submitting": "Envoi en cours...",
+                "success": "Evaluation soumise avec succes !",
+                "error": "Erreur lors de la soumission"
+            },
+            "preview": {
+                "title": "Passeport Locatif",
+                "noPassport": "Ce locataire n'a pas active son Passeport Locatif.",
+                "score": "Score",
+                "rentalHistory": "Historique locatif",
+                "evaluations": "Evaluations proprietaires",
+                "verifiedMonths": "mois verifies",
+                "paymentBadge": "Badge Payeur"
+            }
+        },
         "navigation": {
             "personalInfo": "Informations personnelles",
             "finances": "Mes finances",
@@ -890,6 +1053,7 @@
             "privacy": "Confidentialité et partage",
             "preferences": "Préférences globales",
             "subscription": "Abonnement",
+            "passport": "Passeport Locatif",
             "settings": "Réglages",
             "plan": {
                 "free": "Gratuit",

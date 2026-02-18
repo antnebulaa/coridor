@@ -21,6 +21,9 @@ import VisitsSection from "./components/VisitsSection";
 import StatusSection from "./components/StatusSection";
 import RoomsConfigSection from "./components/RoomsConfigSection";
 import LeaseTypeSection from "./components/LeaseTypeSection";
+import LegalInfoSection from "./components/LegalInfoSection";
+import LeaseConditionsSection from "./components/LeaseConditionsSection";
+import DiagnosticsSection from "@/components/properties/DiagnosticsSection";
 import { sidebarLinks } from "./constants";
 
 
@@ -49,7 +52,10 @@ export type SectionType =
     | 'application'
     | 'status'
     | 'delete'
-    | 'expenses';
+    | 'expenses'
+    | 'legalInfo'
+    | 'leaseConditions'
+    | 'diagnostics';
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -129,6 +135,9 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         status: 'Statut de l\'annonce',
         delete: 'Supprimer l\'annonce',
         expenses: 'Dépenses & Charges',
+        legalInfo: 'Informations Legales',
+        leaseConditions: 'Conditions du Bail',
+        diagnostics: 'Diagnostics Immobiliers',
     };
 
     const renderContent = () => {
@@ -174,6 +183,27 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                 return <div>Application Settings Form Placeholder</div>;
             case 'status':
                 return <StatusSection listing={listing} />;
+            case 'legalInfo':
+                return <LegalInfoSection listing={listing} />;
+            case 'leaseConditions':
+                return <LeaseConditionsSection listing={listing} />;
+            case 'diagnostics':
+                return (
+                    <DiagnosticsSection
+                        propertyId={listing.rentalUnit?.property?.id || ''}
+                        initialData={{
+                            dpe: (listing as any).dpe,
+                            dpeDate: (listing.rentalUnit?.property as any)?.dpeDate,
+                            dpeExpiryDate: (listing.rentalUnit?.property as any)?.dpeExpiryDate,
+                            electricalDiagnosticDate: (listing.rentalUnit?.property as any)?.electricalDiagnosticDate,
+                            electricalInstallYear: (listing.rentalUnit?.property as any)?.electricalInstallYear,
+                            gasDiagnosticDate: (listing.rentalUnit?.property as any)?.gasDiagnosticDate,
+                            gasInstallYear: (listing.rentalUnit?.property as any)?.gasInstallYear,
+                            hasGasInstallation: (listing.rentalUnit?.property as any)?.hasGasInstallation,
+                            erpDate: (listing.rentalUnit?.property as any)?.erpDate,
+                        }}
+                    />
+                );
             case 'delete':
                 return <div>Delete Form Placeholder</div>;
             default:

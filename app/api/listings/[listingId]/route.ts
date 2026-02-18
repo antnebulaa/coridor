@@ -145,7 +145,14 @@ export async function PUT(
         rentalUnitType, // NEW: Expecting 'ENTIRE_PLACE' | 'PRIVATE_ROOM'
         bedType, // NEW
         hasPrivateBathroom, // NEW
-        isPublished // NEW
+        isPublished, // NEW
+        // Lease conditions fields
+        paymentDay,
+        paymentMethod,
+        chargesAmount,
+        chargesType,
+        recentWorksAmountCents,
+        recentWorksDescription,
     } = body;
 
     try {
@@ -206,7 +213,14 @@ export async function PUT(
                 propertyAdjective,
                 isPublished: isPublished,
                 status: isPublished !== undefined ? (isPublished ? 'PENDING_REVIEW' : 'DRAFT') : undefined,
-                statusUpdatedAt: isPublished !== undefined ? new Date() : undefined
+                statusUpdatedAt: isPublished !== undefined ? new Date() : undefined,
+                // Lease conditions
+                paymentDay: paymentDay !== undefined ? parseInt(String(paymentDay), 10) : undefined,
+                paymentMethod: paymentMethod || undefined,
+                chargesAmount: chargesAmount !== undefined && chargesAmount !== null ? parseInt(String(chargesAmount), 10) : undefined,
+                chargesType: chargesType || undefined,
+                recentWorksAmountCents: recentWorksAmountCents !== undefined ? parseInt(String(recentWorksAmountCents), 10) : undefined,
+                recentWorksDescription: recentWorksDescription || undefined,
             };
 
             // 4. Distribute Amenities (Boolean Flags)

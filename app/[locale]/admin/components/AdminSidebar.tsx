@@ -3,13 +3,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Home, Users, BarChart3, ArrowLeft } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Home, Users, BarChart3, ArrowLeft, CreditCard } from 'lucide-react';
 
 const NAV_ITEMS = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: '/admin/listings', label: 'Annonces', icon: Home },
     { href: '/admin/users', label: 'Utilisateurs', icon: Users },
     { href: '/admin/polls', label: 'Sondages', icon: BarChart3 },
+    { href: '/admin/plans', label: 'Plans & Features', icon: CreditCard },
 ];
 
 const AdminSidebar: React.FC = () => {

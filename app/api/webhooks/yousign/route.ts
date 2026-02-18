@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
+import crypto from 'crypto';
 import prisma from "@/libs/prismadb";
 import { YousignService } from "@/services/YousignService";
+import { PassportService } from "@/services/PassportService";
+
+const YOUSIGN_WEBHOOK_SECRET = process.env.YOUSIGN_WEBHOOK_SECRET;
 
 // Yousign webhook events we care about
 type YousignEvent =
@@ -47,7 +51,35 @@ async function sendNotification(userId: string, title: string, message: string, 
 
 export async function POST(request: Request) {
     try {
-        const payload: YousignWebhookPayload = await request.json();
+        // 1. Read raw body for HMAC validation
+        const rawBody = await request.text();
+
+        // 2. Validate HMAC signature (skip if secret not configured - dev mode)
+        if (YOUSIGN_WEBHOOK_SECRET) {
+            const receivedSignature = request.headers.get('x-yousign-signature-hmac-sha256');
+            if (!receivedSignature) {
+                console.warn("[Yousign Webhook] Missing HMAC signature header");
+                return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+            }
+
+            const expectedSignature = crypto
+                .createHmac('sha256', YOUSIGN_WEBHOOK_SECRET)
+                .update(rawBody)
+                .digest('hex');
+
+            if (!crypto.timingSafeEqual(
+                Buffer.from(receivedSignature),
+                Buffer.from(expectedSignature)
+            )) {
+                console.warn("[Yousign Webhook] Invalid HMAC signature");
+                return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+            }
+        } else {
+            console.warn("[Yousign Webhook] YOUSIGN_WEBHOOK_SECRET not set - skipping HMAC validation");
+        }
+
+        // 3. Parse JSON after validation
+        const payload: YousignWebhookPayload = JSON.parse(rawBody);
 
         console.log("[Yousign Webhook] Received:", payload.event_name, payload.data.signature_request.id);
 
@@ -117,6 +149,14 @@ export async function POST(request: Request) {
                         "Félicitations ! Vous pouvez maintenant télécharger votre bail signé.",
                         `/leases/${application.id}`
                     );
+                }
+
+                // Auto-create RentalHistory entry for the Passeport Locatif
+                try {
+                    await PassportService.onLeaseSigned(application.id);
+                    console.log("[Yousign Webhook] RentalHistory created for application:", application.id);
+                } catch (passportErr) {
+                    console.error("[Yousign Webhook] Failed to create RentalHistory:", passportErr);
                 }
                 break;
 

@@ -34,8 +34,35 @@ export async function GET(request: Request) {
     }
 
     try {
-        const summary = await FiscalService.generateFiscalSummary(propertyId, year);
-        return NextResponse.json(summary);
+        const raw = await FiscalService.generateFiscalSummary(propertyId, year);
+
+        // Map to the shape expected by FiscalClient
+        const byCategory = Object.entries(raw.categories as Record<string, { label: string; amount: number }>)
+            .filter(([, v]) => v.amount > 0)
+            .map(([category, v]) => ({
+                category,
+                label: v.label,
+                totalCents: v.amount,
+            }));
+
+        const declaration2044 = Object.entries(raw.lines as Record<string, { label: string; amount: number }>)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([line, v]) => ({
+                line,
+                description: v.label,
+                amountCents: v.amount,
+            }));
+
+        return NextResponse.json({
+            year,
+            propertyId,
+            grossRevenueCents: raw.grossIncomeCents || 0,
+            totalDeductibleCents: raw.totalDeductibleCents || 0,
+            managementFeesCents: raw.managementFeesCents || 0,
+            netTaxableIncomeCents: raw.netIncomeCents || 0,
+            byCategory,
+            declaration2044,
+        });
     } catch (error) {
         console.error("[Fiscal Summary] Error:", error);
         return NextResponse.json({ error: "Erreur lors de la génération du récapitulatif fiscal" }, { status: 500 });

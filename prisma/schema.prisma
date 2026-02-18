@@ -95,6 +95,8 @@ model User {
   zipCode           String?
   country           String?
   measurementSystem String?   @default("metric") // "metric" or "imperial"
+  nationality   String?
+  stripeCustomerId String?
 
   accounts     Account[]
   // listings     Listing[] // REMOVED in 3-Tier Refactor
@@ -140,8 +142,12 @@ model User {
   subscriptions       Subscription[]
   giftedSubscriptions Subscription[] @relation("GiftedSubscriptions")
   invoices            Invoice[]
+  userSubscription    UserSubscription?
 
   legalReminders      LegalReminder[]
+
+  // --- Passeport Locatif ---
+  landlordReviews   LandlordReview[] @relation("LandlordReviews")
 }
 
 model TenantProfile {
@@ -181,6 +187,10 @@ model TenantProfile {
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   guarantors        Guarantor[]
   additionalIncomes Income[]
+
+  // --- Passeport Locatif ---
+  rentalHistory     RentalHistory[]
+  passportSettings  PassportSettings?
 }
 
 model Guarantor {
@@ -314,7 +324,45 @@ model Property {
   isRefurbished     Boolean @default(false)
   isQuiet           Boolean @default(false)
   hasNoOpposite     Boolean @default(false)
-  
+
+  // ---- ZONE TENDUE / ENCADREMENT DES LOYERS ----
+  isZoneTendue              Boolean   @default(false)
+  referenceRent             Float?    // Loyer de référence EUR/m²/mois
+  referenceRentIncreased    Float?    // Loyer de référence majoré EUR/m²/mois
+  rentSupplement            Float?    // Complément de loyer EUR
+  rentSupplementJustification String?
+  previousRent              Float?    // Dernier loyer appliqué (EUR)
+  previousRentDate          DateTime? @db.Date
+
+  // ---- ANNEXES / LOCAUX ACCESSOIRES ----
+  hasCave           Boolean   @default(false)
+  caveReference     String?
+  hasParking        Boolean   @default(false)
+  parkingReference  String?
+  hasGarage         Boolean   @default(false)
+  garageReference   String?
+
+  // ---- ÉQUIPEMENTS COMPLÉMENTAIRES ----
+  waterHeatingSystem  String?   // IND_ELEC, COL_GAZ, etc.
+
+  // ---- REGIME JURIDIQUE ----
+  legalRegime         String?   // "COPROPRIETE" or "MONOPROPRIETE"
+
+  // ---- QUALITE DU BAILLEUR ----
+  ownerLegalStatus    String?   // "PERSONNE_PHYSIQUE", "SCI", "PERSONNE_MORALE"
+  ownerSiren          String?   // Numéro SIREN si personne morale
+  ownerSiege          String?   // Siège social si personne morale
+
+  // ---- DIAGNOSTICS COMPLÉMENTAIRES ----
+  leadDiagnosticDate        DateTime? @db.Date   // CREP (plomb)
+  leadDiagnosticResult      String?              // POSITIF, NEGATIF, NON_APPLICABLE
+  asbestosDiagnosticDate    DateTime? @db.Date   // Amiante
+  asbestosDiagnosticResult  String?
+
+  // Diagnostic Bruit
+  noiseDiagnosticDate     DateTime? @db.Date
+  noiseDiagnosticResult   String?
+
   // Relations
   owner           User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   rentalUnits     RentalUnit[]
@@ -349,6 +397,7 @@ model RentalUnit {
   // Specific Characteristics
   surface     Float?
   bedType     String? // "SINGLE", "DOUBLE", "NONE"
+  roomCount   Int?    // Nombre de pièces principales
   
   // Amenities specific to this unit
   isFurnished       Boolean @default(false)
@@ -402,7 +451,17 @@ model Listing {
   petsAllowed       Boolean @default(false)
   
   leaseType     LeaseType?
-  
+
+  // ---- CONDITIONS DU BAIL ----
+  chargesAmount             Int?        // Montant charges en euros (typed alternative to Json charges)
+  chargesIncluded           Boolean     @default(false)
+  chargesType               String?     // "PROVISION" | "FORFAIT"
+  paymentDay                Int         @default(1)      // Jour du mois (1-28)
+  paymentMethod             String      @default("VIREMENT")  // VIREMENT, CHEQUE, PRELEVEMENT, ESPECES
+  recentWorksAmountCents    Int         @default(0)
+  recentWorksDescription    String      @default("Néant")
+  agencyFeesAmount   Int?   // Honoraires agence (si applicable)
+
   // Relations
   rentalUnit    RentalUnit @relation(fields: [rentalUnitId], references: [id], onDelete: Cascade)
   
@@ -725,6 +784,12 @@ model RentalApplication {
   indexationQuarter  Int?    // 1, 2, 3, or 4
   baseIndexValue     Float?  // Index value at lease signature
 
+  // ---- DATES ET DURÉE DU BAIL ----
+  leaseStartDate       DateTime? @db.Date   // Date d'effet du bail
+  moveInDate           DateTime? @db.Date   // Date d'entrée dans les lieux
+  leaseDurationMonths  Int?                 // Durée personnalisable
+  mobilityReason       String?              // Motif bail mobilité (obligatoire si BAIL_MOBILITE)
+
   // ---- RAPPELS LEGAUX ----
   leaseEndDate              DateTime? @db.Date
   keysReturnDate            DateTime?
@@ -747,6 +812,9 @@ model RentalApplication {
   // Selection
   visits             Visit[]
   evaluation         CandidateEvaluation?
+
+  // --- Passeport Locatif ---
+  rentalHistory      RentalHistory?
 
   @@index([listingId])
   @@index([candidateScopeId])
@@ -1132,6 +1200,8 @@ model NeighborhoodPoll {
 model PollResponse {
   id             String   @id @default(uuid())
   selectedOption Int
+  latitude       Float?
+  longitude      Float?
   neighborhood   String?
   city           String?
   zipCode        String?
@@ -1187,6 +1257,78 @@ model Invoice {
   @@index([userId])
   @@index([invoiceDate])
 }
+
+// ── Stripe Subscription System ──────────────────────────────
+
+model Feature {
+  id          String   @id @default(uuid())
+  key         String   @unique  // e.g. "LEASE_GENERATION", "RENT_TRACKING"
+  label       String             // Display name: "Génération de baux"
+  description String?
+  category    String   @default("GENERAL") // "LOCATION", "FINANCE", "SUPPORT", etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  planFeatures PlanFeature[]
+}
+
+model SubscriptionPlan {
+  id              String   @id @default(uuid())
+  name            String   @unique  // "FREE", "ESSENTIAL", "PRO"
+  displayName     String            // "Gratuit", "Essentiel", "Pro"
+  description     String?
+  monthlyPriceCents Int   @default(0)
+  yearlyPriceCents  Int   @default(0)
+  stripePriceIdMonthly String?
+  stripePriceIdYearly  String?
+  maxProperties   Int      @default(1)
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  isPopular       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  planFeatures    PlanFeature[]
+  userSubscriptions UserSubscription[]
+}
+
+model PlanFeature {
+  id             String           @id @default(uuid())
+  planId         String
+  featureId      String
+  limitValue     Int?             // null = unlimited, e.g. maxProperties override
+
+  plan           SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  feature        Feature          @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, featureId])
+  @@index([planId])
+  @@index([featureId])
+}
+
+model UserSubscription {
+  id                    String           @id @default(uuid())
+  userId                String           @unique
+  planId                String
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  status                String           @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELLED, TRIALING
+  billingCycle          String           @default("MONTHLY") // MONTHLY, YEARLY
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean          @default(false)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@index([status])
+}
+
 
 // ── Legal Reminders ─────────────────────────────────────────
 
@@ -1283,6 +1425,47 @@ enum RentPaymentStatus {
   IGNORED
 }
 
+// ============================================================
+// ENUMS -- Passeport Locatif
+// ============================================================
+
+/// Type de bien pour l'historique locatif.
+/// Utilise pour les saisies manuelles (les baux Coridor ont deja
+/// le type via Property.category).
+enum RentalPropertyType {
+  APARTMENT       // Appartement
+  HOUSE           // Maison
+  STUDIO          // Studio
+  COLOCATION_ROOM // Chambre en colocation
+  OTHER           // Autre
+}
+
+/// Source de l'entree dans l'historique.
+/// CORIDOR = genere automatiquement depuis un bail signe.
+/// MANUAL = saisi par le locataire (declaratif, non verifie).
+enum RentalHistorySource {
+  CORIDOR   // Bail Coridor (verifie automatiquement)
+  MANUAL    // Saisie manuelle (declaratif)
+}
+
+/// Criteres d'evaluation du proprietaire vers le locataire en fin de bail.
+/// Chaque critere est objectif, factuel, et non-discriminatoire.
+enum LandlordReviewCriterion {
+  PAYMENT_REGULARITY    // Regularite des paiements
+  PROPERTY_CONDITION    // Etat du logement
+  COMMUNICATION         // Communication et reactivite
+  WOULD_RECOMMEND       // Recommandation globale
+}
+
+/// Niveaux de reponse pour chaque critere d'evaluation.
+/// 3 niveaux seulement : positif / neutre / negatif.
+/// Pas de granularite excessive pour eviter les biais.
+enum ReviewRating {
+  POSITIVE    // Bon / Oui / Excellent
+  NEUTRAL     // Correct / Parfois / Avec reserves
+  NEGATIVE    // Problematique / Non / Degradations
+}
+
 model RentPaymentTracking {
   id                  String   @id @default(uuid())
   rentalApplicationId String
@@ -1314,4 +1497,146 @@ model RentPaymentTracking {
   @@index([rentalApplicationId])
   @@index([status])
   @@index([expectedDate])
+}
+
+// ── Passeport Locatif ──────────────────────────────────────────────────
+
+/// Historique locatif du locataire.
+/// Combine les baux Coridor (remplis automatiquement) et les locations
+/// exterieures (saisies manuellement par le locataire).
+///
+/// Pour les baux Coridor, les champs sont pre-remplis depuis
+/// RentalApplication -> Listing -> RentalUnit -> Property.
+/// Le locataire ne peut PAS modifier les donnees d'un bail Coridor.
+model RentalHistory {
+  id                  String               @id @default(uuid())
+  tenantProfileId     String
+  source              RentalHistorySource  // CORIDOR ou MANUAL
+
+  // ---- Lien Coridor (optionnel, null si MANUAL) ----
+  rentalApplicationId String?  @unique   // Bail Coridor associe (1:1)
+
+  // ---- Donnees du bail ----
+  city                String               // Ville de la location
+  zipCode             String?              // Code postal
+  propertyType        RentalPropertyType   // Type de bien
+  rentAmountCents     Int?                 // Loyer mensuel approximatif (en centimes)
+  startDate           DateTime  @db.Date   // Date d'entree dans le logement
+  endDate             DateTime? @db.Date   // Date de sortie (null = en cours)
+  landlordName        String?              // Nom du proprietaire/agence (optionnel)
+
+  // ---- Verification ----
+  /// true si la source est CORIDOR et le bail est verifie.
+  /// false pour les saisies manuelles (non verifiable par Coridor).
+  isVerified          Boolean  @default(false)
+
+  // ---- Visibilite ----
+  /// Le locataire peut masquer une entree specifique de son Passeport.
+  /// Masquee = non visible lors des candidatures, mais toujours stockee.
+  isHidden            Boolean  @default(false)
+
+  // ---- Metadata ----
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // ---- Relations ----
+  tenantProfile       TenantProfile      @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
+  rentalApplication   RentalApplication? @relation(fields: [rentalApplicationId], references: [id], onDelete: SetNull)
+  landlordReview      LandlordReview?    // Evaluation du proprietaire (0 ou 1 par bail)
+
+  @@index([tenantProfileId])
+  @@index([source])
+  @@index([startDate])
+  @@index([isVerified])
+}
+
+/// Evaluation structuree d'un locataire par son ancien proprietaire
+/// en fin de bail.
+///
+/// REGLES :
+/// - Liee a un RentalHistory (lui-meme lie a un bail Coridor).
+/// - Seul le proprietaire du bail peut remplir l'evaluation.
+/// - Le locataire doit avoir donne son consentement.
+/// - AUCUN champ texte libre (anti-discrimination by design).
+/// - Le locataire peut masquer l'evaluation via isHidden sur RentalHistory.
+///
+/// Le proprietaire ne peut creer une evaluation QUE si :
+/// 1. Le bail est termine (endDate non null) OU en cours de cloture
+/// 2. Le bail a dure au minimum 3 mois
+/// 3. L'evaluation n'a pas deja ete soumise
+model LandlordReview {
+  id                String   @id @default(uuid())
+  rentalHistoryId   String   @unique  // 1 evaluation par bail
+  reviewerId        String             // userId du proprietaire
+
+  // ---- Score composite ----
+  /// Calcule cote serveur a partir des scores individuels.
+  /// Moyenne simple des ReviewRating converties en numerique :
+  /// POSITIVE=3, NEUTRAL=2, NEGATIVE=1 -> Score /3.
+  compositeScore    Float
+
+  // ---- Metadata ----
+  /// Le locataire a-t-il consenti au partage de cette evaluation ?
+  /// L'evaluation est stockee mais non affichee tant que consent = false.
+  tenantConsented   Boolean  @default(false)
+  consentedAt       DateTime?
+
+  submittedAt       DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // ---- Relations ----
+  rentalHistory     RentalHistory       @relation(fields: [rentalHistoryId], references: [id], onDelete: Cascade)
+  reviewer          User                @relation("LandlordReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  scores            LandlordReviewScore[]
+
+  @@index([reviewerId])
+  @@index([compositeScore])
+}
+
+/// Score individuel pour un critere d'evaluation proprietaire.
+/// Chaque evaluation contient exactement 6 scores (un par critere).
+model LandlordReviewScore {
+  id                String                  @id @default(uuid())
+  landlordReviewId  String
+  criterion         LandlordReviewCriterion
+  rating            ReviewRating
+
+  landlordReview    LandlordReview @relation(fields: [landlordReviewId], references: [id], onDelete: Cascade)
+
+  @@unique([landlordReviewId, criterion])
+  @@index([landlordReviewId])
+}
+
+/// Preferences de partage du Passeport Locatif.
+/// Le locataire controle ce qu'il partage lors de ses candidatures.
+///
+/// Principe : opt-in. Par defaut, rien n'est partage.
+/// Le locataire active les sections qu'il souhaite rendre visibles.
+model PassportSettings {
+  id                String   @id @default(uuid())
+  tenantProfileId   String   @unique
+
+  // ---- Activation globale ----
+  /// Le Passeport est-il active ? Si false, rien n'est visible.
+  isEnabled         Boolean  @default(false)
+
+  // ---- Sections partageables ----
+  /// Chaque toggle controle la visibilite d'une section.
+  showPaymentBadge      Boolean @default(true)   // Badge Payeur (Bronze/Silver/Gold)
+  showRentalHistory     Boolean @default(true)   // Historique des baux
+  showLandlordReviews   Boolean @default(false)  // Evaluations proprietaires
+  showFinancialSummary  Boolean @default(false)  // Synthese financiere (revenus, garants)
+  showVerifiedMonths    Boolean @default(true)   // Nombre de mois verifies
+
+  // ---- Consentement RGPD ----
+  /// Date d'activation initiale du Passeport.
+  activatedAt       DateTime?
+  /// Date de derniere modification des preferences.
+  lastModifiedAt    DateTime?
+
+  // ---- Relations ----
+  tenantProfile     TenantProfile @relation(fields: [tenantProfileId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

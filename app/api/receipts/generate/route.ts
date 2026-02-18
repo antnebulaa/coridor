@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { RentReceiptService } from "@/services/RentReceiptService";
+import { hasFeature } from '@/lib/features';
+
 
 export async function POST(request: Request) {
   try {
@@ -8,6 +10,16 @@ export async function POST(request: Request) {
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Check feature access
+    const canGenerateReceipts = await hasFeature(currentUser.id, 'AUTO_RECEIPTS');
+    if (!canGenerateReceipts) {
+      return NextResponse.json(
+        { error: 'La génération de quittances nécessite un abonnement Essentiel ou Pro.' },
+        { status: 403 }
+      );
+    }
+
 
     const body = await request.json();
     const { applicationId, year, month } = body;

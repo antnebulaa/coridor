@@ -20,6 +20,7 @@ import IncompleteProfileModal from "@/components/modals/IncompleteProfileModal";
 import ListingMobileFooter from "@/components/listings/ListingMobileFooter";
 import ReportButton from "@/components/reports/ReportButton";
 import PollResults from "@/components/listings/PollResults";
+import PollBanner from "@/components/listings/PollBanner";
 
 interface ListingClientProps {
     listing: SafeListing & {
@@ -200,6 +201,16 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 onApply={onApply}
                 disabled={isLoading}
                 isOwner={isOwner}
+            />
+            <PollBanner
+                currentUser={currentUser}
+                locationContext={{
+                    latitude: listing.latitude,
+                    longitude: listing.longitude,
+                    neighborhood: listing.neighborhood,
+                    city: listing.city,
+                    zipCode: listing.zipCode,
+                }}
             />
         </Container>
     );

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
 
 const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || "https://api-sandbox.yousign.app/v3";
 const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY;
@@ -117,7 +118,9 @@ export class YousignService {
     }
 
     /**
-     * Get the signed document download URL
+     * Get the signed document download URL.
+     * Uploads the signed PDF to Supabase Storage and returns the public URL.
+     * Falls back to base64 data URL if Supabase is not configured.
      */
     static async getSignedDocumentUrl(signatureRequestId: string): Promise<string> {
         if (!YOUSIGN_API_KEY) throw new Error("YOUSIGN_API_KEY is missing");
@@ -135,7 +138,7 @@ export class YousignService {
 
             const documentId = docsRes.data[0].id;
 
-            // Get download URL for signed document
+            // Download the signed document as arraybuffer
             const downloadRes = await axios.get(
                 `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/documents/${documentId}/download`,
                 {
@@ -144,9 +147,39 @@ export class YousignService {
                 }
             );
 
-            // For now, we return a data URL. In production, you'd upload to cloud storage
-            const base64 = Buffer.from(downloadRes.data).toString('base64');
-            return `data:application/pdf;base64,${base64}`;
+            // Upload to Supabase Storage
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+            if (!supabaseUrl || !supabaseServiceKey) {
+                // Fallback to base64 if Supabase not configured
+                console.warn("[YousignService] Supabase not configured, falling back to base64");
+                const base64 = Buffer.from(downloadRes.data).toString('base64');
+                return `data:application/pdf;base64,${base64}`;
+            }
+
+            const supabase = createClient(supabaseUrl, supabaseServiceKey);
+            const fileName = `leases/signed/${signatureRequestId}.pdf`;
+
+            const { error } = await supabase.storage
+                .from('documents')
+                .upload(fileName, downloadRes.data, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                });
+
+            if (error) {
+                console.error("[YousignService] Supabase upload failed:", error);
+                // Fallback to base64
+                const base64 = Buffer.from(downloadRes.data).toString('base64');
+                return `data:application/pdf;base64,${base64}`;
+            }
+
+            const { data } = supabase.storage
+                .from('documents')
+                .getPublicUrl(fileName);
+
+            return data.publicUrl;
 
         } catch (error: any) {
             console.error("Yousign getSignedDocumentUrl Error:", error.response?.data || error.message);

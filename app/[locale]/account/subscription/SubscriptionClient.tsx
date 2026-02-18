@@ -305,6 +305,17 @@ export default function SubscriptionClient() {
         }
     };
 
+    const handleManageBilling = async () => {
+        try {
+            const res = await axios.post('/api/subscription/portal');
+            window.location.href = res.data.url;
+        } catch {
+            toast.custom((t) => (
+                <CustomToast t={t} message="Erreur lors de l'ouverture du portail Stripe" type="error" />
+            ));
+        }
+    };
+
     if (loading) {
         return <SubscriptionSkeleton />;
     }
@@ -514,18 +525,29 @@ export default function SubscriptionClient() {
                         <h2 className="text-lg font-semibold text-neutral-900">Moyen de paiement</h2>
                     </div>
 
-                    <p className="text-sm text-neutral-500">
-                        Aucun moyen de paiement enregistré
-                    </p>
-                    <button
-                        disabled
-                        className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm font-medium opacity-50 cursor-not-allowed"
-                    >
-                        Ajouter un moyen de paiement
-                    </button>
-                    <p className="text-xs text-neutral-400 mt-2">
-                        L&apos;intégration Stripe arrive bientôt.
-                    </p>
+                    {data.plan !== 'FREE' ? (
+                        <>
+                            <button
+                                onClick={handleManageBilling}
+                                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition"
+                            >
+                                Gérer mon abonnement Stripe
+                            </button>
+                            <p className="text-xs text-neutral-400 mt-2">
+                                Modifiez votre moyen de paiement, téléchargez vos factures, ou annulez via le portail Stripe.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-neutral-500">Aucun moyen de paiement enregistré</p>
+                            <Link
+                                href="/pricing"
+                                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition"
+                            >
+                                Souscrire un abonnement
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
 

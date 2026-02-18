@@ -177,8 +177,28 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
                     </View>
                     <View style={styles.row}>
                         <Text style={styles.label}>Email / Tél :</Text>
-                        <Text style={styles.value}>{data.landlord.email}</Text>
+                        <Text style={styles.value}>{data.landlord.email} {data.landlord.phone ? `/ ${data.landlord.phone}` : ''}</Text>
                     </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Qualité :</Text>
+                        <Text style={styles.value}>
+                            {data.landlord.legal_status === 'SCI' ? 'Société Civile Immobilière (SCI)' :
+                             data.landlord.legal_status === 'PERSONNE_MORALE' ? 'Personne Morale' :
+                             'Personne Physique'}
+                        </Text>
+                    </View>
+                    {data.landlord.siren && (
+                        <View style={styles.row}>
+                            <Text style={styles.label}>SIREN :</Text>
+                            <Text style={styles.value}>{data.landlord.siren}</Text>
+                        </View>
+                    )}
+                    {data.landlord.siege && (
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Siège social :</Text>
+                            <Text style={styles.value}>{data.landlord.siege}</Text>
+                        </View>
+                    )}
 
                     <Text style={styles.subsectionTitle}>LE(S) LOCATAIRE(S)</Text>
                     {data.tenants.map((tenant, index) => (
@@ -214,6 +234,14 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
                     <View style={styles.row}>
                         <Text style={styles.label}>Type d'habitat :</Text>
                         <Text style={styles.value}>{data.property.type === 'Maison' ? 'Maison Individuelle' : 'Appartement en Immeuble Collectif'}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Régime juridique :</Text>
+                        <Text style={styles.value}>
+                            {data.property.legal_regime === 'COPROPRIETE' ? 'Copropriété' :
+                             data.property.legal_regime === 'MONOPROPRIETE' ? 'Mono-propriété' :
+                             'Non renseigné'}
+                        </Text>
                     </View>
                     <View style={styles.row}>
                         <Text style={styles.label}>Période de construction :</Text>
@@ -252,7 +280,12 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
 
                     <Text style={styles.subsectionTitle}>3. Destination des lieux</Text>
                     <Text style={styles.text}>
-                        Le local est loué à usage exclusif d'habitation principale. {isMobilite ? "(Bail Mobilité - Motif professionnel ou études)" : ""}
+                        Le local est loué à usage exclusif d'habitation principale.
+                        {isMobilite && data.mobility_reason
+                            ? ` (Bail Mobilité — Motif : ${data.mobility_reason})`
+                            : isMobilite
+                            ? " (Bail Mobilité — Motif : Non renseigné)"
+                            : ""}
                     </Text>
                 </View>
 
@@ -317,13 +350,24 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
 
                     <Text style={styles.subsectionTitle}>2. Paiement</Text>
                     <Text style={styles.text}>
-                        Le paiement s'effectuera le {data.contract_data.payment_date} de chaque mois par {data.contract_data.payment_method}.
+                        {data.contract_data.payment_method === 'tout moyen à sa convenance'
+                            ? `Le locataire règle le loyer le ${data.contract_data.payment_date} de chaque mois par tout moyen à sa convenance.`
+                            : `Le loyer sera préférentiellement réglé le ${data.contract_data.payment_date} de chaque mois par ${data.contract_data.payment_method}, sans que ce mode soit exclusif de tout autre moyen de paiement.`
+                        }
                     </Text>
 
                     <Text style={styles.subsectionTitle}>3. Révision du Loyer</Text>
-                    <Text style={styles.text}>
-                        Le montant du loyer sera révisé chaque année à la date anniversaire du contrat, selon la variation de l'Indice de Référence des Loyers (IRL) publié par l'INSEE.
-                    </Text>
+                    {!isMobilite ? (
+                        <Text style={styles.text}>
+                            Le montant du loyer sera révisé chaque année à la date anniversaire du contrat, selon la variation de l'Indice de Référence des Loyers (IRL) publié par l'INSEE.
+                            {data.contract_data.indexation_quarter ? ` L'indice de référence est celui du ${data.contract_data.indexation_quarter}e trimestre.` : ''}
+                            {data.contract_data.base_index_value ? ` Valeur de l'IRL de base : ${data.contract_data.base_index_value}.` : ''}
+                        </Text>
+                    ) : (
+                        <Text style={styles.text}>
+                            Le loyer du bail mobilité n'est pas révisable pendant la durée du contrat.
+                        </Text>
+                    )}
 
                     <Text style={styles.subsectionTitle}>4. Information Loyer Précédent (Zone Tendue)</Text>
                     <View style={styles.row}>
@@ -336,6 +380,43 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
                     </View>
 
                 </View>
+
+                {/* IV bis. ENCADREMENT DES LOYERS */}
+                {data.rent_control?.is_applicable && (
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionNumber}>IV bis.</Text>
+                            <Text style={styles.sectionTitle}>ENCADREMENT DES LOYERS (ZONE TENDUE)</Text>
+                        </View>
+                        <Text style={styles.text}>
+                            Le logement est situé dans une zone soumise à l'encadrement des loyers (article 140 de la loi ELAN).
+                        </Text>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Loyer de référence :</Text>
+                            <Text style={styles.value}>
+                                {data.rent_control.reference_rent ? `${data.rent_control.reference_rent.toFixed(2)} €/m²/mois` : 'Non renseigné'}
+                            </Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Loyer de référence majoré :</Text>
+                            <Text style={styles.value}>
+                                {data.rent_control.reference_rent_increased ? `${data.rent_control.reference_rent_increased.toFixed(2)} €/m²/mois` : 'Non renseigné'}
+                            </Text>
+                        </View>
+                        {data.rent_control.rent_supplement !== undefined && data.rent_control.rent_supplement > 0 && (
+                            <>
+                                <View style={styles.row}>
+                                    <Text style={styles.label}>Complément de loyer :</Text>
+                                    <Text style={styles.value}>{formatCurrency(data.rent_control.rent_supplement)}</Text>
+                                </View>
+                                <View style={styles.row}>
+                                    <Text style={styles.label}>Justification :</Text>
+                                    <Text style={styles.value}>{data.rent_control.rent_supplement_justification || 'Non renseignée'}</Text>
+                                </View>
+                            </>
+                        )}
+                    </View>
+                )}
 
                 <Text style={styles.footer} render={({ pageNumber, totalPages }) => (
                     `${pageNumber} / ${totalPages}`
@@ -420,6 +501,35 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
                     </Text>
                 </View>
 
+                {/* VIII bis. CLAUSE DE SOUS-LOCATION */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionNumber}>VIII bis.</Text>
+                        <Text style={styles.sectionTitle}>SOUS-LOCATION</Text>
+                    </View>
+                    <Text style={styles.text}>{data.dynamic_legal_texts.subletting_clause}</Text>
+                </View>
+
+                {/* VIII ter. ASSURANCE HABITATION */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionNumber}>VIII ter.</Text>
+                        <Text style={styles.sectionTitle}>ASSURANCE HABITATION OBLIGATOIRE</Text>
+                    </View>
+                    <Text style={styles.text}>{data.dynamic_legal_texts.insurance_clause}</Text>
+                </View>
+
+                {/* VIII quater. DROIT DE PRÉEMPTION */}
+                {data.dynamic_legal_texts.preemption_clause && (
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionNumber}>VIII quater.</Text>
+                            <Text style={styles.sectionTitle}>CONGÉ POUR VENTE ET DROIT DE PRÉEMPTION</Text>
+                        </View>
+                        <Text style={styles.text}>{data.dynamic_legal_texts.preemption_clause}</Text>
+                    </View>
+                )}
+
                 {/* IX. HONORAIRES DE LOCATION */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -469,10 +579,53 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
                     <Text style={styles.text}>Sont annexées et jointes au présent contrat les pièces suivantes :</Text>
                     <View style={{ marginLeft: 10, marginTop: 4 }}>
                         <Text style={styles.text}>• L'état des lieux d'entrée établi contradictoirement.</Text>
-                        <Text style={styles.text}>• Le dossier de diagnostic technique (DPE, ERP, etc.).</Text>
-                        {isFurnished && <Text style={styles.text}>• L'inventaire détaillé et l'état du mobilier.</Text>}
-                        <Text style={styles.text}>• La notice d'information relative aux droits et obligations des locataires et bailleurs.</Text>
-                        <Text style={styles.text}>• Un extrait du règlement de copropriété (si applicable).</Text>
+
+                        {/* Detailed diagnostics */}
+                        <Text style={styles.subsectionTitle}>Dossier de Diagnostic Technique (DDT) :</Text>
+                        <Text style={styles.text}>• Diagnostic de Performance Énergétique (DPE)
+                            {data.diagnostics?.dpe ? ` — Date : ${data.diagnostics.dpe.date}, Note : ${data.diagnostics.dpe.rating}${data.diagnostics.dpe.expiryDate ? `, Expire : ${data.diagnostics.dpe.expiryDate}` : ''}` : ' — Non fourni'}</Text>
+                        <Text style={styles.text}>• État des Risques et Pollutions (ERP)
+                            {data.diagnostics?.erp ? ` — Date : ${data.diagnostics.erp.date}` : ' — Non fourni'}</Text>
+                        <Text style={styles.text}>• Diagnostic Électricité
+                            {data.diagnostics?.electrical ? ` — Date : ${data.diagnostics.electrical.date}${data.diagnostics.electrical.installYear ? `, Installation : ${data.diagnostics.electrical.installYear}` : ''}` : ' — Non applicable ou non fourni'}</Text>
+                        <Text style={styles.text}>• Diagnostic Gaz
+                            {data.diagnostics?.gas?.hasInstallation
+                                ? ` — Date : ${data.diagnostics.gas.date}${data.diagnostics.gas.installYear ? `, Installation : ${data.diagnostics.gas.installYear}` : ''}`
+                                : " — Pas d'installation gaz"}</Text>
+                        <Text style={styles.text}>• Constat de Risque d'Exposition au Plomb (CREP)
+                            {data.diagnostics?.lead ? ` — Date : ${data.diagnostics.lead.date}, Résultat : ${data.diagnostics.lead.result}` : ' — Non applicable ou non fourni'}</Text>
+                        <Text style={styles.text}>• Diagnostic Amiante (DAPP)
+                            {data.diagnostics?.asbestos ? ` — Date : ${data.diagnostics.asbestos.date}, Résultat : ${data.diagnostics.asbestos.result}` : ' — Non applicable ou non fourni'}</Text>
+                        {data.diagnostics?.noise && (
+                            <Text style={styles.text}>• Diagnostic Bruit (Plan d'Exposition au Bruit)
+                                {` — Date : ${data.diagnostics.noise.date}${data.diagnostics.noise.result ? `, Résultat : ${data.diagnostics.noise.result}` : ''}`}</Text>
+                        )}
+
+                        {isFurnished && (
+                            <View>
+                                <Text style={styles.subsectionTitle}>Inventaire du mobilier (décret n° 2015-981) :</Text>
+                                {data.furniture_inventory?.items ? (
+                                    data.furniture_inventory.items.map((item, idx) => (
+                                        <Text key={idx} style={styles.text}>
+                                            • {item.label} : {item.present ? '✓ Fourni — État : Bon état' : '✗ Non fourni'}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.text}>• L'inventaire détaillé et l'état du mobilier (à compléter).</Text>
+                                )}
+                            </View>
+                        )}
+                        <Text style={styles.text}>• La notice d'information relative aux droits et obligations des locataires et bailleurs (arrêté du 29 mai 2015).</Text>
+                        {data.property.legal_regime === 'COPROPRIETE' && (
+                            <Text style={styles.text}>• Un extrait du règlement de copropriété (parties applicables).</Text>
+                        )}
+                        {data.guarantor_names && data.guarantor_names.length > 0 && (
+                            <View>
+                                {data.guarantor_names.map((name, idx) => (
+                                    <Text key={idx} style={styles.text}>• Acte de cautionnement solidaire : {name}</Text>
+                                ))}
+                            </View>
+                        )}
                     </View>
                 </View>
 

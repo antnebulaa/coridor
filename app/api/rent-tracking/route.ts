@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { hasFeature } from '@/lib/features';
+
 
 /**
  * GET /api/rent-tracking?applicationId=xxx
@@ -14,6 +16,16 @@ export async function GET(request: Request) {
     if (!currentUser) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
+
+    // Check feature access
+    const canAccessRentTracking = await hasFeature(currentUser.id, 'RENT_TRACKING');
+    if (!canAccessRentTracking) {
+      return NextResponse.json(
+        { error: 'Le suivi des loyers nécessite un abonnement Essentiel ou Pro.' },
+        { status: 403 }
+      );
+    }
+
 
     const { searchParams } = new URL(request.url);
     const applicationId = searchParams.get("applicationId");

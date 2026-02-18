@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 12 février 2026
+> Dernière mise à jour : 17 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -77,12 +77,13 @@
 - [✅] Historique financier du bail (`LeaseFinancials` : loyer + charges par période)
 - [✅] Montants déductibles des impôts (`amountDeductibleCents`) — `FiscalService.ts` (calculateDeductible + generateFiscalSummary + generateAllPropertiesSummary), auto-calcul à la création/modification d'une dépense, DEDUCTIBILITY_RULES par catégorie (FULL/PARTIAL/NONE/MANUAL), API fiscal (`/api/fiscal/summary`, `/api/fiscal/summary-all`), page récap fiscal (`account/fiscal/FiscalClient.tsx`) avec sélecteur année/bien + tableau déclaration 2044, FiscalWidget dashboard (avril-juin), lien TaxReminders → `/account/fiscal`, indicateur déductible dans ExpensesClient
 - [✅] Page rentals (`app/[locale]/rentals/`) — affiche les baux signés
+- [✅] Simulateur fiscal propriétaire — `lib/fiscalRules.ts` (constantes 2025-2026 avec sources légales : barème IR 5 tranches, PS 17.2%, micro-foncier/réel, micro-BIC/réel LMNP, déficit foncier, seuils LMP), `TaxSimulatorService.ts` (8 méthodes : simuler, calculerMicroFoncier, calculerReelFoncier, calculerMicroBIC, calculerReelLMNP, calculerIR, detecterLMP, determinerRegimeOptimal), API POST+GET `/api/tax-simulator/` (simulation + pré-remplissage depuis biens existants), page `account/tax-simulator/TaxSimulatorClient.tsx` (formulaire multi-biens dynamique + résultats côte à côte + alertes + disclaimer), feature-gated `TAX_SIMULATOR` (Essentiel + Pro), intégré sidebar compte
 
 ### Banking & Paiements (Powens)
 - [✅] Connexion bancaire (`BankConnection`, `app/lib/powens.ts`, `app/api/powens/`) — OAuth + sync
 - [✅] Import de transactions (`BankTransaction`)
 - [🔧] Matching paiement ↔ bail (`matchedLeaseId`) — champ existe, logique de matching à compléter
-- [✅] Badge Payeur Exemplaire — `PaymentVerificationService.ts` (analyse transactions bancaires, ponctualité, niveaux Bronze/Silver/Gold), champs TenantProfile (`badgeLevel`, `verifiedMonths`, `punctualityRate`, `lastVerifiedAt`, `verificationStatus`), API (`/api/profile/badge`, `/api/profile/verify-badge`), auto-analyse via Powens analyze, composant `PaymentBadge.tsx` (compact + full), intégré dans `TenantProfilePreview` + conversation inbox + page tenant-profile (progression vers niveau suivant)
+- [✅] Badge Payeur Vérifié — `PaymentVerificationService.ts` (analyse transactions bancaires, régularité + mois vérifiés, `regularityRate` remplace `badgeLevel` déprécié), champs TenantProfile (`badgeLevel` déprécié, `verifiedMonths`, `punctualityRate`, `lastVerifiedAt`, `verificationStatus`), API (`/api/profile/badge`, `/api/profile/verify-badge`), auto-analyse via Powens analyze, composant `PaymentBadge.tsx` ("Payeur vérifié — X mois" avec jauge progressive, pas de médailles), intégré dans `TenantProfilePreview` + conversation inbox + page tenant-profile
 - [✅] Relance impayés automatique — model `RentPaymentTracking` (8 statuts), `RentCollectionService.ts` (génération mensuelle, détection paiements, workflow relance J+5/J+10/J+15/J+30), cron quotidien (`app/api/cron/rent-collection/`), API CRUD (`app/api/rent-tracking/`), rappel amiable via messagerie, section suivi loyers dans Rentals (`RentTrackingSection`), widget dashboard (`RentCollectionWidget`), mode manuel sans Powens
 - [✅] Dashboard de suivi des paiements — `RentCollectionWidget` dans le dashboard + `RentTrackingSection` dans la page baux
 
@@ -120,7 +121,7 @@
 - [✅] Email cadeau d'abonnement via `EmailTemplate` + Resend
 - [✅] Facture auto à 0€ lors d'un cadeau d'abonnement
 - [✅] Annulation d'abonnement côté utilisateur (`POST /api/account/subscription/cancel`) — marque CANCELLED, notification, l'abo reste actif jusqu'à endDate
-- [❌] Intégration Stripe (paiement, renouvellement auto, moyen de paiement)
+- [✅] Intégration Stripe V1 — `SubscriptionService.ts` (checkout, portal, webhook), `lib/stripe.ts` (Stripe SDK v20 clover), `lib/features.ts` (hasFeature, getMaxProperties, getUserFeatures), 4 modèles Prisma (Feature, SubscriptionPlan, PlanFeature, UserSubscription), webhook Stripe (`app/api/webhooks/stripe/`), API subscription (`checkout`, `portal`, `status`, `plans`), page pricing dynamique, `FeatureGate.tsx` + `useFeature` hook, gates sur: LEASE_GENERATION, AUTO_RECEIPTS, LEGAL_REMINDERS, RENT_TRACKING, maxProperties, admin Plans & Features management (`app/[locale]/admin/plans/`), fallback legacy plan
 - [❌] Génération PDF de factures
 
 ---
@@ -133,7 +134,8 @@
 - [✅] Revenus additionnels (`Income`)
 - [✅] Server action `getTenantProfile.ts`
 - [🔧] Lissage salaire freelance — champs existent (netSalary + partnerNetSalary), logique de lissage non visible
-- [🔧] Dossier unique réutilisable — `generateDossierHtml` existe, UX à confirmer
+- [✅] Dossier unique réutilisable — `generateDossierHtml`, TenantProfilePreview auto dans conversations, intégration DossierFacile OAuth
+- [✅] Passeport Locatif V1 — `PassportService.ts` (10+ méthodes : getPassport, computeScore, submitLandlordReview, exportPassport JSON/PDF, onLeaseSigned auto-backfill), 4 modèles Prisma (RentalHistory, LandlordReview, LandlordReviewScore, PassportSettings), 10 routes API (`/api/passport/*`), hook webhook Yousign, score composite 0-100 **privé locataire** (Régularité 40% + Ancienneté 20% + Évaluations 25% + Complétude 15%), confiance LOW/MEDIUM/HIGH, évaluations structurées **4 critères** (PAYMENT_REGULARITY, PROPERTY_CONDITION, COMMUNICATION, WOULD_RECOMMEND — anti-discrimination: pas de texte libre), badge "Payeur vérifié — X mois" avec jauge progressive (pas de médailles Bronze/Silver/Gold), opt-in RGPD, page tenant (`account/passport/PassportClient.tsx` : jauge SVG, timeline historique, toggles partage, export), `PassportPreview.tsx` (vue compacte propriétaire — données factuelles uniquement, jamais le score), `LandlordReviewForm.tsx` (formulaire 4 questions), page review standalone (`/passport/review/[id]`), intégré dans `TenantProfilePreview`, notification in-app au locataire à réception d'une évaluation (type `PASSPORT_REVIEW` avec ville), script backfill baux existants (`scripts/backfill-rental-history.ts` — dry-run + live)
 
 ### Recherche & Navigation
 - [✅] Recherche d'annonces (`app/[locale]/listings/`, `app/api/listings/`)
@@ -214,7 +216,7 @@
 - [✅] Manifest + Service Worker (`public/manifest.json`, `public/sw.js`)
 - [✅] Icône app + favicon (`app/icon.png`, `app/apple-icon.png`, `manifest.json`)
 - [✅] Safe area iOS PWA (`black-translucent` + `pt-safe` sur MainLayout, Modal, ScorecardSheet, ListingImageGallery, AllPhotosModal)
-- [🔧] Install prompt (`components/pwa/InstallPrompt.tsx`) — beforeinstallprompt + cooldown 24h
+- [✅] Install prompt (`components/pwa/InstallPrompt.tsx`) — beforeinstallprompt + cooldown 24h, intégré dans layout.tsx
 
 ### Signalements
 - [✅] Report annonce ou utilisateur (`Report`, `components/reports/ReportButton.tsx`) — modal avec raison/détails
@@ -242,7 +244,7 @@
 - [x] ~~Annulation auto visites non confirmées~~ (fait)
 - [x] ~~Relance impayés automatique~~ (fait)
 - [x] ~~Badge Payeur Exemplaire (logique + UI)~~ (fait)
-- [ ] Intégration Stripe (paiement abonnements, renouvellement auto, moyen de paiement)
+- [x] ~~Intégration Stripe (paiement abonnements, renouvellement auto, moyen de paiement)~~ (fait — SubscriptionService, FeatureGate, Plans dynamiques)
 
 ### Priorité moyenne
 - [x] ~~Alertes dashboard avancées (IRL, échéances, impayés)~~ (fait — LegalRemindersWidget + RentCollectionWidget)
@@ -255,20 +257,20 @@
 - [ ] Génération PDF de factures
 
 ### Pistes futures
-- [ ] Module fiscal (aide déclaration revenus fonciers)
+- [x] ~~Module fiscal (aide déclaration revenus fonciers)~~ (fait — Simulateur fiscal V1, comparaison micro/réel, déficit foncier, LMNP)
 - [ ] Intégration GLI (Garantie Loyers Impayés)
 - [ ] Vérification de pièces d'identité
 - [ ] Mix bail 9 mois étudiant + été saisonnier
-- [ ] Scoring fiabilité avancé
+- [x] ~~Scoring fiabilité avancé~~ (fait — Passeport Locatif V1)
 - [ ] B2B2C : partenariats (assurance, déménagement)
-- [ ] Recommandation d'ancien propriétaire
+- [x] ~~Recommandation d'ancien propriétaire~~ (fait — Passeport Locatif V1, LandlordReview structuré)
 - [ ] Lissage salaire freelance (calcul avancé)
 
 ---
 
 ## ⚠️ Notes déploiement
 
-- **Cron jobs désactivés** : Les routes `/api/cron/visit-reminders/`, `/api/cron/check-alerts/` et `/api/cron/check-subscriptions/` existent mais ne sont pas configurées dans `vercel.json` (nécessite Vercel Pro). À réactiver quand on passe sur un plan payant.
+- **Cron jobs activés** : 6 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h).
 
 ---
 

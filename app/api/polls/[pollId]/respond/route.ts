@@ -21,7 +21,7 @@ export async function POST(
 
     try {
         const body = await request.json();
-        const { selectedOption } = body;
+        const { selectedOption, latitude, longitude, neighborhood, city, zipCode } = body;
 
         // Validate selectedOption is 1, 2, or 3
         if (!Number.isInteger(selectedOption) || selectedOption < 1 || selectedOption > 3) {
@@ -44,11 +44,11 @@ export async function POST(
             return NextResponse.json({ error: "Poll is not active" }, { status: 400 });
         }
 
-        // Read city and zipCode from the user's profile
-        const userCity = currentUser.city ?? null;
-        const userZipCode = currentUser.zipCode ?? null;
+        // Use location from request body (listing context), fallback to user profile
+        const responseCity = city ?? currentUser.city ?? null;
+        const responseZipCode = zipCode ?? currentUser.zipCode ?? null;
 
-        // Upsert the response (create or update), populating location from user profile
+        // Upsert the response
         await prisma.pollResponse.upsert({
             where: {
                 pollId_userId: {
@@ -58,37 +58,41 @@ export async function POST(
             },
             update: {
                 selectedOption,
-                city: userCity,
-                zipCode: userZipCode
+                latitude: latitude ?? null,
+                longitude: longitude ?? null,
+                neighborhood: neighborhood ?? null,
+                city: responseCity,
+                zipCode: responseZipCode
             },
             create: {
                 pollId,
                 userId: currentUser.id,
                 selectedOption,
-                city: userCity,
-                zipCode: userZipCode
+                latitude: latitude ?? null,
+                longitude: longitude ?? null,
+                neighborhood: neighborhood ?? null,
+                city: responseCity,
+                zipCode: responseZipCode
             }
         });
 
-        // Compute results for the user's zone:
-        // Prefer zipCode if available, otherwise fall back to city
+        // Compute results for the zone
         const responseWhere: any = { pollId };
         let zone: "zipCode" | "city" | "global" = "global";
 
-        if (userZipCode) {
-            // Check if there are enough responses for this zipCode
+        if (responseZipCode) {
             const zipCodeCount = await prisma.pollResponse.count({
-                where: { pollId, zipCode: userZipCode }
+                where: { pollId, zipCode: responseZipCode }
             });
             if (zipCodeCount >= 10) {
-                responseWhere.zipCode = userZipCode;
+                responseWhere.zipCode = responseZipCode;
                 zone = "zipCode";
-            } else if (userCity) {
-                responseWhere.city = userCity;
+            } else if (responseCity) {
+                responseWhere.city = responseCity;
                 zone = "city";
             }
-        } else if (userCity) {
-            responseWhere.city = userCity;
+        } else if (responseCity) {
+            responseWhere.city = responseCity;
             zone = "city";
         }
 
