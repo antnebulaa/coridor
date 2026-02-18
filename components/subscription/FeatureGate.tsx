@@ -21,7 +21,7 @@ export default function FeatureGate({ featureKey, children, fallback }: FeatureG
 
     return (
       <div className="relative">
-        <div className="pointer-events-none opacity-30 blur-[1px] select-none">
+        <div className="pointer-events-none opacity-20 blur-[1px] select-none">
           {children}
         </div>
         <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-xl">

@@ -38,8 +38,8 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ currentUser, re
             const data = response.data;
             setNotifications(data);
             setUnreadCount(data.filter((n: Notification) => !n.isRead).length);
-        } catch (error) {
-            console.error("Failed to fetch notifications");
+        } catch {
+            // Silently ignore — can happen before auth session is ready
         }
     }, [currentUser]);
 

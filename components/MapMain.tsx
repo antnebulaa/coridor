@@ -7,9 +7,8 @@ import { SafeListing, SafeUser } from '@/types';
 import L from 'leaflet';
 import dynamic from 'next/dynamic';
 
-const StationsLayer = dynamic(() => import('./map/StationsLayer'), {
-    ssr: false
-});
+// StationsLayer disabled — too many M/G markers, will revisit later
+// const StationsLayer = dynamic(() => import('./map/StationsLayer'), { ssr: false });
 
 // Fix for Leaflet default marker
 // @ts-ignore
@@ -166,9 +165,11 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
 
     const isDark = resolvedTheme === 'dark';
 
+    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
     const tileUrl = isDark
         ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+        : `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`;
 
     useEffect(() => {
         if (selectedListingId) {
@@ -276,8 +277,13 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
             zoomControl={false} // Disable default
         >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                attribution={isDark
+                    ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
+                }
                 url={tileUrl}
+                tileSize={isDark ? 256 : 512}
+                zoomOffset={isDark ? 0 : -1}
             />
             <ZoomControl position="topright" />
 
@@ -397,7 +403,7 @@ const MapMain: React.FC<MapMainProps> = ({ listings, selectedListingId, onSelect
             })}
             <Recenter center={center} useOffset={!!selectedListingId} />
             <ResizeHandler />
-            <StationsLayer />
+            {/* StationsLayer disabled — too many M/G markers cluttering the map */}
         </MapContainer>
     )
 };

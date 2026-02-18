@@ -233,16 +233,16 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0 mt-1 md:-mt-1">
-                                    <div className="font-medium text-base text-foreground line-clamp-1">
+                                    <div className="font-medium text-base  text-neutral-600  line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                                             ? t('privateRoom')
                                             : data.category}
                                         {data.rentalUnit?.type !== 'PRIVATE_ROOM' && data.propertyAdjective && <span className="lowercase"> {data.propertyAdjective}</span>}
                                     </div>
-                                    <div className="hidden md:block font-normal text-neutral-700 text-sm line-clamp-2">
+                                    <div className="hidden md:block font-normal text-neutral-500 text-sm line-clamp-2">
                                         {data.city || (location?.label?.split(',')[0])}{data.district ? ` ${data.district}` : ''}
                                         {data.neighborhood && (
-                                            <span className="font-normal text-xs md:text-sm text-neutral-700">
+                                            <span className="font-normal text-xs md:text-sm text-neutral-500">
                                                 , {data.neighborhood.toLowerCase().startsWith('quartier') ? data.neighborhood : `${t('neighborhood')} ${data.neighborhood}`}
                                             </span>
                                         )}

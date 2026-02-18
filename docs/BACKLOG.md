@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 17 février 2026
+> Dernière mise à jour : 18 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -224,12 +224,12 @@
 
 ### Sondages communautaires (V2 — globaux, 3 options, géolocalisation auto)
 - [✅] Model `NeighborhoodPoll` avec `option1/option2/option3` (plus de neighborhood/city sur le poll)
-- [✅] Model `PollResponse` avec `selectedOption` (1-3) + `city/zipCode` (géoloc depuis profil utilisateur)
+- [✅] Model `PollResponse` avec `selectedOption` (1-3) + `latitude/longitude` + `neighborhood/city/zipCode` (géoloc contextuelle depuis l'annonce consultée, fallback profil utilisateur)
 - [✅] API admin (`app/api/admin/polls/`) — CRUD avec option1/2/3
-- [✅] API vote (`app/api/polls/[pollId]/respond/`) — selectedOption + résultats par zone (zipCode → city → global)
-- [✅] API sondages actifs (`app/api/polls/active/`) — global, sondage non répondu par l'utilisateur
-- [✅] API résultats par zone (`app/api/polls/results/`) — agrégation par zipCode/city avec seuil minimum
-- [✅] PollBanner (`components/listings/PollBanner.tsx`) — 3 boutons vote, barres de pourcentage, flow "needsAddress"
+- [✅] API vote (`app/api/polls/[pollId]/respond/`) — selectedOption + géoloc depuis body (listing context) avec fallback profil + résultats par zone (zipCode → city → global)
+- [✅] API sondages actifs (`app/api/polls/active/`) — global, sondage non répondu par l'utilisateur (fonctionne aussi sans auth)
+- [✅] API résultats par zone (`app/api/polls/results/`) — agrégation par zipCode/city avec seuil minimum (≥10 pour zipCode)
+- [✅] PollBanner (`components/listings/PollBanner.tsx`) — 3 boutons vote, barres de pourcentage, prop `locationContext` (latitude/longitude/neighborhood/city/zipCode), intégré dans HomeClient + ListingClient
 - [✅] PollResults (`components/listings/PollResults.tsx`) — résultats zone en lecture seule sur les annonces
 - [✅] Page admin sondages (`app/[locale]/admin/polls/PollManagementClient.tsx`) — formulaire + table avec options
 
@@ -274,7 +274,8 @@
 
 ---
 
-## 🐛 Bugs connus
-(À compléter)
+## 🐛 Bugs connus / corrigés
 
-- [ ] ...
+- [x] ~~Recap fiscal : NaN € dans les cards + boutons propriétés vides~~ (corrigé — mismatch noms de champs entre FiscalService et FiscalClient, mapping ajouté dans les API routes `/api/fiscal/summary` et `/api/fiscal/summary-all`)
+- [x] ~~React key warning dans FiscalClient~~ (corrigé — ajout `key="all"` sur le bouton statique "Tous les biens")
+- [x] ~~Build Vercel échoue : STRIPE_SECRET_KEY not defined~~ (corrigé — `lib/stripe.ts` lazy init via Proxy, plus de throw au top-level)
