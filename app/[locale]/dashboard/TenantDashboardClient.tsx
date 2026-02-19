@@ -2,10 +2,9 @@
 
 import { SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
-import PageHeader from "@/components/PageHeader";
 import Container from "@/components/Container";
-import { CheckCircle2, Circle, FolderOpen, Calendar } from "lucide-react";
-import { useMemo } from "react";
+import { CheckCircle2, Circle, FolderOpen, Calendar, Bell, FileText, Receipt, ChevronRight, Shield, ArrowRight } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import VisitCard from "./components/VisitCard";
 import SubscriptionCarousel from "./components/SubscriptionCarousel";
@@ -13,7 +12,7 @@ import { useTranslations } from 'next-intl';
 
 interface TenantDashboardClientProps {
     currentUser: SafeUser;
-    rentalProject: any; // SafeTenantCandidateScope
+    rentalProject: any;
     applications?: any[];
     visits?: any[];
 }
@@ -28,85 +27,85 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
     const t = useTranslations('dashboard');
     const tenantProfile = (currentUser as any).tenantProfile;
 
+    // Passport score state
+    const [passportScore, setPassportScore] = useState<{
+        globalScore: number;
+        confidence: string;
+        badgeScore: number;
+    } | null>(null);
+    const [passportLoading, setPassportLoading] = useState(true);
+
+    // Fetch passport score
+    useEffect(() => {
+        fetch('/api/passport/score')
+            .then(r => {
+                if (!r.ok) return null;
+                return r.json();
+            })
+            .then(data => {
+                if (data) setPassportScore(data);
+            })
+            .catch(() => {})
+            .finally(() => setPassportLoading(false));
+    }, []);
+
     // Active Applications Count
     const activeApplicationsCount = applications.filter(app =>
         ['PENDING', 'SENT', 'VISIT_PROPOSED', 'VISIT_CONFIRMED', 'ACCEPTED'].includes(app.status)
     ).length;
 
-    // 1. Account Created (Always true if logged in)
+    // Responses received (non-PENDING, non-SENT statuses)
+    const responsesCount = applications.filter(app =>
+        ['VISIT_PROPOSED', 'VISIT_CONFIRMED', 'ACCEPTED', 'REJECTED'].includes(app.status)
+    ).length;
+
+    // Next visit (closest upcoming, CONFIRMED first)
+    const nextVisit = useMemo(() => {
+        const now = new Date();
+        const upcoming = visits
+            .filter(v => new Date(v.date || v.startTime) >= now)
+            .sort((a, b) => {
+                // CONFIRMED first
+                if (a.status === 'CONFIRMED' && b.status !== 'CONFIRMED') return -1;
+                if (b.status === 'CONFIRMED' && a.status !== 'CONFIRMED') return 1;
+                return new Date(a.date || a.startTime).getTime() - new Date(b.date || b.startTime).getTime();
+            });
+        return upcoming[0] || null;
+    }, [visits]);
+
+    // Verified months from tenant profile
+    const verifiedMonths = (tenantProfile as any)?.verifiedMonths || 0;
+
+    // Dossier progress
     const isAccountCreated = true;
-
-    // 2. Rental Project Defined
-    const isProjectDefined = useMemo(() => {
-        return !!rentalProject;
-    }, [rentalProject]);
-
-    // 3. Personal Info Completed
-    const isIdentityConfirmed = useMemo(() => {
-        return !!(
-            currentUser.firstName &&
-            currentUser.lastName &&
-            currentUser.phoneNumber &&
-            currentUser.address &&
-            currentUser.zipCode &&
-            currentUser.city &&
-            currentUser.birthDate &&
-            currentUser.birthPlace
-        );
-    }, [currentUser]);
-
-    // 4. Dossier Locataire Completed
+    const isProjectDefined = useMemo(() => !!rentalProject, [rentalProject]);
+    const isIdentityConfirmed = useMemo(() => !!(
+        currentUser.firstName && currentUser.lastName && currentUser.phoneNumber &&
+        currentUser.address && currentUser.zipCode && currentUser.city &&
+        currentUser.birthDate && currentUser.birthPlace
+    ), [currentUser]);
     const isDossierCompleted = useMemo(() => {
         if (!tenantProfile) return false;
-
-        // Check Self Job/Income (Basic requirement)
         const hasSelfInfo = !!tenantProfile.netSalary && !!tenantProfile.jobTitle;
-
         if (!hasSelfInfo) return false;
-
-        // Check Partner if Couple
         if (rentalProject?.compositionType === 'COUPLE') {
-            const hasPartnerInfo = !!tenantProfile.partnerNetSalary && !!tenantProfile.partnerJobTitle;
-            if (!hasPartnerInfo) return false;
+            if (!tenantProfile.partnerNetSalary || !tenantProfile.partnerJobTitle) return false;
         }
-
         return true;
     }, [tenantProfile, rentalProject]);
 
     const steps = [
-        {
-            id: 'account',
-            label: t('steps.createAccount'),
-            isCompleted: isAccountCreated,
-            href: '/account/profile'
-        },
-        {
-            id: 'project',
-            label: t('steps.defineProject'),
-            isCompleted: isProjectDefined,
-            href: '/account/project'
-        },
-        {
-            id: 'identity',
-            label: t('steps.confirmIdentity'),
-            isCompleted: isIdentityConfirmed,
-            href: '/account/personal-info'
-        },
-        {
-            id: 'dossier',
-            label: t('steps.completeDossier'),
-            isCompleted: isDossierCompleted,
-            href: '/account/tenant-profile'
-        }
+        { id: 'account', label: t('steps.createAccount'), isCompleted: isAccountCreated, href: '/account/profile' },
+        { id: 'project', label: t('steps.defineProject'), isCompleted: isProjectDefined, href: '/account/project' },
+        { id: 'identity', label: t('steps.confirmIdentity'), isCompleted: isIdentityConfirmed, href: '/account/personal-info' },
+        { id: 'dossier', label: t('steps.completeDossier'), isCompleted: isDossierCompleted, href: '/account/tenant-profile' }
     ];
-
     const completedCount = steps.filter(s => s.isCompleted).length;
     const progress = (completedCount / steps.length) * 100;
 
-    // Helper for Journey
+    // Journey helpers
     const mostRelevantApplication = useMemo(() => {
         if (!applications.length) return null;
-        // Prioritize: Accepted > Visit > Sent
         const accepted = applications.find(a => a.status === 'ACCEPTED');
         if (accepted) return accepted;
         const visit = applications.find(a => ['VISIT_PROPOSED', 'VISIT_CONFIRMED'].includes(a.status));
@@ -122,109 +121,193 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
     };
 
     const isStepCompleted = (stepStatus: string[], currentStatus: string, stepIdx: number) => {
-        const statusOrder = ['SENT', 'VISIT_PROPOSED', 'ACCEPTED', 'SIGNED']; // Simplified
-        // Map currentStatus to index
         let currentIdx = 0;
         if (currentStatus === 'ACCEPTED') currentIdx = 2;
         else if (['VISIT_PROPOSED', 'VISIT_CONFIRMED'].includes(currentStatus)) currentIdx = 1;
-
         return currentIdx >= stepIdx;
     };
 
-    const isStepActive = (stepStatus: string[], currentStatus: string, stepIdx: number) => {
+    const isStepActive = (stepStatus: string[], currentStatus: string) => {
         return stepStatus.includes(currentStatus);
     };
+
+    // Format visit date
+    const formatVisitDate = (visit: any) => {
+        const date = new Date(visit.date || visit.startTime);
+        const day = date.getDate();
+        const month = date.toLocaleDateString('fr-FR', { month: 'short' });
+        const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return { day, month, time };
+    };
+
+    const firstName = currentUser.firstName || currentUser.name?.split(' ')[0] || '';
 
     return (
         <Container>
             <div className="pb-20">
-                <PageHeader
-                    title={t('title')}
-                    subtitle={t('tenantSubtitle')}
-                />
+                <div className="max-w-2xl mx-auto mt-6 flex flex-col gap-5">
 
-                <div className="max-w-2xl mx-auto mt-8 flex flex-col gap-6">
-                    {/* My Applications Tile */}
-                    <Link
-                        href="/dashboard/applications"
-                        className="bg-neutral-100 rounded-2xl p-6 hover:border-black/20 hover:shadow-md transition group cursor-pointer flex items-center justify-between"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                                <FolderOpen size={24} />
-                            </div>
-                            <div className="flex flex-col">
-                                <div className="font-medium text-lg text-neutral-900 group-hover:text-blue-600 transition">
-                                    {t('myApplications')}
-                                </div>
-                                <div className="text-neutral-500 text-sm">
-                                    {activeApplicationsCount > 0
-                                        ? t('applicationsCount', { count: activeApplicationsCount })
-                                        : t('noApplications')
-                                    }
-                                </div>
-                            </div>
+                    {/* === HEADER === */}
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                                Bonjour {firstName} 👋
+                            </h1>
+                            <p className="text-sm text-neutral-500 mt-0.5">
+                                {activeApplicationsCount > 0
+                                    ? `${activeApplicationsCount} candidature${activeApplicationsCount > 1 ? 's' : ''} en cours`
+                                    : 'Aucune candidature en cours'
+                                }
+                            </p>
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center group-hover:bg-neutral-200 transition">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-neutral-500">
-                                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                        <Link
+                            href="/notifications"
+                            className="p-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+                        >
+                            <Bell size={20} className="text-neutral-600 dark:text-neutral-400" />
+                        </Link>
+                    </div>
+
+                    {/* === STATS RAPIDES === */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* Candidatures */}
+                        <Link
+                            href="/dashboard/applications"
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 hover:shadow-md transition group"
+                        >
+                            <div className="flex items-center gap-2 mb-2">
+                                <FolderOpen size={16} className="text-neutral-400" />
+                                <span className="text-xs font-medium text-neutral-500">Candidatures</span>
+                            </div>
+                            <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                {activeApplicationsCount}
+                            </div>
+                            <div className="text-xs text-neutral-500 mt-1">
+                                {responsesCount > 0
+                                    ? `${responsesCount} réponse${responsesCount > 1 ? 's' : ''} reçue${responsesCount > 1 ? 's' : ''}`
+                                    : 'En attente de réponses'
+                                }
+                            </div>
+                        </Link>
+
+                        {/* Prochain RDV */}
+                        <Link
+                            href="/calendar"
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 hover:shadow-md transition group"
+                        >
+                            <div className="flex items-center gap-2 mb-2">
+                                <Calendar size={16} className="text-neutral-400" />
+                                <span className="text-xs font-medium text-neutral-500">Prochain RDV</span>
+                            </div>
+                            {nextVisit ? (
+                                <>
+                                    <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                        {formatVisitDate(nextVisit).day} {formatVisitDate(nextVisit).month}
+                                    </div>
+                                    <div className="text-xs text-neutral-500 mt-1">
+                                        {formatVisitDate(nextVisit).time} · {nextVisit.listing?.title || 'Visite'}
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-xl font-bold text-neutral-300 dark:text-neutral-600">—</div>
+                                    <div className="text-xs text-neutral-400 mt-1">Aucune visite prévue</div>
+                                </>
+                            )}
+                        </Link>
+                    </div>
+
+                    {/* === PASSEPORT LOCATIF === */}
+                    <Link
+                        href="/account/passport"
+                        className="bg-neutral-900 dark:bg-neutral-800 rounded-2xl p-5 flex items-center justify-between group hover:bg-neutral-800 dark:hover:bg-neutral-700 transition"
+                    >
+                        <div className="flex-1">
+                            <div className="text-[10px] font-semibold tracking-widest uppercase text-neutral-400 mb-2">
+                                Passeport Locatif
+                            </div>
+                            {passportLoading ? (
+                                <div className="h-6 w-24 bg-neutral-700 rounded animate-pulse" />
+                            ) : passportScore ? (
+                                <>
+                                    <div className="text-white text-xl font-bold">
+                                        Score : {passportScore.globalScore}/100
+                                    </div>
+                                    {verifiedMonths > 0 && (
+                                        <div className="flex items-center gap-1.5 mt-1.5">
+                                            <CheckCircle2 size={14} className="text-green-400" />
+                                            <span className="text-sm text-green-400">
+                                                Payeur vérifié — {verifiedMonths} mois
+                                            </span>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="text-neutral-400 text-sm">
+                                    Activez votre passeport pour renforcer votre profil
+                                </div>
+                            )}
+                        </div>
+                        <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0 ml-4">
+                            <Shield size={24} className="text-white" />
                         </div>
                     </Link>
 
-                    {/* Visits Section */}
-                    {visits.length > 0 && (
-                        <div className="flex flex-col gap-4 mt-1.5">
-                            <div className="flex items-center gap-2 text-2xl font-medium text-neutral-900">
-                                <Calendar className="text-neutral-500" size={20} />
-                                {t('upcomingVisits')}
-                            </div>
-                            <div className="grid grid-cols-1 gap-4">
-                                {visits.map((visit) => (
-                                    <VisitCard key={visit.id} visit={visit} />
-                                ))}
-                            </div>
+                    {/* === ACCES RAPIDE === */}
+                    <div>
+                        <h2 className="text-sm font-semibold text-neutral-500 mb-3">Accès rapide</h2>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Link
+                                href="/account/tenant-profile"
+                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition"
+                            >
+                                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+                                    <FileText size={18} className="text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Mon dossier</span>
+                            </Link>
+                            <Link
+                                href="/account/receipts"
+                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition"
+                            >
+                                <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
+                                    <Receipt size={18} className="text-amber-600 dark:text-amber-400" />
+                                </div>
+                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Quittances</span>
+                            </Link>
                         </div>
-                    )}
+                    </div>
 
-                    {/* Subscription Carousel */}
-                    <SubscriptionCarousel />
-
-                    {/* Application Journey or Dossier Progress */}
+                    {/* === APPLICATION JOURNEY OR DOSSIER PROGRESS === */}
                     {mostRelevantApplication ? (
-                        <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-medium">{t('applicationTracking')}</h2>
-                                <span className="text-sm text-neutral-500">{mostRelevantApplication.listing?.title}</span>
+                                <h2 className="text-lg font-medium">{t('applicationTracking')}</h2>
+                                <span className="text-sm text-neutral-500 truncate max-w-[140px]">{mostRelevantApplication.listing?.title}</span>
                             </div>
 
                             <div className="relative flex items-center justify-between w-full">
-                                {/* Progress Line */}
-                                <div className="absolute top-1/2 left-0 w-full h-1 bg-neutral-100 -z-10 -translate-y-1/2 rounded-full"></div>
+                                <div className="absolute top-1/2 left-0 w-full h-1 bg-neutral-100 dark:bg-neutral-800 -z-10 -translate-y-1/2 rounded-full" />
                                 <div
                                     className="absolute top-1/2 left-0 h-1 bg-green-500 -z-10 -translate-y-1/2 rounded-full transition-all duration-1000"
                                     style={{ width: `${getJourneyProgress(mostRelevantApplication.status, mostRelevantApplication.leaseStatus)}%` }}
-                                ></div>
+                                />
 
-                                {/* Steps */}
                                 {[
                                     { label: t('journey.sent'), status: ['SENT', 'PENDING'] },
                                     { label: t('journey.visit'), status: ['VISIT_PROPOSED', 'VISIT_CONFIRMED'] },
                                     { label: t('journey.validation'), status: ['ACCEPTED'] },
-                                    { label: t('journey.lease'), status: ['SIGNED'] } // Lease status check needed
+                                    { label: t('journey.lease'), status: ['SIGNED'] }
                                 ].map((step, idx) => {
-                                    const isActive = isStepActive(step.status, mostRelevantApplication.status, idx);
-                                    const isCompleted = isStepCompleted(step.status, mostRelevantApplication.status, idx);
-
+                                    const active = isStepActive(step.status, mostRelevantApplication.status);
+                                    const completed = isStepCompleted(step.status, mostRelevantApplication.status, idx);
                                     return (
-                                        <div key={idx} className="flex flex-col items-center gap-2 bg-white px-2">
-                                            <div className={`
-                                                w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all
-                                                ${isActive || isCompleted ? 'border-green-500 bg-green-50 text-green-600' : 'border-neutral-200 text-neutral-300'}
-                                             `}>
-                                                {isCompleted ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                                        <div key={idx} className="flex flex-col items-center gap-2 bg-white dark:bg-neutral-900 px-2">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all
+                                                ${active || completed ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600' : 'border-neutral-200 dark:border-neutral-700 text-neutral-300'}`}>
+                                                {completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
                                             </div>
-                                            <span className={`text-xs font-medium ${isActive || isCompleted ? 'text-neutral-900' : 'text-neutral-400'}`}>
+                                            <span className={`text-xs font-medium ${active || completed ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-400'}`}>
                                                 {step.label}
                                             </span>
                                         </div>
@@ -232,55 +315,34 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 })}
                             </div>
 
-                            <div className="mt-8 flex justify-end">
-                                <Link href={`/dashboard/applications/${mostRelevantApplication.id}`} className="text-sm font-medium text-blue-600 hover:underline">
-                                    {t('viewDetails')}
+                            <div className="mt-6 flex justify-end">
+                                <Link href={`/dashboard/applications/${mostRelevantApplication.id}`} className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1">
+                                    {t('viewDetails')} <ArrowRight size={14} />
                                 </Link>
                             </div>
                         </div>
                     ) : (
                         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                             <div className="mb-6">
-                                <h2 className="text-xl font-medium mb-2">
-                                    {t('prepareDossier')}
-                                </h2>
-                                <p className="text-neutral-500 text-sm mb-4">
-                                    {t('dossierHint')}
-                                </p>
-
-                                {/* Progress Bar */}
+                                <h2 className="text-lg font-medium mb-2">{t('prepareDossier')}</h2>
+                                <p className="text-neutral-500 text-sm mb-4">{t('dossierHint')}</p>
                                 <div className="flex items-center gap-3 mb-1">
                                     <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary transition-all duration-500 ease-out"
-                                            style={{ width: `${progress}%` }}
-                                        />
+                                        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
                                     </div>
-                                    <span className="text-sm font-medium text-primary">
-                                        {Math.round(progress)}%
-                                    </span>
+                                    <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
                                 </div>
                             </div>
-
                             <div className="flex flex-col gap-3">
                                 {steps.map((step) => (
                                     <Link
                                         key={step.id}
                                         href={step.href}
-                                        className={`
-                                        flex items-center gap-3 p-3 rounded-xl transition
-                                        ${step.isCompleted ? 'bg-secondary/50 opacity-100' : 'bg-white border border-border hover:border-primary/50 hover:shadow-sm'}
-                                    `}
+                                        className={`flex items-center gap-3 p-3 rounded-xl transition
+                                            ${step.isCompleted ? 'bg-secondary/50' : 'bg-white dark:bg-neutral-900 border border-border hover:border-primary/50 hover:shadow-sm'}`}
                                     >
-                                        <div className={`
-                                        shrink-0
-                                        ${step.isCompleted ? 'text-green-500' : 'text-neutral-300'}
-                                    `}>
-                                            {step.isCompleted ? (
-                                                <CheckCircle2 size={24} className="fill-green-100" />
-                                            ) : (
-                                                <Circle size={24} />
-                                            )}
+                                        <div className={`shrink-0 ${step.isCompleted ? 'text-green-500' : 'text-neutral-300'}`}>
+                                            {step.isCompleted ? <CheckCircle2 size={24} className="fill-green-100" /> : <Circle size={24} />}
                                         </div>
                                         <div className={`font-medium ${step.isCompleted ? 'text-neutral-500 line-through' : 'text-foreground'}`}>
                                             {step.label}
@@ -290,6 +352,9 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                             </div>
                         </div>
                     )}
+
+                    {/* === SUBSCRIPTION === */}
+                    <SubscriptionCarousel />
                 </div>
             </div>
         </Container>

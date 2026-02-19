@@ -1,12 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Boldonse } from 'next/font/google';
+import localFont from 'next/font/local';
 
-const font = Boldonse({
+const font = localFont({
+    src: '../../public/fonts/Boldonse-Regular.ttf',
     weight: '400',
-    subsets: ['latin'],
-    adjustFontFallback: false,
+    display: 'swap',
 });
 
 const Logo = () => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Heart, LayoutDashboard, User, Home, Building2, MessageSquare, Calendar, Bell } from "lucide-react";
+import { Heart, LayoutDashboard, Settings, Home, Building2, MessageSquare, Calendar, Bell } from "lucide-react";
 import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
 import { motion } from "framer-motion";
@@ -75,8 +75,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             active: activePath === '/inbox'
         },
         {
-            label: t('profile'),
-            icon: User,
+            label: t('settings'),
+            icon: Settings,
             href: '/account',
             active: activePath?.startsWith('/account')
         }
