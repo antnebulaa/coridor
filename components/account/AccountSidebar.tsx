@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon } from "lucide-react";
+import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -91,6 +91,46 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
         },
     ];
 
+    const isLandlord = currentUser?.userMode === 'LANDLORD';
+
+    // Landlord-only routes
+    const landlordRoutes: RouteItem[] = isLandlord ? [
+        {
+            label: t('fiscalRecap'),
+            icon: Wallet,
+            href: '/account/fiscal',
+            active: pathname === '/account/fiscal'
+        },
+        {
+            label: t('receipts'),
+            icon: Receipt,
+            href: '/account/receipts',
+            active: pathname === '/account/receipts'
+        },
+        {
+            label: t('reminders'),
+            icon: Scale,
+            href: '/account/reminders',
+            active: pathname === '/account/reminders'
+        },
+        {
+            label: t('taxSimulator'),
+            icon: Calculator,
+            href: '/account/tax-simulator',
+            active: pathname === '/account/tax-simulator'
+        },
+    ] : [];
+
+    // Tenant-only routes
+    const tenantRoutes: RouteItem[] = !isLandlord ? [
+        {
+            label: t('alerts'),
+            icon: Search,
+            href: '/account/alerts',
+            active: pathname === '/account/alerts'
+        },
+    ] : [];
+
     const preferencesRoutes: RouteItem[] = [
         {
             label: t('notifications'),
@@ -109,6 +149,12 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             icon: Globe,
             href: '/account/preferences',
             active: pathname === '/account/preferences'
+        },
+        {
+            label: t('settings'),
+            icon: Settings,
+            href: '/account/settings',
+            active: pathname === '/account/settings'
         },
     ];
 
@@ -165,6 +211,30 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                         {accountRoutes.map(renderRoute)}
                     </div>
                 </div>
+
+                {/* Mode-specific: Landlord */}
+                {landlordRoutes.length > 0 && (
+                    <div className="mb-4">
+                        <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">
+                            {t('sectionLandlord')}
+                        </h3>
+                        <div className="flex flex-col gap-0.5">
+                            {landlordRoutes.map(renderRoute)}
+                        </div>
+                    </div>
+                )}
+
+                {/* Mode-specific: Tenant */}
+                {tenantRoutes.length > 0 && (
+                    <div className="mb-4">
+                        <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">
+                            {t('sectionTenant')}
+                        </h3>
+                        <div className="flex flex-col gap-0.5">
+                            {tenantRoutes.map(renderRoute)}
+                        </div>
+                    </div>
+                )}
 
                 {/* Préférences */}
                 <div className="mb-4">

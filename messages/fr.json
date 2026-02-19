@@ -1061,6 +1061,11 @@
             "subscription": "Abonnement",
             "passport": "Passeport Locatif",
             "settings": "Réglages",
+            "reminders": "Rappels légaux",
+            "taxSimulator": "Simulateur fiscal",
+            "fiscalRecap": "Récap fiscal",
+            "sectionLandlord": "Gestion locative",
+            "sectionTenant": "Recherche",
             "plan": {
                 "free": "Gratuit",
                 "plus": "Plus",
@@ -1481,6 +1486,56 @@
             "loadLeases": "Erreur chargement locataires",
             "calculate": "Erreur calcul régularisation",
             "save": "Erreur sauvegarde"
+        }
+    },
+    "myRental": {
+        "back": "Mon espace",
+        "activeLease": "Bail actif",
+        "rentCC": "Loyer CC",
+        "startDate": "Début",
+        "endDate": "Fin bail",
+        "landlord": "Propriétaire",
+        "actions": {
+            "receipts": "Quittances",
+            "report": "Signaler",
+            "notice": "Préavis"
+        },
+        "payments": {
+            "title": "Paiements",
+            "nextRent": "Prochain loyer",
+            "dueDate": "Échéance",
+            "paid": "Payé",
+            "pending": "En attente",
+            "late": "En retard",
+            "overdue": "Impayé",
+            "noHistory": "Aucun historique de paiement"
+        },
+        "documents": {
+            "title": "Documents",
+            "lease": "Bail de location",
+            "signedOn": "Signé le {date}",
+            "lastReceipt": "Dernière quittance"
+        },
+        "practicalInfo": {
+            "title": "Infos pratiques",
+            "deposit": "Dépôt de garantie",
+            "charges": "Charges provisions",
+            "heating": "Type chauffage",
+            "dpe": "Performance énergétique",
+            "floor": "Étage"
+        },
+        "leaseEnd": {
+            "title": "Fin de bail",
+            "description": "Votre bail se termine le {date}.",
+            "noticePeriod": "Pour un départ anticipé, le préavis est de 1 à 3 mois selon votre situation."
+        },
+        "empty": {
+            "title": "Pas encore de logement",
+            "description": "Quand vous signerez un bail sur Coridor, toutes les informations de votre logement apparaîtront ici.",
+            "searchCta": "Rechercher un logement",
+            "prepareTitle": "En attendant, préparez votre dossier",
+            "passport": "Compléter mon Passeport Locatif",
+            "dossier": "Préparer mon dossier"
         }
     }
 }

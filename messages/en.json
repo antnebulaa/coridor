@@ -1043,6 +1043,11 @@
             "subscription": "Subscription",
             "passport": "Rental Passport",
             "settings": "Settings",
+            "reminders": "Legal reminders",
+            "taxSimulator": "Tax simulator",
+            "fiscalRecap": "Tax summary",
+            "sectionLandlord": "Rental management",
+            "sectionTenant": "Search",
             "plan": {
                 "free": "Free",
                 "plus": "Plus",
@@ -1447,6 +1452,56 @@
             "loadLeases": "Error loading tenants",
             "calculate": "Error calculating regularization",
             "save": "Error saving"
+        }
+    },
+    "myRental": {
+        "back": "My space",
+        "activeLease": "Active lease",
+        "rentCC": "Rent incl.",
+        "startDate": "Start",
+        "endDate": "Lease end",
+        "landlord": "Landlord",
+        "actions": {
+            "receipts": "Receipts",
+            "report": "Report",
+            "notice": "Notice"
+        },
+        "payments": {
+            "title": "Payments",
+            "nextRent": "Next rent",
+            "dueDate": "Due date",
+            "paid": "Paid",
+            "pending": "Pending",
+            "late": "Late",
+            "overdue": "Overdue",
+            "noHistory": "No payment history"
+        },
+        "documents": {
+            "title": "Documents",
+            "lease": "Lease agreement",
+            "signedOn": "Signed on {date}",
+            "lastReceipt": "Latest receipt"
+        },
+        "practicalInfo": {
+            "title": "Practical info",
+            "deposit": "Security deposit",
+            "charges": "Service charges",
+            "heating": "Heating type",
+            "dpe": "Energy performance",
+            "floor": "Floor"
+        },
+        "leaseEnd": {
+            "title": "Lease end",
+            "description": "Your lease ends on {date}.",
+            "noticePeriod": "For early departure, notice period is 1 to 3 months depending on your situation."
+        },
+        "empty": {
+            "title": "No home yet",
+            "description": "When you sign a lease on Coridor, all your housing information will appear here.",
+            "searchCta": "Search for a home",
+            "prepareTitle": "In the meantime, prepare your file",
+            "passport": "Complete my Rental Passport",
+            "dossier": "Prepare my file"
         }
     }
 }

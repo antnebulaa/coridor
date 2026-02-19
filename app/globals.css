@@ -106,8 +106,8 @@ body {
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  overflow: hidden;
-  /* Prevent bouncing/scrolling of the strict body root */
+  overscroll-behavior-y: none;
+  /* Prevent iOS bounce without blocking scroll */
 }
 
 button {

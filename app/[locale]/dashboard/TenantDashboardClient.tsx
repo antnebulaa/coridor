@@ -7,8 +7,10 @@ import { CheckCircle2, Circle, FolderOpen, Calendar, Bell, FileText, Receipt, Ch
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import VisitCard from "./components/VisitCard";
-import SubscriptionCarousel from "./components/SubscriptionCarousel";
+// import SubscriptionCarousel from "./components/SubscriptionCarousel";
 import { useTranslations } from 'next-intl';
+import PassportCard from "@/components/passport/PassportCard";
+import usePassportCompletion from "@/hooks/usePassportCompletion";
 
 interface TenantDashboardClientProps {
     currentUser: SafeUser;
@@ -27,27 +29,8 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
     const t = useTranslations('dashboard');
     const tenantProfile = (currentUser as any).tenantProfile;
 
-    // Passport score state
-    const [passportScore, setPassportScore] = useState<{
-        globalScore: number;
-        confidence: string;
-        badgeScore: number;
-    } | null>(null);
-    const [passportLoading, setPassportLoading] = useState(true);
-
-    // Fetch passport score
-    useEffect(() => {
-        fetch('/api/passport/score')
-            .then(r => {
-                if (!r.ok) return null;
-                return r.json();
-            })
-            .then(data => {
-                if (data) setPassportScore(data);
-            })
-            .catch(() => {})
-            .finally(() => setPassportLoading(false));
-    }, []);
+    // Passport completion (progressive disclosure)
+    const { data: passportCompletion, isLoading: passportLoading } = usePassportCompletion();
 
     // Active Applications Count
     const activeApplicationsCount = applications.filter(app =>
@@ -72,9 +55,6 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
             });
         return upcoming[0] || null;
     }, [visits]);
-
-    // Verified months from tenant profile
-    const verifiedMonths = (tenantProfile as any)?.verifiedMonths || 0;
 
     // Dossier progress
     const isAccountCreated = true;
@@ -190,7 +170,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     {/* === HEADER === */}
                     <div className="flex items-start justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                            <h1 className="text-2xl font-medium text-neutral-900 dark:text-neutral-100">
                                 Bonjour {firstName} 👋
                             </h1>
                             <p className="text-sm text-neutral-500 mt-0.5">
@@ -217,9 +197,9 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <FolderOpen size={16} className="text-neutral-400" />
-                                <span className="text-xs font-medium text-neutral-500">Candidatures</span>
+                                <span className="text-sm font-medium text-neutral-500">Candidatures</span>
                             </div>
-                            <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                            <div className="text-3xl font-medium text-neutral-900 dark:text-neutral-100">
                                 {activeApplicationsCount}
                             </div>
                             <div className="text-xs text-neutral-500 mt-1">
@@ -237,20 +217,20 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <Calendar size={16} className="text-neutral-400" />
-                                <span className="text-xs font-medium text-neutral-500">Prochain RDV</span>
+                                <span className="text-sm font-medium text-neutral-500">Prochain RDV</span>
                             </div>
                             {nextVisit ? (
                                 <>
-                                    <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                                    <div className="text-3xl font-medium text-neutral-900 dark:text-neutral-100">
                                         {formatVisitDate(nextVisit).day} {formatVisitDate(nextVisit).month}
                                     </div>
-                                    <div className="text-xs text-neutral-500 mt-1">
+                                    <div className="text-sm text-neutral-500 mt-1">
                                         {formatVisitDate(nextVisit).time} · {nextVisit.listing?.title || 'Visite'}
                                     </div>
                                 </>
                             ) : (
                                 <>
-                                    <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">0</div>
+                                    <div className="text-3xl font-medium text-neutral-900 dark:text-neutral-100">0</div>
                                     <div className="text-xs text-neutral-500 mt-1">Aucune visite prévue</div>
                                 </>
                             )}
@@ -258,12 +238,11 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     </div>
 
                     {/* === MON LOGEMENT ACTUEL === */}
-                    {activeLease && leaseDisplayInfo && (
+                    {activeLease && leaseDisplayInfo ? (
                         <Link
-                            href={`/rentals`}
+                            href="/dashboard/my-rental"
                             className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex gap-4 hover:shadow-md transition group"
                         >
-                            {/* Photo */}
                             <div className="shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
                                 {leaseDisplayInfo.photo ? (
                                     <img
@@ -277,8 +256,6 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                     </div>
                                 )}
                             </div>
-
-                            {/* Info */}
                             <div className="flex-1 min-w-0 flex flex-col justify-center">
                                 <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
                                     {leaseDisplayInfo.category}
@@ -293,46 +270,61 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                     <span className="text-xs font-medium text-green-600 dark:text-green-400">À jour</span>
                                 </div>
                             </div>
-
+                            <ChevronRight size={18} className="text-neutral-400 group-hover:text-neutral-600 transition shrink-0 self-center" />
+                        </Link>
+                    ) : activeApplicationsCount > 0 ? (
+                        /* Option A: Show candidatures summary */
+                        <Link
+                            href="/dashboard/applications"
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex gap-4 hover:shadow-md transition group"
+                        >
+                            <div className="shrink-0 w-20 h-20 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                                <FolderOpen size={24} className="text-blue-500" />
+                            </div>
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                    Vos candidatures
+                                </div>
+                                <div className="text-xs text-neutral-500 mt-1">
+                                    {activeApplicationsCount} candidature{activeApplicationsCount > 1 ? 's' : ''} en cours
+                                </div>
+                            </div>
+                            <ChevronRight size={18} className="text-neutral-400 group-hover:text-neutral-600 transition shrink-0 self-center" />
+                        </Link>
+                    ) : (
+                        /* Option B: CTA to search */
+                        <Link
+                            href="/dashboard/my-rental"
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex gap-4 hover:shadow-md transition group"
+                        >
+                            <div className="shrink-0 w-20 h-20 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                                <Home size={24} className="text-neutral-300 dark:text-neutral-600" />
+                            </div>
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                    Mon logement
+                                </div>
+                                <div className="text-xs text-neutral-400 mt-1">
+                                    Pas encore de bail actif
+                                </div>
+                            </div>
                             <ChevronRight size={18} className="text-neutral-400 group-hover:text-neutral-600 transition shrink-0 self-center" />
                         </Link>
                     )}
 
-                    {/* === PASSEPORT LOCATIF === */}
-                    <Link
-                        href="/account/passport"
-                        className="bg-neutral-900 dark:bg-neutral-800 rounded-2xl p-5 flex items-center justify-between group hover:bg-neutral-800 dark:hover:bg-neutral-700 transition"
-                    >
-                        <div className="flex-1">
-                            <div className="text-[10px] font-semibold tracking-widest uppercase text-neutral-400 mb-2">
-                                Passeport Locatif
-                            </div>
-                            {passportLoading ? (
-                                <div className="h-6 w-24 bg-neutral-700 rounded animate-pulse" />
-                            ) : passportScore ? (
-                                <>
-                                    <div className="text-white text-xl font-bold">
-                                        Score : {passportScore.globalScore}/100
-                                    </div>
-                                    {verifiedMonths > 0 && (
-                                        <div className="flex items-center gap-1.5 mt-1.5">
-                                            <CheckCircle2 size={14} className="text-green-400" />
-                                            <span className="text-sm text-green-400">
-                                                Payeur vérifié — {verifiedMonths} mois
-                                            </span>
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <div className="text-neutral-400 text-sm">
-                                    Activez votre passeport pour renforcer votre profil
-                                </div>
-                            )}
+                    {/* === PASSEPORT LOCATIF (progressive disclosure) === */}
+                    {passportLoading ? (
+                        <div
+                            className="rounded-2xl p-5 animate-pulse"
+                            style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%)' }}
+                        >
+                            <div className="h-4 w-32 bg-white/10 rounded mb-3" />
+                            <div className="h-6 w-48 bg-white/10 rounded mb-2" />
+                            <div className="h-4 w-full bg-white/10 rounded" />
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0 ml-4">
-                            <Shield size={24} className="text-white" />
-                        </div>
-                    </Link>
+                    ) : passportCompletion ? (
+                        <PassportCard completionData={passportCompletion} />
+                    ) : null}
 
                     {/* === ACCES RAPIDE === */}
                     <div>
@@ -443,8 +435,8 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                         </div>
                     )}
 
-                    {/* === SUBSCRIPTION === */}
-                    <SubscriptionCarousel />
+                    {/* === SUBSCRIPTION (hidden for now) === */}
+                    {/* <SubscriptionCarousel /> */}
                 </div>
             </div>
         </Container>

@@ -163,6 +163,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     let applicationId = null;
     let applicationStatus: string | null = null;
     let applicationRejectionReason: string | null = null;
+    let leaseStatus: string | null = null;
     let confirmedVisit = null;
 
     if (safeListing && otherUser) {
@@ -174,11 +175,12 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                     creatorUserId: otherUser.id
                 }
             },
-            select: { id: true, status: true, rejectionReason: true }
+            select: { id: true, status: true, rejectionReason: true, leaseStatus: true }
         });
         applicationId = application?.id || null;
         applicationStatus = application?.status || null;
         applicationRejectionReason = application?.rejectionReason || null;
+        leaseStatus = application?.leaseStatus || null;
 
         // Fetch valid visit (confirmed)
         // We check if EITHER the current user OR the other user is the candidate for this listing.
@@ -220,6 +222,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 applicationId={applicationId}
                 applicationStatus={applicationStatus}
                 applicationRejectionReason={applicationRejectionReason}
+                leaseStatus={leaseStatus}
                 conversationId={conversation.id}
                 confirmedVisit={confirmedVisit}
             />

@@ -48,6 +48,7 @@ interface ConversationClientProps {
     applicationId?: string | null;
     applicationStatus?: string | null;
     applicationRejectionReason?: string | null;
+    leaseStatus?: string | null;
     conversationId?: string;
     confirmedVisit?: {
         id: string;
@@ -69,6 +70,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     applicationId,
     applicationStatus: initialApplicationStatus,
     applicationRejectionReason: initialRejectionReason,
+    leaseStatus: initialLeaseStatus,
     conversationId,
     confirmedVisit
 }) => {
@@ -263,8 +265,46 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             });
         }
 
+        if (initialLeaseStatus === 'PENDING_SIGNATURE') {
+            steps.push({
+                title: "Bail envoyé pour signature",
+                description: (
+                    <div className="flex flex-col gap-2">
+                        <span>Le bail de location est prêt à être signé. Vous allez recevoir un email de Yousign.</span>
+                        {applicationId && (
+                            <button
+                                onClick={() => window.open(`/leases/${applicationId}`, '_blank')}
+                                className="text-left text-sm font-medium text-blue-600 hover:text-blue-700 underline"
+                            >
+                                Consulter le bail
+                            </button>
+                        )}
+                    </div>
+                ),
+                completed: true
+            });
+        } else if (initialLeaseStatus === 'SIGNED') {
+            steps.push({
+                title: "Bail signé",
+                description: (
+                    <div className="flex flex-col gap-2">
+                        <span>Le bail a été signé par toutes les parties.</span>
+                        {applicationId && (
+                            <button
+                                onClick={() => window.open(`/leases/${applicationId}`, '_blank')}
+                                className="text-left text-sm font-medium text-green-600 hover:text-green-700 underline"
+                            >
+                                Voir le bail signé
+                            </button>
+                        )}
+                    </div>
+                ),
+                completed: true
+            });
+        }
+
         return steps;
-    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason]);
+    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, initialLeaseStatus, applicationId]);
 
     return (
         <div className="h-full flex flex-row">
@@ -359,38 +399,66 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                             p-4
                             flex flex-col gap-2
                         ">
-                            <Button
-                                disabled={!listing}
-                                label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
-                                onClick={() => {
-                                    if (!listing) return;
-
-                                    if (hasProposedVisit) {
+                            {/* Lease status-based actions */}
+                            {initialLeaseStatus === 'SIGNED' ? (
+                                <Button
+                                    label="Voir le bail signé"
+                                    outline
+                                    onClick={() => {
                                         if (applicationId) {
                                             window.open(`/leases/${applicationId}`, '_blank');
-                                        } else {
-                                            toast.error("Aucune demande de location trouvée pour ce dossier.");
                                         }
-                                        return;
-                                    }
+                                    }}
+                                />
+                            ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
+                                        En cours de signature...
+                                    </div>
+                                    <Button
+                                        label="Voir le bail"
+                                        outline
+                                        onClick={() => {
+                                            if (applicationId) {
+                                                window.open(`/leases/${applicationId}`, '_blank');
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <Button
+                                    disabled={!listing}
+                                    label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
+                                    onClick={() => {
+                                        if (!listing) return;
 
-                                    if (!hasAvailability) {
-                                        setIsAvailabilityModalOpen(true);
-                                        return;
-                                    }
+                                        if (hasProposedVisit) {
+                                            if (applicationId) {
+                                                window.open(`/leases/${applicationId}`, '_blank');
+                                            } else {
+                                                toast.error("Aucune demande de location trouvée pour ce dossier.");
+                                            }
+                                            return;
+                                        }
 
-                                    axios.post('/api/messages', {
-                                        message: 'INVITATION_VISITE',
-                                        conversationId: conversation.id,
-                                        listingId: listing.id
-                                    })
-                                        .then(() => {
-                                            toast.success('Invitation envoyée');
-                                            router.refresh();
+                                        if (!hasAvailability) {
+                                            setIsAvailabilityModalOpen(true);
+                                            return;
+                                        }
+
+                                        axios.post('/api/messages', {
+                                            message: 'INVITATION_VISITE',
+                                            conversationId: conversation.id,
+                                            listingId: listing.id
                                         })
-                                        .catch(() => toast.error('Erreur lors de l\'envoi'));
-                                }}
-                            />
+                                            .then(() => {
+                                                toast.success('Invitation envoyée');
+                                                router.refresh();
+                                            })
+                                            .catch(() => toast.error('Erreur lors de l\'envoi'));
+                                    }}
+                                />
+                            )}
                             <button
                                 onClick={() => {
                                     setSelectedReason('');

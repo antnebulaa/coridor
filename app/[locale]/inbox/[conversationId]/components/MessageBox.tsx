@@ -103,6 +103,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     const message = clsx(
         "text-[15px] w-fit transition select-none !ring-0 !outline-none !border-none", // Select none to prevent text selection on long press
         // isMenuOpen && "scale-95 brightness-95", // Removed as per user feedback
+        data.body === 'LEASE_SENT_FOR_SIGNATURE' ? "p-0" :
         data.body === 'INVITATION_VISITE' ? "p-0" :
             (data.image || data.listing) ? "rounded-md p-0 overflow-hidden" :
                 clsx(
@@ -415,6 +416,20 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         </div>
                                     );
                                 })()
+
+                            ) : data.body === 'LEASE_SENT_FOR_SIGNATURE' ? (
+                                <div className="flex flex-col gap-2 bg-blue-50 border border-blue-200 p-4 rounded-2xl max-w-xs">
+                                    <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Bail envoyé pour signature
+                                    </div>
+                                    <div className="text-sm text-blue-600">
+                                        Le bail de location a été envoyé pour signature électronique via Yousign.
+                                    </div>
+                                </div>
+
                             ) : (
                                 <div>
                                     {(() => {

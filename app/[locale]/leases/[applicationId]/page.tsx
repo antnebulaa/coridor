@@ -3,6 +3,7 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "@/components/ClientOnly";
 import EmptyState from "@/components/EmptyState";
 import LeaseViewerClient from "./LeaseViewerClient";
+import prisma from "@/libs/prismadb";
 
 interface IParams {
     applicationId: string;
@@ -17,9 +18,27 @@ const LeasePage = async (props: { params: Promise<IParams> }) => {
     }
 
     try {
-        const leaseConfig = await LeaseService.generateLeaseConfig(params.applicationId);
+        // Verify user is authorized (landlord or tenant)
+        const application = await prisma.rentalApplication.findUnique({
+            where: { id: params.applicationId },
+            include: {
+                listing: { include: { rentalUnit: { include: { property: true } } } },
+                candidateScope: { select: { creatorUserId: true } }
+            }
+        });
 
-        const isOwner = currentUser.email === leaseConfig.landlord.email;
+        if (!application) {
+            return <ClientOnly><EmptyState title="Non trouvé" subtitle="Ce bail n'existe pas." /></ClientOnly>;
+        }
+
+        const isOwner = application.listing?.rentalUnit?.property?.ownerId === currentUser.id;
+        const isTenant = application.candidateScope?.creatorUserId === currentUser.id;
+
+        if (!isOwner && !isTenant) {
+            return <ClientOnly><EmptyState title="Accès refusé" subtitle="Vous n'avez pas accès à ce bail." /></ClientOnly>;
+        }
+
+        const leaseConfig = await LeaseService.generateLeaseConfig(params.applicationId);
 
         return (
             <ClientOnly>

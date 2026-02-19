@@ -8,7 +8,8 @@ import ReactPDF from '@react-pdf/renderer';
 import LeaseDocument from "@/components/documents/LeaseDocument";
 import { LeaseConfig } from "@/services/LeaseService";
 import { hasFeature } from '@/lib/features';
-
+import { createNotification } from '@/libs/notifications';
+import { sendPushNotification } from '@/app/lib/sendPushNotification';
 
 // Helper to render PDF to Buffer
 const renderToBuffer = async (element: React.ReactElement): Promise<Buffer> => {
@@ -52,6 +53,13 @@ export async function POST(
                             include: {
                                 property: true
                             }
+                        }
+                    }
+                },
+                candidateScope: {
+                    include: {
+                        creatorUser: {
+                            select: { id: true, name: true, email: true }
                         }
                     }
                 }
@@ -111,6 +119,60 @@ export async function POST(
                 yousignSignatureId: signatureId
             }
         });
+
+        // 7. Notify tenant(s) — system message + notification + push
+        const candidate = application.candidateScope?.creatorUser;
+        const listingTitle = application.listing?.title || 'votre logement';
+        const propertyCity = application.listing?.rentalUnit?.property?.city || '';
+
+        if (candidate) {
+            // Find conversation between landlord and tenant for this listing
+            const conversation = await prisma.conversation.findFirst({
+                where: {
+                    listingId: application.listingId,
+                    users: {
+                        every: {
+                            id: { in: [currentUser.id, candidate.id] }
+                        }
+                    }
+                }
+            });
+
+            // Create system message in conversation
+            if (conversation) {
+                await prisma.message.create({
+                    data: {
+                        body: 'LEASE_SENT_FOR_SIGNATURE',
+                        conversation: { connect: { id: conversation.id } },
+                        sender: { connect: { id: currentUser.id } },
+                        seen: { connect: { id: currentUser.id } }
+                    }
+                });
+
+                await prisma.conversation.update({
+                    where: { id: conversation.id },
+                    data: { lastMessageAt: new Date() }
+                });
+            }
+
+            // In-app notification
+            await createNotification({
+                userId: candidate.id,
+                type: 'lease',
+                title: 'Bail envoyé pour signature',
+                message: `Un bail de location pour "${listingTitle}"${propertyCity ? ` à ${propertyCity}` : ''} vous a été envoyé pour signature électronique.`,
+                link: `/leases/${applicationId}`
+            });
+
+            // Push notification
+            sendPushNotification({
+                userId: candidate.id,
+                title: 'Bail envoyé pour signature',
+                body: `Votre bail pour "${listingTitle}" est prêt à être signé. Consultez-le maintenant.`,
+                url: `/leases/${applicationId}`,
+                type: 'lease'
+            }).catch(err => console.error("[Push] Failed to notify tenant:", err));
+        }
 
         return NextResponse.json({ success: true, signatureId });
 

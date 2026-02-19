@@ -169,89 +169,84 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col h-full min-w-0">
-                {/* Header SaaS Style */}
-                <div className="
-                    h-16 
-                    bg-white 
-                    border-b border-neutral-200 
-                    flex items-center justify-between 
-                    px-6
-                    flex-none
-                    z-10
-                ">
-                    <div className="font-semibold text-lg flex items-center gap-3">
-                        {/* Mobile Back Button */}
-                        <div onClick={() => router.back()} className="lg:hidden cursor-pointer">
-                            <HiArrowLeft />
+            <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+                {/* Header */}
+                <div className="bg-white border-b border-neutral-200 flex-none z-10 px-4 sm:px-6 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="font-semibold text-lg flex items-center gap-3 shrink-0">
+                            <div onClick={() => router.back()} className="lg:hidden cursor-pointer">
+                                <HiArrowLeft />
+                            </div>
+                            <span className="hidden sm:inline">Aperçu du Document</span>
                         </div>
-                        <span>Aperçu du Document</span>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Sign Button - Only for owner when DRAFT */}
-                        {isOwner && status === 'DRAFT' && (
-                            <button
-                                onClick={handleSign}
-                                disabled={loading}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
-                            >
-                                <HiPencilSquare size={18} />
-                                {loading ? 'Envoi Yousign...' : 'Envoyer pour signature'}
-                            </button>
-                        )}
-
-                        {/* Pending Status with Refresh */}
-                        {status === 'PENDING_SIGNATURE' && (
-                            <>
-                                <div className="flex items-center gap-2 px-4 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
-                                    <span>En cours de signature...</span>
-                                </div>
+                        <div className="flex items-center gap-2 flex-wrap justify-end">
+                            {/* Sign Button - Only for owner when DRAFT */}
+                            {isOwner && status === 'DRAFT' && (
                                 <button
-                                    onClick={handleRefreshStatus}
-                                    disabled={refreshing}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-600 hover:text-black rounded-lg hover:bg-neutral-100 transition disabled:opacity-50"
+                                    onClick={handleSign}
+                                    disabled={loading}
+                                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
                                 >
-                                    <HiArrowPath size={18} className={refreshing ? 'animate-spin' : ''} />
-                                    {refreshing ? 'Actualisation...' : 'Actualiser'}
+                                    <HiPencilSquare size={16} />
+                                    <span className="hidden sm:inline">{loading ? 'Envoi Yousign...' : 'Envoyer pour signature'}</span>
+                                    <span className="sm:hidden">{loading ? 'Envoi...' : 'Signer'}</span>
                                 </button>
-                            </>
-                        )}
+                            )}
 
-                        {/* Signed Status with Download */}
-                        {status === 'SIGNED' && (
-                            <>
-                                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
-                                    <HiCheckCircle size={18} />
-                                    <span>Document Signé</span>
-                                </div>
-                                {signedUrl && (
+                            {/* Pending Status with Refresh */}
+                            {status === 'PENDING_SIGNATURE' && (
+                                <>
+                                    <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
+                                        <span>En cours de signature...</span>
+                                    </div>
                                     <button
-                                        onClick={handleDownloadSigned}
-                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm"
+                                        onClick={handleRefreshStatus}
+                                        disabled={refreshing}
+                                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-600 hover:text-black rounded-lg hover:bg-neutral-100 transition disabled:opacity-50"
                                     >
-                                        <HiArrowDownTray size={18} />
-                                        Télécharger le bail signé
+                                        <HiArrowPath size={16} className={refreshing ? 'animate-spin' : ''} />
+                                        <span className="hidden sm:inline">{refreshing ? 'Actualisation...' : 'Actualiser'}</span>
                                     </button>
-                                )}
-                            </>
-                        )}
+                                </>
+                            )}
 
-                        <button className="hidden sm:flex text-sm font-medium text-neutral-600 hover:text-black gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 transition">
-                            <HiPrinter size={18} />
-                            Imprimer
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition shadow-sm">
-                            <HiArrowDownTray size={18} />
-                            <span>Télécharger</span>
-                        </button>
+                            {/* Signed Status with Download */}
+                            {status === 'SIGNED' && (
+                                <>
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
+                                        <HiCheckCircle size={16} />
+                                        <span>Document Signé</span>
+                                    </div>
+                                    {signedUrl && (
+                                        <button
+                                            onClick={handleDownloadSigned}
+                                            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm"
+                                        >
+                                            <HiArrowDownTray size={16} />
+                                            <span className="hidden sm:inline">Télécharger le bail signé</span>
+                                            <span className="sm:hidden">Télécharger</span>
+                                        </button>
+                                    )}
+                                </>
+                            )}
+
+                            <button className="hidden sm:flex text-sm font-medium text-neutral-600 hover:text-black gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 transition">
+                                <HiPrinter size={16} />
+                                Imprimer
+                            </button>
+                            <button className="flex items-center gap-2 px-3 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition shadow-sm">
+                                <HiArrowDownTray size={16} />
+                                <span className="hidden sm:inline">Télécharger</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {/* PDF Area */}
-                <div className="flex-1 bg-neutral-100 p-4 sm:p-8 overflow-hidden relative">
-                    <div className="w-full h-full shadow-lg rounded-xl overflow-hidden bg-white border border-neutral-200">
-                        <PDFViewer width="100%" height="100%" showToolbar={true}>
+                <div className="flex-1 bg-neutral-100 p-2 sm:p-8 overflow-auto relative">
+                    <div className="w-full h-full shadow-lg sm:rounded-xl overflow-hidden bg-white border border-neutral-200 min-h-[70vh]">
+                        <PDFViewer width="100%" height="100%" showToolbar={false}>
                             <LeaseDocument data={leaseConfig} />
                         </PDFViewer>
                     </div>
