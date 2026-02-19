@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @plugin "tailwindcss-motion";
 
+@font-face {
+  font-family: 'Boldonse';
+  src: url('/fonts/Boldonse-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -79,8 +87,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-matter);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 
@@ -94,7 +102,7 @@ body {
   height: -webkit-fill-available;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-matter), ui-sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;

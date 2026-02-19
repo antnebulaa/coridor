@@ -64,6 +64,7 @@ const font = localFont({
             style: 'normal',
         },
     ],
+    variable: '--font-matter',
 });
 
 export const metadata: Metadata = {
@@ -106,7 +107,7 @@ export default async function LocaleLayout({
     const messages = await getMessages();
 
     return (
-        <html lang={locale} suppressHydrationWarning>
+        <html lang={locale} suppressHydrationWarning className={font.variable}>
             <head>
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

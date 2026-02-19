@@ -3,7 +3,7 @@
 import { SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
-import { CheckCircle2, Circle, FolderOpen, Calendar, Bell, FileText, Receipt, ChevronRight, Shield, ArrowRight } from "lucide-react";
+import { CheckCircle2, Circle, FolderOpen, Calendar, Bell, FileText, Receipt, ChevronRight, Shield, ArrowRight, BellRing, Home } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import VisitCard from "./components/VisitCard";
@@ -140,6 +140,46 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
         return { day, month, time };
     };
 
+    // Active lease (signed)
+    const activeLease = useMemo(() => {
+        return applications.find((app: any) => app.leaseStatus === 'SIGNED') || null;
+    }, [applications]);
+
+    const leaseDisplayInfo = useMemo(() => {
+        if (!activeLease) return null;
+
+        const listing = activeLease.listing;
+        const unit = listing?.rentalUnit;
+        const property = unit?.property;
+
+        // Photo
+        const photo = property?.images?.[0]?.url || unit?.images?.[0]?.url || null;
+
+        // Category shortname
+        const categoryMap: Record<string, string> = {
+            'apartment': 'Apt',
+            'house': 'Maison',
+            'studio': 'Studio',
+            'loft': 'Loft',
+            'room': 'Chambre',
+        };
+        const rawCategory = (property?.category || '').toLowerCase();
+        const category = categoryMap[rawCategory] || property?.category || 'Logement';
+
+        // Location
+        const city = property?.city || '';
+
+        // Surface
+        const surface = unit?.surface || property?.totalSurface || null;
+
+        // Next rent date (1st of next month)
+        const now = new Date();
+        const nextRentDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const nextRentLabel = `1er ${nextRentDate.toLocaleDateString('fr-FR', { month: 'long' })}`;
+
+        return { photo, category, city, surface, nextRentLabel, listingTitle: listing?.title };
+    }, [activeLease]);
+
     const firstName = currentUser.firstName || currentUser.name?.split(' ')[0] || '';
 
     return (
@@ -210,12 +250,53 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <div className="text-xl font-bold text-neutral-300 dark:text-neutral-600">—</div>
-                                    <div className="text-xs text-neutral-400 mt-1">Aucune visite prévue</div>
+                                    <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">0</div>
+                                    <div className="text-xs text-neutral-500 mt-1">Aucune visite prévue</div>
                                 </>
                             )}
                         </Link>
                     </div>
+
+                    {/* === MON LOGEMENT ACTUEL === */}
+                    {activeLease && leaseDisplayInfo && (
+                        <Link
+                            href={`/rentals`}
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex gap-4 hover:shadow-md transition group"
+                        >
+                            {/* Photo */}
+                            <div className="shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                                {leaseDisplayInfo.photo ? (
+                                    <img
+                                        src={leaseDisplayInfo.photo}
+                                        alt={leaseDisplayInfo.listingTitle || 'Logement'}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <Home size={24} className="text-neutral-400" />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                                    {leaseDisplayInfo.category}
+                                    {leaseDisplayInfo.city && ` · ${leaseDisplayInfo.city}`}
+                                    {leaseDisplayInfo.surface && ` · ${leaseDisplayInfo.surface}m²`}
+                                </div>
+                                <div className="text-xs text-neutral-500 mt-1">
+                                    Bail actif · Prochain loyer : {leaseDisplayInfo.nextRentLabel}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-1.5">
+                                    <CheckCircle2 size={14} className="text-green-500" />
+                                    <span className="text-xs font-medium text-green-600 dark:text-green-400">À jour</span>
+                                </div>
+                            </div>
+
+                            <ChevronRight size={18} className="text-neutral-400 group-hover:text-neutral-600 transition shrink-0 self-center" />
+                        </Link>
+                    )}
 
                     {/* === PASSEPORT LOCATIF === */}
                     <Link
@@ -256,24 +337,33 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     {/* === ACCES RAPIDE === */}
                     <div>
                         <h2 className="text-sm font-semibold text-neutral-500 mb-3">Accès rapide</h2>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-3">
                             <Link
                                 href="/account/tenant-profile"
-                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition"
+                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
                                     <FileText size={18} className="text-blue-600 dark:text-blue-400" />
                                 </div>
-                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Mon dossier</span>
+                                <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">Mon dossier</span>
                             </Link>
                             <Link
                                 href="/account/receipts"
-                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition"
+                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
                                     <Receipt size={18} className="text-amber-600 dark:text-amber-400" />
                                 </div>
-                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Quittances</span>
+                                <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">Quittances</span>
+                            </Link>
+                            <Link
+                                href="/account/alerts"
+                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                            >
+                                <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
+                                    <BellRing size={18} className="text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">Alertes</span>
                             </Link>
                         </div>
                     </div>

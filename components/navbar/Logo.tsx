@@ -1,13 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import localFont from 'next/font/local';
-
-const font = localFont({
-    src: '../../public/fonts/Boldonse-Regular.ttf',
-    weight: '400',
-    display: 'swap',
-});
 
 const Logo = () => {
     const router = useRouter();
@@ -15,14 +8,8 @@ const Logo = () => {
     return (
         <div
             onClick={() => router.push('/')}
-            className={`
-                hidden
-                md:block
-                cursor-pointer
-                text-[16px]
-                text-[#151515]
-                ${font.className}
-            `}
+            className="hidden md:block cursor-pointer text-[16px] text-[#151515]"
+            style={{ fontFamily: "'Boldonse', sans-serif" }}
         >
             CORIDOR
         </div>
