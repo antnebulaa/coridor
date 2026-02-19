@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['react-icons'],
   },
+  webpack: (config, { isServer }) => {
+    // react-pdf (client-side) needs canvas alias disabled in browser builds
+    // but server-side @react-pdf/renderer may need it for PDF generation
+    if (!isServer) {
+      config.resolve.alias.canvas = false;
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "avatars.githubusercontent.com" },

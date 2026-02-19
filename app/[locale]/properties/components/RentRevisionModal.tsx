@@ -36,7 +36,7 @@ const RentRevisionModal: React.FC<RentRevisionModalProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [newRent, setNewRent] = useState(currentRent);
     const [newCharges, setNewCharges] = useState(currentCharges);
-    const t = useTranslations('rentModal.rentRevision');
+    const t = useTranslations('dashboard.rentRevision');
     const locale = useLocale();
     const dateLocale = locale === 'fr' ? fr : enUS;
 

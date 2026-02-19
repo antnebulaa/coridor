@@ -17,13 +17,13 @@ interface SlideData {
 
 const SLIDES: SlideData[] = [
     {
-        headline: 'Prouvez votre\nfiabilité',
-        subtitle: 'Fini les dossiers papier et les jugements subjectifs.',
+        headline: 'Affichez votre fiabilité\net rassurez les proriétaires',
+        subtitle: 'Vos anciennes locations parlent pour vous.',
         background: 'linear-gradient(180deg, #1A1A1A 0%, #2A2520 100%)',
         color: '#E8A838',
     },
     {
-        headline: 'Paiements\nvérifiés',
+        headline: 'Nous vérifions ensemble\nle paiement de vos loyers',
         subtitle: 'Vos données bancaires prouvent que vous payez — automatiquement.',
         background: 'linear-gradient(180deg, #1A1A1A 0%, #1A2540 100%)',
         color: '#4A8FE7',

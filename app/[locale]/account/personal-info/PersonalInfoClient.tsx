@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast";
 import Heading from "@/components/Heading";
 import PageHeader from "@/components/PageHeader";
 import SoftInput from "@/components/inputs/SoftInput";
+import PhoneInput from "@/components/inputs/PhoneInput";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
 import { Button } from "@/components/ui/Button";
 import { AlertCircle } from "lucide-react";
@@ -102,6 +103,20 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
         // Reconstruct 'name' for backward compatibility
         if (data.firstName && data.lastName) {
             data.name = `${data.firstName} ${data.lastName}`;
+        }
+
+        // Normalize phone to E.164 format (+33...)
+        if (data.phoneNumber) {
+            let phone = data.phoneNumber.replace(/[\s.\-()]/g, '');
+            // Convert 06/07... to +336/+337...
+            if (phone.startsWith('0') && phone.length === 10) {
+                phone = '+33' + phone.slice(1);
+            }
+            // Ensure + prefix if starts with 33
+            if (phone.startsWith('33') && !phone.startsWith('+')) {
+                phone = '+' + phone;
+            }
+            data.phoneNumber = phone;
         }
 
         axios.post('/api/settings', data)
@@ -373,12 +388,9 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                         <div className="text-xs text-neutral-500 mb-2">
                             {t('phone.privacy')}
                         </div>
-                        <SoftInput
-                            id="phoneNumber"
-                            label={t('phone.label')}
-                            type="tel"
-                            register={register}
-                            errors={errors}
+                        <PhoneInput
+                            value={watch('phoneNumber') || ''}
+                            onChange={(val) => setValue('phoneNumber', val, { shouldDirty: true })}
                             disabled={isLoading}
                         />
                         <Button

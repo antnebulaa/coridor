@@ -10,10 +10,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     label?: string;
     icon?: React.ElementType;
     loading?: boolean;
+    outline?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = 'primary', size = 'md', small, label, icon: Icon, loading, children, ...props }, ref) => {
+    ({ className, variant: variantProp = 'primary', size = 'md', small, label, icon: Icon, loading, outline, children, ...props }, ref) => {
+        // Support legacy `outline` boolean prop
+        const variant = outline ? 'outline' : variantProp;
         return (
             <button
                 ref={ref}

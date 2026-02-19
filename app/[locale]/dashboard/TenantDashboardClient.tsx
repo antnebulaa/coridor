@@ -199,7 +199,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 <FolderOpen size={16} className="text-neutral-400" />
                                 <span className="text-sm font-medium text-neutral-500">Candidatures</span>
                             </div>
-                            <div className="text-3xl font-medium text-neutral-900 dark:text-neutral-100">
+                            <div className="text-3xl font-medium text-neutral-800 dark:text-neutral-100">
                                 {activeApplicationsCount}
                             </div>
                             <div className="text-xs text-neutral-500 mt-1">
@@ -221,7 +221,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                             </div>
                             {nextVisit ? (
                                 <>
-                                    <div className="text-3xl font-medium text-neutral-900 dark:text-neutral-100">
+                                    <div className="text-3xl font-medium text-neutral-800 dark:text-neutral-100">
                                         {formatVisitDate(nextVisit).day} {formatVisitDate(nextVisit).month}
                                     </div>
                                     <div className="text-sm text-neutral-500 mt-1">
@@ -332,7 +332,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                         <div className="grid grid-cols-3 gap-3">
                             <Link
                                 href="/account/tenant-profile"
-                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
                                     <FileText size={18} className="text-blue-600 dark:text-blue-400" />
@@ -341,7 +341,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                             </Link>
                             <Link
                                 href="/account/receipts"
-                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
                                     <Receipt size={18} className="text-amber-600 dark:text-amber-400" />
@@ -350,7 +350,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                             </Link>
                             <Link
                                 href="/account/alerts"
-                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
                                     <BellRing size={18} className="text-purple-600 dark:text-purple-400" />

@@ -79,30 +79,38 @@ export async function POST(
         // 3. Generate PDF Buffer
         const pdfBuffer = await renderToBuffer(React.createElement(LeaseDocument, { data: leaseConfig }));
 
-        // 4. Prepare Signers
-        // Tenant(s) - use real phone from LeaseConfig
+        // 4. Prepare & validate signers
+        const normalizePhone = (phone: string): string => {
+            let p = phone.replace(/[\s.\-()]/g, '');
+            if (p.startsWith('0') && p.length === 10) p = '+33' + p.slice(1);
+            if (p.startsWith('33') && !p.startsWith('+')) p = '+' + p;
+            if (!p.startsWith('+')) p = '+33' + p;
+            return p;
+        };
+
         const signers = leaseConfig.tenants.map((t: any) => {
             if (!t.phone) {
                 throw new Error(`Le locataire ${t.name} n'a pas de numéro de téléphone renseigné. Le numéro est requis pour la signature électronique (OTP SMS).`);
             }
             return {
-                first_name: t.firstName || t.name.split(' ')[0] || "Locataire",
-                last_name: t.lastName || t.name.split(' ').slice(1).join(' ') || "Inconnu",
-                email: t.email,
-                phone_number: t.phone
+                first_name: (t.firstName || t.name.split(' ')[0] || "Locataire").trim(),
+                last_name: (t.lastName || t.name.split(' ').slice(1).join(' ') || "Inconnu").trim(),
+                email: t.email.trim(),
+                phone_number: normalizePhone(t.phone)
             };
         });
 
-        // Landlord
         if (!leaseConfig.landlord.phone) {
             throw new Error(`Le bailleur ${leaseConfig.landlord.name} n'a pas de numéro de téléphone renseigné.`);
         }
         signers.push({
-            first_name: leaseConfig.landlord.name.split(' ')[0] || "Bailleur",
-            last_name: leaseConfig.landlord.name.split(' ').slice(1).join(' ') || "Inconnu",
-            email: leaseConfig.landlord.email,
-            phone_number: leaseConfig.landlord.phone
+            first_name: (leaseConfig.landlord.name.split(' ')[0] || "Bailleur").trim(),
+            last_name: (leaseConfig.landlord.name.split(' ').slice(1).join(' ') || "Inconnu").trim(),
+            email: leaseConfig.landlord.email.trim(),
+            phone_number: normalizePhone(leaseConfig.landlord.phone)
         });
+
+        console.log("[Sign] Signers payload:", JSON.stringify(signers, null, 2));
 
         // 5. Initiate via Yousign
         const signatureId = await YousignService.initiateSignatureRequest(
@@ -177,7 +185,12 @@ export async function POST(
         return NextResponse.json({ success: true, signatureId });
 
     } catch (error: any) {
-        console.error("Sign Trigger Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Extract the most useful error message
+        const detail = error?.response?.data?.detail
+            || error?.response?.data?.message
+            || error?.response?.data
+            || error.message;
+        console.error("Sign Trigger Error:", JSON.stringify(detail, null, 2) || error);
+        return NextResponse.json({ error: typeof detail === 'string' ? detail : JSON.stringify(detail) }, { status: 500 });
     }
 }
