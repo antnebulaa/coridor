@@ -72,25 +72,38 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
 
     const canSign = missingFields.length === 0;
 
-    // Generate PDF blob on mount
+    // Load PDF blob on mount: signed PDF if available, otherwise generate
     useEffect(() => {
         let cancelled = false;
 
-        async function generatePdf() {
+        async function loadPdf() {
             try {
+                // If signed and we have a valid URL, fetch the signed PDF
+                if (status === 'SIGNED' && signedUrl && !signedUrl.includes('example.com') && !signedUrl.startsWith('data:')) {
+                    const res = await fetch(signedUrl);
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        if (!cancelled) setPdfBlob(blob);
+                        return;
+                    }
+                    // If fetch failed, fall through to generate
+                    console.warn('Failed to fetch signed PDF, falling back to generated');
+                }
+
+                // Generate PDF from lease config
                 const { pdf } = await import('@react-pdf/renderer');
                 const blob = await pdf(<LeaseDocument data={leaseConfig} />).toBlob();
                 if (!cancelled) setPdfBlob(blob);
             } catch (err) {
-                console.error('PDF generation error:', err);
+                console.error('PDF load error:', err);
             } finally {
                 if (!cancelled) setPdfLoading(false);
             }
         }
 
-        generatePdf();
+        loadPdf();
         return () => { cancelled = true; };
-    }, [leaseConfig]);
+    }, [leaseConfig, status, signedUrl]);
 
     const handleSign = async () => {
         try {
