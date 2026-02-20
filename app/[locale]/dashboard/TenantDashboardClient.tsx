@@ -200,7 +200,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                         {/* Candidatures */}
                         <Link
                             href="/dashboard/applications"
-                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 hover:shadow-md transition group"
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 hover:shadow-md transition group animate-pulse"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <FolderOpen size={16} className="text-neutral-400" />
@@ -220,7 +220,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                         {/* Prochain RDV */}
                         <Link
                             href="/calendar"
-                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 hover:shadow-md transition group"
+                            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 hover:shadow-md transition group animate-pulse"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <Calendar size={16} className="text-neutral-400" />
@@ -344,7 +344,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     {/* === PASSEPORT LOCATIF (progressive disclosure) === */}
                     {passportLoading ? (
                         <div
-                            className="rounded-2xl p-5 animate-pulse"
+                            className="rounded-3xl p-5 animate-pulse"
                             style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%)' }}
                         >
                             <div className="h-4 w-32 bg-white/10 rounded mb-3" />
@@ -357,34 +357,34 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
 
                     {/* === ACCES RAPIDE === */}
                     <div>
-                        <h2 className="text-sm font-semibold text-neutral-500 mb-3">Accès rapide</h2>
+                        
                         <div className="grid grid-cols-3 gap-3">
                             <Link
                                 href="/account/tenant-profile"
-                                className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
                                     <FileText size={18} className="text-blue-600 dark:text-blue-400" />
                                 </div>
-                                <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">Mon dossier</span>
+                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-leftr">Dossier</span>
                             </Link>
                             <Link
                                 href="/account/receipts"
-                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
                                     <Receipt size={18} className="text-amber-600 dark:text-amber-400" />
                                 </div>
-                                <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">Quittances</span>
+                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Quittances</span>
                             </Link>
                             <Link
                                 href="/account/alerts"
-                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
                                 <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
                                     <BellRing size={18} className="text-purple-600 dark:text-purple-400" />
                                 </div>
-                                <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 text-center">Alertes</span>
+                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Alertes</span>
                             </Link>
                         </div>
                     </div>

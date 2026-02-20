@@ -63,6 +63,9 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             if (lastMessage.body === 'INVITATION_VISITE') return 'Invitation à une visite';
             if (lastMessage.body.startsWith('VISIT_CONFIRMED|')) return 'Visite confirmée';
             if (lastMessage.body.startsWith('APPLICATION_REJECTED|')) return 'Candidature déclinée';
+            if (lastMessage.body.startsWith('INSPECTION_STARTED|')) return "🏠 État des lieux démarré";
+            if (lastMessage.body.startsWith('INSPECTION_SIGNED|')) return '✅ État des lieux signé';
+            if (lastMessage.body.startsWith('INSPECTION_PDF_READY|')) return '📄 PDF disponible';
             return lastMessage.body;
         }
 

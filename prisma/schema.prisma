@@ -148,6 +148,10 @@ model User {
 
   // --- Passeport Locatif ---
   landlordReviews   LandlordReview[] @relation("LandlordReviews")
+
+  // --- État des Lieux ---
+  inspectionsAsLandlord Inspection[] @relation("InspectionLandlord")
+  inspectionsAsTenant   Inspection[] @relation("InspectionTenant")
 }
 
 model TenantProfile {
@@ -382,6 +386,9 @@ model Property {
 
   legalReminders      LegalReminder[]
 
+  // --- État des Lieux ---
+  inspections         Inspection[]
+
   @@index([ownerId])
 }
 
@@ -590,6 +597,9 @@ model Room {
   
   // Reverse relation for RentalUnit logic targeting a specific room
   rentalUnits RentalUnit[]
+
+  // --- État des Lieux ---
+  inspectionRooms InspectionRoom[]
 
   @@index([propertyId])
 }
@@ -822,6 +832,9 @@ model RentalApplication {
 
   // --- Guide d'emménagement ---
   moveInGuide        MoveInGuide?
+
+  // --- État des Lieux ---
+  inspections        Inspection[]
 
   @@index([listingId])
   @@index([candidateScopeId])
@@ -1473,6 +1486,82 @@ enum ReviewRating {
   NEGATIVE    // Problematique / Non / Degradations
 }
 
+// ---- ÉTAT DES LIEUX (EDL) ----
+
+enum InspectionType {
+  ENTRY
+  EXIT
+}
+
+enum InspectionStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  SIGNED
+  LOCKED
+  AMENDED
+}
+
+enum MeterType {
+  ELECTRICITY
+  WATER
+  GAS
+}
+
+enum InspectionRoomType {
+  ENTRY
+  HALLWAY
+  LIVING
+  BEDROOM
+  KITCHEN
+  BATHROOM
+  WC
+  LAUNDRY
+  OFFICE
+  DRESSING
+  BALCONY
+  TERRACE
+  CELLAR
+  PARKING
+  GARAGE
+  OTHER
+}
+
+enum ElementCategory {
+  FLOOR
+  WALL
+  CEILING
+  EQUIPMENT
+}
+
+enum ElementCondition {
+  NEW
+  GOOD
+  NORMAL_WEAR
+  DEGRADED
+  OUT_OF_SERVICE
+}
+
+enum ElementEvolution {
+  UNCHANGED
+  NORMAL_WEAR
+  DETERIORATION
+  IMPROVEMENT
+}
+
+enum PhotoType {
+  OVERVIEW
+  SURFACE
+  DETAIL
+  METER
+  KEY
+}
+
+enum AmendmentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model RentPaymentTracking {
   id                  String   @id @default(uuid())
   rentalApplicationId String
@@ -1658,4 +1747,210 @@ model MoveInGuide {
   updatedAt             DateTime  @updatedAt
 
   rentalApplication     RentalApplication @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
+}
+
+// ---- ÉTAT DES LIEUX (EDL) — Modèles ----
+
+model Inspection {
+  id                    String           @id @default(uuid())
+  type                  InspectionType
+  status                InspectionStatus @default(DRAFT)
+  applicationId         String
+  propertyId            String
+
+  // Parties
+  landlordId            String
+  tenantId              String?
+  tenantPresent         Boolean          @default(true)
+  representativeName    String?          // Mandataire si locataire absent
+  representativeMandate String?          // URL du mandat (Cloudinary)
+
+  // Dates
+  scheduledAt           DateTime?
+  startedAt             DateTime?
+  completedAt           DateTime?
+
+  // Signatures — stockées en JSON { svg, timestamp, ip, userAgent, geoloc }
+  landlordSignature     Json?
+  tenantSignature       Json?
+  landlordSignedAt      DateTime?
+  tenantSignedAt        DateTime?
+
+  // Réserves du locataire (texte libre)
+  tenantReserves        String?
+
+  // [Sortie] Diff avec l'EDL d'entrée
+  entryInspectionId     String?  @unique
+
+  // PDF final
+  pdfUrl                String?
+
+  // Observations générales
+  generalObservations   String?
+
+  // Relations
+  application           RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  property              Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  landlord              User              @relation("InspectionLandlord", fields: [landlordId], references: [id])
+  tenant                User?             @relation("InspectionTenant", fields: [tenantId], references: [id])
+  entryInspection       Inspection?       @relation("InspectionDiff", fields: [entryInspectionId], references: [id])
+  exitInspection        Inspection?       @relation("InspectionDiff")
+
+  meters                InspectionMeter[]
+  keys                  InspectionKey[]
+  rooms                 InspectionRoom[]
+  photos                InspectionPhoto[]
+  furniture             InspectionFurniture[]
+  amendments            InspectionAmendment[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([applicationId, type])
+  @@index([applicationId])
+  @@index([landlordId])
+  @@index([propertyId])
+}
+
+model InspectionMeter {
+  id                    String    @id @default(uuid())
+  inspectionId          String
+  type                  MeterType
+  meterNumber           String?   // Numéro du compteur (PDL, PCE, etc.)
+  indexValue            String?   // Valeur de l'index (texte pour gérer les virgules)
+  photoUrl              String?   // Photo du compteur (Cloudinary)
+  photoThumbnailUrl     String?
+  noGas                 Boolean   @default(false) // "Pas de gaz" coché
+
+  inspection            Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([inspectionId, type])
+}
+
+model InspectionKey {
+  id                    String  @id @default(uuid())
+  inspectionId          String
+  type                  String  // "Porte", "BAL", "Cave", "Badge", "Télécommande", custom...
+  quantity              Int     @default(0)
+
+  inspection            Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([inspectionId])
+}
+
+model InspectionRoom {
+  id                    String             @id @default(uuid())
+  inspectionId          String
+  roomType              InspectionRoomType
+  name                  String             // Nom affiché ("Chambre 1", "Salon", etc.)
+  order                 Int                @default(0) // Ordre d'affichage
+  isCompleted           Boolean            @default(false)
+  observations          String?            // Observation générale de la pièce (audio/texte)
+
+  // Lien optionnel vers la Room physique du bien
+  physicalRoomId        String?
+
+  inspection            Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  physicalRoom          Room?      @relation(fields: [physicalRoomId], references: [id])
+
+  elements              InspectionElement[]
+  photos                InspectionPhoto[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([inspectionId])
+}
+
+model InspectionElement {
+  id                    String           @id @default(uuid())
+  inspectionRoomId      String
+  category              ElementCategory  // FLOOR, WALL, CEILING, EQUIPMENT
+  name                  String           // "Sols", "Murs", "Plafond", "Fenêtre(s)", "Évier", etc.
+  nature                String?          // Nature du revêtement : "Parquet", "Carrelage", "Peinture"...
+  condition             ElementCondition? // Neuf, Bon, Usure norm., Dégradé, H.S.
+  isAbsent              Boolean          @default(false) // Équipement inexistant (chip "Absent")
+  observations          String?          // Observation texte (dictée ou clavier)
+  degradationTypes      String[]         // ["Tache", "Rayure", "Fissure", ...] multi-sélection
+
+  // [Sortie] Comparaison avec l'entrée
+  evolution             ElementEvolution?
+
+  inspectionRoom        InspectionRoom @relation(fields: [inspectionRoomId], references: [id], onDelete: Cascade)
+  photos                InspectionPhoto[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([inspectionRoomId])
+}
+
+model InspectionPhoto {
+  id                    String    @id @default(uuid())
+  inspectionId          String
+  inspectionRoomId      String?
+  inspectionElementId   String?
+  type                  PhotoType // OVERVIEW, SURFACE, DETAIL, METER, KEY
+  url                   String    // URL Cloudinary
+  thumbnailUrl          String?   // Thumbnail Cloudinary
+  sha256                String?   // Hash SHA-256 de l'original (preuve d'intégrité)
+
+  // Metadata probante
+  capturedAt            DateTime  @default(now()) // Timestamp serveur
+  latitude              Float?
+  longitude             Float?
+  deviceInfo            String?   // User-Agent
+
+  inspection            Inspection        @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  room                  InspectionRoom?   @relation(fields: [inspectionRoomId], references: [id], onDelete: Cascade)
+  element               InspectionElement? @relation(fields: [inspectionElementId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([inspectionId])
+  @@index([inspectionRoomId])
+  @@index([inspectionElementId])
+}
+
+model InspectionFurniture {
+  id                    String  @id @default(uuid())
+  inspectionId          String
+  name                  String  // "Lit", "Table", "Canapé", etc.
+  quantity              Int     @default(1)
+  condition             ElementCondition?
+  observations          String?
+
+  inspection            Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([inspectionId])
+}
+
+model InspectionAmendment {
+  id                    String          @id @default(uuid())
+  inspectionId          String
+  requestedBy           String          // userId du demandeur
+  status                AmendmentStatus @default(PENDING)
+  description           String          // Description de la rectification
+  elementId             String?         // Élément concerné (optionnel)
+  previousValue         Json?           // Valeur avant rectification
+  newValue              Json?           // Valeur après rectification
+  respondedAt           DateTime?
+  responseNote          String?
+
+  inspection            Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([inspectionId])
 }

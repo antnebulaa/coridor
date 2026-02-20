@@ -40,7 +40,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     const t = useTranslations('nav');
 
     const isAdmin = pathname?.includes('/admin');
-    if (!isMounted || isOpen || isContentMode || isTenantProfile || isPropertyEdit || isAdmin) {
+    const isInspection = pathname?.includes('/inspection');
+    if (!isMounted || isOpen || isContentMode || isTenantProfile || isPropertyEdit || isAdmin || isInspection) {
         return null;
     }
 

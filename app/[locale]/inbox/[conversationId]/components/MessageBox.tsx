@@ -109,6 +109,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
         // isMenuOpen && "scale-95 brightness-95", // Removed as per user feedback
         data.body === 'LEASE_SENT_FOR_SIGNATURE' ? "p-0" :
         data.body === 'INVITATION_VISITE' ? "p-0" :
+        data.body?.startsWith('INSPECTION_') ? "p-0" :
             (data.image || data.listing) ? "rounded-md p-0 overflow-hidden" :
                 clsx(
                     "overflow-hidden py-2 px-3",
@@ -444,6 +445,91 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         </button>
                                     )}
                                 </div>
+
+                            ) : data.body?.startsWith('INSPECTION_STARTED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspectionId = parts[1];
+                                    const inspType = parts[2];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-amber-50 border border-amber-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-amber-700 font-medium text-sm">
+                                                <span className="text-base">🏠</span>
+                                                {label} démarré
+                                            </div>
+                                            <div className="text-sm text-amber-600">
+                                                L&apos;inspection du logement est en cours.
+                                            </div>
+                                            {inspectionId && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.location.href = `/inspection/${inspectionId}`;
+                                                    }}
+                                                    className="mt-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition w-fit"
+                                                >
+                                                    Reprendre l&apos;EDL →
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_SIGNED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspType = parts[2];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-green-50 border border-green-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-green-700 font-medium text-sm">
+                                                <span className="text-base">✅</span>
+                                                {label} signé
+                                            </div>
+                                            <div className="text-sm text-green-600">
+                                                Signé par les deux parties. Le PDF sera envoyé par email.
+                                            </div>
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_PDF_READY|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const pdfUrl = parts[2];
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-blue-50 border border-blue-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+                                                <span className="text-base">📄</span>
+                                                PDF de l&apos;état des lieux
+                                            </div>
+                                            <div className="text-sm text-blue-600">
+                                                Le document est prêt et disponible en téléchargement.
+                                            </div>
+                                            {pdfUrl && (
+                                                <a
+                                                    href={pdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit inline-block"
+                                                >
+                                                    Voir le PDF
+                                                </a>
+                                            )}
+                                        </div>
+                                    );
+                                })()
 
                             ) : (
                                 <div>

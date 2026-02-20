@@ -15,7 +15,7 @@ const PassportCardInProgress: React.FC<PassportCardInProgressProps> = ({ data, o
 
     return (
         <div
-            className="rounded-2xl p-5 relative overflow-hidden"
+            className="rounded-3xl p-5 relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%)' }}
         >
             <div className="flex flex-col gap-4">

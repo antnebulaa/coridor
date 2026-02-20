@@ -42,3 +42,5 @@ next-env.d.ts
 
 /lib/generated/prisma
 prisma/seeds/bpe_data.csv
+
+certificates

@@ -20,17 +20,17 @@ const MoveInStoryCongrats: React.FC<MoveInStoryCongratsProps> = ({ lease, onNext
 
   return (
     <div
-      className="flex flex-col items-center justify-center h-full px-6 animate-scaleIn"
+      className="flex flex-col items-left justify-center h-full px-6 animate-scaleIn"
       style={{ background: 'linear-gradient(160deg, #FFF9F0 0%, #FFFFFF 50%, #F0F7FF 100%)' }}
     >
       {/* Emoji */}
       <div className="text-[64px] mb-4">🎉</div>
 
       {/* Titre */}
-      <h1 className="text-[28px] font-bold text-[#1A1A1A] text-center leading-tight mb-2">
+      <h1 className="text-[28px] font-medium text-[#1A1A1A] text-left leading-tight mb-2">
         Félicitations !
       </h1>
-      <p className="text-[15px] text-center leading-relaxed mb-8" style={{ color: 'rgba(0,0,0,0.5)' }}>
+      <p className="text-[15px] text-left leading-relaxed mb-8" style={{ color: 'rgba(0,0,0,0.5)' }}>
         Votre bail est signé.{'\n'}Bienvenue chez vous.
       </p>
 
@@ -45,12 +45,6 @@ const MoveInStoryCongrats: React.FC<MoveInStoryCongratsProps> = ({ lease, onNext
       >
         {/* Adresse */}
         <div className="flex items-center gap-3 mb-4">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#FFF6E8', border: '1px solid rgba(232,168,56,0.2)' }}
-          >
-            <span className="text-lg">🏠</span>
-          </div>
           <p className="text-[13px] font-medium text-[#1A1A1A] leading-snug">
             {lease.propertyAddress}
           </p>

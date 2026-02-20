@@ -56,6 +56,12 @@ interface ConversationClientProps {
         startTime: string;
         endTime: string;
     } | null;
+    inspectionData?: {
+        id: string;
+        status: string;
+        type: string;
+        pdfUrl: string | null;
+    } | null;
 }
 
 const ConversationClient: React.FC<ConversationClientProps> = ({
@@ -72,7 +78,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     applicationRejectionReason: initialRejectionReason,
     leaseStatus: initialLeaseStatus,
     conversationId,
-    confirmedVisit
+    confirmedVisit,
+    inspectionData
 }) => {
     const router = useRouter();
 
@@ -322,8 +329,31 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             });
         }
 
+        // EDL timeline step
+        if (inspectionData) {
+            if (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') {
+                steps.push({
+                    title: "État des lieux signé",
+                    description: "L'état des lieux a été signé par les deux parties.",
+                    completed: true
+                });
+            } else if (inspectionData.status === 'DRAFT') {
+                steps.push({
+                    title: "État des lieux en cours",
+                    description: "L'inspection du logement est en cours de réalisation.",
+                    completed: false
+                });
+            } else if (inspectionData.status === 'PENDING_SIGNATURE') {
+                steps.push({
+                    title: "État des lieux — signature",
+                    description: "En attente de la signature du locataire.",
+                    completed: false
+                });
+            }
+        }
+
         return steps;
-    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, isSelected, hasLeaseAction, initialLeaseStatus, applicationId]);
+    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, isSelected, hasLeaseAction, initialLeaseStatus, applicationId, inspectionData]);
 
     return (
         <div className="h-full flex flex-row">
@@ -422,15 +452,47 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         ">
                             {/* Lease status-based actions */}
                             {initialLeaseStatus === 'SIGNED' ? (
-                                <Button
-                                    label="Voir le bail signé"
-                                    outline
-                                    onClick={() => {
-                                        if (applicationId) {
-                                            window.open(`/leases/${applicationId}`, '_blank');
-                                        }
-                                    }}
-                                />
+                                <div className="flex flex-col gap-2">
+                                    <Button
+                                        label="Voir le bail signé"
+                                        outline
+                                        onClick={() => {
+                                            if (applicationId) {
+                                                window.open(`/leases/${applicationId}`, '_blank');
+                                            }
+                                        }}
+                                    />
+                                    {/* EDL action button */}
+                                    {!inspectionData || inspectionData.status === 'DRAFT' ? (
+                                        <button
+                                            onClick={() => {
+                                                if (inspectionData) {
+                                                    router.push(`/inspection/${inspectionData.id}`);
+                                                } else if (applicationId) {
+                                                    router.push(`/inspection/new/${applicationId}`);
+                                                }
+                                            }}
+                                            className="w-full py-2.5 px-4 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition"
+                                        >
+                                            🏠 {inspectionData ? "Reprendre l'EDL" : "Démarrer l'état des lieux"}
+                                        </button>
+                                    ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
+                                        inspectionData.pdfUrl && (
+                                            <a
+                                                href={inspectionData.pdfUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
+                                            >
+                                                📄 Voir le PDF de l&apos;EDL
+                                            </a>
+                                        )
+                                    ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
+                                        <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
+                                            ⏳ En attente de signature locataire
+                                        </div>
+                                    ) : null}
+                                </div>
                             ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
