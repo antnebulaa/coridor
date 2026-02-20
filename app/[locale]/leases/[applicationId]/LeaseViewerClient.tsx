@@ -423,14 +423,16 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
                                 <HiPrinter size={16} />
                                 Imprimer
                             </button>
-                            <button
-                                onClick={handleDownload}
-                                disabled={pdfLoading}
-                                className="flex items-center gap-2 px-3 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition shadow-sm disabled:opacity-50"
-                            >
-                                <HiArrowDownTray size={16} />
-                                <span className="hidden sm:inline">Télécharger</span>
-                            </button>
+                            {status !== 'SIGNED' && (
+                                <button
+                                    onClick={handleDownload}
+                                    disabled={pdfLoading}
+                                    className="flex items-center gap-2 px-3 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition shadow-sm disabled:opacity-50"
+                                >
+                                    <HiArrowDownTray size={16} />
+                                    <span className="hidden sm:inline">Télécharger</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

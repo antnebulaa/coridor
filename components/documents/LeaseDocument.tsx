@@ -308,9 +308,14 @@ const LeaseDocument: React.FC<LeaseDocumentProps> = ({ data }) => {
                         </Text>
                     </View>
 
-                    {(!isMobilite && !isStudent) && (
+                    {(!isMobilite && !isStudent && isFurnished) && (
                         <Text style={styles.text}>
-                            Le contrat est conclu pour une durée d'un an. A défaut de congé régulier, il se renouvelle par tacite reconduction pour une durée d'un an.
+                            Le contrat est conclu pour une durée d&apos;un an. À défaut de congé régulier, il se renouvelle par tacite reconduction pour une durée d&apos;un an.
+                        </Text>
+                    )}
+                    {(!isMobilite && !isStudent && !isFurnished) && (
+                        <Text style={styles.text}>
+                            Le contrat est conclu pour une durée de trois ans. À défaut de congé régulier, il se renouvelle par tacite reconduction pour une durée de trois ans.
                         </Text>
                     )}
                     {isStudent && (

@@ -611,13 +611,9 @@ export class LeaseService {
                 break;
         }
 
-        // Adjust deposit if stored in listing explicitly (securityDeposit is on Listing)
-        if (listing.securityDeposit !== null && listing.securityDeposit !== undefined) {
-            if (templateId === "BAIL_MOBILITE") {
-                deposit = 0;
-            } else {
-                deposit = listing.securityDeposit;
-            }
+        // Override deposit only if explicitly set to a positive value on the listing
+        if (listing.securityDeposit && listing.securityDeposit > 0 && templateId !== "BAIL_MOBILITE") {
+            deposit = listing.securityDeposit;
         }
 
         return {

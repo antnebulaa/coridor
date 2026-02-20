@@ -71,9 +71,25 @@ export class YousignService {
             const docData = await uploadRes.json();
             const documentId = docData.id;
 
+            // Count PDF pages to place signatures on the last page
+            const pdfStr = pdfBuffer.toString('latin1');
+            const pageMatches = pdfStr.match(/\/Type\s*\/Page(?!s)/g);
+            const totalPages = pageMatches ? pageMatches.length : 4; // fallback 4 pages
+            console.log("[Yousign] PDF has", totalPages, "pages");
+
+            // Signature positions on last page (A4: 595x842pt, padding 30pt)
+            // Landlord box: left side, bottom area
+            // Tenant box: right side, bottom area
+            const signerPositions = [
+                { x: 50, y: 692, width: 220, height: 80 },   // LE BAILLEUR (left)
+                { x: 320, y: 692, width: 220, height: 80 },  // LE(S) LOCATAIRE(S) (right)
+            ];
+
             // 3. Add Signers
             console.log("[Yousign] 3. Adding Signers...");
-            for (const signer of signers) {
+            for (let i = 0; i < signers.length; i++) {
+                const signer = signers[i];
+                const pos = signerPositions[Math.min(i, signerPositions.length - 1)];
                 await axios.post(
                     `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`,
                     {
@@ -84,14 +100,15 @@ export class YousignService {
                             phone_number: signer.phone_number,
                             locale: "fr"
                         },
-                        // Default to Page 1 signature if anchors fail, but we hope for anchors later.
                         fields: [
                             {
                                 document_id: documentId,
                                 type: "signature",
-                                page: 1,
-                                x: 100, // Arbitrary placement if anchors miss
-                                y: 100
+                                page: totalPages,
+                                x: pos.x,
+                                y: pos.y,
+                                width: pos.width,
+                                height: pos.height
                             }
                         ],
                         signature_level: "electronic_signature",
