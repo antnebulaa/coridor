@@ -146,6 +146,9 @@ export default async function getActiveRental() {
                 electricMeterPDL: property.electricMeterPDL,
             },
 
+            // Lease renewal info
+            leaseType: listing.leaseType || null,
+
             // Listing info
             listing: {
                 id: listing.id,

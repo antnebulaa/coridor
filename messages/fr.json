@@ -1542,7 +1542,9 @@
         "leaseEnd": {
             "title": "Fin de bail",
             "description": "Votre bail se termine le {date}.",
-            "noticePeriod": "Pour un départ anticipé, le préavis est de 1 à 3 mois selon votre situation."
+            "noticePeriod": "Pour un départ anticipé, le préavis est de 1 à 3 mois selon votre situation.",
+            "renewable": "Bail renouvelable par tacite reconduction",
+            "notRenewable": "Bail non renouvelable"
         },
         "empty": {
             "title": "Pas encore de logement",

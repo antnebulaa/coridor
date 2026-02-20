@@ -510,11 +510,22 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                             <p className="text-sm text-neutral-600 dark:text-neutral-400">
                                 {t('leaseEnd.description', { date: leaseEndInfo.date })}
                             </p>
-                            {rental.leaseDurationMonths && (
-                                <p className="text-sm text-neutral-500 mt-2">
-                                    {t('leaseEnd.noticePeriod')}
-                                </p>
+                            {/* Renewal info */}
+                            {rental.leaseType && (
+                                <div className={`flex items-center gap-2 mt-3 text-sm font-medium ${
+                                    rental.leaseType === 'BAIL_ETUDIANT' || rental.leaseType === 'STUDENT' || rental.leaseType === 'BAIL_MOBILITE'
+                                        ? 'text-amber-600 dark:text-amber-400'
+                                        : 'text-green-600 dark:text-green-400'
+                                }`}>
+                                    {rental.leaseType === 'BAIL_ETUDIANT' || rental.leaseType === 'STUDENT' || rental.leaseType === 'BAIL_MOBILITE'
+                                        ? t('leaseEnd.notRenewable')
+                                        : t('leaseEnd.renewable')
+                                    }
+                                </div>
                             )}
+                            <p className="text-sm text-neutral-500 mt-2">
+                                {t('leaseEnd.noticePeriod')}
+                            </p>
                         </div>
                     )}
 

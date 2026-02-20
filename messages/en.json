@@ -1508,7 +1508,9 @@
         "leaseEnd": {
             "title": "Lease end",
             "description": "Your lease ends on {date}.",
-            "noticePeriod": "For early departure, notice period is 1 to 3 months depending on your situation."
+            "noticePeriod": "For early departure, notice period is 1 to 3 months depending on your situation.",
+            "renewable": "Lease automatically renewed by tacit agreement",
+            "notRenewable": "Non-renewable lease"
         },
         "empty": {
             "title": "No home yet",
