@@ -131,6 +131,18 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                     color = 'bg-indigo-500';
                     label = t('status.visitConfirmed');
                     break;
+                case 'SELECTED':
+                    color = 'bg-green-500';
+                    label = 'Candidature retenue';
+                    break;
+                case 'SHORTLISTED':
+                    color = 'bg-emerald-500';
+                    label = 'Présélectionné';
+                    break;
+                case 'FINALIST':
+                    color = 'bg-emerald-500';
+                    label = 'Finaliste';
+                    break;
                 case 'ACCEPTED':
                     color = 'bg-green-500';
                     label = t('status.accepted');

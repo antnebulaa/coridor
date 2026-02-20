@@ -166,13 +166,13 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     let leaseStatus: string | null = null;
     let confirmedVisit = null;
 
-    if (safeListing && otherUser) {
-        // We need to find the application linking this user (via scope) and this property
+    if (safeListing && otherUser && currentUser) {
+        // Find the application for this listing — scope could be from either participant
         const application = await prisma.rentalApplication.findFirst({
             where: {
                 listingId: safeListing.id,
                 candidateScope: {
-                    creatorUserId: otherUser.id
+                    creatorUserId: { in: [otherUser.id, currentUser.id] }
                 }
             },
             select: { id: true, status: true, rejectionReason: true, leaseStatus: true }

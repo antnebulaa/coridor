@@ -210,6 +210,9 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     }, [confirmedVisit, listing]);
 
     // Timeline Steps Logic
+    const isSelected = initialApplicationStatus === 'SELECTED' || initialApplicationStatus === 'SHORTLISTED' || initialApplicationStatus === 'FINALIST';
+    const hasLeaseAction = initialLeaseStatus === 'PENDING_SIGNATURE' || initialLeaseStatus === 'SIGNED';
+
     const timelineSteps = useMemo(() => {
         const steps: { title: string; description: any; completed: boolean }[] = [
             {
@@ -265,6 +268,16 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             });
         }
 
+        // Selected / shortlisted — show if explicitly selected OR if lease process has started
+        if (isSelected || hasLeaseAction) {
+            steps.push({
+                title: "Candidature retenue",
+                description: "Votre profil a été sélectionné par le propriétaire.",
+                completed: true
+            });
+        }
+
+        // Lease steps
         if (initialLeaseStatus === 'PENDING_SIGNATURE') {
             steps.push({
                 title: "Bail envoyé pour signature",
@@ -284,6 +297,12 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 completed: true
             });
         } else if (initialLeaseStatus === 'SIGNED') {
+            // Show both steps when signed: the signature step (completed) + signed step
+            steps.push({
+                title: "Bail envoyé pour signature",
+                description: "Le bail a été envoyé pour signature électronique.",
+                completed: true
+            });
             steps.push({
                 title: "Bail signé",
                 description: (
@@ -304,7 +323,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         }
 
         return steps;
-    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, initialLeaseStatus, applicationId]);
+    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, isSelected, hasLeaseAction, initialLeaseStatus, applicationId]);
 
     return (
         <div className="h-full flex flex-row">
