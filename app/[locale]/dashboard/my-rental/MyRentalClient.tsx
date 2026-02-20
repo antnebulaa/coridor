@@ -395,44 +395,26 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                         <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{t('documents.title')}</h2>
 
                         <div className="flex flex-col gap-2">
-                            {/* Bail signé */}
-                            {rental.signedLeaseUrl ? (
-                                <a
-                                    href={rental.signedLeaseUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <FileText size={18} className="text-neutral-500" />
-                                        <div>
-                                            <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('documents.lease')}</div>
-                                            {rental.leaseStartDate && (
-                                                <div className="text-xs text-neutral-400">
-                                                    {t('documents.signedOn', { date: formatDate(rental.leaseStartDate) })}
-                                                </div>
-                                            )}
-                                        </div>
+                            {/* Bail */}
+                            <Link
+                                href={`/leases/${rental.applicationId}`}
+                                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <FileText size={18} className="text-neutral-500" />
+                                    <div>
+                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('documents.lease')}</div>
+                                        {rental.leaseStatus === 'SIGNED' && rental.leaseStartDate ? (
+                                            <div className="text-xs text-neutral-400">
+                                                {t('documents.signedOn', { date: formatDate(rental.leaseStartDate) })}
+                                            </div>
+                                        ) : rental.leaseStatus === 'PENDING_SIGNATURE' ? (
+                                            <div className="text-xs text-amber-500">En attente de signature</div>
+                                        ) : null}
                                     </div>
-                                    <Download size={16} className="text-neutral-400" />
-                                </a>
-                            ) : (
-                                <Link
-                                    href={`/leases/${rental.applicationId}`}
-                                    className="flex items-center justify-between p-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <FileText size={18} className="text-neutral-500" />
-                                        <div>
-                                            <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('documents.lease')}</div>
-                                            {rental.leaseStatus === 'PENDING_SIGNATURE' && (
-                                                <div className="text-xs text-amber-500">En attente de signature</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <ChevronRight size={16} className="text-neutral-400" />
-                                </Link>
-                            )}
+                                </div>
+                                <ChevronRight size={16} className="text-neutral-400" />
+                            </Link>
 
                             {/* Dernière quittance */}
                             {rental.lastReceipt ? (
