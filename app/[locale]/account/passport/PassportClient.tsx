@@ -15,6 +15,7 @@ import {
     ShieldCheck,
     Loader2,
     ChevronDown,
+    UserCheck,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Container from "@/components/Container";
@@ -200,6 +201,128 @@ function RatingDot({ rating }: { rating: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' }) 
         NEGATIVE: 'bg-red-500',
     };
     return <div className={`w-3 h-3 rounded-full ${colors[rating]}`} />;
+}
+
+// ── Landlord Preview Card ──────────────────────────────────────────────────
+
+function LandlordPreviewCard({
+    settings,
+    score,
+    rentalHistory,
+    evaluations,
+    t,
+    formatDate,
+}: {
+    settings: PassportSettings;
+    score: PassportScore;
+    rentalHistory: RentalHistoryEntry[];
+    evaluations: { historyEntry: RentalHistoryEntry; review: LandlordReview }[];
+    t: ReturnType<typeof useTranslations>;
+    formatDate: (d: string) => string;
+}) {
+    if (!settings.isEnabled) return null;
+
+    const visibleHistory = rentalHistory.filter(rh => !rh.isHidden);
+    const sharedReviews = evaluations.filter(e => e.review.tenantConsented);
+
+    const confidenceStyles = {
+        HIGH: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        MEDIUM: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        LOW: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
+    };
+
+    const hasContent =
+        (settings.showPaymentBadge) ||
+        (settings.showRentalHistory && visibleHistory.length > 0) ||
+        (settings.showLandlordReviews && sharedReviews.length > 0);
+
+    return (
+        <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+                <UserCheck size={16} />
+                <span className="font-medium">{t('landlordPreview.title')}</span>
+                <span>—</span>
+                <span>{t('landlordPreview.description')}</span>
+            </div>
+
+            <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-xl p-5 bg-white dark:bg-neutral-900/50">
+                {!hasContent ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                        {t('landlordPreview.noData')}
+                    </p>
+                ) : (
+                    <div className="flex flex-col gap-4">
+                        {/* Confidence badge — landlord never sees the score */}
+                        <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${confidenceStyles[score.confidence]}`}>
+                                <ShieldCheck size={12} />
+                                {t(`confidence.${score.confidence}`)}
+                            </span>
+                        </div>
+
+                        {/* Payment badge */}
+                        {settings.showPaymentBadge && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <CheckCircle size={14} className="text-blue-500 shrink-0" />
+                                <span className="text-foreground font-medium">
+                                    {t('sharing.showPaymentBadge.label')}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Rental history */}
+                        {settings.showRentalHistory && visibleHistory.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    {t('landlordPreview.rentalHistory')}
+                                </span>
+                                <div className="flex flex-col gap-1">
+                                    {visibleHistory.slice(0, 5).map(entry => (
+                                        <div key={entry.id} className="flex items-center gap-2 text-sm">
+                                            {entry.isVerified ? (
+                                                <CheckCircle size={14} className="text-green-500 shrink-0" />
+                                            ) : (
+                                                <Clock size={14} className="text-neutral-400 shrink-0" />
+                                            )}
+                                            <span className="text-foreground font-medium">{entry.city}</span>
+                                            <span className="text-muted-foreground">
+                                                {formatDate(entry.startDate)} — {entry.endDate ? formatDate(entry.endDate) : t('landlordPreview.current')}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Evaluations */}
+                        {settings.showLandlordReviews && sharedReviews.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    {t('landlordPreview.evaluations')}
+                                </span>
+                                <div className="flex flex-col gap-1">
+                                    {sharedReviews.map(({ review }, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 text-sm">
+                                            <div className="flex items-center gap-1">
+                                                {CRITERIA_ORDER.map(criterion => {
+                                                    const s = review.scores.find(sc => sc.criterion === criterion);
+                                                    if (!s) return null;
+                                                    return <RatingDot key={criterion} rating={s.rating} />;
+                                                })}
+                                            </div>
+                                            <span className="text-muted-foreground">
+                                                {review.compositeScore.toFixed(2)} / 3.00
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
@@ -476,6 +599,16 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
                             />
                         </div>
                     </div>
+
+                    {/* ─── Landlord Preview ─────────────────────────────── */}
+                    <LandlordPreviewCard
+                        settings={settings}
+                        score={score}
+                        rentalHistory={rentalHistory}
+                        evaluations={evaluations}
+                        t={t}
+                        formatDate={formatDate}
+                    />
 
                     {/* ─── Rental History Section ──────────────────────────── */}
                     <div className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-card">

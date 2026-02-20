@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -13,14 +14,7 @@ const EditPropertyPage = async ({ params }: { params: Promise<IParams> }) => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     if (!listing) {

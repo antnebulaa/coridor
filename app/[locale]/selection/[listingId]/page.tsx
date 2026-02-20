@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -35,14 +36,7 @@ const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Non autorise"
-                    subtitle="Veuillez vous connecter"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     const { listingId } = await params;

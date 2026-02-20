@@ -2,6 +2,7 @@ import getConversations from "@/app/actions/getConversations";
 import Sidebar from "@/components/sidebar/Sidebar";
 import ConversationList from "./ConversationList";
 import InteractiveViewportWrapper from "@/components/InteractiveViewportWrapper";
+import { redirect } from 'next/navigation';
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 
@@ -12,6 +13,7 @@ export default async function InboxLayout({
 }) {
     const conversations = await getConversations();
     const currentUser = await getCurrentUser();
+    if (!currentUser) { redirect('/'); }
 
     return (
         <InteractiveViewportWrapper>

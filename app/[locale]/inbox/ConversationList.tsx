@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { FullConversationType, SafeUser } from "@/types";
 import clsx from "clsx";
 import ConversationBox from "./ConversationBox";
@@ -113,6 +113,26 @@ const ConversationList: React.FC<ConversationListProps> = ({
         return counts;
     }, [items, currentUser]);
 
+    // Tabs scroll fade
+    const tabsRef = useRef<HTMLDivElement>(null);
+    const [tabsFade, setTabsFade] = useState({ left: false, right: false });
+
+    const updateTabsFade = useCallback(() => {
+        const el = tabsRef.current;
+        if (!el) return;
+        const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+        setTabsFade({
+            left: el.scrollLeft > 4,
+            right: hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 4
+        });
+    }, []);
+
+    useEffect(() => {
+        updateTabsFade();
+        window.addEventListener('resize', updateTabsFade);
+        return () => window.removeEventListener('resize', updateTabsFade);
+    }, [updateTabsFade]);
+
     return (
         <aside className={clsx(
             /* Base Styles */
@@ -136,106 +156,44 @@ const ConversationList: React.FC<ConversationListProps> = ({
                     </div>
                 </div>
 
-                <div className="flex gap-2 pb-2 overflow-x-auto">
-                    <button
-                        onClick={() => setCurrentTab('all')}
-                        className={clsx(`
-                            px-4
-                            py-2
-                            text-sm 
-                            font-medium 
-                            transition
-                            relative
-                            flex
-                            items-center
-                            gap-2
-                            rounded-full
-                        `,
-                            currentTab === 'all'
-                                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-                        )}
+                <div className="relative">
+                    {tabsFade.left && (
+                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-r from-background to-transparent z-10 pointer-events-none" />
+                    )}
+                    <div
+                        ref={tabsRef}
+                        onScroll={updateTabsFade}
+                        className="flex gap-2 overflow-x-auto"
+                        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
                     >
-                        {t('tabs.all')}
-                    </button>
-                    <button
-                        onClick={() => setCurrentTab('tenant')}
-                        className={clsx(`
-                            px-4
-                            py-2
-                            text-sm 
-                            font-medium 
-                            transition
-                            relative
-                            flex
-                            items-center
-                            gap-2
-                            rounded-full
-                        `,
-                            currentTab === 'tenant'
-                                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-                        )}
-                    >
-                        {t('tabs.tenant')}
-                        {unreadCounts.tenant > 0 && (
-                            <div className="bg-red-500 text-white text-[10px] px-1.5 h-4 rounded-full flex items-center justify-center">
-                                {unreadCounts.tenant > 9 ? '9+' : unreadCounts.tenant}
-                            </div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setCurrentTab('landlord')}
-                        className={clsx(`
-                            px-4 
-                            py-2
-                            text-sm 
-                            font-medium 
-                            transition
-                            relative
-                            flex
-                            items-center
-                            gap-2
-                            rounded-full
-                        `,
-                            currentTab === 'landlord'
-                                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-                        )}
-                    >
-                        {t('tabs.landlord')}
-                        {unreadCounts.landlord > 0 && (
-                            <div className="bg-red-500 text-white text-[10px] px-1.5 h-4 rounded-full flex items-center justify-center">
-                                {unreadCounts.landlord > 9 ? '9+' : unreadCounts.landlord}
-                            </div>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setCurrentTab('support')}
-                        className={clsx(`
-                            px-4 
-                            py-2
-                            text-sm 
-                            font-medium 
-                            transition
-                            relative
-                            flex
-                            items-center
-                            gap-2
-                            rounded-full
-                        `,
-                            currentTab === 'support'
-                                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-                        )}
-                    >
-                        {t('tabs.support')}
-                        {unreadCounts.support > 0 && (
-                            <div className="bg-red-500 text-white text-[10px] px-1.5 h-4 rounded-full flex items-center justify-center">
-                                {unreadCounts.support > 9 ? '9+' : unreadCounts.support}
-                            </div>
-                        )}
-                    </button>
+                        {([
+                            { key: 'all' as Tab, label: t('tabs.all') },
+                            { key: 'tenant' as Tab, label: t('tabs.tenant'), count: unreadCounts.tenant },
+                            { key: 'landlord' as Tab, label: t('tabs.landlord'), count: unreadCounts.landlord },
+                            { key: 'support' as Tab, label: t('tabs.support'), count: unreadCounts.support },
+                        ]).map(tab => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setCurrentTab(tab.key)}
+                                className={clsx(
+                                    'px-4 py-2 text-sm font-medium transition flex items-center gap-2 rounded-full whitespace-nowrap shrink-0',
+                                    currentTab === tab.key
+                                        ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                                )}
+                            >
+                                {tab.label}
+                                {tab.count && tab.count > 0 ? (
+                                    <div className="bg-red-500 text-white text-[10px] px-1.5 h-4 rounded-full flex items-center justify-center">
+                                        {tab.count > 9 ? '9+' : tab.count}
+                                    </div>
+                                ) : null}
+                            </button>
+                        ))}
+                    </div>
+                    {tabsFade.right && (
+                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-l from-background to-transparent z-10 pointer-events-none" />
+                    )}
                 </div>
             </div>
 

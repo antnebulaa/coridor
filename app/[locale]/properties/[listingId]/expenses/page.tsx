@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "@/components/ClientOnly";
@@ -13,14 +14,7 @@ const ExpensesPage = async ({ params }: { params: Promise<IParams> }) => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Non autorisé"
-                    subtitle="Veuillez vous connecter pour accéder à cette page."
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     // 1. Resolve Property ID from Listing ID

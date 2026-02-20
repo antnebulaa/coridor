@@ -1,4 +1,4 @@
-import EmptyState from "@/components/EmptyState";
+import { redirect } from "next/navigation";
 import ClientOnly from "@/components/ClientOnly";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -12,14 +12,7 @@ const PropertiesPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        )
+        redirect('/');
     }
 
     const properties = await getProperties();

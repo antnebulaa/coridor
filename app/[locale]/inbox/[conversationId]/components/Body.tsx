@@ -20,6 +20,7 @@ interface BodyProps {
         startTime: string;
         endTime: string;
     } | null;
+    leaseStatus?: string | null;
 }
 
 const Body: React.FC<BodyProps> = ({
@@ -29,7 +30,8 @@ const Body: React.FC<BodyProps> = ({
     onOpenListingRecap,
     showDossier,
     applicationId,
-    confirmedVisit
+    confirmedVisit,
+    leaseStatus
 }) => {
     const [messages, setMessages] = useState(initialMessages);
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -69,6 +71,7 @@ const Body: React.FC<BodyProps> = ({
                     onOpenListingRecap={onOpenListingRecap}
                     showDossier={showDossier}
                     applicationId={applicationId}
+                    leaseStatus={leaseStatus}
                     isMenuOpen={activeMessageId === message.id}
                     onOpenMenu={() => setActiveMessageId(message.id)}
                     onCloseMenu={() => setActiveMessageId(null)}

@@ -96,7 +96,8 @@ export async function POST(request: Request) {
                         }
                     }
                 },
-                candidateScope: true
+                candidateScope: true,
+                financials: { where: { endDate: null }, take: 1 }
             }
         });
 
@@ -118,12 +119,35 @@ export async function POST(request: Request) {
                     console.error("[Yousign Webhook] Failed to get signed document:", err);
                 }
 
-                // Update application status
+                // Compute lease dates from financials or candidateScope
+                const financial = application.financials?.[0];
+                const leaseStartDate = financial?.startDate
+                    || application.candidateScope?.targetMoveInDate
+                    || new Date();
+
+                // Determine duration from application or lease type defaults
+                const listing = application.listing;
+                const leaseType = listing?.leaseType;
+                let durationMonths = (application as any).leaseDurationMonths;
+                if (!durationMonths) {
+                    if (leaseType === 'BAIL_NU_LOI_89' || leaseType === 'LONG_TERM') durationMonths = 36;
+                    else if (leaseType === 'BAIL_ETUDIANT' || leaseType === 'STUDENT') durationMonths = 9;
+                    else if (leaseType === 'BAIL_MOBILITE') durationMonths = 10;
+                    else durationMonths = 12; // meublé default
+                }
+
+                const leaseEndDate = new Date(leaseStartDate);
+                leaseEndDate.setMonth(leaseEndDate.getMonth() + durationMonths);
+
+                // Update application status + lease dates
                 await prisma.rentalApplication.update({
                     where: { id: application.id },
                     data: {
                         leaseStatus: "SIGNED",
-                        signedLeaseUrl: signedUrl
+                        signedLeaseUrl: signedUrl,
+                        leaseStartDate,
+                        leaseEndDate,
+                        leaseDurationMonths: durationMonths,
                     }
                 });
 

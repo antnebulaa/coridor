@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 18 février 2026
+> Dernière mise à jour : 20 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -20,7 +20,8 @@
 - [✅] Adjectif marketing pour l'annonce (`propertyAdjective`) — utilisé dans ListingCard + RentModal
 
 ### Candidatures & Pipeline
-- [✅] Pipeline candidat : `RentalApplication` avec statuts (PENDING → SENT → VISIT_PROPOSED → VISIT_CONFIRMED → ACCEPTED / REJECTED)
+- [✅] Pipeline candidat : `RentalApplication` avec statuts complets (PENDING → SENT → VISIT_PROPOSED → VISIT_CONFIRMED → SHORTLISTED → FINALIST → SELECTED → ACCEPTED / REJECTED)
+- [✅] Sélection finale du candidat (statut `SELECTED`) — `/api/applications/[applicationId]/advance` avec `targetStatus: 'SELECTED'`, auto-rejet des autres candidatures avec notification + email + message système
 - [✅] Dossier candidat `TenantCandidateScope` (solo/couple/groupe, enfants, type bail souhaité)
 - [✅] Server action `getApplications.ts`
 - [✅] Actions rapides dans le pipeline (proposer visite + décliner candidature avec motifs prédéfinis anti-discrimination)
@@ -62,6 +63,10 @@
 - [✅] Server action `markLeaseAsSigned.ts`
 - [✅] Page baux (`app/[locale]/leases/[applicationId]/`) — viewer + signature
 - [✅] Quittances automatiques — model `RentReceipt`, `RentReceiptService.ts`, cron mensuel (`app/api/cron/generate-receipts/`), API CRUD (`app/api/receipts/`), PDF `@react-pdf/renderer` (`RentReceiptDocument.tsx`), page locataire (`account/receipts/`), section propriétaire (`LeaseReceiptsSection.tsx`), notification + email
+- [✅] Viewer de bail PDF pleine largeur — `PdfPagesRenderer` avec `react-pdf` (canvas rendering), responsive, navigation multi-pages, zoom
+- [✅] Validation pré-envoi du bail — vérification des champs manquants (loyer, charges, dépôt, date début, identité signataires) avant initiation de la signature
+- [✅] Bouton "Signer le bail" dans le message système LEASE_SENT_FOR_SIGNATURE — lien direct vers `/leases/[applicationId]` (locataire : "Signer le bail", propriétaire : "Consulter le bail")
+- [✅] Lien de signature Yousign dans le viewer — récupération `signature_link` par signataire via `YousignService.getSignatureStatus`, bouton "Signer le bail" (locataire) ou "En cours de signature" (propriétaire), fallback "Vérifiez votre email"
 - [✅] Rappels légaux automatiques V1 — model `LegalReminder` (12 types, 6 statuts, 4 priorités), `ReminderEngine.ts` orchestrateur, calculateurs (`DiagnosticReminders`, `LeaseReminders`, `TaxReminders`), cron quotidien (`app/api/cron/legal-reminders/`), API CRUD (`app/api/reminders/`), page rappels (`account/reminders/`), widget dashboard (`LegalRemindersWidget`), formulaire diagnostics (`DiagnosticsSection`), notification + email
 
 ### Gestion financière
@@ -93,6 +98,9 @@
 - [✅] Rendement brut/net/net-net (calculé dans `analytics.ts`)
 - [✅] Bénéfice net (calculé dans `analytics.ts`)
 - [✅] Alertes (IRL, échéances, diagnostics) — `LegalRemindersWidget` dans le dashboard + `ReminderEngine` avec rappels automatiques
+- [✅] Statut "Bail en signature" dans les cards propriétés — `PropertyStandardCard` + `PropertyColocationCard` affichent le statut `PENDING_SIGNATURE` (point bleu + label) en plus de Occupé/Vacant
+- [✅] Refonte dashboard locataire — header personnalisé "Bonjour [Prénom]", stats rapides (candidatures + prochain RDV), Passeport Locatif card, accès rapides (Mon dossier, Quittances), Application Journey
+- [✅] Card logement actuel dans le dashboard locataire — affichage du logement actif si bail signé
 
 ### Admin
 - [✅] Dashboard admin (`app/[locale]/admin/`, `app/api/admin/`)
@@ -194,6 +202,9 @@
 - [✅] Server actions : `getConversations.ts`, `getConversationById.ts`, `getMessages.ts`, `getUnreadMessageCount.ts`
 - [✅] Tabs de tri dans la messagerie
 - [✅] Résumé du dossier candidat dans la conversation (TenantProfilePreview)
+- [✅] Badges statut bail dans la boîte de réception — priorité leaseStatus sur applicationStatus (`Bail signé` vert, `Bail en signature` bleu, `Sélectionné`, `Finaliste`, `Présélectionné`)
+- [✅] Traduction des messages système dans l'aperçu ConversationBox — `LEASE_SENT_FOR_SIGNATURE` → "Bail envoyé pour signature", `INVITATION_VISITE` → "Invitation à une visite", etc.
+- [✅] Timeline enrichie dans le récapitulatif conversation — étapes dynamiques : Candidature reçue → Visite (proposée/confirmée) → Candidature retenue → Bail envoyé pour signature → Bail signé, avec états completed/pending
 
 ### Notifications
 - [✅] Notifications in-app (`Notification`, polling 60s, `NotificationCenter.tsx`)
@@ -217,6 +228,13 @@
 - [✅] Icône app + favicon (`app/icon.png`, `app/apple-icon.png`, `manifest.json`)
 - [✅] Safe area iOS PWA (`black-translucent` + `pt-safe` sur MainLayout, Modal, ScorecardSheet, ListingImageGallery, AllPhotosModal)
 - [✅] Install prompt (`components/pwa/InstallPrompt.tsx`) — beforeinstallprompt + cooldown 24h, intégré dans layout.tsx
+
+### UI & Navigation
+- [✅] Bottom bar mobile : "Profil" → "Réglages" — icône `Settings` (engrenage), label `t('settings')`, lien vers `/account`
+- [✅] Refonte sidebar réglages (`AccountSidebar`) — catégories restructurées (Général, Logement, Financier, Sécurité), icônes cohérentes
+- [✅] PhoneInput avec préfixe +33 — composant dédié avec formatage automatique, validation, flag français
+- [✅] Passeport Locatif progressive disclosure — `PassportExplainerModal` carousel multi-étapes (explication du concept avant activation), intégré dans `PassportClient`
+- [✅] Font Boldonse — correction chargement custom font dans `layout.tsx`
 
 ### Signalements
 - [✅] Report annonce ou utilisateur (`Report`, `components/reports/ReportButton.tsx`) — modal avec raison/détails
@@ -279,3 +297,8 @@
 - [x] ~~Recap fiscal : NaN € dans les cards + boutons propriétés vides~~ (corrigé — mismatch noms de champs entre FiscalService et FiscalClient, mapping ajouté dans les API routes `/api/fiscal/summary` et `/api/fiscal/summary-all`)
 - [x] ~~React key warning dans FiscalClient~~ (corrigé — ajout `key="all"` sur le bouton statique "Tous les biens")
 - [x] ~~Build Vercel échoue : STRIPE_SECRET_KEY not defined~~ (corrigé — `lib/stripe.ts` lazy init via Proxy, plus de throw au top-level)
+- [x] ~~applicationId null côté locataire dans la conversation~~ (corrigé — `page.tsx` cherchait `candidateScope.creatorUserId: otherUser.id` mais otherUser = propriétaire qui ne crée pas de scope → changé en `{ in: [otherUser.id, currentUser.id] }`)
+- [x] ~~Property cards affichent "Vacant" quand bail en signature~~ (corrigé — `getProperties.ts` ne récupérait que `leaseStatus: 'SIGNED'`, changé en `{ in: ['SIGNED', 'PENDING_SIGNATURE'] }`)
+- [x] ~~Inbox affiche "En attente" au lieu du statut bail~~ (corrigé — priorité leaseStatus sur applicationStatus dans ConversationBox)
+- [x] ~~Message système LEASE_SENT_FOR_SIGNATURE sans bouton d'action~~ (corrigé — ajout bouton "Signer le bail" / "Consulter le bail" dans MessageBox)
+- [x] ~~Lease viewer locataire : pas de bouton pour signer~~ (corrigé — récupération `signature_link` Yousign + bouton "Signer le bail" dans LeaseViewerClient)

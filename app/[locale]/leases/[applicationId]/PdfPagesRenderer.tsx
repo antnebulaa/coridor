@@ -18,12 +18,17 @@ const PdfPagesRenderer: React.FC<PdfPagesRendererProps> = ({ blob }) => {
     const [fileData, setFileData] = useState<{ data: Uint8Array } | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Convert blob to Uint8Array (avoids cross-origin blob URL fetch from worker)
+    // Convert blob to Uint8Array once
     useEffect(() => {
+        let cancelled = false;
         blob.arrayBuffer().then(buf => {
-            setFileData({ data: new Uint8Array(buf) });
+            if (!cancelled) setFileData({ data: new Uint8Array(buf) });
         });
+        return () => { cancelled = true; };
     }, [blob]);
+
+    // Stable reference for react-pdf (avoids unnecessary reloads)
+    const stableFile = useMemo(() => fileData, [fileData]);
 
     // Track container width with ResizeObserver
     useEffect(() => {
@@ -59,9 +64,9 @@ const PdfPagesRenderer: React.FC<PdfPagesRendererProps> = ({ blob }) => {
             ref={containerRef}
             className="h-full overflow-y-auto overflow-x-hidden bg-neutral-200"
         >
-            {containerWidth > 0 && fileData && (
+            {containerWidth > 0 && stableFile && (
                 <Document
-                    file={fileData}
+                    file={stableFile}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={
                         <div className="flex items-center justify-center py-20">

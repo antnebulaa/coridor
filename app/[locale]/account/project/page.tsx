@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "@/components/ClientOnly";
 import RentalProjectClient from "./RentalProjectClient";
@@ -7,11 +8,7 @@ const RentalProjectPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return <ClientOnly>
-            <div className="flex items-center justify-center h-full">
-                Vous devez être connecté.
-            </div>
-        </ClientOnly>;
+        redirect('/');
     }
 
     const existingScope = await prisma.tenantCandidateScope.findFirst({

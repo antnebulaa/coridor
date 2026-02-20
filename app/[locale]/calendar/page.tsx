@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import VisitsClient from "./VisitsClient";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
@@ -11,14 +12,7 @@ const CalendarPage = async ({ searchParams }: { searchParams: Promise<{ view?: s
     const resolvedParams = await searchParams;
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     // Landlord Mode: Show Calendar by default

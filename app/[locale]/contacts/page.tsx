@@ -1,4 +1,4 @@
-import EmptyState from "@/components/EmptyState";
+import { redirect } from "next/navigation";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getContacts from "@/app/actions/getContacts";
@@ -16,14 +16,7 @@ const ContactsPage = async (props: ContactsPageProps) => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Non autorisé"
-                    subtitle="Veuillez vous connecter"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     const contacts = await getContacts();

@@ -345,6 +345,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         showDossier={showDossier}
                         applicationId={applicationId}
                         confirmedVisit={confirmedVisit}
+                        leaseStatus={initialLeaseStatus}
                     />
                 </div>
                 <div className="flex-none bg-white dark:bg-neutral-900"

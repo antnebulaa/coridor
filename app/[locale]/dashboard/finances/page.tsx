@@ -1,6 +1,6 @@
+import { redirect } from "next/navigation";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import EmptyState from "@/components/EmptyState";
 import prisma from "@/libs/prismadb";
 import FinancesClient from "./FinancesClient";
 
@@ -8,14 +8,7 @@ const FinancesPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     // Fetch existing bank connections

@@ -1,22 +1,15 @@
-import EmptyState from "@/components/EmptyState";
-import ClientOnly from "@/components/ClientOnly";
+import { redirect } from "next/navigation";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getApplications from "@/app/actions/getApplications";
 import prisma from "@/libs/prismadb";
+import ClientOnly from "@/components/ClientOnly";
 import ApplicationsClient from "./ApplicationsClient";
 
 const ApplicationsPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     const applications = await getApplications();

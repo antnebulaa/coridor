@@ -1,6 +1,7 @@
 import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { redirect } from 'next/navigation';
 import getWishlistById from "@/app/actions/getWishlistById";
 import WishlistClient from "./WishlistClient";
 
@@ -12,6 +13,7 @@ const WishlistPage = async (props: { params: Promise<IParams> }) => {
     const params = await props.params;
     const wishlist = await getWishlistById(params);
     const currentUser = await getCurrentUser();
+    if (!currentUser) { redirect('/'); }
 
     if (!wishlist) {
         return (

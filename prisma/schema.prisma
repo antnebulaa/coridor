@@ -286,10 +286,14 @@ model Property {
   hasElevator       Boolean @default(false)
   isAccessible      Boolean @default(false) // PMR
   hasDigicode       Boolean @default(false)
+  digicodeValue     String?
   hasIntercom       Boolean @default(false)
   hasCaretaker      Boolean @default(false)
   hasPool           Boolean @default(false)
-  
+
+  // Meters & Utilities
+  electricMeterPDL  String?  // Point de Livraison (PDL) compteur électrique
+
   // Energy Performance
   dpe             String?
   ges             String?

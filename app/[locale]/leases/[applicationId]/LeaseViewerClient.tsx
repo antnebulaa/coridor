@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from "next/navigation";
 import { LeaseConfig } from '@/services/LeaseService';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -32,10 +31,10 @@ interface Signer {
     name: string;
     email: string;
     status: string;
+    signed_at?: string | null;
 }
 
 const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOwner }) => {
-    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [status, setStatus] = useState(leaseConfig.metadata?.status || "DRAFT");
@@ -44,6 +43,7 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [pdfLoading, setPdfLoading] = useState(true);
     const [signatureLink, setSignatureLink] = useState<string | null>(null);
+    const [currentUserSigned, setCurrentUserSigned] = useState(false);
 
     // Validate required data for signature (phone + email for all parties)
     const missingFields = useMemo(() => {
@@ -115,6 +115,7 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
             if (res.data.signedUrl) setSignedUrl(res.data.signedUrl);
             if (res.data.signers) setSigners(res.data.signers);
             if (res.data.signatureLink) setSignatureLink(res.data.signatureLink);
+            if (res.data.currentUserSigned !== undefined) setCurrentUserSigned(res.data.currentUserSigned);
             if (!silent) toast.success("Statut mis à jour");
         } catch (error) {
             if (!silent) toast.error("Erreur lors de la mise à jour");
@@ -180,11 +181,11 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
             {/* Sidebar - Desktop only */}
             <div className="hidden lg:flex flex-col w-[300px] border-r border-neutral-200 bg-white p-6 gap-6 shrink-0">
                 <div
-                    onClick={() => router.back()}
+                    onClick={() => window.close()}
                     className="flex items-center gap-2 cursor-pointer text-neutral-500 hover:text-black transition mb-4"
                 >
                     <HiArrowLeft />
-                    <span className="font-medium">Retour</span>
+                    <span className="font-medium">Fermer</span>
                 </div>
 
                 <div>
@@ -230,33 +231,57 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
                         La notice d&apos;information relative aux droits et obligations des locataires et des bailleurs doit être remise au locataire lors de la signature du bail.
                     </p>
                     <a
-                        href="/documents/notice-information-locataire.pdf"
+                        href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2066"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 text-sm font-medium rounded-lg transition"
                     >
                         <HiArrowDownTray size={16} />
-                        Télécharger la notice
+                        Consulter la notice
                     </a>
                 </div>
 
                 {/* Signers Progress */}
-                {status === 'PENDING_SIGNATURE' && signers.length > 0 && (
+                {(status === 'PENDING_SIGNATURE' || status === 'SIGNED') && signers.length > 0 && (
                     <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
                         <h3 className="font-semibold text-neutral-800 mb-3">Statut des signatures</h3>
-                        <div className="space-y-2">
-                            {signers.map((signer, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm">
-                                    {signer.status === 'signed' ? (
-                                        <HiCheckCircle className="text-green-500" size={16} />
-                                    ) : (
-                                        <div className="w-4 h-4 rounded-full border-2 border-neutral-300" />
-                                    )}
-                                    <span className={signer.status === 'signed' ? 'text-green-700' : 'text-neutral-600'}>
-                                        {signer.name}
-                                    </span>
-                                </div>
-                            ))}
+                        <div className="space-y-3">
+                            {signers.map((signer, idx) => {
+                                // Consider signed if status is 'signed' OR if signed_at exists OR if overall status is SIGNED
+                                const isSigned = signer.status === 'signed' || !!signer.signed_at || status === 'SIGNED';
+                                const effectiveStatus = isSigned ? 'signed' : signer.status;
+                                const statusLabel = effectiveStatus === 'signed' ? 'Signé'
+                                    : effectiveStatus === 'notified' ? 'Notifié'
+                                    : effectiveStatus === 'processing' ? 'En cours'
+                                    : effectiveStatus === 'consent_given' ? 'En cours'
+                                    : effectiveStatus === 'verified' ? 'Vérifié'
+                                    : effectiveStatus === 'declined' ? 'Refusé'
+                                    : effectiveStatus === 'error' ? 'Erreur'
+                                    : 'En attente';
+                                const statusColor = isSigned ? 'text-green-600'
+                                    : effectiveStatus === 'declined' || effectiveStatus === 'error' ? 'text-red-600'
+                                    : 'text-neutral-500';
+
+                                return (
+                                    <div key={idx} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            {isSigned ? (
+                                                <HiCheckCircle className="text-green-500 shrink-0" size={16} />
+                                            ) : signer.status === 'declined' || signer.status === 'error' ? (
+                                                <HiExclamationTriangle className="text-red-500 shrink-0" size={16} />
+                                            ) : (
+                                                <div className="w-4 h-4 rounded-full border-2 border-neutral-300 shrink-0" />
+                                            )}
+                                            <span className={isSigned ? 'text-green-700 font-medium' : 'text-neutral-700'}>
+                                                {signer.name}
+                                            </span>
+                                        </div>
+                                        <span className={`text-xs font-medium ${statusColor}`}>
+                                            {statusLabel}
+                                        </span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -283,7 +308,7 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
                 <div className="bg-white border-b border-neutral-200 flex-none z-10 px-4 sm:px-6 py-3">
                     <div className="flex items-center justify-between gap-3">
                         <div className="font-semibold text-lg flex items-center gap-3 shrink-0">
-                            <div onClick={() => router.back()} className="lg:hidden cursor-pointer">
+                            <div onClick={() => window.close()} className="lg:hidden cursor-pointer">
                                 <HiArrowLeft />
                             </div>
                             <span className="hidden sm:inline">Aperçu du Document</span>
@@ -309,7 +334,7 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
 
                             {status === 'PENDING_SIGNATURE' && (
                                 <>
-                                    {!isOwner && signatureLink ? (
+                                    {!currentUserSigned && signatureLink ? (
                                         <a
                                             href={signatureLink}
                                             target="_blank"
@@ -320,13 +345,14 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
                                             <span className="hidden sm:inline">Signer le bail</span>
                                             <span className="sm:hidden">Signer</span>
                                         </a>
-                                    ) : !isOwner && !signatureLink ? (
-                                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg border border-blue-200">
-                                            <span>Vérifiez votre email pour signer</span>
+                                    ) : currentUserSigned ? (
+                                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 text-sm font-semibold rounded-lg border border-green-200">
+                                            <HiCheckCircle size={16} />
+                                            <span>Vous avez signé — en attente de l&apos;autre partie</span>
                                         </div>
                                     ) : (
-                                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
-                                            <span>En cours de signature...</span>
+                                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg border border-blue-200">
+                                            <span>Vérifiez votre email pour signer</span>
                                         </div>
                                     )}
                                     <button
@@ -388,6 +414,32 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
                         </div>
                     </div>
                 </div>
+
+                {/* Signers status - mobile banner */}
+                {(status === 'PENDING_SIGNATURE' || status === 'SIGNED') && signers.length > 0 && (
+                    <div className="lg:hidden bg-neutral-50 border-b border-neutral-200 px-4 py-2">
+                        <div className="flex items-center gap-4">
+                            {signers.map((signer, idx) => {
+                                const isSigned = signer.status === 'signed' || !!signer.signed_at || status === 'SIGNED';
+                                return (
+                                    <div key={idx} className="flex items-center gap-1.5 text-xs">
+                                        {isSigned ? (
+                                            <HiCheckCircle className="text-green-500 shrink-0" size={14} />
+                                        ) : (
+                                            <div className="w-3.5 h-3.5 rounded-full border-2 border-neutral-300 shrink-0" />
+                                        )}
+                                        <span className={isSigned ? 'text-green-700 font-medium' : 'text-neutral-600'}>
+                                            {signer.name.split(' ')[0]}
+                                        </span>
+                                        <span className={`font-medium ${isSigned ? 'text-green-600' : 'text-neutral-400'}`}>
+                                            {isSigned ? '✓' : '…'}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Missing data warning - mobile banner */}
                 {isOwner && status === 'DRAFT' && missingFields.length > 0 && (

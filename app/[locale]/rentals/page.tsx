@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 
@@ -11,14 +12,7 @@ const RentalsPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     const applications = await getApplications();

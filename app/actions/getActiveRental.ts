@@ -100,12 +100,21 @@ export default async function getActiveRental() {
         const chargesCents = financials?.serviceChargesCents || listing.chargesAmount || 0;
         const totalRentCents = baseRentCents + chargesCents;
 
+        // Fallback: if leaseStartDate is null, use financials.startDate
+        const leaseStartDate = application.leaseStartDate || financials?.startDate || null;
+        // Fallback: compute leaseEndDate from start + duration if missing
+        let leaseEndDate = application.leaseEndDate;
+        if (!leaseEndDate && leaseStartDate && application.leaseDurationMonths) {
+            leaseEndDate = new Date(leaseStartDate);
+            leaseEndDate.setMonth(leaseEndDate.getMonth() + application.leaseDurationMonths);
+        }
+
         return {
             applicationId: application.id,
             leaseStatus: application.leaseStatus,
             signedLeaseUrl: application.signedLeaseUrl,
-            leaseStartDate: application.leaseStartDate?.toISOString() || null,
-            leaseEndDate: application.leaseEndDate?.toISOString() || null,
+            leaseStartDate: leaseStartDate instanceof Date ? leaseStartDate.toISOString() : leaseStartDate ? new Date(leaseStartDate).toISOString() : null,
+            leaseEndDate: leaseEndDate instanceof Date ? leaseEndDate.toISOString() : leaseEndDate ? new Date(leaseEndDate).toISOString() : null,
             leaseDurationMonths: application.leaseDurationMonths,
 
             // Property info
@@ -121,6 +130,9 @@ export default async function getActiveRental() {
                 heatingSystem: property.heatingSystem,
                 dpe: property.dpe,
                 photo: property.images[0]?.url || null,
+                hasDigicode: property.hasDigicode,
+                digicodeValue: property.digicodeValue,
+                electricMeterPDL: property.electricMeterPDL,
             },
 
             // Listing info

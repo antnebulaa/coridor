@@ -965,6 +965,15 @@
                 "exportPdf": "Export as PDF",
                 "exportJson": "Export as JSON"
             },
+            "landlordPreview": {
+                "title": "Landlord preview",
+                "description": "This is what the landlord will see on your profile when you apply.",
+                "emptyState": "Enable your Passport and add information to see the preview.",
+                "noData": "No shared information. Enable options in the sharing settings.",
+                "rentalHistory": "Rental history",
+                "evaluations": "Evaluations",
+                "current": "Ongoing"
+            },
             "toasts": {
                 "settingsUpdated": "Settings updated",
                 "historyAdded": "Rental added",
@@ -1458,6 +1467,7 @@
         "back": "My space",
         "activeLease": "Active lease",
         "rentCC": "Rent incl.",
+        "sinceDate": "since {date}",
         "startDate": "Start",
         "endDate": "Lease end",
         "landlord": "Landlord",
@@ -1480,15 +1490,20 @@
             "title": "Documents",
             "lease": "Lease agreement",
             "signedOn": "Signed on {date}",
-            "lastReceipt": "Latest receipt"
+            "lastReceipt": "Latest receipt",
+            "noReceipt": "No receipt available yet"
         },
         "practicalInfo": {
             "title": "Practical info",
             "deposit": "Security deposit",
             "charges": "Service charges",
+            "electricMeter": "Electric meter",
             "heating": "Heating type",
             "dpe": "Energy performance",
-            "floor": "Floor"
+            "floor": "Floor",
+            "digicode": "Door code",
+            "notProvided": "Not provided",
+            "none": "None"
         },
         "leaseEnd": {
             "title": "Lease end",

@@ -1,9 +1,9 @@
-import EmptyState from "@/components/EmptyState";
-import ClientOnly from "@/components/ClientOnly";
+import { redirect } from "next/navigation";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 
 import DashboardClient from "./DashboardClient";
 
+import ClientOnly from "@/components/ClientOnly";
 import Link from "next/link";
 import prisma from "@/libs/prismadb";
 import TenantDashboardClient from "./TenantDashboardClient";
@@ -18,14 +18,7 @@ const DashboardPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Unauthorized"
-                    subtitle="Please login"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     // TENANT MODE

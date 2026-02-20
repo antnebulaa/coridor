@@ -6,17 +6,50 @@ import { revalidatePath } from "next/cache";
 
 export async function markLeaseAsSigned(applicationId: string, signedUrl?: string) {
     try {
-        // 1. Update Application Status
+        // 1. Fetch application to compute lease dates
+        const application = await prisma.rentalApplication.findUnique({
+            where: { id: applicationId },
+            include: {
+                listing: true,
+                candidateScope: true,
+                financials: { where: { endDate: null }, take: 1 }
+            }
+        });
+
+        if (!application) throw new Error("Application not found");
+
+        // Compute lease dates
+        const financial = application.financials?.[0];
+        const leaseStartDate = financial?.startDate
+            || application.candidateScope?.targetMoveInDate
+            || new Date();
+
+        const leaseType = application.listing?.leaseType;
+        let durationMonths = application.leaseDurationMonths;
+        if (!durationMonths) {
+            if (leaseType === 'BAIL_NU_LOI_89' || leaseType === 'LONG_TERM') durationMonths = 36;
+            else if (leaseType === 'BAIL_ETUDIANT' || leaseType === 'STUDENT') durationMonths = 9;
+            else if (leaseType === 'BAIL_MOBILITE') durationMonths = 10;
+            else durationMonths = 12;
+        }
+
+        const leaseEndDate = new Date(leaseStartDate);
+        leaseEndDate.setMonth(leaseEndDate.getMonth() + durationMonths);
+
+        // 2. Update Application Status + dates
         await prisma.rentalApplication.update({
             where: { id: applicationId },
             data: {
                 leaseStatus: "SIGNED",
-                signedLeaseUrl: signedUrl || "https://example.com/mock-signed-lease.pdf", // Mock if not provided
-                status: "ACCEPTED" // Also mark application as accepted if not already
+                signedLeaseUrl: signedUrl || "https://example.com/mock-signed-lease.pdf",
+                status: "ACCEPTED",
+                leaseStartDate,
+                leaseEndDate,
+                leaseDurationMonths: durationMonths,
             }
         });
 
-        // 2. Initialize Financials
+        // 3. Initialize Financials
         await LeaseService.initializeFinancials(applicationId);
 
         revalidatePath(`/dashboard/applications/${applicationId}`);

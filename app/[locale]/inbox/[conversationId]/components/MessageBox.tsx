@@ -27,6 +27,7 @@ interface MessageBoxProps {
     onCloseMenu: () => void;
     showDossier?: boolean;
     applicationId?: string | null;
+    leaseStatus?: string | null;
     confirmedVisit?: {
         id: string;
         date: string;
@@ -46,6 +47,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     onCloseMenu,
     showDossier,
     applicationId,
+    leaseStatus,
     confirmedVisit
 }) => {
     const t = useTranslations('inbox');
@@ -438,7 +440,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             }}
                                             className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit"
                                         >
-                                            {isOwn ? 'Consulter le bail' : 'Signer le bail'}
+                                            {leaseStatus === 'SIGNED' ? 'Consulter le bail' : 'Signer le bail'}
                                         </button>
                                     )}
                                 </div>

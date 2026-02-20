@@ -22,6 +22,7 @@ import {
     Flame,
     Building2,
     Search,
+    MessageSquare,
 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from 'next-intl';
@@ -248,29 +249,24 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                             </div>
 
                             {/* Key info */}
-                            <div className="grid grid-cols-3 gap-4 mt-5 pt-5 border-t border-neutral-100 dark:border-neutral-800">
+                            <div className="flex items-end justify-between mt-5 pt-5 border-t border-neutral-100 dark:border-neutral-800">
                                 <div>
                                     <div className="text-xs text-neutral-400 mb-0.5">{t('rentCC')}</div>
-                                    <div className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                    <div className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
                                         {formatCents(rental.totalRentCents)}
                                     </div>
+                                    <div className="text-xs text-neutral-400 mt-1">
+                                        {rental.leaseStartDate
+                                            ? t('sinceDate', { date: formatDate(rental.leaseStartDate) })
+                                            : t('sinceDate', { date: '—' })}
+                                    </div>
                                 </div>
-                                {rental.leaseStartDate && (
-                                    <div>
-                                        <div className="text-xs text-neutral-400 mb-0.5">{t('startDate')}</div>
-                                        <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                            {formatDate(rental.leaseStartDate)}
-                                        </div>
+                                <div className="text-right">
+                                    <div className="text-xs text-neutral-400 mb-0.5">{t('endDate')}</div>
+                                    <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        {rental.leaseEndDate ? formatDate(rental.leaseEndDate) : '—'}
                                     </div>
-                                )}
-                                {rental.leaseEndDate && (
-                                    <div>
-                                        <div className="text-xs text-neutral-400 mb-0.5">{t('endDate')}</div>
-                                        <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                            {formatDate(rental.leaseEndDate)}
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -297,14 +293,7 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                     )}
 
                     {/* === LANDLORD === */}
-                    <button
-                        onClick={() => {
-                            if (rental.conversationId) {
-                                router.push(`/inbox/${rental.conversationId}`);
-                            }
-                        }}
-                        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition w-full text-left"
-                    >
+                    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-4">
                         <Avatar src={landlord.image} seed={landlord.id} size={44} />
                         <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">
@@ -312,8 +301,15 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                             </div>
                             <div className="text-xs text-neutral-500">{t('landlord')}</div>
                         </div>
-                        <ChevronRight size={18} className="text-neutral-400 shrink-0" />
-                    </button>
+                        {rental.conversationId && (
+                            <button
+                                onClick={() => router.push(`/inbox/${rental.conversationId}`)}
+                                className="p-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-xl hover:bg-neutral-200 dark:hover:bg-neutral-700 transition shrink-0"
+                            >
+                                <MessageSquare size={18} className="text-neutral-600 dark:text-neutral-400" />
+                            </button>
+                        )}
+                    </div>
 
                     {/* === QUICK ACTIONS === */}
                     <div className="grid grid-cols-3 gap-3">
@@ -439,7 +435,7 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                             )}
 
                             {/* Dernière quittance */}
-                            {rental.lastReceipt && (
+                            {rental.lastReceipt ? (
                                 <a
                                     href={rental.lastReceipt.pdfUrl || `/api/receipts/${rental.lastReceipt.id}/download`}
                                     target="_blank"
@@ -457,6 +453,14 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                                     </div>
                                     <Download size={16} className="text-neutral-400" />
                                 </a>
+                            ) : (
+                                <div className="flex items-center gap-3 p-3.5 rounded-xl">
+                                    <Receipt size={18} className="text-neutral-400" />
+                                    <div>
+                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('documents.lastReceipt')}</div>
+                                        <div className="text-xs text-neutral-400">{t('documents.noReceipt')}</div>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -466,46 +470,36 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                         <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{t('practicalInfo.title')}</h2>
 
                         <div className="flex flex-col gap-3">
-                            {listing.securityDeposit > 0 && (
-                                <div className="flex items-center justify-between py-1">
-                                    <span className="text-sm text-neutral-500">{t('practicalInfo.deposit')}</span>
-                                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                        {formatCents(listing.securityDeposit)}
-                                    </span>
-                                </div>
-                            )}
-                            {rental.chargesCents > 0 && (
-                                <div className="flex items-center justify-between py-1">
-                                    <span className="text-sm text-neutral-500">{t('practicalInfo.charges')}</span>
-                                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                        {formatCents(rental.chargesCents)}/mois
-                                    </span>
-                                </div>
-                            )}
-                            {property.heatingSystem && (
-                                <div className="flex items-center justify-between py-1">
-                                    <span className="text-sm text-neutral-500">{t('practicalInfo.heating')}</span>
-                                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                        {heatingMap[property.heatingSystem] || property.heatingSystem}
-                                    </span>
-                                </div>
-                            )}
-                            {property.dpe && (
-                                <div className="flex items-center justify-between py-1">
-                                    <span className="text-sm text-neutral-500">{t('practicalInfo.dpe')}</span>
-                                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                        DPE {property.dpe}
-                                    </span>
-                                </div>
-                            )}
-                            {floorDisplay && (
-                                <div className="flex items-center justify-between py-1">
-                                    <span className="text-sm text-neutral-500">{t('practicalInfo.floor')}</span>
-                                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                        {floorDisplay}
-                                    </span>
-                                </div>
-                            )}
+                            <div className="flex items-center justify-between py-1">
+                                <span className="text-sm text-neutral-500">{t('practicalInfo.deposit')}</span>
+                                <span className={`text-sm font-medium ${listing.securityDeposit > 0 ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-400 italic'}`}>
+                                    {listing.securityDeposit > 0 ? formatCents(listing.securityDeposit) : t('practicalInfo.notProvided')}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-1">
+                                <span className="text-sm text-neutral-500">{t('practicalInfo.electricMeter')}</span>
+                                <span className={`text-sm font-medium ${property.electricMeterPDL ? 'text-neutral-900 dark:text-neutral-100 font-mono' : 'text-neutral-400 italic'}`}>
+                                    {property.electricMeterPDL || t('practicalInfo.notProvided')}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-1">
+                                <span className="text-sm text-neutral-500">{t('practicalInfo.heating')}</span>
+                                <span className={`text-sm font-medium ${property.heatingSystem ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-400 italic'}`}>
+                                    {property.heatingSystem ? (heatingMap[property.heatingSystem] || property.heatingSystem) : t('practicalInfo.notProvided')}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-1">
+                                <span className="text-sm text-neutral-500">{t('practicalInfo.floor')}</span>
+                                <span className={`text-sm font-medium ${floorDisplay ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-400 italic'}`}>
+                                    {floorDisplay || t('practicalInfo.notProvided')}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-1">
+                                <span className="text-sm text-neutral-500">{t('practicalInfo.digicode')}</span>
+                                <span className={`text-sm font-medium ${property.digicodeValue ? 'text-neutral-900 dark:text-neutral-100 font-mono' : 'text-neutral-400 italic'}`}>
+                                    {property.digicodeValue || (property.hasDigicode ? t('practicalInfo.notProvided') : t('practicalInfo.none'))}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

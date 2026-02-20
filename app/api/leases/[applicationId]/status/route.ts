@@ -53,7 +53,9 @@ export async function GET(
 
         try {
             // Poll Yousign API for current status
+            console.log("[LeaseStatus] Fetching Yousign status for:", application.yousignSignatureId);
             const yousignStatus = await YousignService.getSignatureStatus(application.yousignSignatureId);
+            console.log("[LeaseStatus] Yousign response:", JSON.stringify({ status: yousignStatus.status, signers: yousignStatus.signers }));
 
             // Map Yousign status to our status
             let mappedStatus = application.leaseStatus;
@@ -87,17 +89,20 @@ export async function GET(
                 });
             }
 
-            // Find the signature link for the current user
+            // Find the current user's signer entry
             const currentUserEmail = currentUser.email?.toLowerCase();
             const currentSigner = yousignStatus.signers.find(
                 s => s.email.toLowerCase() === currentUserEmail
             );
 
+            const currentUserSigned = currentSigner?.status === 'signed' || !!currentSigner?.signed_at;
+
             return NextResponse.json({
                 status: mappedStatus,
                 signedUrl: application.signedLeaseUrl,
                 signers: yousignStatus.signers,
-                signatureLink: currentSigner?.signature_link || null
+                signatureLink: currentSigner?.signature_link || null,
+                currentUserSigned
             });
 
         } catch (yousignError: any) {

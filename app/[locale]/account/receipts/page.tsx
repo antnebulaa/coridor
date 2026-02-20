@@ -1,6 +1,6 @@
+import { redirect } from "next/navigation";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "@/components/ClientOnly";
-import EmptyState from "@/components/EmptyState";
 import ReceiptsClient from "./ReceiptsClient";
 import prisma from "@/libs/prismadb";
 
@@ -8,14 +8,7 @@ const ReceiptsPage = async () => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return (
-            <ClientOnly>
-                <EmptyState
-                    title="Non autorise"
-                    subtitle="Veuillez vous connecter"
-                />
-            </ClientOnly>
-        );
+        redirect('/');
     }
 
     // Fetch all signed leases where the current user is a tenant

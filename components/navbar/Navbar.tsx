@@ -25,6 +25,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
 
     return (
         <div
+            data-navbar
             className={`${isHomePage ? 'fixed' : 'sticky top-0'} w-full z-9999 transition-colors duration-200 pt-safe ${isHomePage ? 'bg-transparent md:bg-background' : 'bg-background'} ${!isHomePage ? 'hidden md:block' : ''}`}
             suppressHydrationWarning
         >

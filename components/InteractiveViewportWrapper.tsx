@@ -9,8 +9,25 @@ interface InteractiveViewportWrapperProps {
 const InteractiveViewportWrapper: React.FC<InteractiveViewportWrapperProps> = ({ children }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // Desktop: offset below the sticky navbar
     useEffect(() => {
-        // Keyboard fallback: only needed if interactiveWidget: 'resizes-content' is not supported
+        const computeOffset = () => {
+            if (!containerRef.current) return;
+            const navbar = document.querySelector('[data-navbar]');
+            if (window.innerWidth >= 768 && navbar) {
+                containerRef.current.style.top = `${navbar.getBoundingClientRect().height}px`;
+            } else {
+                containerRef.current.style.top = '0';
+            }
+        };
+
+        computeOffset();
+        window.addEventListener('resize', computeOffset);
+        return () => window.removeEventListener('resize', computeOffset);
+    }, []);
+
+    // Mobile: keyboard handling
+    useEffect(() => {
         if (!window.visualViewport) return;
 
         const updateGeometry = () => {
@@ -27,7 +44,7 @@ const InteractiveViewportWrapper: React.FC<InteractiveViewportWrapperProps> = ({
             } else {
                 // Keyboard closed — let CSS inset handle full viewport
                 containerRef.current.style.height = '';
-                containerRef.current.style.bottom = '0';
+                containerRef.current.style.bottom = '';
             }
         };
 
@@ -46,16 +63,7 @@ const InteractiveViewportWrapper: React.FC<InteractiveViewportWrapperProps> = ({
     return (
         <div
             ref={containerRef}
-            style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 0,
-                overflow: 'hidden',
-                backgroundColor: 'var(--background)'
-            }}
+            className="fixed inset-0 z-0 overflow-hidden bg-background"
         >
             {children}
         </div>

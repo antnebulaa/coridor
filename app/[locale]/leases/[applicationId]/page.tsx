@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { LeaseService } from "@/services/LeaseService";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import ClientOnly from "@/components/ClientOnly";
@@ -14,7 +15,7 @@ const LeasePage = async (props: { params: Promise<IParams> }) => {
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return <ClientOnly><EmptyState title="Non autorisé" subtitle="Veuillez vous connecter." /></ClientOnly>;
+        redirect('/');
     }
 
     try {

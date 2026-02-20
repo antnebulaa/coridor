@@ -3,6 +3,7 @@ import getConversationById from "@/app/actions/getConversationById";
 import getMessages from "@/app/actions/getMessages";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import EmptyState from "@/components/EmptyState";
+import { redirect } from 'next/navigation';
 import { SafeUser, FullMessageType, SafeListing } from "@/types";
 import ConversationClient from "./ConversationClient";
 
@@ -15,6 +16,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     const conversation = await getConversationById(params.conversationId);
     const messages = await getMessages(params.conversationId) as FullMessageType[];
     const currentUser = await getCurrentUser();
+    if (!currentUser) { redirect('/'); }
 
     if (!conversation) {
         return (

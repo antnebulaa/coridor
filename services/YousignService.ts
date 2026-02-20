@@ -196,6 +196,7 @@ export class YousignService {
             name: string;
             email: string;
             status: string;
+            signed_at?: string | null;
             signature_link?: string;
         }>;
     }> {
@@ -213,12 +214,27 @@ export class YousignService {
                 { headers: this.headers }
             );
 
-            const signers = signersRes.data.map((s: any) => ({
-                name: `${s.info.first_name} ${s.info.last_name}`,
-                email: s.info.email,
-                status: s.status,
-                signature_link: s.signature_link || undefined
-            }));
+            console.log("[Yousign] Raw signers response type:", typeof signersRes.data, Array.isArray(signersRes.data));
+            console.log("[Yousign] Raw signers response:", JSON.stringify(signersRes.data, null, 2));
+
+            // Yousign v3 may return a direct array or { data: [...] } depending on version
+            const signersArray = Array.isArray(signersRes.data)
+                ? signersRes.data
+                : (signersRes.data?.data || []);
+
+            const signers = signersArray.map((s: any) => {
+                console.log(`[Yousign] Signer ${s.info?.first_name} ${s.info?.last_name}: status=${s.status}, signed_at=${s.signed_at}`);
+                return {
+                    name: `${s.info.first_name} ${s.info.last_name}`,
+                    email: s.info.email,
+                    status: s.status,
+                    signed_at: s.signed_at || null,
+                    signature_link: s.signature_link || undefined
+                };
+            });
+
+            console.log("[Yousign] Overall request status:", res.data.status);
+            console.log("[Yousign] Mapped signers:", JSON.stringify(signers));
 
             return {
                 status: res.data.status,
