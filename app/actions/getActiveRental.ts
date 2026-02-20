@@ -102,11 +102,22 @@ export default async function getActiveRental() {
 
         // Fallback: if leaseStartDate is null, use financials.startDate
         const leaseStartDate = application.leaseStartDate || financials?.startDate || null;
+
+        // Fallback: compute leaseDurationMonths from leaseType if missing
+        let durationMonths = application.leaseDurationMonths;
+        if (!durationMonths) {
+            const leaseType = listing.leaseType;
+            if (leaseType === 'BAIL_NU_LOI_89' || leaseType === 'LONG_TERM') durationMonths = 36;
+            else if (leaseType === 'BAIL_ETUDIANT' || leaseType === 'STUDENT') durationMonths = 9;
+            else if (leaseType === 'BAIL_MOBILITE') durationMonths = 10;
+            else durationMonths = 12; // meublé default
+        }
+
         // Fallback: compute leaseEndDate from start + duration if missing
         let leaseEndDate = application.leaseEndDate;
-        if (!leaseEndDate && leaseStartDate && application.leaseDurationMonths) {
+        if (!leaseEndDate && leaseStartDate) {
             leaseEndDate = new Date(leaseStartDate);
-            leaseEndDate.setMonth(leaseEndDate.getMonth() + application.leaseDurationMonths);
+            leaseEndDate.setMonth(leaseEndDate.getMonth() + durationMonths);
         }
 
         return {
@@ -115,7 +126,7 @@ export default async function getActiveRental() {
             signedLeaseUrl: application.signedLeaseUrl,
             leaseStartDate: leaseStartDate instanceof Date ? leaseStartDate.toISOString() : leaseStartDate ? new Date(leaseStartDate).toISOString() : null,
             leaseEndDate: leaseEndDate instanceof Date ? leaseEndDate.toISOString() : leaseEndDate ? new Date(leaseEndDate).toISOString() : null,
-            leaseDurationMonths: application.leaseDurationMonths,
+            leaseDurationMonths: durationMonths,
 
             // Property info
             property: {
