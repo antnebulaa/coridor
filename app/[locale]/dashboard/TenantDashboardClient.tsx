@@ -11,6 +11,8 @@ import VisitCard from "./components/VisitCard";
 import { useTranslations } from 'next-intl';
 import PassportCard from "@/components/passport/PassportCard";
 import usePassportCompletion from "@/hooks/usePassportCompletion";
+import { useMoveInGuide } from "@/hooks/useMoveInGuide";
+import { getCompletedCount } from "@/lib/moveInGuide";
 
 interface TenantDashboardClientProps {
     currentUser: SafeUser;
@@ -124,6 +126,11 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
     const activeLease = useMemo(() => {
         return applications.find((app: any) => app.leaseStatus === 'SIGNED') || null;
     }, [applications]);
+
+    // Move-in guide (for banner)
+    const { guide: moveInGuide } = useMoveInGuide(activeLease?.id);
+    const moveInProgress = moveInGuide ? getCompletedCount(moveInGuide.steps) : 0;
+    const moveInTotal = moveInGuide?.steps.length || 8;
 
     const leaseDisplayInfo = useMemo(() => {
         if (!activeLease) return null;
@@ -309,6 +316,28 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 </div>
                             </div>
                             <ChevronRight size={18} className="text-neutral-400 group-hover:text-neutral-600 transition shrink-0 self-center" />
+                        </Link>
+                    )}
+
+                    {/* === MOVE-IN GUIDE BANNER === */}
+                    {moveInGuide && activeLease && (
+                        <Link
+                            href="/dashboard/my-rental"
+                            className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-800/50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition group"
+                        >
+                            <span className="text-2xl">🎉</span>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                    {!moveInGuide.storiesShownAt ? 'Votre bail est signé !' : 'Emménagement en cours'}
+                                </p>
+                                <p className="text-xs text-neutral-500 mt-0.5">
+                                    {!moveInGuide.storiesShownAt
+                                        ? 'Découvrez les étapes pour votre emménagement'
+                                        : `${moveInProgress}/${moveInTotal} étapes complétées`
+                                    }
+                                </p>
+                            </div>
+                            <ChevronRight size={18} className="text-amber-400 group-hover:text-amber-600 transition shrink-0" />
                         </Link>
                     )}
 

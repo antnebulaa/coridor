@@ -24,8 +24,12 @@ import {
     Search,
     MessageSquare,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
+import { useMoveInGuide } from "@/hooks/useMoveInGuide";
+import MoveInStories from "@/components/move-in/MoveInStories";
+import MoveInChecklist from "@/components/move-in/MoveInChecklist";
+import type { MoveInLeaseData } from "@/lib/moveInGuide";
 
 interface MyRentalClientProps {
     currentUser: SafeUser;
@@ -35,6 +39,21 @@ interface MyRentalClientProps {
 const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) => {
     const router = useRouter();
     const t = useTranslations('myRental');
+
+    // Move-in guide
+    const { guide, toggleStep, markStoriesShown } = useMoveInGuide(rental?.applicationId);
+    const [showStories, setShowStories] = useState(false);
+
+    useEffect(() => {
+        if (guide && !guide.storiesShownAt) {
+            setShowStories(true);
+        }
+    }, [guide]);
+
+    const handleStoriesClose = () => {
+        setShowStories(false);
+        markStoriesShown();
+    };
 
     // Category display map
     const categoryMap: Record<string, string> = {
@@ -198,8 +217,27 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
     const { property, listing, landlord, payments } = rental;
     const category = categoryMap[(property.category || '').toLowerCase()] || property.category || 'Logement';
 
+    // Lease data for stories
+    const leaseData: MoveInLeaseData | null = rental ? {
+        applicationId: rental.applicationId,
+        propertyAddress: `${property?.address || ''}${property?.city ? `, ${property.city}` : ''}${property?.zipCode ? ` ${property.zipCode}` : ''}`,
+        propertyType: categoryMap[(property?.category || '').toLowerCase()] || property?.category || 'Logement',
+        propertySurface: property?.totalSurface || 0,
+        rentAmount: (rental.totalRentCents || 0) / 100,
+        startDate: rental.leaseStartDate || new Date().toISOString(),
+    } : null;
+
     return (
         <Container>
+            {/* Move-in stories overlay */}
+            {showStories && leaseData && (
+                <MoveInStories
+                    lease={leaseData}
+                    onClose={handleStoriesClose}
+                    onComplete={handleStoriesClose}
+                />
+            )}
+
             <div className="pb-20">
                 <div className="max-w-2xl mx-auto mt-6 flex flex-col gap-5">
 
@@ -484,6 +522,18 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                             </div>
                         </div>
                     </div>
+
+                    {/* === MOVE-IN GUIDE CHECKLIST === */}
+                    {guide && rental.leaseStatus === 'SIGNED' && (
+                        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
+                            <MoveInChecklist
+                                steps={guide.steps}
+                                onToggleStep={toggleStep}
+                                onReplayStories={() => setShowStories(true)}
+                                propertyAddress={`${property.address || ''}${property.city ? `, ${property.city}` : ''}`}
+                            />
+                        </div>
+                    )}
 
                     {/* === END OF LEASE === */}
                     {leaseEndInfo && (

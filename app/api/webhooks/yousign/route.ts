@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import prisma from "@/libs/prismadb";
 import { YousignService } from "@/services/YousignService";
 import { PassportService } from "@/services/PassportService";
+import { DEFAULT_MOVE_IN_STEPS } from "@/lib/moveInGuide";
 
 const YOUSIGN_WEBHOOK_SECRET = process.env.YOUSIGN_WEBHOOK_SECRET;
 
@@ -181,6 +182,24 @@ export async function POST(request: Request) {
                     console.log("[Yousign Webhook] RentalHistory created for application:", application.id);
                 } catch (passportErr) {
                     console.error("[Yousign Webhook] Failed to create RentalHistory:", passportErr);
+                }
+
+                // Auto-create Move-In Guide for the tenant
+                try {
+                    const existingGuide = await prisma.moveInGuide.findUnique({
+                        where: { rentalApplicationId: application.id }
+                    });
+                    if (!existingGuide) {
+                        await prisma.moveInGuide.create({
+                            data: {
+                                rentalApplicationId: application.id,
+                                steps: DEFAULT_MOVE_IN_STEPS,
+                            }
+                        });
+                        console.log("[Yousign Webhook] MoveInGuide created for application:", application.id);
+                    }
+                } catch (guideErr) {
+                    console.error("[Yousign Webhook] Failed to create MoveInGuide:", guideErr);
                 }
                 break;
 
