@@ -48,7 +48,6 @@ const ApplicationsClient: React.FC<ApplicationsClientProps> = ({
                     subtitle={t('subtitle')}
                     showBack
                     backLabel={useTranslations('dashboard')('title')}
-                    backHref="/dashboard"
                 />
 
                 <div className="max-w-4xl mx-auto mt-8">

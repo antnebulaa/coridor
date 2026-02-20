@@ -126,41 +126,33 @@ const MoveInStories: React.FC<MoveInStoriesProps> = ({ lease, onClose, onComplet
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)' }}>
-      <div
-        className="relative w-full max-w-[380px] mx-auto overflow-hidden flex flex-col"
-        style={{
-          height: 'min(90vh, 740px)',
-          borderRadius: '28px',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)',
-          backgroundColor: '#FFFFFF',
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-      >
-        {/* Progress bars */}
-        <div className="relative z-10">
-          <MoveInStoryProgress total={TOTAL_STORIES} currentIndex={currentIndex} progress={progress} />
-        </div>
+    <div
+      className="fixed inset-0 z-[100] flex flex-col bg-white"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+    >
+      {/* Progress bars */}
+      <div className="relative z-10 pt-safe">
+        <MoveInStoryProgress total={TOTAL_STORIES} currentIndex={currentIndex} progress={progress} />
+      </div>
 
-        {/* Header: close + counter */}
-        <div className="relative z-10 flex items-center justify-between px-4 pt-2 pb-1">
-          <span className="text-[11px]" style={{ color: 'rgba(0,0,0,0.25)' }}>
-            {currentIndex + 1}/{TOTAL_STORIES}
-          </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
-            className="w-[30px] h-[30px] rounded-full flex items-center justify-center transition-colors"
-            style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}
-          >
-            <X size={14} style={{ color: 'rgba(0,0,0,0.35)' }} />
-          </button>
-        </div>
+      {/* Header: close + counter */}
+      <div className="relative z-10 flex items-center justify-between px-4 pt-2 pb-1">
+        <span className="text-[11px]" style={{ color: 'rgba(0,0,0,0.25)' }}>
+          {currentIndex + 1}/{TOTAL_STORIES}
+        </span>
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="w-[30px] h-[30px] rounded-full flex items-center justify-center transition-colors"
+          style={{ backgroundColor: 'rgba(0,0,0,0.06)' }}
+        >
+          <X size={14} style={{ color: 'rgba(0,0,0,0.35)' }} />
+        </button>
+      </div>
 
-        {/* Story content */}
-        <div className="flex-1 overflow-hidden">
-          {renderStory()}
-        </div>
+      {/* Story content */}
+      <div className="flex-1 overflow-hidden pb-safe">
+        {renderStory()}
       </div>
     </div>
   );

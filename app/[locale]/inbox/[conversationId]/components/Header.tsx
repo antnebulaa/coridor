@@ -3,7 +3,7 @@
 import { Conversation, User, Listing } from "@prisma/client";
 import useOtherUser from "@/hooks/useOtherUser";
 import { useMemo } from "react";
-import Link from "next/link";
+import { useRouter } from "@/i18n/navigation";
 import { HiChevronLeft } from "react-icons/hi";
 import Avatar from "@/components/Avatar";
 import { HiEllipsisHorizontal, HiInformationCircle } from "react-icons/hi2";
@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({
     showDossier
 }) => {
     const t = useTranslations('inbox.header');
+    const router = useRouter();
     const otherUser = useOtherUser(conversation);
 
     const statusText = useMemo(() => {
@@ -55,19 +56,19 @@ const Header: React.FC<HeaderProps> = ({
         min-h-[60px]
       ">
                 <div className="flex gap-3 items-center">
-                    <Link
-                        href="/inbox"
+                    <button
+                        onClick={() => router.back()}
                         className="
-              lg:hidden 
-              block 
-              text-primary 
-              hover:text-primary-hover 
-              transition 
+              lg:hidden
+              block
+              text-primary
+              hover:text-primary-hover
+              transition
               cursor-pointer
             "
                     >
                         <HiChevronLeft size={32} />
-                    </Link>
+                    </button>
                     {conversation.listing ? (
                         <>
                             <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">

@@ -1,6 +1,5 @@
 'use client';
 
-import { useSearchParams } from "next/navigation";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Suspense } from "react";
@@ -28,18 +27,10 @@ const PAGE_TITLES: Record<string, string> = {
 const AccountHeader = () => {
     const pathname = usePathname();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const returnUrl = searchParams.get('returnUrl');
-    const backHref = returnUrl ? decodeURIComponent(returnUrl) : '/account';
-
     const title = PAGE_TITLES[pathname] || 'Mon compte';
 
     const handleBack = () => {
-        if (returnUrl) {
-            router.push(decodeURIComponent(returnUrl));
-        } else {
-            router.push('/account');
-        }
+        router.back();
     };
 
     return (

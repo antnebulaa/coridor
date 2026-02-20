@@ -54,7 +54,6 @@ const SelectionClient: React.FC<SelectionClientProps> = ({
                     subtitle="Comparez vos candidats et choisissez votre locataire"
                     showBack
                     backLabel="Tableau de bord"
-                    backHref="/dashboard"
                 />
 
                 {/* Stats bar */}
