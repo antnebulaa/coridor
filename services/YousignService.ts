@@ -196,6 +196,7 @@ export class YousignService {
             name: string;
             email: string;
             status: string;
+            signature_link?: string;
         }>;
     }> {
         if (!YOUSIGN_API_KEY) throw new Error("YOUSIGN_API_KEY is missing");
@@ -206,7 +207,7 @@ export class YousignService {
                 { headers: this.headers }
             );
 
-            // Get signers
+            // Get signers (includes signature_link for each)
             const signersRes = await axios.get(
                 `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`,
                 { headers: this.headers }
@@ -215,7 +216,8 @@ export class YousignService {
             const signers = signersRes.data.map((s: any) => ({
                 name: `${s.info.first_name} ${s.info.last_name}`,
                 email: s.info.email,
-                status: s.status
+                status: s.status,
+                signature_link: s.signature_link || undefined
             }));
 
             return {

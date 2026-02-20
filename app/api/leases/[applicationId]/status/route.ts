@@ -87,10 +87,17 @@ export async function GET(
                 });
             }
 
+            // Find the signature link for the current user
+            const currentUserEmail = currentUser.email?.toLowerCase();
+            const currentSigner = yousignStatus.signers.find(
+                s => s.email.toLowerCase() === currentUserEmail
+            );
+
             return NextResponse.json({
                 status: mappedStatus,
                 signedUrl: application.signedLeaseUrl,
-                signers: yousignStatus.signers
+                signers: yousignStatus.signers,
+                signatureLink: currentSigner?.signature_link || null
             });
 
         } catch (yousignError: any) {

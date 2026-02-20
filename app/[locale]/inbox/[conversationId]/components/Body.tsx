@@ -13,6 +13,7 @@ interface BodyProps {
     onToggleDossier?: () => void;
     onOpenListingRecap?: () => void;
     showDossier?: boolean;
+    applicationId?: string | null;
     confirmedVisit?: {
         id: string;
         date: string;
@@ -27,6 +28,7 @@ const Body: React.FC<BodyProps> = ({
     onToggleDossier,
     onOpenListingRecap,
     showDossier,
+    applicationId,
     confirmedVisit
 }) => {
     const [messages, setMessages] = useState(initialMessages);
@@ -66,6 +68,7 @@ const Body: React.FC<BodyProps> = ({
                     onToggleDossier={onToggleDossier}
                     onOpenListingRecap={onOpenListingRecap}
                     showDossier={showDossier}
+                    applicationId={applicationId}
                     isMenuOpen={activeMessageId === message.id}
                     onOpenMenu={() => setActiveMessageId(message.id)}
                     onCloseMenu={() => setActiveMessageId(null)}

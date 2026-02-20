@@ -31,7 +31,10 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
     const t = useTranslations('properties.card');
 
     // Status Logic
-    const hasActiveLease = (data.activeApplications || []).length > 0;
+    const signedApplications = (data.activeApplications || []).filter((a: any) => a.leaseStatus === 'SIGNED');
+    const pendingSignatureApplications = (data.activeApplications || []).filter((a: any) => a.leaseStatus === 'PENDING_SIGNATURE');
+    const hasActiveLease = signedApplications.length > 0;
+    const hasPendingSignature = pendingSignatureApplications.length > 0;
     const isOccupied = hasActiveLease;
 
     const nextFreeDate = isOccupied
@@ -119,8 +122,8 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
                     </div>
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2 font-medium text-lg text-neutral-800">
-                            <div className={`w-3.5 h-3.5 rounded-full ${isOccupied ? 'bg-green-600' : 'bg-orange-500'}`}></div>
-                            {isOccupied ? t('status.occupied') : t('status.vacant')}
+                            <div className={`w-3.5 h-3.5 rounded-full ${isOccupied ? 'bg-green-600' : hasPendingSignature ? 'bg-blue-500' : 'bg-orange-500'}`}></div>
+                            {isOccupied ? t('status.occupied') : hasPendingSignature ? 'Bail en signature' : t('status.vacant')}
                         </div>
                         {isOccupied && nextFreeDate && (
                             <div className="text-neutral-500 text-sm flex items-center gap-0">

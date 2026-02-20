@@ -58,6 +58,11 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         }
 
         if (lastMessage?.body) {
+            // Translate system messages
+            if (lastMessage.body === 'LEASE_SENT_FOR_SIGNATURE') return 'Bail envoyé pour signature';
+            if (lastMessage.body === 'INVITATION_VISITE') return 'Invitation à une visite';
+            if (lastMessage.body.startsWith('VISIT_CONFIRMED|')) return 'Visite confirmée';
+            if (lastMessage.body.startsWith('APPLICATION_REJECTED|')) return 'Candidature déclinée';
             return lastMessage.body;
         }
 
@@ -97,36 +102,45 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             return { applicationStatus: null, applicationColor: null, applicationLabel: null };
         }
 
-        // 3. Determine label and color
+        // 3. Determine label and color — lease status takes priority
         let color = 'bg-gray-400';
         let label = t('status.pending');
 
-        switch (application.status) {
-            case 'SENT':
-                color = 'bg-blue-500';
-                label = t('status.sent');
-                break;
-            case 'REJECTED':
-                color = 'bg-red-500';
-                label = t('status.rejected');
-                break;
-            case 'VISIT_PROPOSED':
-                color = 'bg-purple-500';
-                label = t('status.visitProposed');
-                break;
-            case 'VISIT_CONFIRMED':
-                color = 'bg-indigo-500';
-                label = t('status.visitConfirmed');
-                break;
-            case 'ACCEPTED':
-                color = 'bg-green-500';
-                label = t('status.accepted');
-                break;
-            case 'PENDING':
-            default:
-                color = 'bg-yellow-500';
-                label = t('status.pending');
-                break;
+        // Check lease status first (higher priority than application status)
+        if (application.leaseStatus === 'SIGNED') {
+            color = 'bg-green-500';
+            label = 'Bail signé';
+        } else if (application.leaseStatus === 'PENDING_SIGNATURE') {
+            color = 'bg-blue-500';
+            label = 'Bail en signature';
+        } else {
+            switch (application.status) {
+                case 'SENT':
+                    color = 'bg-blue-500';
+                    label = t('status.sent');
+                    break;
+                case 'REJECTED':
+                    color = 'bg-red-500';
+                    label = t('status.rejected');
+                    break;
+                case 'VISIT_PROPOSED':
+                    color = 'bg-purple-500';
+                    label = t('status.visitProposed');
+                    break;
+                case 'VISIT_CONFIRMED':
+                    color = 'bg-indigo-500';
+                    label = t('status.visitConfirmed');
+                    break;
+                case 'ACCEPTED':
+                    color = 'bg-green-500';
+                    label = t('status.accepted');
+                    break;
+                case 'PENDING':
+                default:
+                    color = 'bg-yellow-500';
+                    label = t('status.pending');
+                    break;
+            }
         }
 
         return {

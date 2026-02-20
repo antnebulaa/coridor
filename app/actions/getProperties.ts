@@ -45,7 +45,7 @@ export default async function getProperties() {
 
                                 applications: {
                                     where: {
-                                        leaseStatus: 'SIGNED'
+                                        leaseStatus: { in: ['SIGNED', 'PENDING_SIGNATURE'] }
                                     },
                                     include: {
                                         financials: true

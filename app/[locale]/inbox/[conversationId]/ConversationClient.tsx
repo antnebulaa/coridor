@@ -324,6 +324,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         onToggleDossier={toggleDossier}
                         onOpenListingRecap={handleOpenListingRecap}
                         showDossier={showDossier}
+                        applicationId={applicationId}
                         confirmedVisit={confirmedVisit}
                     />
                 </div>

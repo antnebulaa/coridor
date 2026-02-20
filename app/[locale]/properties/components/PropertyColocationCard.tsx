@@ -35,8 +35,11 @@ const PropertyColocationCard: React.FC<PropertyColocationCardProps> = ({
         const listing = unit.listings?.[0]; // Assuming 1 active listing per unit logic for now
 
         // Check Lease (Active Application)
-        const activeLease = listing?.activeApplications?.[0];
-        const hasActiveLease = !!activeLease;
+        const signedApps = (listing?.activeApplications || []).filter((a: any) => a.leaseStatus === 'SIGNED');
+        const pendingApps = (listing?.activeApplications || []).filter((a: any) => a.leaseStatus === 'PENDING_SIGNATURE');
+        const activeLease = signedApps[0] || pendingApps[0];
+        const hasActiveLease = signedApps.length > 0;
+        const hasPendingSignature = pendingApps.length > 0;
 
         const isOccupied = hasActiveLease;
 
@@ -57,6 +60,7 @@ const PropertyColocationCard: React.FC<PropertyColocationCardProps> = ({
         return {
             id: unit.id,
             isOccupied,
+            hasPendingSignature,
             isRentPaid,
             rentAmount,
             chargesAmount,
@@ -159,7 +163,7 @@ const PropertyColocationCard: React.FC<PropertyColocationCardProps> = ({
                         {roomStates.map((state) => (
                             <div
                                 key={state.id}
-                                className={`w-3.5 h-3.5 rounded-full  ${state.isOccupied ? 'bg-green-500 border-green-500' : ' bg-neutral-200'}`}
+                                className={`w-3.5 h-3.5 rounded-full ${state.isOccupied ? 'bg-green-500' : state.hasPendingSignature ? 'bg-blue-500' : 'bg-neutral-200'}`}
                             />
                         ))}
                     </div>

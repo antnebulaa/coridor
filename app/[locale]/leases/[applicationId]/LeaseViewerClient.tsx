@@ -43,6 +43,7 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
     const [signers, setSigners] = useState<Signer[]>([]);
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [pdfLoading, setPdfLoading] = useState(true);
+    const [signatureLink, setSignatureLink] = useState<string | null>(null);
 
     // Validate required data for signature (phone + email for all parties)
     const missingFields = useMemo(() => {
@@ -106,21 +107,30 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
         }
     };
 
-    const handleRefreshStatus = async () => {
+    const handleRefreshStatus = async (silent = false) => {
         try {
             setRefreshing(true);
             const res = await axios.get(`/api/leases/${leaseConfig.application_id}/status`);
             if (res.data.status) setStatus(res.data.status);
             if (res.data.signedUrl) setSignedUrl(res.data.signedUrl);
             if (res.data.signers) setSigners(res.data.signers);
-            toast.success("Statut mis à jour");
+            if (res.data.signatureLink) setSignatureLink(res.data.signatureLink);
+            if (!silent) toast.success("Statut mis à jour");
         } catch (error) {
-            toast.error("Erreur lors de la mise à jour");
+            if (!silent) toast.error("Erreur lors de la mise à jour");
             console.error(error);
         } finally {
             setRefreshing(false);
         }
     };
+
+    // Auto-fetch status & signature link on mount when PENDING_SIGNATURE
+    useEffect(() => {
+        if (status === 'PENDING_SIGNATURE') {
+            handleRefreshStatus(true);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleDownload = useCallback(() => {
         if (!pdfBlob) return;
@@ -299,11 +309,28 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
 
                             {status === 'PENDING_SIGNATURE' && (
                                 <>
-                                    <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
-                                        <span>En cours de signature...</span>
-                                    </div>
+                                    {!isOwner && signatureLink ? (
+                                        <a
+                                            href={signatureLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm"
+                                        >
+                                            <HiPencilSquare size={16} />
+                                            <span className="hidden sm:inline">Signer le bail</span>
+                                            <span className="sm:hidden">Signer</span>
+                                        </a>
+                                    ) : !isOwner && !signatureLink ? (
+                                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg border border-blue-200">
+                                            <span>Vérifiez votre email pour signer</span>
+                                        </div>
+                                    ) : (
+                                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
+                                            <span>En cours de signature...</span>
+                                        </div>
+                                    )}
                                     <button
-                                        onClick={handleRefreshStatus}
+                                        onClick={() => handleRefreshStatus()}
                                         disabled={refreshing}
                                         className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-600 hover:text-black rounded-lg hover:bg-neutral-100 transition disabled:opacity-50"
                                     >

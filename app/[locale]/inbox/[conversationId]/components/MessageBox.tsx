@@ -26,6 +26,7 @@ interface MessageBoxProps {
     onOpenMenu: () => void;
     onCloseMenu: () => void;
     showDossier?: boolean;
+    applicationId?: string | null;
     confirmedVisit?: {
         id: string;
         date: string;
@@ -44,6 +45,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     onOpenMenu,
     onCloseMenu,
     showDossier,
+    applicationId,
     confirmedVisit
 }) => {
     const t = useTranslations('inbox');
@@ -428,6 +430,17 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     <div className="text-sm text-blue-600">
                                         Le bail de location a été envoyé pour signature électronique via Yousign.
                                     </div>
+                                    {applicationId && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.open(`/leases/${applicationId}`, '_blank');
+                                            }}
+                                            className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit"
+                                        >
+                                            {isOwn ? 'Consulter le bail' : 'Signer le bail'}
+                                        </button>
+                                    )}
                                 </div>
 
                             ) : (
