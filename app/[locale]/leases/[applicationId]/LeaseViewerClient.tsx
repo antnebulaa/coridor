@@ -72,25 +72,32 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
 
     const canSign = missingFields.length === 0;
 
-    // Load PDF blob on mount: signed PDF if available, otherwise generate
+    // Load PDF blob: signed PDF if available, otherwise generate from config
     useEffect(() => {
         let cancelled = false;
 
         async function loadPdf() {
             try {
-                // If signed and we have a valid URL, fetch the signed PDF
-                if (status === 'SIGNED' && signedUrl && !signedUrl.includes('example.com') && !signedUrl.startsWith('data:')) {
+                // Try to load signed PDF if available
+                if (status === 'SIGNED' && signedUrl && !signedUrl.includes('example.com')) {
+                    // Handle base64 data URLs
+                    if (signedUrl.startsWith('data:')) {
+                        const response = await fetch(signedUrl);
+                        const blob = await response.blob();
+                        if (!cancelled) setPdfBlob(blob);
+                        return;
+                    }
+                    // Handle regular URLs (Supabase storage)
                     const res = await fetch(signedUrl);
                     if (res.ok) {
                         const blob = await res.blob();
                         if (!cancelled) setPdfBlob(blob);
                         return;
                     }
-                    // If fetch failed, fall through to generate
                     console.warn('Failed to fetch signed PDF, falling back to generated');
                 }
 
-                // Generate PDF from lease config
+                // Fallback: generate PDF from lease config
                 const { pdf } = await import('@react-pdf/renderer');
                 const blob = await pdf(<LeaseDocument data={leaseConfig} />).toBlob();
                 if (!cancelled) setPdfBlob(blob);
@@ -138,9 +145,9 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
         }
     };
 
-    // Auto-fetch status & signature link on mount when PENDING_SIGNATURE
+    // Auto-fetch status on mount: recover signed URL or get signature links
     useEffect(() => {
-        if (status === 'PENDING_SIGNATURE') {
+        if (status === 'PENDING_SIGNATURE' || (status === 'SIGNED' && (!signedUrl || signedUrl.includes('example.com')))) {
             handleRefreshStatus(true);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
