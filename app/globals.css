@@ -131,46 +131,44 @@ hr {
   border-color: #EBEBEB;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-hide {
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-@layer utilities {
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
+/* ──── Safe Area Utilities ──── */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
 
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
-  .top-safe {
-    top: env(safe-area-inset-top);
-  }
+@utility top-safe {
+  top: env(safe-area-inset-top);
+}
 
-  /* Home page: content must clear the fixed navbar (pt-safe + navbar content height) */
-  .pt-safe-navbar {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 5rem);
-  }
+/* Home page: content must clear the fixed navbar (pt-safe + navbar content height) */
+@utility pt-safe-navbar {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 5rem);
+}
 
-  .container-custom {
-    @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;
-  }
+/* ──── Layout Utilities ──── */
+@utility container-custom {
+  @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;
+}
 
-  .animated-underline {
-    position: relative;
-    text-decoration: none;
-    display: inline-block;
-    /* Required for width calc */
-  }
+/* ──── Animated Underline ──── */
+@utility animated-underline {
+  position: relative;
+  text-decoration: none;
+  display: inline-block;
 
-  /* Base Gray Line */
-  .animated-underline::before {
+  &::before {
     content: "";
     position: absolute;
     bottom: 0;
@@ -178,18 +176,17 @@ hr {
     width: 100%;
     height: 1px;
     background-color: #D1D5DB;
-    /* neutral-300 */
     transform-origin: right;
     transition: transform 0.3s ease-out;
   }
 
-  /* Dark mode adjust for gray line if needed, but neutral-300 is okay usually, or opacity */
-  .dark .animated-underline::before {
-    background-color: #525252;
+  &:where(.dark, .dark *) {
+    &::before {
+      background-color: #525252;
+    }
   }
 
-  /* Animated Fill Line */
-  .animated-underline::after {
+  &::after {
     content: "";
     position: absolute;
     bottom: 0;
@@ -202,97 +199,89 @@ hr {
     transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
   }
 
-  .animated-underline:hover::after {
+  &:hover::after {
     transform: scaleX(1);
   }
+}
 
-  /* Mobile Slide Up Animation */
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-slide-up {
+/* ──── Animation Utilities ──── */
+@keyframes slideUp {
+  from {
     opacity: 0;
-    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform: translateY(20px);
   }
-
-  .stagger-1 {
-    animation-delay: 0.1s;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
-    }
+@utility animate-slide-up {
+  opacity: 0;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
-    100% {
-      background-position: -200% 0;
-    }
+@utility stagger-1 {
+  animation-delay: 0.1s;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
   }
-
-  .animate-shimmer {
-    background: linear-gradient(to right, #a3a3a3 0%, #d4d4d4 20%, #a3a3a3 40%, #a3a3a3 100%);
-    background-size: 200% auto;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    animation: shimmer 8s linear infinite;
+  100% {
+    background-position: -200% 0;
   }
+}
 
-  .dark .animate-shimmer {
+@utility animate-shimmer {
+  background: linear-gradient(to right, #a3a3a3 0%, #d4d4d4 20%, #a3a3a3 40%, #a3a3a3 100%);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer 8s linear infinite;
+
+  &:where(.dark, .dark *) {
     background: linear-gradient(to right, #525252 0%, #a3a3a3 20%, #525252 40%, #525252 100%);
     background-size: 200% auto;
     background-clip: text;
-    /* standard */
     -webkit-background-clip: text;
-    /* webkit prefix */
     -webkit-text-fill-color: transparent;
     color: transparent;
-    /* Toast Animations */
-    /* Nested block removed */
   }
+}
 
-  /* Toast Animations */
-  @keyframes toast-enter {
-    0% {
-      opacity: 0;
-      transform: translateY(100%) scale(0.9);
-    }
-
-    100% {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+/* ──── Toast Animation Utilities ──── */
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(100%) scale(0.9);
   }
-
-  @keyframes toast-leave {
-    0% {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-
-    100% {
-      opacity: 0;
-      transform: translateY(150%) scale(0.9);
-    }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
+}
 
-  .animate-enter {
-    animation: toast-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+@keyframes toast-leave {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
+  100% {
+    opacity: 0;
+    transform: translateY(150%) scale(0.9);
+  }
+}
 
-  .animate-leave {
-    animation: toast-leave 0.3s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
-  }
+@utility animate-enter {
+  animation: toast-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@utility animate-leave {
+  animation: toast-leave 0.3s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
 }
 
 /* Move-In Stories Animations */
@@ -304,8 +293,12 @@ hr {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
 }
-.animate-fadeUp { animation: fadeUp 0.4s ease forwards; }
-.animate-scaleIn { animation: scaleIn 0.5s ease forwards; }
+@utility animate-fadeUp {
+  animation: fadeUp 0.4s ease forwards;
+}
+@utility animate-scaleIn {
+  animation: scaleIn 0.5s ease forwards;
+}
 
 /* Leaflet Dark Mode Overrides */
 .dark .leaflet-control-zoom a {

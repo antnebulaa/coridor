@@ -363,8 +363,8 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 href="/account/tenant-profile"
                                 className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
-                                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
-                                    <FileText size={18} className="text-blue-600 dark:text-blue-400" />
+                                <div className="p-2 bg-blue-600 dark:bg-blue-900/30 rounded-full">
+                                    <FileText size={14} className="text-white dark:text-blue-400" />
                                 </div>
                                 <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-leftr">Dossier</span>
                             </Link>
@@ -372,8 +372,8 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 href="/account/receipts"
                                 className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
-                                <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
-                                    <Receipt size={18} className="text-amber-600 dark:text-amber-400" />
+                                <div className="p-2 bg-amber-600 dark:bg-amber-900/30 rounded-full">
+                                    <Receipt size={14} className="text-white dark:text-amber-400" />
                                 </div>
                                 <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Quittances</span>
                             </Link>
@@ -381,8 +381,8 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                 href="/account/alerts"
                                 className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
-                                <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
-                                    <BellRing size={18} className="text-purple-600 dark:text-purple-400" />
+                                <div className="p-2 bg-purple-600 dark:bg-purple-900/30 rounded-full">
+                                    <BellRing size={14} className="text-white dark:text-purple-400" />
                                 </div>
                                 <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Alertes</span>
                             </Link>
