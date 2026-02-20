@@ -94,59 +94,62 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     return (
         <div
             id="bottom-nav"
-            className="fixed bottom-6 w-full z-2000 md:hidden px-4 pointer-events-none"
+            className="fixed bottom-0 left-0 right-0 z-2000 md:hidden pointer-events-none"
         >
-            <div className="flex flex-row items-center justify-center max-w-[400px] mx-auto">
-                {/* Main Menu Pill */}
-                <div className="flex-1 bg-card/70 backdrop-blur-md rounded-full shadow-2xl pointer-events-auto border border-border">
-                    <div className="flex flex-row items-center justify-between p-1">
-                        {routes.map((route) => (
-                            <div
-                                key={route.label}
-                                onClick={() => handleClick(route.href)}
-                                className="relative flex-1 flex items-center justify-center cursor-pointer py-2 px-1"
-                            >
-                                {route.active && (
-                                    <motion.div
-                                        layoutId="active-bubble"
-                                        className="absolute inset-0 bg-primary rounded-full"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
-                                <div className={`
-                                    relative 
-                                    z-10 
-                                    flex 
-                                    flex-col 
-                                    items-center 
-                                    justify-center 
-                                    gap-1
-                                    transition-colors
-                                    duration-200
-                                    ${route.active ? 'text-primary-foreground' : 'text-foreground hover:text-foreground'}
-                                `}>
-                                    <div className="relative">
-                                        <route.icon size={20} />
-                                        {route.label === 'Messages' && !!unreadCount && (
-                                            <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
-                                                {unreadCount > 99 ? '99+' : unreadCount}
-                                            </div>
-                                        )}
-                                        {route.label === 'Notifs' && !!notificationCount && (
-                                            <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
-                                                {notificationCount > 99 ? '99+' : notificationCount}
-                                            </div>
-                                        )}
-                                        {route.label === 'Dashboard' && hasPendingAlert && (
-                                            <div className="absolute top-0 -right-1 bg-red-500 w-2.5 h-2.5 rounded-full border border-background" />
-                                        )}
-                                    </div>
-                                    <div className="text-[0.68rem] font-medium">
-                                        {route.label}
+            {/* Gradient fade — fills the gap between pill and screen edge */}
+            <div className="bg-linear-to-b from-transparent via-background/50 to-background/80 pt-6 pb-safe-nav px-4">
+                <div className="flex flex-row items-center justify-center max-w-[400px] mx-auto">
+                    {/* Main Menu Pill */}
+                    <div className="flex-1 bg-card/70 backdrop-blur-md rounded-full shadow-2xl pointer-events-auto border border-border">
+                        <div className="flex flex-row items-center justify-between p-1">
+                            {routes.map((route) => (
+                                <div
+                                    key={route.label}
+                                    onClick={() => handleClick(route.href)}
+                                    className="relative flex-1 flex items-center justify-center cursor-pointer py-2 px-1"
+                                >
+                                    {route.active && (
+                                        <motion.div
+                                            layoutId="active-bubble"
+                                            className="absolute inset-0 bg-primary rounded-full"
+                                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                    <div className={`
+                                        relative
+                                        z-10
+                                        flex
+                                        flex-col
+                                        items-center
+                                        justify-center
+                                        gap-1
+                                        transition-colors
+                                        duration-200
+                                        ${route.active ? 'text-primary-foreground' : 'text-foreground hover:text-foreground'}
+                                    `}>
+                                        <div className="relative">
+                                            <route.icon size={20} />
+                                            {route.label === 'Messages' && !!unreadCount && (
+                                                <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
+                                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                                </div>
+                                            )}
+                                            {route.label === 'Notifs' && !!notificationCount && (
+                                                <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
+                                                    {notificationCount > 99 ? '99+' : notificationCount}
+                                                </div>
+                                            )}
+                                            {route.label === 'Dashboard' && hasPendingAlert && (
+                                                <div className="absolute top-0 -right-1 bg-red-500 w-2.5 h-2.5 rounded-full border border-background" />
+                                            )}
+                                        </div>
+                                        <div className="text-[0.68rem] font-medium">
+                                            {route.label}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

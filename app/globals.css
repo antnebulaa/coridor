@@ -148,6 +148,10 @@ hr {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+@utility pb-safe-nav {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
 @utility top-safe {
   top: env(safe-area-inset-top);
 }
