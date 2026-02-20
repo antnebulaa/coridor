@@ -66,7 +66,7 @@ export default function SignLandlordPage() {
   const isTenantSigned = inspection?.tenantSignature != null;
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       <InspectionTopBar title="Signature" onBack={() => router.back()} />
 
       <div className="flex-1 overflow-y-auto px-5 py-5">

@@ -56,7 +56,7 @@ export default function RoomsHubPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       <InspectionTopBar
         title="Pièces"
         subtitle={`${completedCount}/${rooms.length} complétées`}

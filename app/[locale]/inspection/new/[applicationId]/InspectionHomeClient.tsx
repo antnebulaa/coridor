@@ -92,7 +92,7 @@ const InspectionHomeClient: React.FC<InspectionHomeClientProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       <InspectionTopBar title="État des lieux d'entrée" />
 
       <div className="flex-1 overflow-y-auto px-5 py-5">

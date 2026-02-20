@@ -75,7 +75,7 @@ export default function RoomInspectionPage() {
 
   if (!currentRoom) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex items-center justify-center">
         <div style={{ color: EDL_COLORS.text2 }}>Chargement...</div>
       </div>
     );
@@ -87,7 +87,7 @@ export default function RoomInspectionPage() {
   // ─── PHASE: OVERVIEW (plan large) ───
   if (phase === 'OVERVIEW') {
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
         <CameraCapture
           label={`${currentRoom.name} — Vue d'ensemble`}
@@ -114,7 +114,7 @@ export default function RoomInspectionPage() {
   if (phase === 'SURFACE_PHOTO') {
     const surface = SURFACE_ELEMENTS[currentSurfaceIndex];
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         {/* Surface tabs */}
@@ -168,7 +168,7 @@ export default function RoomInspectionPage() {
     const surfacePhoto = currentSurface?.photos?.[currentSurface.photos.length - 1];
 
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -249,7 +249,7 @@ export default function RoomInspectionPage() {
   if (phase === 'DEGRAD_TYPE' || phase === 'DEGRAD_CLOSEUP' || phase === 'DEGRAD_AUDIO') {
     const degradElement = currentRoom.elements.find((e) => e.id === currentDegradElementId);
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <DegradationFlow
           elementName={degradElement?.name || 'Élément'}
           onComplete={async (data) => {
@@ -304,7 +304,7 @@ export default function RoomInspectionPage() {
     const allQualified = equipmentElements.every((e) => e.condition || e.isAbsent);
 
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -361,7 +361,7 @@ export default function RoomInspectionPage() {
   // ─── PHASE: OBS ───
   if (phase === 'OBS') {
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         <div className="flex-1 px-5 py-6">
@@ -392,7 +392,7 @@ export default function RoomInspectionPage() {
   if (phase === 'DONE') {
     const nextRoom = currentRoomIndex < rooms.length - 1 ? rooms[currentRoomIndex + 1] : null;
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex items-center justify-center">
         <div className="text-center animate-pulse">
           <div className="text-[64px] mb-4">✓</div>
           <div className="text-[28px] font-bold" style={{ color: EDL_COLORS.green }}>

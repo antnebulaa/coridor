@@ -68,7 +68,7 @@ export default function KeysPage() {
   // Phase PHOTO — Take photo of keys
   if (phase === 'PHOTO') {
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <InspectionTopBar title="Clés & accès" onBack={() => router.back()} />
         <CameraCapture
           label="Photographiez les clés"
@@ -84,7 +84,7 @@ export default function KeysPage() {
   const allTypes = Object.keys(keyCounts);
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       <InspectionTopBar title="Clés & accès" onBack={() => setPhase('PHOTO')} />
 
       <div className="flex-1 overflow-y-auto px-5 py-5">

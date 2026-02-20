@@ -35,7 +35,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
     const isInbox = pathname?.includes('/inbox');
     const isAdmin = pathname?.includes('/admin');
-    const paddingBottom = (isInbox || isMainPage || isAdmin) ? 'pb-0' : 'pb-20';
+    const isInspection = pathname?.includes('/inspection');
+    const paddingBottom = (isInbox || isMainPage || isAdmin || isInspection) ? 'pb-0' : 'pb-20';
 
     // Navbar positioning:
     // - Home page: Navbar is FIXED (transparent overlay on map) → needs padding
@@ -44,7 +45,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // - Mobile (non-home): Navbar hidden, bottom nav used → pt-safe for notch
 
     let paddingTop = 'pt-0';
-    if (isAdmin) {
+    if (isAdmin || isInspection) {
         paddingTop = 'pt-0';
     } else if (isMainPage) {
         // Home: Navbar is fixed + transparent over map

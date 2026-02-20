@@ -307,14 +307,6 @@ hr {
 .animate-fadeUp { animation: fadeUp 0.4s ease forwards; }
 .animate-scaleIn { animation: scaleIn 0.5s ease forwards; }
 
-/* EDL Inspection — safe area top bar */
-.edl-top-safe {
-  /* Fallback: generous fixed padding for all iPhones (incl. Dynamic Island) */
-  padding-top: 60px;
-  /* Override with actual safe area if browser supports env() + max() */
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 60px);
-}
-
 /* Leaflet Dark Mode Overrides */
 .dark .leaflet-control-zoom a {
   background-color: #262626 !important;

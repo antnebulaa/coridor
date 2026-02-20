@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { EDL_COLORS } from '@/lib/inspection';
@@ -21,19 +21,6 @@ const InspectionTopBar: React.FC<InspectionTopBarProps> = ({
   step,
 }) => {
   const router = useRouter();
-  const [topPad, setTopPad] = useState(60);
-
-  useEffect(() => {
-    // Read actual safe area from a temporary element (works in PWA + Safari)
-    const el = document.createElement('div');
-    el.style.paddingTop = 'env(safe-area-inset-top, 0px)';
-    el.style.position = 'fixed';
-    el.style.visibility = 'hidden';
-    document.body.appendChild(el);
-    const computed = parseInt(getComputedStyle(el).paddingTop, 10) || 0;
-    document.body.removeChild(el);
-    setTopPad(Math.max(computed + 12, 60));
-  }, []);
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -44,7 +31,6 @@ const InspectionTopBar: React.FC<InspectionTopBarProps> = ({
     <div
       className="flex-shrink-0"
       style={{
-        paddingTop: topPad,
         background: EDL_COLORS.bg,
         borderBottom: `1px solid ${EDL_COLORS.border}`,
       }}

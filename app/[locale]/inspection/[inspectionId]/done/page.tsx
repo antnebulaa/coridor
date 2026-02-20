@@ -21,7 +21,7 @@ export default function DonePage() {
   }, [inspection, generatePdf]);
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center px-6" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col items-center justify-center px-6">
       {/* Success animation */}
       <div className="text-center mb-8">
         <div className="text-[72px] mb-4 animate-bounce">✅</div>

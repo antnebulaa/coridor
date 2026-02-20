@@ -112,7 +112,7 @@ export default function MetersPage() {
     );
 
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <InspectionTopBar
           title="Compteurs"
           subtitle="Récapitulatif"
@@ -175,7 +175,7 @@ export default function MetersPage() {
 
   if (wizardConfig.field === 'photo') {
     return (
-      <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <WizardPhoto
           title="Compteurs"
           label={wizardConfig.label}
@@ -196,7 +196,7 @@ export default function MetersPage() {
     : '';
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       <WizardInput
         title="Compteurs"
         icon={wizardConfig.icon}

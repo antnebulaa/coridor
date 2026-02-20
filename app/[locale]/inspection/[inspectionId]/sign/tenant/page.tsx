@@ -68,7 +68,7 @@ export default function TenantSignPage() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex items-center justify-center">
         <div className="text-[14px]" style={{ color: EDL_COLORS.text2 }}>Chargement...</div>
       </div>
     );
@@ -76,7 +76,7 @@ export default function TenantSignPage() {
 
   if (error || !inspection) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center px-6" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex items-center justify-center px-6">
         <div className="text-center">
           <div className="text-[48px] mb-4">⚠️</div>
           <div className="text-[16px] font-semibold" style={{ color: EDL_COLORS.text }}>
@@ -92,7 +92,7 @@ export default function TenantSignPage() {
 
   if (signed) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center px-6" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex items-center justify-center px-6">
         <div className="text-center">
           <div className="text-[64px] mb-4">✅</div>
           <div className="text-[24px] font-bold" style={{ color: EDL_COLORS.text }}>
@@ -109,7 +109,7 @@ export default function TenantSignPage() {
   const rooms = inspection.rooms || [];
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0 pt-safe px-5 py-4" style={{ borderBottom: `1px solid ${EDL_COLORS.border}` }}>
         <div className="text-[20px] font-bold" style={{ color: EDL_COLORS.text }}>

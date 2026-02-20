@@ -31,7 +31,7 @@ export default function RecapPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: EDL_COLORS.bg }}>
+    <div className="h-full flex flex-col">
       <InspectionTopBar
         title="Récapitulatif"
         subtitle={`${rooms.length} pièces · ${totalPhotos} photos`}
