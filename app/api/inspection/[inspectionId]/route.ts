@@ -135,3 +135,41 @@ export async function PATCH(request: Request, props: Params) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+// DELETE /api/inspection/[inspectionId] — Delete an inspection (landlord only, DRAFT/CANCELLED)
+export async function DELETE(request: Request, props: Params) {
+  try {
+    const { inspectionId } = await props.params;
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const result = await getInspectionWithAuth(inspectionId, currentUser.id);
+    if (!result) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const { inspection, isLandlord } = result;
+
+    if (!isLandlord) {
+      return NextResponse.json({ error: 'Only the landlord can delete an inspection' }, { status: 403 });
+    }
+
+    // Only allow deleting DRAFT or CANCELLED inspections
+    if (!['DRAFT', 'CANCELLED'].includes(inspection.status)) {
+      return NextResponse.json({ error: 'Cannot delete a signed or pending inspection' }, { status: 403 });
+    }
+
+    // Cascade delete handles all child records (rooms, elements, photos, meters, keys, furniture, amendments)
+    await prisma.inspection.delete({
+      where: { id: inspectionId },
+    });
+
+    return NextResponse.json({ ok: true, deleted: inspectionId });
+  } catch (error: unknown) {
+    console.error('[Inspection DELETE] Error:', error);
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
