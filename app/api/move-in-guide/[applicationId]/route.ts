@@ -37,7 +37,7 @@ export async function GET(
             const guide = await prisma.moveInGuide.create({
                 data: {
                     rentalApplicationId: application.id,
-                    steps: DEFAULT_MOVE_IN_STEPS,
+                    steps: DEFAULT_MOVE_IN_STEPS as unknown as any,
                 }
             });
             return NextResponse.json(guide);
@@ -104,7 +104,7 @@ export async function PATCH(
                 return NextResponse.json({ error: "Invalid stepId" }, { status: 400 });
             }
 
-            const currentSteps = application.moveInGuide.steps as MoveInStep[];
+            const currentSteps = application.moveInGuide.steps as unknown as MoveInStep[];
             const updatedSteps = currentSteps.map(step => {
                 if (step.id === body.stepId) {
                     return {
@@ -118,7 +118,7 @@ export async function PATCH(
 
             const updated = await prisma.moveInGuide.update({
                 where: { id: application.moveInGuide.id },
-                data: { steps: updatedSteps },
+                data: { steps: updatedSteps as unknown as any },
             });
             return NextResponse.json(updated);
         }

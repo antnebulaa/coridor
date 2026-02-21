@@ -86,7 +86,7 @@ export async function POST(request: Request, props: Params) {
     // Build PDF data
     const pdfData: InspectionPdfData = {
       type: inspection.type as 'ENTRY' | 'EXIT',
-      date: new Date(inspection.date).toLocaleDateString('fr-FR', {
+      date: new Date(inspection.scheduledAt || inspection.createdAt).toLocaleDateString('fr-FR', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -126,13 +126,13 @@ export async function POST(request: Request, props: Params) {
           degradationTypes: el.degradationTypes,
           photos: el.photos.map((p) => ({
             url: p.url,
-            thumbnailUrl: p.thumbnailUrl,
+            thumbnailUrl: p.thumbnailUrl ?? undefined,
             type: p.type,
           })),
         })),
         photos: room.photos.map((p) => ({
           url: p.url,
-          thumbnailUrl: p.thumbnailUrl,
+          thumbnailUrl: p.thumbnailUrl ?? undefined,
           type: p.type,
         })),
       })),
@@ -146,7 +146,7 @@ export async function POST(request: Request, props: Params) {
     // Upload to Cloudinary (unsigned upload)
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const formData = new FormData();
-    formData.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }), `edl-${inspectionId}.pdf`);
+    formData.append('file', new Blob([new Uint8Array(pdfBuffer)], { type: 'application/pdf' }), `edl-${inspectionId}.pdf`);
     formData.append('upload_preset', 'airbnb-clone');
     formData.append('resource_type', 'auto');
     formData.append('folder', 'inspection-pdfs');

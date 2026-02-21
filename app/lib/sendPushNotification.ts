@@ -22,7 +22,7 @@ interface PushNotificationOptions {
     body: string;
     url: string;
     icon?: string;
-    type?: 'message' | 'visit' | 'application' | 'like'; // NEW: Notification type for preferences
+    type?: 'message' | 'visit' | 'application' | 'like' | 'lease' | 'inspection';
 }
 
 /**
@@ -42,14 +42,16 @@ export async function sendPushNotification(options: PushNotificationOptions): Pr
 
         // If preferences exist, check if this notification type is enabled
         if (preferences) {
-            const typeEnabled = {
+            const typeEnabled: Record<string, boolean> = {
                 message: preferences.enableMessages,
                 visit: preferences.enableVisits,
                 application: preferences.enableApplications,
                 like: preferences.enableLikes,
+                lease: true,
+                inspection: true,
             };
 
-            if (type && !typeEnabled[type]) {
+            if (type && typeEnabled[type] === false) {
                 console.log(`[Push] Notification type "${type}" is disabled for user ${userId}`);
                 return 0;
             }

@@ -27,9 +27,9 @@ export async function markLeaseAsSigned(applicationId: string, signedUrl?: strin
         const leaseType = application.listing?.leaseType;
         let durationMonths = application.leaseDurationMonths;
         if (!durationMonths) {
-            if (leaseType === 'BAIL_NU_LOI_89' || leaseType === 'LONG_TERM') durationMonths = 36;
-            else if (leaseType === 'BAIL_ETUDIANT' || leaseType === 'STUDENT') durationMonths = 9;
-            else if (leaseType === 'BAIL_MOBILITE') durationMonths = 10;
+            if (leaseType === 'LONG_TERM') durationMonths = 36;
+            else if (leaseType === 'STUDENT') durationMonths = 9;
+            else if (leaseType === 'SHORT_TERM') durationMonths = 10;
             else durationMonths = 12;
         }
 

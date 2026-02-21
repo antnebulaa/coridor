@@ -84,7 +84,7 @@ export function useInspection(inspectionId: string | undefined) {
   const [isSaving, setIsSaving] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const pendingChangesRef = useRef(false);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // ─── Fetch inspection (with sessionStorage fallback) ───
 

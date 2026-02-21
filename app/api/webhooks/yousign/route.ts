@@ -131,9 +131,9 @@ export async function POST(request: Request) {
                 const leaseType = listing?.leaseType;
                 let durationMonths = (application as any).leaseDurationMonths;
                 if (!durationMonths) {
-                    if (leaseType === 'BAIL_NU_LOI_89' || leaseType === 'LONG_TERM') durationMonths = 36;
-                    else if (leaseType === 'BAIL_ETUDIANT' || leaseType === 'STUDENT') durationMonths = 9;
-                    else if (leaseType === 'BAIL_MOBILITE') durationMonths = 10;
+                    if (leaseType === 'LONG_TERM') durationMonths = 36;
+                    else if (leaseType === 'STUDENT') durationMonths = 9;
+                    else if (leaseType === 'SHORT_TERM') durationMonths = 10;
                     else durationMonths = 12; // meublé default
                 }
 
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
                         await prisma.moveInGuide.create({
                             data: {
                                 rentalApplicationId: application.id,
-                                steps: DEFAULT_MOVE_IN_STEPS,
+                                steps: DEFAULT_MOVE_IN_STEPS as unknown as any,
                             }
                         });
                         console.log("[Yousign Webhook] MoveInGuide created for application:", application.id);

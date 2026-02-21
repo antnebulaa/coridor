@@ -73,8 +73,8 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
         const isActive = room.id === activeRoomId;
         const isDone = room.isCompleted;
 
-        let bg = EDL_COLORS.card2;
-        let textColor = EDL_COLORS.text3;
+        let bg: string = EDL_COLORS.card2;
+        let textColor: string = EDL_COLORS.text3;
 
         if (isActive) {
           bg = EDL_COLORS.accent;
