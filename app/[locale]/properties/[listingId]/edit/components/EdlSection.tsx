@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { SafeListing } from '@/types';
 import Heading from '@/components/Heading';
 import { FileText, ExternalLink, Loader2, ClipboardList, CheckCircle2, Clock, Send } from 'lucide-react';

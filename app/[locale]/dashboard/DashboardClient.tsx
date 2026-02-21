@@ -6,7 +6,7 @@ import KPICards from "@/app/[locale]/properties/components/analytics/KPICards";
 import CashflowChart from "@/app/[locale]/properties/components/analytics/CashflowChart";
 import { HiOutlineHome, HiOutlineUserGroup, HiOutlineClipboard, HiOutlineKey } from "react-icons/hi2";
 import { Plus, Trophy, Users, ArrowRight, ClipboardCheck, FileText, Clock, Send, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { SafeUser } from "@/types";
 import LegalRemindersWidget from "@/components/dashboard/LegalRemindersWidget";
 import RentCollectionWidget from "@/components/dashboard/RentCollectionWidget";
@@ -300,7 +300,7 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
 
                     {/* Quick Actions / Tips */}
                     <div className="lg:col-span-1 flex flex-col gap-4">
-                        <Link href="mailto:support@coridor.com" className="bg-linear-to-br from-neutral-900 to-neutral-800 rounded-xl p-5 text-white hover:opacity-95 transition group">
+                        <a href="mailto:support@coridor.com" className="bg-linear-to-br from-neutral-900 to-neutral-800 rounded-xl p-5 text-white hover:opacity-95 transition group">
                             <h4 className="font-semibold mb-2">{t('landlord.needHelp')}</h4>
                             <p className="text-sm text-neutral-300 mb-4">
                                 {t('landlord.helpText')}
@@ -308,7 +308,7 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                             <span className="text-xs bg-white text-black px-3 py-1.5 rounded-full font-medium inline-block group-hover:bg-neutral-100 transition">
                                 {t('landlord.contactUs')}
                             </span>
-                        </Link>
+                        </a>
                     </div>
                 </div>
             </div>

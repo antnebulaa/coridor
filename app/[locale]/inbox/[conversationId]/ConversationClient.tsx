@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { SafeUser, SafeMessage, SafeListing } from "@/types";
 import clsx from "clsx";
 import { format } from "date-fns";
