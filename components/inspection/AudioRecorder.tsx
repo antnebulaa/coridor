@@ -145,9 +145,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
         disabled={isTranscribing}
         className="flex items-center justify-center gap-3 py-4 rounded-2xl text-[18px] font-bold"
         style={{
-          background: isRecording ? EDL_COLORS.red : isTranscribing ? EDL_COLORS.card2 : EDL_COLORS.card,
-          color: isRecording ? '#fff' : EDL_COLORS.text,
-          border: `2px solid ${isRecording ? EDL_COLORS.red : EDL_COLORS.border}`,
+          background: isRecording ? EDL_COLORS.red : isTranscribing ? EDL_COLORS.card2 : EDL_COLORS.accent,
+          color: isRecording ? '#fff' : isTranscribing ? EDL_COLORS.text : '#fff',
+          border: `2px solid ${isRecording ? EDL_COLORS.red : isTranscribing ? EDL_COLORS.border : EDL_COLORS.accent}`,
           boxShadow: isRecording ? `0 0 30px ${EDL_COLORS.red}50` : 'none',
           opacity: isTranscribing ? 0.6 : 1,
         }}

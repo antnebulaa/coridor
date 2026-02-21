@@ -63,9 +63,21 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             if (lastMessage.body === 'INVITATION_VISITE') return 'Invitation à une visite';
             if (lastMessage.body.startsWith('VISIT_CONFIRMED|')) return 'Visite confirmée';
             if (lastMessage.body.startsWith('APPLICATION_REJECTED|')) return 'Candidature déclinée';
+            if (lastMessage.body.startsWith('INSPECTION_SCHEDULED|')) return "🗓️ État des lieux planifié";
+            if (lastMessage.body.startsWith('INSPECTION_CONFIRMED|')) return "✅ Créneau EDL confirmé";
+            if (lastMessage.body.startsWith('INSPECTION_REMINDER|')) return "🔔 Rappel état des lieux";
             if (lastMessage.body.startsWith('INSPECTION_STARTED|')) return "🏠 État des lieux démarré";
+            if (lastMessage.body.startsWith('INSPECTION_COMPLETED|')) return '✍️ Bailleur a signé';
             if (lastMessage.body.startsWith('INSPECTION_SIGNED|')) return '✅ État des lieux signé';
+            if (lastMessage.body.startsWith('INSPECTION_SIGN_LINK_SENT|')) return '✉️ Lien de signature envoyé';
             if (lastMessage.body.startsWith('INSPECTION_PDF_READY|')) return '📄 PDF disponible';
+            if (lastMessage.body.startsWith('INSPECTION_CANCELLED|')) return '❌ État des lieux annulé';
+            if (lastMessage.body.startsWith('INSPECTION_RESCHEDULED|')) return '🔄 EDL reprogrammé';
+            if (lastMessage.body.startsWith('INSPECTION_AMENDMENT_REQUESTED|')) return '⚠️ Rectification demandée';
+            if (lastMessage.body.startsWith('INSPECTION_AMENDMENT_RESPONDED|')) {
+                const status = lastMessage.body.split('|')[3];
+                return status === 'ACCEPTED' ? '✅ Rectification acceptée' : '❌ Rectification refusée';
+            }
             return lastMessage.body;
         }
 
@@ -109,8 +121,22 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         let color = 'bg-gray-400';
         let label = t('status.pending');
 
-        // Check lease status first (higher priority than application status)
-        if (application.leaseStatus === 'SIGNED') {
+        // Check EDL status (highest priority — derived from system messages)
+        const messages = data.messages || [];
+        const hasEdlSigned = messages.some(m => m.body?.startsWith('INSPECTION_SIGNED|') || m.body?.startsWith('INSPECTION_PDF_READY|'));
+        const hasEdlStarted = messages.some(m => m.body?.startsWith('INSPECTION_STARTED|'));
+        const hasEdlScheduled = messages.some(m => m.body?.startsWith('INSPECTION_SCHEDULED|'));
+
+        if (hasEdlSigned) {
+            color = 'bg-green-500';
+            label = 'EDL signé';
+        } else if (hasEdlStarted) {
+            color = 'bg-amber-500';
+            label = 'EDL en cours';
+        } else if (hasEdlScheduled) {
+            color = 'bg-amber-400';
+            label = 'EDL planifié';
+        } else if (application.leaseStatus === 'SIGNED') {
             color = 'bg-green-500';
             label = 'Bail signé';
         } else if (application.leaseStatus === 'PENDING_SIGNATURE') {

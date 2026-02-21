@@ -23,6 +23,8 @@ import {
     Building2,
     Search,
     MessageSquare,
+    ClipboardCheck,
+    Pen,
 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
@@ -31,12 +33,23 @@ import MoveInStories from "@/components/move-in/MoveInStories";
 import MoveInChecklist from "@/components/move-in/MoveInChecklist";
 import type { MoveInLeaseData } from "@/lib/moveInGuide";
 
+interface InspectionData {
+    id: string;
+    status: string;
+    type: string;
+    pdfUrl: string | null;
+    updatedAt: string;
+    landlordSignedAt: string | null;
+    tenantSignedAt: string | null;
+}
+
 interface MyRentalClientProps {
     currentUser: SafeUser;
     rental: any | null;
+    inspections?: InspectionData[];
 }
 
-const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) => {
+const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental, inspections = [] }) => {
     const router = useRouter();
     const t = useTranslations('myRental');
 
@@ -484,6 +497,98 @@ const MyRentalClient: React.FC<MyRentalClientProps> = ({ currentUser, rental }) 
                             )}
                         </div>
                     </div>
+
+                    {/* === ÉTATS DES LIEUX === */}
+                    {inspections.length > 0 && (
+                        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
+                            <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+                                <ClipboardCheck size={18} className="text-indigo-500" />
+                                États des lieux
+                            </h2>
+                            <div className="flex flex-col gap-2">
+                                {inspections.map((insp) => {
+                                    const typeLabel = insp.type === 'ENTRY' ? "Entrée" : "Sortie";
+                                    const statusMap: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+                                        DRAFT: { label: 'En cours', color: 'text-amber-600', icon: <Clock size={16} className="text-amber-500" /> },
+                                        PENDING_SIGNATURE: { label: 'À signer', color: 'text-blue-600', icon: <Pen size={16} className="text-blue-500" /> },
+                                        SIGNED: { label: 'Signé', color: 'text-green-600', icon: <CheckCircle2 size={16} className="text-green-500" /> },
+                                        LOCKED: { label: 'Finalisé', color: 'text-green-600', icon: <CheckCircle2 size={16} className="text-green-500" /> },
+                                    };
+                                    const config = statusMap[insp.status] || statusMap.DRAFT;
+
+                                    // If signed and has PDF, show download link
+                                    if ((insp.status === 'SIGNED' || insp.status === 'LOCKED') && insp.pdfUrl) {
+                                        return (
+                                            <a
+                                                key={insp.id}
+                                                href={insp.pdfUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    {config.icon}
+                                                    <div>
+                                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                                            État des lieux · {typeLabel}
+                                                        </div>
+                                                        <div className="text-xs text-neutral-400">
+                                                            Signé le {new Date(insp.tenantSignedAt || insp.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <Download size={16} className="text-neutral-400" />
+                                            </a>
+                                        );
+                                    }
+
+                                    // Pending signature — link to sign page
+                                    if (insp.status === 'PENDING_SIGNATURE') {
+                                        return (
+                                            <Link
+                                                key={insp.id}
+                                                href={`/inspection/${insp.id}/sign/tenant`}
+                                                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    {config.icon}
+                                                    <div>
+                                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                                            État des lieux · {typeLabel}
+                                                        </div>
+                                                        <div className="text-xs text-blue-500 font-medium">
+                                                            En attente de votre signature
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <ChevronRight size={16} className="text-neutral-400" />
+                                            </Link>
+                                        );
+                                    }
+
+                                    // Draft or other — just show status
+                                    return (
+                                        <div
+                                            key={insp.id}
+                                            className="flex items-center justify-between p-3.5 rounded-xl"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {config.icon}
+                                                <div>
+                                                    <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                                        État des lieux · {typeLabel}
+                                                    </div>
+                                                    <div className={`text-xs font-medium ${config.color}`}>
+                                                        {config.label}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* === PRACTICAL INFO === */}
                     <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">

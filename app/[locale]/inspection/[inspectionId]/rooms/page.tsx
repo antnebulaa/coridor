@@ -25,6 +25,7 @@ const ROOM_ICONS: Record<InspectionRoomType, LucideIcon> = {
   BEDROOM: BedDouble,
   KITCHEN: CookingPot,
   BATHROOM: ShowerHead,
+  BATHROOM_WC: ShowerHead,
   WC: Droplets,
   LAUNDRY: WashingMachine,
   OFFICE: Monitor,
@@ -40,6 +41,7 @@ const ROOM_ICONS: Record<InspectionRoomType, LucideIcon> = {
 const ADD_ROOM_CHIPS: { type: InspectionRoomType; label: string }[] = [
   { type: 'BEDROOM', label: 'Chambre' },
   { type: 'BATHROOM', label: 'Salle de bain' },
+  { type: 'BATHROOM_WC', label: 'SdB + WC' },
   { type: 'WC', label: 'WC' },
   { type: 'OFFICE', label: 'Bureau' },
   { type: 'DRESSING', label: 'Dressing' },

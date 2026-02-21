@@ -23,7 +23,7 @@ import {
 } from '@/lib/inspection';
 import type { RoomPhase } from '@/lib/inspection';
 import type { ElementCondition } from '@prisma/client';
-import { RotateCcw, Check, CircleCheck } from 'lucide-react';
+import { RotateCcw, Check, CircleCheck, Plus } from 'lucide-react';
 
 function PhotoPreview({ src, alt, onRetake }: { src: string; alt: string; onRetake: () => void }) {
   const [loaded, setLoaded] = useState(false);
@@ -65,11 +65,13 @@ export default function RoomInspectionPage() {
   const inspectionId = params.inspectionId as string;
   const roomId = params.roomId as string;
   const router = useRouter();
-  const { inspection, addPhoto, updateElement, updateRoom } = useInspection(inspectionId);
+  const { inspection, addPhoto, addElement, updateElement, updateRoom } = useInspection(inspectionId);
 
   const [phase, setPhase] = useState<RoomPhase>('OVERVIEW');
   const [currentSurfaceIndex, setCurrentSurfaceIndex] = useState(0); // 0=Sols, 1=Murs, 2=Plafond
   const [currentDegradElementId, setCurrentDegradElementId] = useState<string | null>(null);
+  const [showAddEquip, setShowAddEquip] = useState(false);
+  const [newEquipName, setNewEquipName] = useState('');
 
   const rooms = inspection?.rooms || [];
   const currentRoom = rooms.find((r) => r.id === roomId);
@@ -107,6 +109,13 @@ export default function RoomInspectionPage() {
     // Auto-advance to next room after a brief delay
     setTimeout(goToNextRoom, 500);
   }, [updateRoom, roomId, goToNextRoom]);
+
+  const handleAddEquipment = useCallback(async (name: string) => {
+    if (!name.trim()) return;
+    await addElement(roomId, { category: 'EQUIPMENT', name: name.trim() });
+    setNewEquipName('');
+    setShowAddEquip(false);
+  }, [addElement, roomId]);
 
   if (!currentRoom) {
     return (
@@ -230,10 +239,10 @@ export default function RoomInspectionPage() {
             </div>
             <NatureSelector
               category={surface.category as 'FLOOR' | 'WALL' | 'CEILING'}
-              value={currentSurface?.nature}
-              onChange={async (nature) => {
+              value={(currentSurface?.nature as unknown as string[]) || []}
+              onChange={async (natures) => {
                 if (currentSurface) {
-                  await updateElement(currentSurface.id, { nature });
+                  await updateElement(currentSurface.id, { nature: natures });
                 }
               }}
             />
@@ -271,7 +280,7 @@ export default function RoomInspectionPage() {
               setPhase('EQUIP');
             }
           }}
-          disabled={!currentSurface?.condition || !currentSurface?.nature}
+          disabled={!currentSurface?.condition || !currentSurface?.nature?.length}
         >
           {currentSurfaceIndex < SURFACE_ELEMENTS.length - 1
             ? `${SURFACE_ELEMENTS[currentSurfaceIndex + 1].name} →`
@@ -384,6 +393,68 @@ export default function RoomInspectionPage() {
                 />
               </div>
             ))}
+
+            {/* + Ajouter un équipement */}
+            {showAddEquip ? (
+              <div
+                className="rounded-2xl p-4"
+                style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.accent}40` }}
+              >
+                <input
+                  autoFocus
+                  value={newEquipName}
+                  onChange={(e) => setNewEquipName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && newEquipName.trim()) handleAddEquipment(newEquipName); }}
+                  placeholder="Nom de l'équipement..."
+                  className="w-full bg-transparent text-[17px] font-medium outline-none mb-3 pb-2"
+                  style={{ color: EDL_COLORS.text, borderBottom: `2px solid ${EDL_COLORS.accent}` }}
+                />
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {['Détecteur de fumée', 'Sèche-serviettes', 'Climatisation', 'Store', 'Prise TV', 'Thermostat', 'Meuble vasque', 'Porte-serviettes', 'Tableau électrique'].map((sugg) => (
+                    <button
+                      key={sugg}
+                      onClick={() => { setNewEquipName(sugg); }}
+                      className="px-3 py-1.5 rounded-xl text-[13px]"
+                      style={{
+                        background: newEquipName === sugg ? `${EDL_COLORS.accent}20` : EDL_COLORS.card2,
+                        color: newEquipName === sugg ? EDL_COLORS.accent : EDL_COLORS.text2,
+                        border: `1px solid ${newEquipName === sugg ? EDL_COLORS.accent : EDL_COLORS.border}`,
+                      }}
+                    >
+                      {sugg}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setShowAddEquip(false); setNewEquipName(''); }}
+                    className="flex-1 py-2.5 rounded-xl text-[15px] font-medium"
+                    style={{ color: EDL_COLORS.text3 }}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => handleAddEquipment(newEquipName)}
+                    disabled={!newEquipName.trim()}
+                    className="flex-1 py-2.5 rounded-xl text-[15px] font-bold"
+                    style={{
+                      background: newEquipName.trim() ? EDL_COLORS.accent : EDL_COLORS.card2,
+                      color: newEquipName.trim() ? '#fff' : EDL_COLORS.text3,
+                    }}
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddEquip(true)}
+                className="w-full py-3.5 rounded-2xl text-[16px] font-medium flex items-center justify-center gap-2"
+                style={{ background: EDL_COLORS.card2, color: EDL_COLORS.text2, border: `1px dashed ${EDL_COLORS.border}` }}
+              >
+                <Plus size={16} /> Ajouter un équipement
+              </button>
+            )}
           </div>
         </div>
 

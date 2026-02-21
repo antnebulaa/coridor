@@ -54,7 +54,7 @@ export async function POST(request: Request, props: Params) {
         inspectionRoomId: roomId,
         category,
         name,
-        nature: nature || null,
+        nature: nature || [],
       },
       include: { photos: true },
     });

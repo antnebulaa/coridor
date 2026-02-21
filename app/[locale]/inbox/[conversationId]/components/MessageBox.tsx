@@ -8,6 +8,8 @@ import { useState, useRef, useEffect } from "react";
 import { HiFaceSmile, HiEllipsisHorizontal } from "react-icons/hi2";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 import { FullMessageType, SafeMessage } from "@/types";
 import Avatar from "@/components/Avatar";
@@ -52,7 +54,9 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 }) => {
     const t = useTranslations('inbox');
     const session = useSession();
+    const router = useRouter();
     const [imageModalOpen, setImageModalOpen] = useState(false);
+    const [isConfirmingEdl, setIsConfirmingEdl] = useState(false);
 
     const [menuTrigger, setMenuTrigger] = useState<'button' | 'message' | null>(null);
     const [menuMode, setMenuMode] = useState<'all' | 'reactions' | 'actions'>('all');
@@ -446,6 +450,229 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     )}
                                 </div>
 
+                            ) : data.body?.startsWith('INSPECTION_SCHEDULED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspectionId = parts[1];
+                                    const inspType = parts[2];
+                                    const scheduledIso = parts[3];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    let dateStr = '';
+                                    let timeStr = '';
+                                    try {
+                                        const d = new Date(scheduledIso);
+                                        dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                                        timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                    } catch { /* fallback */ }
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-amber-50 border border-amber-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-amber-700 font-medium text-sm">
+                                                <span className="text-base">🗓️</span>
+                                                {label} planifié
+                                            </div>
+                                            <div className="text-sm text-amber-600">
+                                                {dateStr && timeStr
+                                                    ? `Prévu le ${dateStr} à ${timeStr}.`
+                                                    : "La date sera confirmée."
+                                                }
+                                            </div>
+                                            {isOwn && inspectionId && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.location.href = `/inspection/${inspectionId}`;
+                                                    }}
+                                                    className="mt-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition w-fit"
+                                                >
+                                                    Démarrer l&apos;EDL →
+                                                </button>
+                                            )}
+                                            {!isOwn && inspectionId && (
+                                                <button
+                                                    disabled={isConfirmingEdl}
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        setIsConfirmingEdl(true);
+                                                        try {
+                                                            await axios.post(`/api/inspection/${inspectionId}/confirm`);
+                                                            toast.success('Présence confirmée');
+                                                            router.refresh();
+                                                        } catch (err: unknown) {
+                                                            const error = err as { response?: { status?: number } };
+                                                            if (error?.response?.status === 409) {
+                                                                toast.success('Déjà confirmé');
+                                                            } else {
+                                                                toast.error('Erreur lors de la confirmation');
+                                                            }
+                                                        } finally {
+                                                            setIsConfirmingEdl(false);
+                                                        }
+                                                    }}
+                                                    className="mt-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition w-fit disabled:opacity-50"
+                                                >
+                                                    {isConfirmingEdl ? '...' : 'Confirmer ma présence ✓'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_CONFIRMED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspType = parts[2];
+                                    const scheduledIso = parts[3];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    let dateStr = '';
+                                    let timeStr = '';
+                                    try {
+                                        const d = new Date(scheduledIso);
+                                        dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                                        timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                    } catch { /* fallback */ }
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-green-50 border border-green-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-green-700 font-medium text-sm">
+                                                <span className="text-base">✅</span>
+                                                Créneau confirmé
+                                            </div>
+                                            <div className="text-sm text-green-600">
+                                                {label} confirmé{dateStr && timeStr ? ` pour le ${dateStr} à ${timeStr}.` : '.'}
+                                            </div>
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_CANCELLED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspType = parts[2];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-red-50 border border-red-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
+                                                <span className="text-base">❌</span>
+                                                {label} annulé
+                                            </div>
+                                            <div className="text-sm text-red-600">
+                                                L&apos;état des lieux a été annulé par le propriétaire.
+                                            </div>
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_RESCHEDULED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspectionId = parts[1];
+                                    const inspType = parts[2];
+                                    const scheduledIso = parts[3];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    let dateStr = '';
+                                    let timeStr = '';
+                                    try {
+                                        const d = new Date(scheduledIso);
+                                        dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                                        timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                    } catch { /* fallback */ }
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-blue-50 border border-blue-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+                                                <span className="text-base">🔄</span>
+                                                {label} reprogrammé
+                                            </div>
+                                            <div className="text-sm text-blue-600">
+                                                {dateStr && timeStr
+                                                    ? `Nouveau créneau : ${dateStr} à ${timeStr}.`
+                                                    : "La nouvelle date sera confirmée."
+                                                }
+                                            </div>
+                                            {!isOwn && inspectionId && (
+                                                <button
+                                                    disabled={isConfirmingEdl}
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        setIsConfirmingEdl(true);
+                                                        try {
+                                                            await axios.post(`/api/inspection/${inspectionId}/confirm`);
+                                                            toast.success('Présence confirmée');
+                                                            router.refresh();
+                                                        } catch (err: unknown) {
+                                                            const error = err as { response?: { status?: number } };
+                                                            if (error?.response?.status === 409) {
+                                                                toast.success('Déjà confirmé');
+                                                            } else {
+                                                                toast.error('Erreur lors de la confirmation');
+                                                            }
+                                                        } finally {
+                                                            setIsConfirmingEdl(false);
+                                                        }
+                                                    }}
+                                                    className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit disabled:opacity-50"
+                                                >
+                                                    {isConfirmingEdl ? '...' : 'Confirmer ma présence ✓'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_REMINDER|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspectionId = parts[1];
+                                    const inspType = parts[2];
+                                    const scheduledIso = parts[3];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    let dateStr = '';
+                                    let timeStr = '';
+                                    try {
+                                        const d = new Date(scheduledIso);
+                                        dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+                                        timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                    } catch { /* fallback */ }
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-blue-50 border border-blue-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+                                                <span className="text-base">🔔</span>
+                                                Rappel : {label} demain
+                                            </div>
+                                            <div className="text-sm text-blue-600">
+                                                {dateStr && timeStr
+                                                    ? `Prévu ${dateStr} à ${timeStr}.`
+                                                    : "Consultez votre agenda."
+                                                }
+                                            </div>
+                                            {isOwn && inspectionId && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.location.href = `/inspection/${inspectionId}`;
+                                                    }}
+                                                    className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit"
+                                                >
+                                                    Voir l&apos;état des lieux →
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()
+
                             ) : data.body?.startsWith('INSPECTION_STARTED|') ? (
                                 (() => {
                                     const parts = data.body!.split('|');
@@ -464,7 +691,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             <div className="text-sm text-amber-600">
                                                 L&apos;inspection du logement est en cours.
                                             </div>
-                                            {inspectionId && (
+                                            {isOwn && inspectionId && (
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -475,6 +702,27 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     Reprendre l&apos;EDL →
                                                 </button>
                                             )}
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_COMPLETED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspType = parts[2];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-blue-50 border border-blue-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+                                                <span className="text-base">✍️</span>
+                                                {label} — bailleur signé
+                                            </div>
+                                            <div className="text-sm text-blue-600">
+                                                En attente de la signature du locataire.
+                                            </div>
                                         </div>
                                     );
                                 })()
@@ -496,6 +744,39 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             <div className="text-sm text-green-600">
                                                 Signé par les deux parties. Le PDF sera envoyé par email.
                                             </div>
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_SIGN_LINK_SENT|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspId = parts[1];
+                                    const inspType = parts[2];
+                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-purple-50 border border-purple-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-purple-700 font-medium text-sm">
+                                                <span className="text-base">✉️</span>
+                                                Lien de signature envoyé
+                                            </div>
+                                            <div className="text-sm text-purple-600">
+                                                Le locataire a été invité à signer l&apos;{label.toLowerCase()}.
+                                            </div>
+                                            {!isOwn && inspId && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.location.href = `/inspection/${inspId}/sign/tenant`;
+                                                    }}
+                                                    className="mt-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition w-fit"
+                                                >
+                                                    Signer l&apos;état des lieux →
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })()
@@ -527,6 +808,80 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     Voir le PDF
                                                 </a>
                                             )}
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_AMENDMENT_REQUESTED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspectionId = parts[1];
+                                    const description = parts[3] || '';
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 bg-orange-50 border border-orange-200 p-4 rounded-2xl max-w-xs",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className="flex items-center gap-2 text-orange-700 font-medium text-sm">
+                                                <span className="text-base">⚠️</span>
+                                                Demande de rectification
+                                            </div>
+                                            <div className="text-sm text-orange-600">
+                                                {description || 'Un défaut a été signalé sur l\'état des lieux.'}
+                                            </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push(`/inspection/${inspectionId}/done`);
+                                                }}
+                                                className="mt-1 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition w-fit"
+                                            >
+                                                Voir les rectifications
+                                            </button>
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('INSPECTION_AMENDMENT_RESPONDED|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const inspectionId = parts[1];
+                                    const status = parts[3];
+                                    const description = parts[4] || '';
+                                    const accepted = status === 'ACCEPTED';
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 p-4 rounded-2xl max-w-xs",
+                                            accepted ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200",
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className={clsx(
+                                                "flex items-center gap-2 font-medium text-sm",
+                                                accepted ? "text-green-700" : "text-red-700"
+                                            )}>
+                                                <span className="text-base">{accepted ? '✅' : '❌'}</span>
+                                                Rectification {accepted ? 'acceptée' : 'refusée'}
+                                            </div>
+                                            {description && (
+                                                <div className={clsx(
+                                                    "text-sm",
+                                                    accepted ? "text-green-600" : "text-red-600"
+                                                )}>
+                                                    {description}
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push(`/inspection/${inspectionId}/done`);
+                                                }}
+                                                className={clsx(
+                                                    "mt-1 px-4 py-2 text-white rounded-lg text-sm font-medium transition w-fit",
+                                                    accepted ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                                                )}
+                                            >
+                                                Voir les rectifications
+                                            </button>
                                         </div>
                                     );
                                 })()

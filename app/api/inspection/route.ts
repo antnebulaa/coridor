@@ -6,6 +6,56 @@ import { createNotification } from '@/libs/notifications';
 import { sendPushNotification } from '@/app/lib/sendPushNotification';
 import type { InspectionRoomType } from '@prisma/client';
 
+// GET /api/inspection?listingId=xxx — Fetch inspections for a listing
+export async function GET(request: Request) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const listingId = searchParams.get('listingId');
+
+    if (!listingId) {
+      return NextResponse.json({ error: 'listingId is required' }, { status: 400 });
+    }
+
+    const inspections = await prisma.inspection.findMany({
+      where: {
+        application: {
+          listingId,
+          listing: {
+            rentalUnit: {
+              property: { ownerId: currentUser.id },
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        pdfUrl: true,
+        startedAt: true,
+        completedAt: true,
+        landlordSignedAt: true,
+        tenantSignedAt: true,
+        createdAt: true,
+        tenant: { select: { name: true } },
+        rooms: { select: { isCompleted: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json(inspections);
+  } catch (error: unknown) {
+    console.error('[Inspection GET] Error:', error);
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 // POST /api/inspection — Create a new inspection from an applicationId
 export async function POST(request: Request) {
   try {
@@ -15,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { applicationId, type = 'ENTRY' } = body;
+    const { applicationId, type = 'ENTRY', scheduledAt } = body;
 
     if (!applicationId) {
       return NextResponse.json({ error: 'applicationId is required' }, { status: 400 });
@@ -95,6 +145,7 @@ export async function POST(request: Request) {
         propertyId: property.id,
         landlordId: currentUser.id,
         tenantId: application.candidateScope?.creatorUserId || null,
+        ...(scheduledAt && { scheduledAt: new Date(scheduledAt) }),
         rooms: {
           create: template.map((room, index) => ({
             roomType: room.type,
@@ -143,9 +194,13 @@ export async function POST(request: Request) {
       });
 
       if (conversation) {
+        const messageType = scheduledAt
+          ? `INSPECTION_SCHEDULED|${inspection.id}|${type}|${new Date(scheduledAt).toISOString()}`
+          : `INSPECTION_STARTED|${inspection.id}|${type}`;
+
         await prisma.message.create({
           data: {
-            body: `INSPECTION_STARTED|${inspection.id}|${type}`,
+            body: messageType,
             conversation: { connect: { id: conversation.id } },
             sender: { connect: { id: currentUser.id } },
             seen: { connect: { id: currentUser.id } },
@@ -160,20 +215,43 @@ export async function POST(request: Request) {
 
       // In-app notification
       const propertyCity = property.city || '';
-      await createNotification({
-        userId: tenantId,
-        type: 'inspection',
-        title: "État des lieux démarré",
-        message: `L'état des lieux ${type === 'ENTRY' ? "d'entrée" : 'de sortie'}${propertyCity ? ` à ${propertyCity}` : ''} a été démarré par le propriétaire.`,
-        link: `/inspection/${inspection.id}`,
-      });
+      const typeLabel = type === 'ENTRY' ? "d'entrée" : 'de sortie';
 
-      sendPushNotification({
-        userId: tenantId,
-        title: "État des lieux démarré",
-        body: `L'état des lieux ${type === 'ENTRY' ? "d'entrée" : 'de sortie'} a été démarré. Vous serez invité à le signer.`,
-        url: `/inspection/${inspection.id}`,
-      });
+      if (scheduledAt) {
+        const schedDate = new Date(scheduledAt);
+        const dateStr = schedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        const timeStr = schedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+        await createNotification({
+          userId: tenantId,
+          type: 'inspection',
+          title: "État des lieux planifié",
+          message: `Un état des lieux ${typeLabel}${propertyCity ? ` à ${propertyCity}` : ''} est planifié le ${dateStr} à ${timeStr}.`,
+          link: `/inspection/${inspection.id}`,
+        });
+
+        sendPushNotification({
+          userId: tenantId,
+          title: "État des lieux planifié",
+          body: `État des lieux ${typeLabel} planifié le ${dateStr} à ${timeStr}.`,
+          url: `/inspection/${inspection.id}`,
+        });
+      } else {
+        await createNotification({
+          userId: tenantId,
+          type: 'inspection',
+          title: "État des lieux démarré",
+          message: `L'état des lieux ${typeLabel}${propertyCity ? ` à ${propertyCity}` : ''} a été démarré par le propriétaire.`,
+          link: `/inspection/${inspection.id}`,
+        });
+
+        sendPushNotification({
+          userId: tenantId,
+          title: "État des lieux démarré",
+          body: `L'état des lieux ${typeLabel} a été démarré. Vous serez invité à le signer.`,
+          url: `/inspection/${inspection.id}`,
+        });
+      }
     }
 
     return NextResponse.json(inspection, { status: 201 });

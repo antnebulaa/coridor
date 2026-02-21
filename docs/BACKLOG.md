@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 20 février 2026
+> Dernière mise à jour : 21 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -69,6 +69,35 @@
 - [✅] Lien de signature Yousign dans le viewer — récupération `signature_link` par signataire via `YousignService.getSignatureStatus`, bouton "Signer le bail" (locataire) ou "En cours de signature" (propriétaire), fallback "Vérifiez votre email"
 - [✅] Rappels légaux automatiques V1 — model `LegalReminder` (12 types, 6 statuts, 4 priorités), `ReminderEngine.ts` orchestrateur, calculateurs (`DiagnosticReminders`, `LeaseReminders`, `TaxReminders`), cron quotidien (`app/api/cron/legal-reminders/`), API CRUD (`app/api/reminders/`), page rappels (`account/reminders/`), widget dashboard (`LegalRemindersWidget`), formulaire diagnostics (`DiagnosticsSection`), notification + email
 - [✅] Guide d'emménagement post-signature — model `MoveInGuide` (steps JSON, storiesShownAt), `lib/moveInGuide.ts` (8 étapes : assurance, énergie, internet, APL, adresse, état des lieux, quartier, carte grise — types + config + couleurs par priorité), 10 stories Instagram-style thème clair (`components/move-in/MoveInStories.tsx` — auto-avance 8s, swipe/tap, barres de progression dorées, overlay blur), 3 sous-composants (Congrats avec card logement dynamique, StoryStep générique avec cercle emoji 140px + tips numérotés, Recap avec mini-liste), `MoveInChecklist.tsx` + `MoveInChecklistItem.tsx` (items expandables, checkbox toggle optimistic, barre de progression, CTA externes, tri par complétion), hook `useMoveInGuide.ts` (GET/PATCH optimistic), API `app/api/move-in-guide/[applicationId]` (GET + PATCH toggle step / mark stories shown, auth tenant only), webhook Yousign auto-create guide sur `signature_request.done`, intégré `MyRentalClient` (stories auto-ouverture + checklist section), banner `TenantDashboardClient` (progression + lien vers my-rental)
+
+### État des lieux (EDL)
+- [✅] Modèle Prisma complet — `Inspection` (DRAFT → PENDING_SIGNATURE → SIGNED → LOCKED → AMENDED → CANCELLED), `InspectionRoom`, `InspectionElement`, `InspectionPhoto`, `InspectionMeter`, `InspectionKey`, `InspectionFurnitureItem`, `InspectionAmendment`
+- [✅] Flow 9 écrans — Hub pièces, inspection par pièce (surfaces + équipements), compteurs, clés, mobilier, signature bailleur, envoi lien locataire, signature locataire (revue contradictoire), page done
+- [✅] Multi-revêtements — `nature String[]` (multi-select NatureSelector), natures enrichies par type (parquet massif, stratifié, carrelage, moquette, etc.)
+- [✅] SdB+WC — type `BATHROOM_WC` dans `InspectionRoomType`, config + équipements dédiés
+- [✅] Ajout d'équipement — bouton "+ Ajouter un équipement" en phase EQUIP avec suggestions rapides
+- [✅] Qualification — ConditionChips (Bon/Usé/Dégradé/Absent) + commentaires + photos par élément
+- [✅] Compteurs — eau/électricité/gaz avec relevés (photos optionnelles)
+- [✅] Clés — inventaire par type (porte, boîte, cave, etc.) avec quantités
+- [✅] Mobilier obligatoire — checklist décret meublé avec états
+- [✅] Signature bailleur — canvas SVG, horodatage, IP, user-agent, géoloc
+- [✅] Envoi lien signature locataire — JWT 24h, notification in-app + push + email
+- [✅] Signature locataire — revue contradictoire (accordéons par pièce), réserves audio/texte, bandeau légal 10 jours, canvas signature
+- [✅] Génération PDF — `@react-pdf/renderer` (`InspectionDocument.tsx`), upload Cloudinary, stockage `pdfUrl`
+- [✅] Page done — récap signatures, bandeau 10 jours, bouton PDF, renvoi email
+- [✅] Intégration conversation — 11 types de messages système (SCHEDULED, CONFIRMED, REMINDER, STARTED, COMPLETED, SIGNED, SIGN_LINK_SENT, PDF_READY, CANCELLED, RESCHEDULED, AMENDMENT), cartes interactives dans MessageBox, previews dans ConversationBox
+- [✅] Planification EDL — date/time picker dans la conversation, `scheduledAt` sur Inspection, état "planifié" dans timeline
+- [✅] Confirmation locataire — `tenantConfirmedAt`, bouton "Confirmer ma présence" sur carte SCHEDULED, message système CONFIRMED
+- [✅] Rappels automatiques — cron J-1/Jour J (`app/api/cron/inspection-reminders/`), notification + push aux deux parties, message système REMINDER
+- [✅] Annulation EDL — API `POST /cancel`, statut CANCELLED, `cancelledAt`, message système, notification tenant
+- [✅] Reprogrammation EDL — API `POST /reschedule`, reset `tenantConfirmedAt`, message système RESCHEDULED avec bouton "Confirmer"
+- [✅] Menu actions calendrier — bouton "..." sur cartes inspection DRAFT (Reprogrammer / Annuler), modal reschedule
+- [✅] ConversationClient état CANCELLED — boutons masqués, timeline "EDL annulé" en rouge, re-planification possible
+- [✅] Rectification post-signature — `InspectionAmendment` (PENDING/ACCEPTED/REJECTED), formulaire "Signaler un défaut" (locataire, 10 jours), accepter/refuser (bailleur), messages système, notifications
+- [✅] Dashboard propriétaire — section EDL dans la page property, lien vers inspection en cours ou signée
+- [✅] Calendrier — inspections affichées dans l'agenda (amber, statut badge), navigation par statut
+- [🔧] Auto-email PDF — bouton "Renvoyer par email" fonctionne, envoi automatique après génération à câbler
+- [❌] EDL de sortie — diff avec EDL d'entrée (`entryInspectionId`), comparaison pièce par pièce
 
 ### Gestion financière
 - [✅] Gestionnaire dépenses/charges (`Expense`, `app/api/expenses/`) — CRUD complet (GET/POST/PATCH/DELETE)

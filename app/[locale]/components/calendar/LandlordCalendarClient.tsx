@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay, parseISO, startOfToday, isAfter, isBefore } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, MapPin, User, Clock, Calendar, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, User, Clock, Calendar, List, ClipboardCheck, MoreHorizontal, CalendarClock, X as XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Container from "@/components/Container";
@@ -53,11 +53,26 @@ interface VisitData {
     } | null;
 }
 
+interface InspectionEventData {
+    id: string;
+    type: 'ENTRY' | 'EXIT';
+    status: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    tenantName: string | null;
+    listingTitle: string;
+    address: string | null;
+    totalRooms: number;
+    completedRooms: number;
+}
+
 interface LandlordCalendarClientProps {
     data: {
         slots: SlotData[];
         properties: any[];
         visits: VisitData[];
+        inspections?: InspectionEventData[];
     };
     currentUser?: any;
 }
@@ -74,6 +89,13 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     const [headerHeight, setHeaderHeight] = useState(0);
     const headerRef = useRef<HTMLDivElement>(null);
     const NAVBAR_HEIGHT_DESKTOP = 64; // Global navbar height on desktop (hidden on mobile)
+
+    // Inspection action menu
+    const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+    const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+    const [rescheduleDate, setRescheduleDate] = useState('');
+    const [rescheduleTime, setRescheduleTime] = useState('10:00');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Realtime subscription for new visit bookings
     useRealtimeNotifications({
@@ -134,31 +156,60 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     }, [view, data, headerHeight]);
 
     // Common Event Formatting
-    const formatEvent = (item: any, type: 'VISIT' | 'SLOT') => ({
-        type,
-        id: item.id,
-        propertyId: null,
-        title: type === 'VISIT' ? item.candidate.name : "Disponible",
-        subtitle: type === 'VISIT' ? (item.listing.address || item.listing.title) : item.address,
-        startTime: item.startTime,
-        endTime: item.endTime,
-        date: item.date,
-        status: type === 'VISIT' ? (item.status || 'CONFIRMED') : null,
-        image: type === 'VISIT' ? item.candidate.image : null,
-        candidate: type === 'VISIT' ? item.candidate : null,
-        listing: type === 'VISIT' ? item.listing : null,
-        applicationId: type === 'VISIT' ? (item.applicationId || null) : null,
-        evaluation: type === 'VISIT' ? (item.evaluation || null) : null,
-        color: type === 'VISIT'
-            ? (item.status === 'PENDING' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-200 text-red-700')
-            : 'bg-blue-50 border-blue-200 text-blue-700'
-    });
+    const formatEvent = (item: any, type: 'VISIT' | 'SLOT' | 'INSPECTION') => {
+        if (type === 'INSPECTION') {
+            const typeLabel = item.type === 'ENTRY' ? "EDL d'entrée" : 'EDL de sortie';
+            return {
+                type: 'INSPECTION' as const,
+                id: item.id,
+                propertyId: null,
+                title: typeLabel,
+                subtitle: item.address || item.listingTitle,
+                startTime: item.startTime,
+                endTime: item.endTime,
+                date: item.date,
+                status: item.status,
+                image: null,
+                candidate: null,
+                listing: null,
+                applicationId: null,
+                evaluation: null,
+                color: 'bg-amber-50 border-amber-400 text-amber-800',
+                // Inspection-specific fields
+                inspectionType: item.type,
+                inspectionStatus: item.status,
+                tenantName: item.tenantName,
+                totalRooms: item.totalRooms,
+                completedRooms: item.completedRooms,
+            };
+        }
+        return {
+            type,
+            id: item.id,
+            propertyId: null,
+            title: type === 'VISIT' ? item.candidate.name : "Disponible",
+            subtitle: type === 'VISIT' ? (item.listing.address || item.listing.title) : item.address,
+            startTime: item.startTime,
+            endTime: item.endTime,
+            date: item.date,
+            status: type === 'VISIT' ? (item.status || 'CONFIRMED') : null,
+            image: type === 'VISIT' ? item.candidate.image : null,
+            candidate: type === 'VISIT' ? item.candidate : null,
+            listing: type === 'VISIT' ? item.listing : null,
+            applicationId: type === 'VISIT' ? (item.applicationId || null) : null,
+            evaluation: type === 'VISIT' ? (item.evaluation || null) : null,
+            color: type === 'VISIT'
+                ? (item.status === 'PENDING' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-red-50 border-red-200 text-red-700')
+                : 'bg-blue-50 border-blue-200 text-blue-700',
+        };
+    };
 
     // Filter events for the current day (Day View)
     const dayEvents = useMemo(() => {
         const slots = (data.slots || []).map(s => formatEvent(s, 'SLOT'));
         const visits = (data.visits || []).map(v => formatEvent(v, 'VISIT'));
-        return [...slots, ...visits]
+        const inspections = (data.inspections || []).map(i => formatEvent(i, 'INSPECTION'));
+        return [...slots, ...visits, ...inspections]
             .filter(event => isSameDay(parseISO(event.date), currentDate))
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
     }, [data, currentDate]);
@@ -167,6 +218,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     const agendaEvents = useMemo(() => {
         const rawSlots = (data.slots || []).map(s => formatEvent(s, 'SLOT'));
         const rawVisits = (data.visits || []).map(v => formatEvent(v, 'VISIT'));
+        const rawInspections = (data.inspections || []).map(i => formatEvent(i, 'INSPECTION'));
 
         // Helper to merge slots
         const mergeSlots = (slots: any[]) => {
@@ -195,6 +247,12 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         rawVisits.forEach(v => {
             if (!groupedByDate[v.date]) groupedByDate[v.date] = [];
             groupedByDate[v.date].push(v);
+        });
+
+        // Add Inspections
+        rawInspections.forEach(i => {
+            if (!groupedByDate[i.date]) groupedByDate[i.date] = [];
+            groupedByDate[i.date].push(i);
         });
 
         // Group slots by date separately to merge them
@@ -237,10 +295,66 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         };
     };
 
+    const handleCancelInspection = async (inspectionId: string) => {
+        if (!confirm("Annuler cet état des lieux ? Le locataire sera notifié.")) return;
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(`/api/inspection/${inspectionId}/cancel`, { method: 'POST' });
+            if (res.ok) {
+                toast.success("État des lieux annulé");
+                setActionMenuId(null);
+                router.refresh();
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "Erreur");
+            }
+        } catch {
+            toast.error("Erreur réseau");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleRescheduleInspection = async () => {
+        if (!rescheduleId || !rescheduleDate || !rescheduleTime) return;
+        setIsSubmitting(true);
+        try {
+            const scheduledAt = new Date(`${rescheduleDate}T${rescheduleTime}`).toISOString();
+            const res = await fetch(`/api/inspection/${rescheduleId}/reschedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scheduledAt }),
+            });
+            if (res.ok) {
+                toast.success("État des lieux reprogrammé");
+                setRescheduleId(null);
+                setRescheduleDate('');
+                setRescheduleTime('10:00');
+                router.refresh();
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "Erreur");
+            }
+        } catch {
+            toast.error("Erreur réseau");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const handleEventClick = (event: any) => {
         if (event.type === 'VISIT') {
             setSelectedEvent(event);
             setIsModalOpen(true);
+        } else if (event.type === 'INSPECTION') {
+            // Navigate to inspection based on status
+            if (event.inspectionStatus === 'DRAFT') {
+                router.push(`/inspection/${event.id}/rooms`);
+            } else if (event.inspectionStatus === 'SIGNED') {
+                router.push(`/inspection/${event.id}/done`);
+            } else {
+                router.push(`/inspection/${event.id}/sign`);
+            }
         }
     };
 
@@ -252,6 +366,51 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 event={selectedEvent}
                 onEvaluationSaved={() => router.refresh()}
             />
+
+            {/* Reschedule Modal */}
+            {rescheduleId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setRescheduleId(null)}>
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-neutral-900">Reprogrammer l&apos;EDL</h3>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-sm text-neutral-600 mb-1 block">Date</label>
+                                <input
+                                    type="date"
+                                    value={rescheduleDate}
+                                    onChange={(e) => setRescheduleDate(e.target.value)}
+                                    min={format(new Date(), 'yyyy-MM-dd')}
+                                    className="w-full border border-neutral-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-neutral-600 mb-1 block">Heure</label>
+                                <input
+                                    type="time"
+                                    value={rescheduleTime}
+                                    onChange={(e) => setRescheduleTime(e.target.value)}
+                                    className="w-full border border-neutral-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                            <button
+                                onClick={handleRescheduleInspection}
+                                disabled={isSubmitting || !rescheduleDate}
+                                className="flex-1 py-2.5 bg-amber-500 text-white rounded-lg font-medium text-sm hover:bg-amber-600 transition disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'Envoi...' : 'Reprogrammer'}
+                            </button>
+                            <button
+                                onClick={() => setRescheduleId(null)}
+                                className="px-4 py-2.5 text-neutral-500 text-sm hover:text-neutral-700"
+                            >
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="flex flex-col gap-6">
 
@@ -318,7 +477,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 </div>
 
                 {/* Content */}
-                <div className="bg-white rounded-none sm:rounded-xl p-0 min-h-[600px] -mx-4 sm:mx-0 border-y sm:border-0 border-neutral-200">
+                <div className="bg-white rounded-none sm:rounded-xl p-0 min-h-[600px] -mx-4 sm:mx-0 border-y sm:border-0 border-neutral-200" onClick={() => actionMenuId && setActionMenuId(null)}>
 
                     {/* AGENDA VIEW */}
                     {view === 'agenda' && (
@@ -353,11 +512,13 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                 <span className="capitalize">{format(parsedDate, 'EEEE d MMMM yyyy', { locale: fr })}</span>
                                                 {isToday && <span className="text-xs font-normal capitalize text-red-500 px-2 py-1 rounded-2xl ml-2">Aujourd'hui</span>}
                                             </div>
-                                            <div className="space-y-2 pt-1 pb-6 px-3">
+                                            <div className="space-y-2 pt-4 pb-6 px-3">
                                                 {events.sort((a: any, b: any) => {
-                                                    if (a.type === 'SLOT' && b.type === 'VISIT') return -1;
-                                                    if (a.type === 'VISIT' && b.type === 'SLOT') return 1;
-                                                    return 0; // Keep time sort if same type
+                                                    // Priority: INSPECTION > VISIT > SLOT
+                                                    const priority: Record<string, number> = { INSPECTION: 0, VISIT: 1, SLOT: 2 };
+                                                    const diff = (priority[a.type] ?? 1) - (priority[b.type] ?? 1);
+                                                    if (diff !== 0) return diff;
+                                                    return a.startTime.localeCompare(b.startTime);
                                                 }).map((event: any) => {
                                                     // Determine if event is passed
                                                     const [endH, endM] = event.endTime.split(':').map(Number);
@@ -372,7 +533,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                 key={`${event.type}-${event.id}`}
                                                                 onClick={() => handleEventClick(event)}
                                                                 className={`
-                                                                    group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-4
+                                                                    group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-1
                                                                     ${isPastEvent
                                                                         ? 'bg-neutral-50 border-neutral-200 opacity-80 hover:opacity-100'
                                                                         : 'bg-white border-neutral-500 hover:border-neutral-400 hover:shadow-md'
@@ -386,40 +547,138 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                 </div>
 
                                                                 {/* Content */}
-                                                                <div className="flex-1 flex items-center gap-3">
+                                                                <div className="flex-1 flex items-start gap-3">
                                                                     <div className={`shrink-0 ${isPastEvent ? "opacity-80" : ""}`}>
                                                                         <Avatar src={event.image} seed={event.title} size={42} />
                                                                     </div>
-                                                                    <div>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <h4 className={`font-semibold ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.title}</h4>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                                <h4 className={`font-semibold truncate ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.title}</h4>
+                                                                                {/* Evaluation decision badge */}
+                                                                                {event.evaluation?.decision === 'SHORTLISTED' && (
+                                                                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Shortliste" />
+                                                                                )}
+                                                                                {event.evaluation?.decision === 'UNDECIDED' && (
+                                                                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title="Indecis" />
+                                                                                )}
+                                                                                {event.evaluation?.decision === 'ELIMINATED' && (
+                                                                                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" title="Ecarte" />
+                                                                                )}
+                                                                            </div>
                                                                             {event.status === 'PENDING' && (
-                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">En attente</span>
+                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase shrink-0">En attente</span>
                                                                             )}
                                                                             {event.status === 'CONFIRMED' && !event.evaluation && (
-                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase">Confirmee</span>
-                                                                            )}
-                                                                            {/* Evaluation decision badge */}
-                                                                            {event.evaluation?.decision === 'SHORTLISTED' && (
-                                                                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Shortliste" />
-                                                                            )}
-                                                                            {event.evaluation?.decision === 'UNDECIDED' && (
-                                                                                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title="Indecis" />
-                                                                            )}
-                                                                            {event.evaluation?.decision === 'ELIMINATED' && (
-                                                                                <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" title="Ecarte" />
+                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase shrink-0">Confirmée</span>
                                                                             )}
                                                                         </div>
-                                                                        <div className={`flex items-center gap-1 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
-                                                                            <MapPin size={14} className="shrink-0" />
+                                                                        <div className={`flex items-center gap-1.5 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
+                                                                            <MapPin size={13} className="shrink-0 -translate-y-px" />
                                                                             <span className="line-clamp-1">{event.subtitle}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
+                                                            </div>
+                                                        );
+                                                    }
 
-                                                                {/* Action */}
-                                                                <div className={`hidden sm:flex items-center transition pl-4 ${isPastEvent ? 'text-neutral-300' : 'text-neutral-400 group-hover:text-black'}`}>
-                                                                    <ChevronRight size={20} />
+                                                    if (event.type === 'INSPECTION') {
+                                                        const statusLabel = event.inspectionStatus === 'DRAFT'
+                                                            ? `${event.completedRooms}/${event.totalRooms} pièces`
+                                                            : event.inspectionStatus === 'PENDING_SIGNATURE'
+                                                                ? 'Attente signature'
+                                                                : 'Signé';
+                                                        return (
+                                                            <div
+                                                                key={`${event.type}-${event.id}`}
+                                                                onClick={() => handleEventClick(event)}
+                                                                className={`
+                                                                    group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-0
+                                                                    ${isPastEvent
+                                                                        ? 'bg-neutral-50 border-neutral-200 opacity-80 hover:opacity-100'
+                                                                        : 'bg-amber-50 border-amber-300 hover:border-amber-400 hover:shadow-md'
+                                                                    }
+                                                                `}
+                                                            >
+                                                                {/* Time Block */}
+                                                                <div className={`flex flex-col items-center justify-center min-w-[70px] border-r pr-4 ${isPastEvent ? 'border-neutral-100' : 'border-amber-200'}`}>
+                                                                    <span className={`text-lg font-medium ${isPastEvent ? 'text-neutral-600' : 'text-amber-700'}`}>{event.startTime}</span>
+                                                                    <span className={`text-sm ${isPastEvent ? 'text-neutral-500' : 'text-amber-500'}`}>{event.endTime}</span>
+                                                                </div>
+
+                                                                {/* Content */}
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center justify-between gap-2">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <ClipboardCheck size={15} className={`shrink-0 -translate-y-px ${isPastEvent ? 'text-neutral-500' : 'text-amber-700'}`} />
+                                                                            <h4 className={`font-semibold ${isPastEvent ? 'text-neutral-600' : 'text-amber-800'}`}>{event.title}</h4>
+                                                                        </div>
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                                                                            event.inspectionStatus === 'SIGNED'
+                                                                                ? 'bg-emerald-100 text-emerald-800'
+                                                                                : event.inspectionStatus === 'PENDING_SIGNATURE'
+                                                                                    ? 'bg-blue-100 text-blue-800'
+                                                                                    : 'bg-amber-100 text-amber-800'
+                                                                        }`}>
+                                                                            {statusLabel}
+                                                                        </span>
+                                                                    </div>
+                                                                    {event.tenantName && (
+                                                                        <div className={`text-sm font-medium mt-1.5 ${isPastEvent ? 'text-neutral-500' : 'text-amber-800'}`}>
+                                                                            Avec {event.tenantName}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className={`flex items-center gap-1.5 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-amber-700'}`}>
+                                                                        <MapPin size={13} className="shrink-0 -translate-y-px" />
+                                                                        <span className="line-clamp-1">au {event.subtitle}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Actions */}
+                                                                <div className="flex items-center gap-1">
+                                                                    {event.inspectionStatus === 'DRAFT' && !isPastEvent && (
+                                                                        <div className="relative">
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setActionMenuId(actionMenuId === event.id ? null : event.id);
+                                                                                }}
+                                                                                className="p-1.5 rounded-full hover:bg-amber-100 transition text-amber-500 hover:text-amber-700"
+                                                                            >
+                                                                                <MoreHorizontal size={18} />
+                                                                            </button>
+                                                                            {actionMenuId === event.id && (
+                                                                                <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 z-50 min-w-[180px]">
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            setActionMenuId(null);
+                                                                                            setRescheduleId(event.id);
+                                                                                        }}
+                                                                                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-neutral-50 text-neutral-700"
+                                                                                    >
+                                                                                        <CalendarClock size={15} />
+                                                                                        Reprogrammer
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleCancelInspection(event.id);
+                                                                                        }}
+                                                                                        disabled={isSubmitting}
+                                                                                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-red-50 text-red-600 disabled:opacity-50"
+                                                                                    >
+                                                                                        <XIcon size={15} />
+                                                                                        Annuler l&apos;EDL
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className={`hidden sm:flex items-center transition ${isPastEvent ? 'text-neutral-300' : 'text-amber-400 group-hover:text-amber-700'}`}>
+                                                                        <ChevronRight size={20} />
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         );
@@ -435,8 +694,8 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                 <div className={`font-medium text-xl ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>Visites</div>
                                                                 <div>Créneaux ouverts de {event.startTime} à {event.endTime}</div>
                                                                 {event.subtitle && (
-                                                                    <div className={`text-xs mt-0.5 flex items-left justify-left sm:justify-start gap-1 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
-                                                                        <MapPin size={12} />
+                                                                    <div className={`text-xs mt-0.5 flex items-center justify-start gap-1.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
+                                                                        <MapPin size={11} className="shrink-0 -translate-y-px" />
                                                                         au {event.subtitle}
                                                                     </div>
                                                                 )}
@@ -502,9 +761,10 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                 {dayEvents.map((event) => {
                                     const style = getPositionStyle(event.startTime, event.endTime);
                                     const isVisit = event.type === 'VISIT';
-                                    const zIndex = isVisit ? 20 : 10;
-                                    const width = isVisit ? '90%' : '95%';
-                                    const left = isVisit ? '5%' : '0';
+                                    const isInspection = event.type === 'INSPECTION';
+                                    const zIndex = isVisit ? 20 : isInspection ? 25 : 10;
+                                    const width = isVisit || isInspection ? '90%' : '95%';
+                                    const left = isVisit || isInspection ? '5%' : '0';
 
                                     return (
                                         <div
@@ -520,7 +780,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                             style={{ ...style, zIndex, width, left }}
                                         >
                                             <div className="flex items-center gap-2 mb-1">
-                                                {isVisit ? <User size={14} /> : <Clock size={14} />}
+                                                {isInspection ? <ClipboardCheck size={14} /> : isVisit ? <User size={14} /> : <Clock size={14} />}
                                                 <span className="font-semibold text-sm truncate">{event.title}</span>
                                                 <span className="text-xs opacity-75">{event.startTime} - {event.endTime}</span>
                                             </div>

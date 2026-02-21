@@ -61,6 +61,7 @@ interface ConversationClientProps {
         status: string;
         type: string;
         pdfUrl: string | null;
+        scheduledAt: string | null;
     } | null;
 }
 
@@ -86,6 +87,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const [messages, setMessages] = useState(initialMessages);
     const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE' || m.body?.startsWith('VISIT_CONFIRMED|') || m.body?.startsWith('VISIT_PENDING|'));
     const [applicationStatus, setApplicationStatus] = useState(initialApplicationStatus);
+    const isLandlord = listing?.user?.id === currentUser?.id;
 
     useEffect(() => {
         setMessages(initialMessages);
@@ -113,6 +115,12 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const [selectedReason, setSelectedReason] = useState<string>('');
     const [customReason, setCustomReason] = useState('');
     const [isDeclining, setIsDeclining] = useState(false);
+
+    // EDL scheduling
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [scheduleDate, setScheduleDate] = useState('');
+    const [scheduleTime, setScheduleTime] = useState('10:00');
+    const [isScheduling, setIsScheduling] = useState(false);
 
     const isRejected = applicationStatus === 'REJECTED';
 
@@ -185,6 +193,26 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             setIsDeclining(false);
         }
     }, [applicationId, selectedReason, customReason, conversation.id, router]);
+
+    const handleScheduleEdl = useCallback(async () => {
+        if (!scheduleDate || !applicationId) return;
+        setIsScheduling(true);
+        try {
+            const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+            await axios.post('/api/inspection', {
+                applicationId,
+                type: 'ENTRY',
+                scheduledAt,
+            });
+            toast.success('État des lieux planifié');
+            setIsScheduleModalOpen(false);
+            router.refresh();
+        } catch {
+            toast.error("Erreur lors de la planification");
+        } finally {
+            setIsScheduling(false);
+        }
+    }, [scheduleDate, scheduleTime, applicationId, router]);
 
     const isImperial = currentUser?.measurementSystem === 'imperial';
     const surface = listing?.surface;
@@ -331,11 +359,26 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
         // EDL timeline step
         if (inspectionData) {
-            if (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') {
+            if (inspectionData.status === 'CANCELLED') {
+                steps.push({
+                    title: "État des lieux annulé",
+                    description: "L'état des lieux a été annulé par le propriétaire.",
+                    completed: true
+                });
+            } else if (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') {
                 steps.push({
                     title: "État des lieux signé",
                     description: "L'état des lieux a été signé par les deux parties.",
                     completed: true
+                });
+            } else if (inspectionData.status === 'DRAFT' && inspectionData.scheduledAt) {
+                const schedDate = new Date(inspectionData.scheduledAt);
+                const dateStr = schedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+                const timeStr = schedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                steps.push({
+                    title: "État des lieux planifié",
+                    description: `Prévu le ${dateStr} à ${timeStr}.`,
+                    completed: false
                 });
             } else if (inspectionData.status === 'DRAFT') {
                 steps.push({
@@ -462,22 +505,62 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             }
                                         }}
                                     />
-                                    {/* EDL action button */}
-                                    {!inspectionData || inspectionData.status === 'DRAFT' ? (
-                                        <button
-                                            onClick={() => {
-                                                if (inspectionData) {
-                                                    router.push(`/inspection/${inspectionData.id}`);
-                                                } else if (applicationId) {
-                                                    router.push(`/inspection/new/${applicationId}`);
-                                                }
-                                            }}
-                                            className="w-full py-2.5 px-4 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition"
-                                        >
-                                            🏠 {inspectionData ? "Reprendre l'EDL" : "Démarrer l'état des lieux"}
-                                        </button>
-                                    ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
-                                        inspectionData.pdfUrl && (
+                                    {/* EDL action button — landlord only for actions, PDF visible to both */}
+                                    {isLandlord ? (
+                                        !inspectionData || inspectionData.status === 'CANCELLED' ? (
+                                            /* No inspection or cancelled — show Planifier + Démarrer */
+                                            <div className="flex flex-col gap-2">
+                                                <button
+                                                    onClick={() => setIsScheduleModalOpen(true)}
+                                                    className="w-full py-2.5 px-4 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition"
+                                                >
+                                                    🗓️ Planifier l&apos;état des lieux
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (applicationId) {
+                                                            router.push(`/inspection/new/${applicationId}`);
+                                                        }
+                                                    }}
+                                                    className="w-full py-2 px-4 text-xs font-medium text-neutral-500 hover:text-neutral-700 transition"
+                                                >
+                                                    Démarrer maintenant →
+                                                </button>
+                                            </div>
+                                        ) : inspectionData.status === 'DRAFT' ? (
+                                            /* DRAFT — show scheduled info if scheduled, or just Reprendre */
+                                            <div className="flex flex-col gap-2">
+                                                {inspectionData.scheduledAt && (
+                                                    <div className="text-xs text-amber-600 text-center">
+                                                        🗓️ Planifié le {new Date(inspectionData.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à {new Date(inspectionData.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                )}
+                                                <button
+                                                    onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
+                                                    className="w-full py-2.5 px-4 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition"
+                                                >
+                                                    🏠 {inspectionData.scheduledAt ? "Démarrer l'EDL" : "Reprendre l'EDL"}
+                                                </button>
+                                            </div>
+                                        ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
+                                            inspectionData.pdfUrl && (
+                                                <a
+                                                    href={inspectionData.pdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
+                                                >
+                                                    📄 Voir le PDF de l&apos;EDL
+                                                </a>
+                                            )
+                                        ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
+                                            <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-white bg-neutral-900 rounded-xl border border-neutral-900">
+                                                ⏳ En attente de signature locataire
+                                            </div>
+                                        ) : null
+                                    ) : (
+                                        /* Tenant: only show PDF link if signed (not cancelled) */
+                                        inspectionData && inspectionData.status !== 'CANCELLED' && (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') && inspectionData.pdfUrl ? (
                                             <a
                                                 href={inspectionData.pdfUrl}
                                                 target="_blank"
@@ -486,12 +569,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             >
                                                 📄 Voir le PDF de l&apos;EDL
                                             </a>
-                                        )
-                                    ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
-                                        <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
-                                            ⏳ En attente de signature locataire
-                                        </div>
-                                    ) : null}
+                                        ) : null
+                                    )}
                                 </div>
                             ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (
                                 <div className="flex flex-col gap-2">
@@ -669,6 +748,50 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 }
             />
 
+            {/* Schedule EDL Modal */}
+            <Modal
+                isOpen={isScheduleModalOpen}
+                onClose={() => setIsScheduleModalOpen(false)}
+                title="Planifier l'état des lieux"
+                actionLabel={isScheduling ? "Planification..." : "Planifier"}
+                onSubmit={handleScheduleEdl}
+                disabled={isScheduling || !scheduleDate}
+                body={
+                    <div className="flex flex-col gap-5">
+                        <p className="text-neutral-500 text-sm">
+                            Choisissez la date et l&apos;heure de l&apos;état des lieux d&apos;entrée. Le locataire sera notifié automatiquement.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <label className="text-sm font-medium text-neutral-700">
+                                Date
+                                <input
+                                    type="date"
+                                    value={scheduleDate}
+                                    onChange={(e) => setScheduleDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition"
+                                />
+                            </label>
+                            <label className="text-sm font-medium text-neutral-700">
+                                Heure
+                                <input
+                                    type="time"
+                                    value={scheduleTime}
+                                    onChange={(e) => setScheduleTime(e.target.value)}
+                                    className="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition"
+                                />
+                            </label>
+                        </div>
+                        <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                            <span className="text-amber-500 mt-0.5">💡</span>
+                            <p className="text-xs text-amber-700">
+                                Prévoyez 1h à 1h30 selon la taille du logement. L&apos;état des lieux peut être démarré à tout moment, même avant la date planifiée.
+                            </p>
+                        </div>
+                    </div>
+                }
+            />
+
             {/* Right Sidebar (Visit Selection or Listing Recap) */}
             {
                 !showDossier && rent && (
@@ -751,7 +874,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                 <div className="flex flex-col">
                                                     {timelineSteps.map((step, index) => {
                                                         const isLast = index === timelineSteps.length - 1;
-                                                        const isRejectedStep = step.title === "Candidature non retenue";
+                                                        const isRejectedStep = step.title === "Candidature non retenue" || step.title === "État des lieux annulé";
                                                         return (
                                                             <div key={index} className="relative pl-6 pb-8 last:pb-0">
                                                                 {/* Line */}

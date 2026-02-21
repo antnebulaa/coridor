@@ -1499,6 +1499,7 @@ enum InspectionStatus {
   SIGNED
   LOCKED
   AMENDED
+  CANCELLED
 }
 
 enum MeterType {
@@ -1514,6 +1515,7 @@ enum InspectionRoomType {
   BEDROOM
   KITCHEN
   BATHROOM
+  BATHROOM_WC
   WC
   LAUNDRY
   OFFICE
@@ -1776,6 +1778,12 @@ model Inspection {
   landlordSignedAt      DateTime?
   tenantSignedAt        DateTime?
 
+  // Confirmation du locataire (créneau planifié)
+  tenantConfirmedAt     DateTime?
+
+  // Annulation
+  cancelledAt           DateTime?
+
   // Réserves du locataire (texte libre)
   tenantReserves        String?
 
@@ -1873,7 +1881,7 @@ model InspectionElement {
   inspectionRoomId      String
   category              ElementCategory  // FLOOR, WALL, CEILING, EQUIPMENT
   name                  String           // "Sols", "Murs", "Plafond", "Fenêtre(s)", "Évier", etc.
-  nature                String?          // Nature du revêtement : "Parquet", "Carrelage", "Peinture"...
+  nature                String[]         // Nature(s) du revêtement : ["Parquet", "Carrelage"]...
   condition             ElementCondition? // Neuf, Bon, Usure norm., Dégradé, H.S.
   isAbsent              Boolean          @default(false) // Équipement inexistant (chip "Absent")
   observations          String?          // Observation texte (dictée ou clavier)

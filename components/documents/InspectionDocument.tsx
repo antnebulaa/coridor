@@ -12,7 +12,7 @@ interface InspectionPdfPhoto {
 interface InspectionPdfElement {
   name: string;
   category: string;
-  nature?: string | null;
+  nature: string[];
   condition?: string | null;
   isAbsent: boolean;
   observations?: string | null;
@@ -404,7 +404,7 @@ const InspectionDocument: React.FC<Props> = ({ data }) => {
                 return (
                   <View key={i} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
                     <Text style={[s.tdText, { width: '25%' }]}>{el.name}</Text>
-                    <Text style={[s.tdText, { width: '20%' }]}>{el.nature || '—'}</Text>
+                    <Text style={[s.tdText, { width: '20%' }]}>{el.nature.length ? el.nature.join(', ') : '—'}</Text>
                     <View style={{ width: '15%' }}>
                       <Text style={[s.badge, { backgroundColor: condColor, alignSelf: 'flex-start' }]}>
                         {condLabel}

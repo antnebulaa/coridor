@@ -139,7 +139,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             `bg-background border-r border-border flex flex-col`,
 
             /* Mobile Styles */
-            isOpen ? 'hidden lg:flex' : 'absolute inset-0 z-40 w-full pb-32 lg:pb-0 pt-[env(safe-area-inset-top)] lg:pt-0',
+            isOpen ? 'hidden lg:flex' : 'absolute inset-0 z-40 w-full pb-24 lg:pb-0 pt-[env(safe-area-inset-top)] lg:pt-0',
 
             /* Desktop Styles */
             `lg:static 

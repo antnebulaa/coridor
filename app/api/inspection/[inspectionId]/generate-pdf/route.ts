@@ -7,6 +7,7 @@ import InspectionDocument from '@/components/documents/InspectionDocument';
 import type { InspectionPdfData } from '@/components/documents/InspectionDocument';
 import { createNotification } from '@/libs/notifications';
 import { sendPushNotification } from '@/app/lib/sendPushNotification';
+import { sendEmail } from '@/lib/email';
 
 type Params = { params: Promise<{ inspectionId: string }> };
 
@@ -200,7 +201,11 @@ export async function POST(request: Request, props: Params) {
       }
 
       // Notify both parties
+      const landlordUser = await prisma.user.findUnique({ where: { id: landlordId }, select: { name: true, email: true } });
+      const tenantUser = candidateId ? await prisma.user.findUnique({ where: { id: candidateId }, select: { name: true, email: true } }) : null;
+
       for (const userId of [landlordId, candidateId]) {
+        if (!userId) continue;
         await createNotification({
           userId,
           type: 'inspection',
@@ -215,6 +220,29 @@ export async function POST(request: Request, props: Params) {
           body: "Le document PDF de l'état des lieux est maintenant disponible.",
           url: pdfUrl,
         });
+      }
+
+      // Auto-send PDF by email to both parties
+      const emailHtml = (name: string | null) => `
+        <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #1a1a1a; margin-bottom: 8px;">État des lieux signé</h2>
+          <p style="color: #555; line-height: 1.6;">
+            Bonjour${name ? ` ${name}` : ''},<br/><br/>
+            L'état des lieux a été signé par les deux parties. Le PDF est disponible en cliquant sur le bouton ci-dessous.
+          </p>
+          <a href="${pdfUrl}" style="display: inline-block; background: #1719FF; color: #fff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 600; margin: 16px 0;">
+            Consulter le PDF
+          </a>
+          <p style="color: #999; font-size: 13px; margin-top: 24px;">
+            Rappel : le locataire dispose de 10 jours après la remise des clés pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989).
+          </p>
+        </div>`;
+
+      if (landlordUser?.email) {
+        sendEmail(landlordUser.email, "État des lieux — PDF signé disponible", emailHtml(landlordUser.name));
+      }
+      if (tenantUser?.email) {
+        sendEmail(tenantUser.email, "État des lieux — PDF signé disponible", emailHtml(tenantUser.name));
       }
     }
 

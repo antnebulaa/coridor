@@ -15,13 +15,14 @@ import dynamic from "next/dynamic";
 import Counter from "../inputs/Counter";
 import MultiImageUpload from "../inputs/MultiImageUpload";
 import ImageUpload from "../inputs/ImageUpload";
+import AnimatedNumberInput from "../inputs/AnimatedNumberInput";
 import SoftInput from '../inputs/SoftInput';
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2 } from "lucide-react";
+import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair } from "lucide-react";
 import { calculateRentControl as calcRent } from "@/utils/rentUtils";
 import { useTranslations } from 'next-intl';
 import VisitsSection from "@/app/[locale]/properties/[listingId]/edit/components/VisitsSection";
@@ -111,6 +112,7 @@ const RentModal = () => {
             title: '',
             description: '',
             leaseType: LeaseType.LONG_TERM,
+            isFurnished: false,
             dpe: 'C',
             ges: 'A',
             charges: '' as any,
@@ -571,41 +573,27 @@ const RentModal = () => {
                     subtitle={t('steps.surface.subtitle')}
                 />
                 <div className="flex items-center justify-center py-10">
-                    <div className="relative w-full max-w-[200px]">
-                        <input
-                            {...surfaceRegister}
-                            ref={(e) => {
-                                surfaceRef(e);
-                                surfaceInputRef.current = e;
-                            }}
-                            id="surface"
-                            autoFocus
-                            disabled={isLoading}
-                            placeholder="0"
-                            type="number"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            className="
-                                peer
-                                w-full
-                                p-0
-                                text-center
-                                text-7xl
-                                font-bold
-                                outline-none
-                                transition
-                                disabled:opacity-70
-                                disabled:cursor-not-allowed
-                                border-b-2
-                                border-neutral-300
-                                focus:border-black
-                                placeholder-neutral-200
-                            "
-                        />
-                        <span className="absolute right-0 top-0 h-full flex items-center justify-center text-xl font-bold text-neutral-400 translate-x-8 pointer-events-none">
-                            m²
-                        </span>
-                    </div>
+                    <AnimatedNumberInput
+                        {...surfaceRegister}
+                        ref={(e: any) => {
+                            surfaceRef(e);
+                            surfaceInputRef.current = e;
+                        }}
+                        id="surface"
+                        autoFocus
+                        disabled={isLoading}
+                        value={watch('surface')}
+                        placeholder="0"
+                        suffix="m²"
+                        className="
+                            w-full
+                            max-w-[400px]
+                            text-8xl md:text-9xl
+                            font-bold
+                            transition
+                            pb-4
+                        "
+                    />
                 </div>
             </div>
         );
@@ -1321,57 +1309,82 @@ const RentModal = () => {
                     <div
                         onClick={() => {
                             setCustomValue('leaseType', LeaseType.LONG_TERM);
-                            // Assuming 'furnished' logic is implicit or handled elsewhere for now, usually LONG_TERM implies standard residential lease
-                            // User request: "Location Nue" vs "Location Meublée"
-                            // I might need a 'isFurnished' boolean in the form if not present?
-                            // Checking lines 240: mockListing has isFurnished: true.
-                            // Checking Form State: no explicit isFurnished in defaultValues (line 96).
-                            // But usually 'Meublé' vs 'Nu' is a key distinction.
-                            // I will just set leaseType for now, and maybe a custom field if needed?
-                            // User said: "Location Nue, Location meublé, Colocation".
-                            // I will use `leaseType` enum if it supports it?
-                            // LeaseType in Prisma: LONG_TERM, SHORT_TERM, STUDENT, COLOCATION.
-                            // So "Nue" vs "Meublé" is usually a property attribute, not just LeaseType.
-                            // I'll stick to what the user asked: distinguish the flow.
+                            setCustomValue('isFurnished', false);
                         }}
                         className={`
-                            p-4 border-2 rounded-xl flex flex-col gap-3 cursor-pointer transition hover:border-black
-                            ${watch('leaseType') === LeaseType.LONG_TERM ? 'border-black bg-neutral-50' : 'border-neutral-200'}
+                            p-4 border-2 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-black active:scale-[0.98]
+                            ${watch('leaseType') === LeaseType.LONG_TERM && !watch('isFurnished') ? 'border-black bg-neutral-50' : 'border-neutral-200'}
                         `}
                     >
-                        <Home size={30} />
-                        <div className="font-semibold">{t('steps.rentalType.options.bare.title')}</div>
-                        <div className="text-sm text-neutral-500">{t('steps.rentalType.options.bare.desc')}</div>
+                        <div className="flex items-center gap-2">
+                            <DoorOpen size={20} className="text-neutral-500" />
+                            <div className="font-semibold text-xl">{t('steps.rentalType.options.bare.title')}</div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="text-sm text-neutral-500 leading-snug">{t('steps.rentalType.options.bare.desc')}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg">
+                                    {t('steps.rentalType.options.bare.pros')}
+                                </span>
+                                <span className="px-3 py-1 bg-neutral-900 text-white text-xs font-medium rounded-lg">
+                                    {t('steps.rentalType.options.bare.cons')}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <div
                         onClick={() => {
                             setCustomValue('leaseType', LeaseType.LONG_TERM);
-                            // Need to distinguish Meublé. Maybe I should use a temporary state or form field if I can't find one.
-                            // I'll assume 'Meublé' implies standard Long Term but furnished.
+                            setCustomValue('isFurnished', true);
                         }}
                         className={`
-                            p-4 border-2 rounded-xl flex flex-col gap-3 cursor-pointer transition hover:border-black
-                            ${false ? 'border-black bg-neutral-50' : 'border-neutral-200'}
+                            p-4 border-2 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-black active:scale-[0.98]
+                            ${watch('leaseType') === LeaseType.LONG_TERM && watch('isFurnished') ? 'border-black bg-neutral-50' : 'border-neutral-200'}
                         `}
                     >
-                        <Sparkles size={30} />
-                        <div className="font-semibold">{t('steps.rentalType.options.furnished.title')}</div>
-                        <div className="text-sm text-neutral-500">{t('steps.rentalType.options.furnished.desc')}</div>
+                        <div className="flex items-center gap-2">
+                            <Armchair size={20} className="text-neutral-500" />
+                            <div className="font-semibold text-xl">{t('steps.rentalType.options.furnished.title')}</div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="text-sm text-neutral-500 leading-snug">{t('steps.rentalType.options.furnished.desc')}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg">
+                                    {t('steps.rentalType.options.furnished.pros')}
+                                </span>
+                                <span className="px-3 py-1 bg-neutral-900 text-white text-xs font-medium rounded-lg">
+                                    {t('steps.rentalType.options.furnished.cons')}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <div
                         onClick={() => {
                             setCustomValue('leaseType', LeaseType.COLOCATION);
+                            setCustomValue('isFurnished', true);
                         }}
                         className={`
-                            p-4 border-2 rounded-xl flex flex-col gap-3 cursor-pointer transition hover:border-black
+                            p-4 border-2 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-black active:scale-[0.98]
                             ${watch('leaseType') === LeaseType.COLOCATION ? 'border-black bg-neutral-50' : 'border-neutral-200'}
                         `}
                     >
-                        <Users size={30} />
-                        <div className="font-semibold">{t('steps.rentalType.options.colocation.title')}</div>
-                        <div className="text-sm text-neutral-500">{t('steps.rentalType.options.colocation.desc')}</div>
+                        <div className="flex items-center gap-2">
+                            <Users size={20} className="text-neutral-500" />
+                            <div className="font-semibold text-xl">{t('steps.rentalType.options.colocation.title')}</div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="text-sm text-neutral-500 leading-snug">{t('steps.rentalType.options.colocation.desc')}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-lg">
+                                    {t('steps.rentalType.options.colocation.pros')}
+                                </span>
+                                <span className="px-3 py-1 bg-neutral-900 text-white text-xs font-medium rounded-lg">
+                                    {t('steps.rentalType.options.colocation.cons')}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

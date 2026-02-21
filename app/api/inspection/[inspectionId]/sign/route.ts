@@ -62,6 +62,33 @@ export async function POST(request: Request, props: Params) {
         },
       });
 
+      // Inject system message: landlord signed, waiting for tenant
+      const tenantId = inspection.application.candidateScope?.creatorUserId;
+      if (tenantId) {
+        const conversation = await prisma.conversation.findFirst({
+          where: {
+            listingId: inspection.application.listingId,
+            users: { some: { id: tenantId } },
+          },
+        });
+
+        if (conversation) {
+          await prisma.message.create({
+            data: {
+              body: `INSPECTION_COMPLETED|${inspectionId}|${inspection.type}`,
+              conversation: { connect: { id: conversation.id } },
+              sender: { connect: { id: currentUser.id } },
+              seen: { connect: { id: currentUser.id } },
+            },
+          });
+
+          await prisma.conversation.update({
+            where: { id: conversation.id },
+            data: { lastMessageAt: new Date() },
+          });
+        }
+      }
+
       return NextResponse.json(updated);
     }
 

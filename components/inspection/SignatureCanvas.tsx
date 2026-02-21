@@ -152,7 +152,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
       </div>
 
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-xl overflow-hidden relative"
         style={{ border: `1px solid ${EDL_COLORS.border}` }}
       >
         <canvas
@@ -164,13 +164,14 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
         />
+        {!hasDrawn && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[15px]" style={{ color: EDL_COLORS.text3, opacity: 0.4 }}>
+              Signez ici
+            </span>
+          </div>
+        )}
       </div>
-
-      {!hasDrawn && (
-        <div className="text-center text-[16px]" style={{ color: EDL_COLORS.text3 }}>
-          Dessinez votre signature avec le doigt
-        </div>
-      )}
 
       {hasDrawn && (
         <button

@@ -17,6 +17,7 @@ const ROOM_ICONS: Record<InspectionRoomType, LucideIcon> = {
   BEDROOM: BedDouble,
   KITCHEN: CookingPot,
   BATHROOM: ShowerHead,
+  BATHROOM_WC: ShowerHead,
   WC: Droplets,
   LAUNDRY: WashingMachine,
   OFFICE: Monitor,

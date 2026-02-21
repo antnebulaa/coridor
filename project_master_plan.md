@@ -317,10 +317,11 @@ Ce document sert de **référence unique** pour l'état d'avancement du projet C
     - Internationaliser tous les Toasts.
     - Templates emails multilingues.
 2.  **Gestion Locative Avancée** :
-    - États des lieux (Module ou intégration).
-    - Quittances de loyer automatiques.
-    - Rappels de paiement.
+    - ~~États des lieux (Module ou intégration).~~ ✅ EDL complet (entrée) — 9 écrans, signature, PDF, conversation, calendrier, rectification 10j
+    - ~~Quittances de loyer automatiques.~~ ✅
+    - ~~Rappels de paiement.~~ ✅
     - Historique des locataires.
+    - EDL de sortie (diff avec EDL d'entrée).
 3.  **Paiements Stripe** :
     - Intégration Stripe Connect (Abonnements Propriétaires).
     - Webhooks Stripe pour events.

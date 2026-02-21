@@ -104,6 +104,55 @@ const DashboardPage = async () => {
         console.error("Error fetching selection stats:", error);
     }
 
+    // Fetch EDL (inspection) stats for the landlord
+    let edlStats: { id: string; status: string; type: string; propertyTitle: string; tenantName: string | null; updatedAt: string; totalRooms: number; completedRooms: number }[] = [];
+    try {
+        const inspections = await prisma.inspection.findMany({
+            where: {
+                application: {
+                    listing: {
+                        rentalUnit: {
+                            property: { ownerId: currentUser.id }
+                        }
+                    }
+                },
+                status: { in: ['DRAFT', 'PENDING_SIGNATURE'] }
+            },
+            select: {
+                id: true,
+                status: true,
+                type: true,
+                updatedAt: true,
+                tenant: { select: { name: true } },
+                rooms: { select: { isCompleted: true } },
+                application: {
+                    select: {
+                        listing: {
+                            select: {
+                                title: true,
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { updatedAt: 'desc' },
+            take: 5,
+        });
+
+        edlStats = inspections.map((i) => ({
+            id: i.id,
+            status: i.status,
+            type: i.type,
+            propertyTitle: i.application.listing.title || 'Logement',
+            tenantName: i.tenant?.name || null,
+            updatedAt: i.updatedAt.toISOString(),
+            totalRooms: i.rooms.length,
+            completedRooms: i.rooms.filter((r: { isCompleted: boolean }) => r.isCompleted).length,
+        }));
+    } catch (error) {
+        console.error("Error fetching EDL stats:", error);
+    }
+
     return (
         <ClientOnly>
             <DashboardClient
@@ -111,6 +160,7 @@ const DashboardPage = async () => {
                 financials={financialData}
                 operationalStats={operationalStats}
                 selectionStats={selectionStats}
+                edlStats={edlStats}
             />
         </ClientOnly>
     );

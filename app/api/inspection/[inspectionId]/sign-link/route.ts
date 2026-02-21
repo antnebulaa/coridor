@@ -56,7 +56,9 @@ export async function GET(request: Request, props: Params) {
       { expiresIn: '24h' }
     );
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+      || request.headers.get('origin')
+      || `https://${request.headers.get('host')}`;
     const url = `${baseUrl}/inspection/${inspectionId}/sign/tenant?token=${token}`;
 
     return NextResponse.json({ url, token });

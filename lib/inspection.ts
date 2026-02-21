@@ -73,9 +73,9 @@ export type DegradationType = (typeof DEGRADATION_TYPES)[number];
 // ─── NATURES DE REVÊTEMENT PAR SURFACE ───
 
 export const SURFACE_NATURES: Record<'FLOOR' | 'WALL' | 'CEILING', string[]> = {
-  FLOOR: ['Parquet', 'Carrelage', 'Lino/Vinyle', 'Moquette', 'Béton ciré', 'Autre'],
-  WALL: ['Peinture', 'Papier peint', 'Crépi', 'Carrelage', 'Lambris', 'Autre'],
-  CEILING: ['Peinture', 'Lambris', 'Dalles', 'Autre'],
+  FLOOR: ['Parquet massif', 'Parquet contrecollé', 'Parquet stratifié (clipsable)', 'Carrelage', 'Lino / Vinyle', 'Moquette', 'Béton ciré', 'Résine', 'Jonc de mer', 'Tomettes', 'Autre'],
+  WALL: ['Peinture', 'Papier peint', 'Crépi / Enduit', 'Carrelage', 'Faïence', 'Lambris', 'Béton brut', 'Pierre apparente', 'Autre'],
+  CEILING: ['Peinture', 'Lambris', 'Dalles / Faux plafond', 'Plâtre moulé', 'Béton brut', 'Autre'],
 };
 
 // ─── SURFACES (éléments structurels par pièce) ───
@@ -95,6 +95,7 @@ export const EQUIPMENTS_BY_ROOM: Record<InspectionRoomType, string[]> = {
   BEDROOM: ['Fenêtre(s)', 'Volets', 'Radiateur', 'Placard', 'Prises'],
   KITCHEN: ['Évier', 'Robinet', 'Plaques', 'Hotte', 'Placards', 'VMC'],
   BATHROOM: ['Douche/Baignoire', 'Lavabo', 'Robinet', 'VMC', 'Joints', 'Miroir'],
+  BATHROOM_WC: ['Douche/Baignoire', 'Lavabo', 'Robinet', 'Cuvette', "Chasse d'eau", 'VMC', 'Joints', 'Miroir'],
   WC: ['Cuvette', "Chasse d'eau", 'Lave-mains'],
   LAUNDRY: ['Prises', 'Robinet', 'Évacuation'],
   OFFICE: ['Fenêtre(s)', 'Prises', 'Interrupteurs'],
@@ -122,6 +123,7 @@ export const ROOM_TYPE_CONFIG: Record<InspectionRoomType, { label: string; icon:
   BEDROOM: { label: 'Chambre', icon: '🛏️' },
   KITCHEN: { label: 'Cuisine', icon: '🍳' },
   BATHROOM: { label: 'Salle de bain', icon: '🚿' },
+  BATHROOM_WC: { label: 'Salle de bain + WC', icon: '🚿' },
   WC: { label: 'WC', icon: '🚽' },
   LAUNDRY: { label: 'Buanderie', icon: '🧺' },
   OFFICE: { label: 'Bureau', icon: '💻' },
@@ -248,6 +250,7 @@ export const AI_TIPS: Record<string, string> = {
   LIVING: 'Testez les volets, les fenêtres, les radiateurs et les prises.',
   KITCHEN: 'Testez : plaques, four, robinet, hotte, VMC. Ouvrez les placards.',
   BATHROOM: 'Vérifiez joints douche/baignoire, VMC, et écoulement du lavabo.',
+  BATHROOM_WC: 'Vérifiez joints douche/baignoire, VMC, écoulement lavabo, et tirez la chasse.',
   BEDROOM: 'Testez volets et fenêtres. Ouvrez les placards.',
   WC: "Tirez la chasse, vérifiez l'écoulement.",
   RECAP: 'Vérifiez que tout est noté avant de passer à la signature.',

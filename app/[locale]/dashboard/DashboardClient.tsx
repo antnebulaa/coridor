@@ -5,12 +5,13 @@ import Container from "@/components/Container";
 import KPICards from "@/app/[locale]/properties/components/analytics/KPICards";
 import CashflowChart from "@/app/[locale]/properties/components/analytics/CashflowChart";
 import { HiOutlineHome, HiOutlineUserGroup, HiOutlineClipboard, HiOutlineKey } from "react-icons/hi2";
-import { Plus, Trophy, Users, ArrowRight } from "lucide-react";
+import { Plus, Trophy, Users, ArrowRight, ClipboardCheck, FileText, Clock, Send, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { SafeUser } from "@/types";
 import LegalRemindersWidget from "@/components/dashboard/LegalRemindersWidget";
 import RentCollectionWidget from "@/components/dashboard/RentCollectionWidget";
 import FiscalWidget from "@/components/dashboard/FiscalWidget";
+import { useState } from "react";
 
 interface SelectionStat {
     listingId: string;
@@ -19,11 +20,23 @@ interface SelectionStat {
     shortlisted: number;
 }
 
+interface EdlStat {
+    id: string;
+    status: string;
+    type: string;
+    propertyTitle: string;
+    tenantName: string | null;
+    updatedAt: string;
+    totalRooms: number;
+    completedRooms: number;
+}
+
 interface DashboardClientProps {
     currentUser: SafeUser;
     financials: any;
     operationalStats: any;
     selectionStats?: SelectionStat[];
+    edlStats?: EdlStat[];
 }
 import { useTranslations } from 'next-intl';
 
@@ -31,10 +44,29 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
     currentUser,
     financials,
     operationalStats,
-    selectionStats = []
+    selectionStats = [],
+    edlStats = []
 }) => {
     const t = useTranslations('dashboard');
     const greetingIndex = Math.floor(Math.random() * 4);
+    const [resendingId, setResendingId] = useState<string | null>(null);
+    const [resentIds, setResentIds] = useState<Set<string>>(new Set());
+
+    const handleResendLink = async (e: React.MouseEvent, inspectionId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setResendingId(inspectionId);
+        try {
+            const res = await fetch(`/api/inspection/${inspectionId}/send-sign-link`, { method: 'POST' });
+            if (res.ok) {
+                setResentIds(prev => new Set([...prev, inspectionId]));
+            }
+        } catch {
+            // silent
+        } finally {
+            setResendingId(null);
+        }
+    };
 
     return (
         <Container>
@@ -159,6 +191,95 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                                     </Link>
                                 </div>
                             ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* EDL Widget — only actionable items (DRAFT, PENDING_SIGNATURE) */}
+                {edlStats.length > 0 && (
+                    <section className="bg-white p-5 rounded-xl border border-neutral-200">
+                        <h3 className="font-medium text-neutral-800 flex items-center gap-2 mb-4">
+                            <ClipboardCheck className="w-5 h-5 text-indigo-500" />
+                            États des lieux
+                        </h3>
+                        <div className="space-y-3">
+                            {edlStats.map((edl) => {
+                                const typeLabel = edl.type === 'ENTRY' ? "Entrée" : "Sortie";
+                                const isDraft = edl.status === 'DRAFT';
+                                const isPending = edl.status === 'PENDING_SIGNATURE';
+                                const isResent = resentIds.has(edl.id);
+                                const isResending = resendingId === edl.id;
+
+                                return (
+                                    <div
+                                        key={edl.id}
+                                        className="p-3 rounded-lg border"
+                                        style={{
+                                            background: isDraft ? '#fffbeb' : '#eff6ff',
+                                            borderColor: isDraft ? '#fde68a' : '#bfdbfe',
+                                        }}
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    {isDraft ? (
+                                                        <span className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-100 text-amber-700">
+                                                            <Clock size={11} /> En cours
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-blue-100 text-blue-700">
+                                                            <FileText size={11} /> Attente signature
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm font-medium text-neutral-900 mt-1.5 truncate">{edl.propertyTitle}</p>
+                                                <p className="text-xs text-neutral-500 mt-0.5">
+                                                    {typeLabel}
+                                                    {edl.tenantName && ` · ${edl.tenantName}`}
+                                                    {isDraft && edl.totalRooms > 0 && (
+                                                        <span className="ml-1">
+                                                            · {edl.completedRooms}/{edl.totalRooms} pièce{edl.totalRooms > 1 ? 's' : ''}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2.5 flex gap-2">
+                                            {isDraft && (
+                                                <Link
+                                                    href={`/inspection/${edl.id}/rooms`}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-full hover:bg-amber-700 transition"
+                                                >
+                                                    Reprendre l&apos;EDL
+                                                    <ArrowRight size={12} />
+                                                </Link>
+                                            )}
+                                            {isPending && (
+                                                <button
+                                                    onClick={(e) => handleResendLink(e, edl.id)}
+                                                    disabled={isResending || isResent}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition disabled:opacity-60"
+                                                    style={{
+                                                        background: isResent ? '#dcfce7' : '#2563eb',
+                                                        color: isResent ? '#16a34a' : '#fff',
+                                                    }}
+                                                >
+                                                    {isResending ? (
+                                                        <Loader2 size={12} className="animate-spin" />
+                                                    ) : isResent ? (
+                                                        <>Notification renvoyée</>
+                                                    ) : (
+                                                        <>
+                                                            <Send size={12} />
+                                                            Renvoyer le lien
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </section>
                 )}

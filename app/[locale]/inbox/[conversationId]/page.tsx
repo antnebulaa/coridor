@@ -211,11 +211,11 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     }
 
     // Fetch inspection data if lease is signed
-    let inspectionData: { id: string; status: string; type: string; pdfUrl: string | null } | null = null;
+    let inspectionData: { id: string; status: string; type: string; pdfUrl: string | null; scheduledAt: string | null } | null = null;
     if (applicationId && leaseStatus === 'SIGNED') {
         const inspection = await prisma.inspection.findFirst({
             where: { applicationId },
-            select: { id: true, status: true, type: true, pdfUrl: true },
+            select: { id: true, status: true, type: true, pdfUrl: true, scheduledAt: true },
             orderBy: { createdAt: 'desc' },
         });
         if (inspection) {
@@ -224,6 +224,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 status: inspection.status,
                 type: inspection.type,
                 pdfUrl: inspection.pdfUrl,
+                scheduledAt: inspection.scheduledAt?.toISOString() || null,
             };
         }
     }

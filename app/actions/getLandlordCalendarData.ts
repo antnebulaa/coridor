@@ -132,6 +132,74 @@ export default async function getLandlordCalendarData() {
             updatedAt: prop.updatedAt.toISOString(),
         }));
 
+        // 4. Fetch Inspections (EDL events)
+        const inspections = await prisma.inspection.findMany({
+            where: {
+                landlordId: currentUser.id,
+                status: { in: ['DRAFT', 'PENDING_SIGNATURE', 'SIGNED'] },
+            },
+            select: {
+                id: true,
+                type: true,
+                status: true,
+                scheduledAt: true,
+                startedAt: true,
+                completedAt: true,
+                createdAt: true,
+                tenant: { select: { name: true } },
+                application: {
+                    select: {
+                        listing: {
+                            select: {
+                                title: true,
+                                rentalUnit: {
+                                    select: {
+                                        property: {
+                                            select: {
+                                                city: true,
+                                                address: true,
+                                                addressLine1: true,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                rooms: { select: { isCompleted: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        const safeInspections = inspections.map((insp: any) => {
+            const eventDate = insp.scheduledAt || insp.startedAt || insp.createdAt;
+            const date = new Date(eventDate);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const startTime = `${hours}:${minutes}`;
+            // Default 1.5h duration
+            const endDate = new Date(date.getTime() + 90 * 60 * 1000);
+            const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+
+            return {
+                id: insp.id,
+                type: insp.type, // ENTRY | EXIT
+                status: insp.status,
+                date: eventDate.toISOString(),
+                startTime,
+                endTime,
+                tenantName: insp.tenant?.name || null,
+                listingTitle: insp.application.listing.title || 'Logement',
+                address: insp.application.listing.rentalUnit.property.address
+                    || insp.application.listing.rentalUnit.property.addressLine1
+                    || insp.application.listing.rentalUnit.property.city
+                    || null,
+                totalRooms: insp.rooms.length,
+                completedRooms: insp.rooms.filter((r: any) => r.isCompleted).length,
+            };
+        });
+
         const safeVisits = visits.map((visit: any) => ({
             ...visit,
             date: visit.date.toISOString(),
@@ -158,9 +226,10 @@ export default async function getLandlordCalendarData() {
         }));
 
         return {
-            slots: safeSlots, // NEW: Top level slots
+            slots: safeSlots,
             properties: safeProperties,
-            visits: safeVisits
+            visits: safeVisits,
+            inspections: safeInspections,
         };
 
     } catch (error: any) {

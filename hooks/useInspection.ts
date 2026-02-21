@@ -273,7 +273,7 @@ export function useInspection(inspectionId: string | undefined) {
 
   const addElement = useCallback(async (
     roomId: string,
-    data: { category: string; name: string; nature?: string }
+    data: { category: string; name: string; nature?: string[] }
   ) => {
     if (!inspectionId) return;
     const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}/elements`, {
@@ -300,7 +300,7 @@ export function useInspection(inspectionId: string | undefined) {
     elementId: string,
     data: {
       condition?: ElementCondition;
-      nature?: string;
+      nature?: string[];
       observations?: string;
       degradationTypes?: string[];
       isAbsent?: boolean;

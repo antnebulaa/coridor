@@ -4,6 +4,31 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import { broadcastNewMessage } from "@/lib/supabaseServer";
 import webPush from "web-push";
 
+/** Convert pipe-delimited system message bodies to human-readable text for notifications */
+function formatSystemMessage(body: string | null): string | null {
+    if (!body) return body;
+    if (body === 'LEASE_SENT_FOR_SIGNATURE') return 'Bail envoyé pour signature';
+    if (body === 'INVITATION_VISITE') return 'Invitation à une visite';
+    if (body.startsWith('VISIT_CONFIRMED|')) return 'Visite confirmée';
+    if (body.startsWith('APPLICATION_REJECTED|')) return 'Candidature déclinée';
+    if (body.startsWith('INSPECTION_SCHEDULED|')) return "État des lieux planifié";
+    if (body.startsWith('INSPECTION_CONFIRMED|')) return "Créneau EDL confirmé";
+    if (body.startsWith('INSPECTION_REMINDER|')) return "Rappel état des lieux";
+    if (body.startsWith('INSPECTION_STARTED|')) return "État des lieux démarré";
+    if (body.startsWith('INSPECTION_COMPLETED|')) return "Le bailleur a signé l'état des lieux";
+    if (body.startsWith('INSPECTION_SIGNED|')) return "État des lieux signé par les deux parties";
+    if (body.startsWith('INSPECTION_SIGN_LINK_SENT|')) return "Lien de signature envoyé";
+    if (body.startsWith('INSPECTION_PDF_READY|')) return "PDF de l'état des lieux disponible";
+    if (body.startsWith('INSPECTION_CANCELLED|')) return "État des lieux annulé";
+    if (body.startsWith('INSPECTION_RESCHEDULED|')) return "État des lieux reprogrammé";
+    if (body.startsWith('INSPECTION_AMENDMENT_REQUESTED|')) return "Rectification demandée sur l'état des lieux";
+    if (body.startsWith('INSPECTION_AMENDMENT_RESPONDED|')) {
+        const status = body.split('|')[3];
+        return status === 'ACCEPTED' ? 'Rectification acceptée' : 'Rectification refusée';
+    }
+    return body;
+}
+
 // Configure VAPID keys safely
 try {
     if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
@@ -196,7 +221,7 @@ export async function POST(
                 userId: recipientUser.id,
                 type: 'MESSAGE',
                 title: user.name || 'Nouveau message',
-                message: newMessage.body || (newMessage.image ? "📷 Photo envoyée" : (newMessage.fileUrl ? "📎 Fichier envoyé" : "Nouveau message")),
+                message: formatSystemMessage(newMessage.body) || (newMessage.image ? "📷 Photo envoyée" : (newMessage.fileUrl ? "📎 Fichier envoyé" : "Nouveau message")),
                 link: `/inbox/${conversationId}`
             });
 
@@ -214,7 +239,7 @@ export async function POST(
                     if (subscriptions.length > 0) {
                         const notificationPayload = JSON.stringify({
                             title: `Nouveau message de ${user.name || 'Coridor'}`,
-                            body: newMessage.body || (newMessage.image ? "📷 Photo envoyée" : (newMessage.fileUrl ? "📎 Fichier envoyé" : "Nouveau message")),
+                            body: formatSystemMessage(newMessage.body) || (newMessage.image ? "📷 Photo envoyée" : (newMessage.fileUrl ? "📎 Fichier envoyé" : "Nouveau message")),
                             url: `/inbox/${conversationId}`,
                             icon: "/images/logo.png"
                         });
