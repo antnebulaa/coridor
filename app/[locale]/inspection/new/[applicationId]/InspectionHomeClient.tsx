@@ -41,6 +41,9 @@ const InspectionHomeClient: React.FC<InspectionHomeClientProps> = ({
   const handleStart = async () => {
     setIsCreating(true);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+
       const res = await fetch('/api/inspection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,41 +51,46 @@ const InspectionHomeClient: React.FC<InspectionHomeClientProps> = ({
           applicationId,
           type: 'ENTRY',
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeout);
+
+      const data = await res.json();
+
       // If inspection already exists, redirect to it
-      if (res.status === 409) {
-        const data = await res.json();
-        if (data.existingId) {
-          toast.success('Un état des lieux existe déjà, redirection…');
-          router.push(`/inspection/${data.existingId}`);
-          return;
-        }
+      if (res.status === 409 && data.existingId) {
+        toast.success('Un état des lieux existe déjà, redirection…');
+        router.push(`/inspection/${data.existingId}`);
+        return;
       }
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to create inspection');
+        throw new Error(data.error || `Erreur serveur (${res.status})`);
       }
-
-      const inspection = await res.json();
 
       // If tenant not present, save representative info
       if (!tenantPresent && representativeName) {
-        await fetch(`/api/inspection/${inspection.id}`, {
+        await fetch(`/api/inspection/${data.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             tenantPresent: false,
             representativeName,
           }),
-        });
+        }).catch(() => {}); // Non-blocking
       }
 
-      router.push(`/inspection/${inspection.id}/meters`);
-    } catch (err) {
+      router.push(`/inspection/${data.id}/meters`);
+    } catch (err: unknown) {
       console.error('Failed to create inspection:', err);
-      toast.error('Impossible de démarrer l\'état des lieux. Réessayez.');
+      const message = err instanceof Error && err.name === 'AbortError'
+        ? 'La requête a expiré. Vérifiez votre connexion.'
+        : err instanceof Error
+          ? err.message
+          : 'Impossible de démarrer l\'état des lieux.';
+      toast.error(message);
+    } finally {
       setIsCreating(false);
     }
   };
