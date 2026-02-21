@@ -10,7 +10,7 @@ import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
 import { EDL_COLORS, METER_WIZARD_STEPS, METER_TYPE_LABELS, AI_TIPS } from '@/lib/inspection';
-import { CheckCircle2 } from 'lucide-react';
+import { Check, CheckCircle2 } from 'lucide-react';
 
 // 7 steps: elec number, elec index, elec photo, water number, water index, water photo, summary
 const TOTAL_STEPS = 7;
@@ -159,7 +159,7 @@ export default function MetersPage() {
                 border: noGas ? 'none' : `2px solid ${EDL_COLORS.border}`,
               }}
             >
-              {noGas && <span className="text-white text-[14px] font-bold">✓</span>}
+              {noGas && <Check size={14} color="#fff" strokeWidth={3} />}
             </div>
           </button>
         </div>
@@ -198,6 +198,7 @@ export default function MetersPage() {
   return (
     <div className="h-full flex flex-col">
       <WizardInput
+        key={currentStep}
         title="Compteurs"
         icon={wizardConfig.icon}
         label={wizardConfig.label}

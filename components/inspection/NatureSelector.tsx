@@ -24,7 +24,7 @@ const NatureSelector: React.FC<NatureSelectorProps> = ({ category, value, onChan
             className="px-5 py-3 rounded-2xl text-[17px] font-bold active:scale-95"
             style={{
               background: isSelected ? EDL_COLORS.accent : EDL_COLORS.card2,
-              color: isSelected ? '#000' : EDL_COLORS.text2,
+              color: isSelected ? '#fff' : EDL_COLORS.text2,
               border: `2px solid ${isSelected ? EDL_COLORS.accent : EDL_COLORS.border}`,
             }}
           >

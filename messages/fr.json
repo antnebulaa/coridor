@@ -24,8 +24,8 @@
                 "subtitle": "Aidez les locataires à vous trouver !"
             },
             "surface": {
-                "title": "Quelle est la surface du logement ?",
-                "subtitle": "Indiquez la surface habitable en m²"
+                "title": "Quelle est la surface habitable du logement ?",
+                "subtitle": ""
             },
             "info": {
                 "title": "Combien de pièces ?",
@@ -137,19 +137,25 @@
             },
             "rentalType": {
                 "title": "Quel type de location proposez-vous ?",
-                "subtitle": "Cela déterminera le type de bail.",
+                "subtitle": "Chaque type de location a ses avantages et ses contraintes. Choisissez celui qui correspond le mieux à vos besoins.",
                 "options": {
                     "bare": {
                         "title": "Location Nue",
-                        "desc": "Logement loué vide à titre de résidence principale."
+                        "desc": "Bail de 3 ans minimum. Parfait pour la tranquillité. Cible des locataires cherchant la stabilité pour plusieurs années. Gestion minimale",
+                        "pros": "Stabilité locative",
+                        "cons": "Loyer plus faible"
                     },
                     "furnished": {
                         "title": "Location Meublée",
-                        "desc": "Logement loué avec meubles."
+                        "desc": "Bail d'1 an ou 9 mois étudiant.\n Parfait pour la rentabilité. Loyers généralement plus élevés et abattements fiscaux attractifs (LMNP)",
+                        "pros": "Avantage fiscal",
+                        "cons": "Coût d'investissement"
                     },
                     "colocation": {
                         "title": "Colocation",
-                        "desc": "Louez plusieurs chambres dans un même logement."
+                        "desc": "Bail unique ou baux individuels. Parfait pour optimiser l'espace. Idéal pour diviser le risque d'impayé et booster le rendement au m² des grands appartements.",
+                        "pros": "Rendement maximisé",
+                        "cons": "Turnover fréquent"
                     }
                 }
             },

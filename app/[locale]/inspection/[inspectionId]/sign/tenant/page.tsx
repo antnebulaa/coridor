@@ -7,7 +7,7 @@ import AudioRecorder from '@/components/inspection/AudioRecorder';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import { EDL_COLORS, ROOM_TYPE_CONFIG, CONDITION_MAP } from '@/lib/inspection';
 import type { FullInspection } from '@/hooks/useInspection';
-import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, CircleCheck } from 'lucide-react';
 
 export default function TenantSignPage() {
   const params = useParams();
@@ -94,7 +94,7 @@ export default function TenantSignPage() {
     return (
       <div className="h-full flex items-center justify-center px-6">
         <div className="text-center">
-          <div className="text-[64px] mb-4">✅</div>
+          <CircleCheck size={64} color={EDL_COLORS.green} className="mx-auto mb-4" />
           <div className="text-[24px] font-bold" style={{ color: EDL_COLORS.text }}>
             Signé !
           </div>

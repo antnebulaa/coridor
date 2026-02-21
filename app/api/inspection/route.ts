@@ -60,9 +60,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `An ${type} inspection already exists for this lease` }, { status: 409 });
     }
 
-    // Determine room template from property
-    const roomCount = application.listing.rentalUnit.roomCount || property.rooms.length || 3;
-    const typology = roomCount <= 1 ? 'STUDIO' : `T${roomCount}`;
+    // Determine room template from listing data
+    const listing = application.listing;
+    const rentalUnit = listing.rentalUnit;
+
+    // For colocation (private room), EDL covers just the rented room + common areas
+    const isColocation = listing.leaseType === 'COLOCATION' || rentalUnit.type === 'PRIVATE_ROOM';
+
+    let typology: string;
+
+    if (isColocation) {
+      // Colocation: 1 bedroom (the rented room) + common areas → T2
+      typology = 'T2';
+    } else if (listing.guestCount != null && listing.guestCount > 0) {
+      // Best: use guestCount directly (nombre de chambres)
+      // guestCount=1 → T2 (1 chambre), guestCount=2 → T3 (2 chambres), etc.
+      typology = `T${listing.guestCount + 1}`;
+    } else if (listing.guestCount === 0) {
+      // Studio: 0 chambres
+      typology = 'STUDIO';
+    } else {
+      // Fallback: derive from roomCount (pièces principales = T-number)
+      const piecesCount = listing.roomCount || rentalUnit.roomCount || 2;
+      typology = piecesCount <= 1 ? 'STUDIO' : `T${piecesCount}`;
+    }
+
     const template = getRoomTemplate(typology);
 
     // Create the inspection with rooms, surface elements, and equipment elements

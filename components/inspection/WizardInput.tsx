@@ -50,7 +50,7 @@ const WizardInput: React.FC<WizardInputProps> = ({
         step={{ current: step, total }}
       />
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 animate-fadeUp">
         {/* Icon */}
         <div className="text-[56px] mb-4">{icon}</div>
 

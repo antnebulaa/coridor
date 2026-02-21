@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { useRouter } from '@/i18n/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
 import { EDL_COLORS } from '@/lib/inspection';
 
 interface InspectionTopBarProps {
   title: string;
   subtitle?: string;
   onBack?: () => void;
+  onClose?: () => void;
   right?: React.ReactNode;
   step?: { current: number; total: number };
 }
@@ -17,6 +18,7 @@ const InspectionTopBar: React.FC<InspectionTopBarProps> = ({
   title,
   subtitle,
   onBack,
+  onClose,
   right,
   step,
 }) => {
@@ -65,6 +67,15 @@ const InspectionTopBar: React.FC<InspectionTopBarProps> = ({
           </div>
         )}
         {right}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center active:scale-95"
+            style={{ background: EDL_COLORS.card2 }}
+          >
+            <X size={18} color={EDL_COLORS.text3} />
+          </button>
+        )}
       </div>
     </div>
   );

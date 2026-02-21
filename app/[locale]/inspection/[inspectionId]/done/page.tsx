@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useInspection } from '@/hooks/useInspection';
 import { EDL_COLORS } from '@/lib/inspection';
-import { FileText, Mail, ArrowRight } from 'lucide-react';
+import { FileText, Mail, ArrowRight, CircleCheck } from 'lucide-react';
 
 export default function DonePage() {
   const params = useParams();
@@ -24,7 +24,7 @@ export default function DonePage() {
     <div className="h-full flex flex-col items-center justify-center px-6">
       {/* Success animation */}
       <div className="text-center mb-8">
-        <div className="text-[72px] mb-4 animate-bounce">✅</div>
+        <CircleCheck size={72} color={EDL_COLORS.green} className="mx-auto mb-4 animate-bounce" />
         <h1 className="text-[28px] font-bold tracking-tight" style={{ color: EDL_COLORS.text }}>
           État des lieux terminé !
         </h1>

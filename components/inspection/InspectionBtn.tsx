@@ -17,7 +17,7 @@ const InspectionBtn: React.FC<InspectionBtnProps> = ({
   onClick,
   disabled = false,
   color = EDL_COLORS.accent,
-  textColor = '#000',
+  textColor = '#fff',
   loading = false,
 }) => {
   return (
@@ -31,7 +31,7 @@ const InspectionBtn: React.FC<InspectionBtnProps> = ({
       <button
         onClick={disabled || loading ? undefined : onClick}
         disabled={disabled || loading}
-        className="w-full py-4 rounded-2xl text-[18px] font-bold tracking-tight active:scale-[0.98]"
+        className="w-full py-4 rounded-2xl text-[18px] font-medium tracking-tight active:scale-[0.98]"
         style={{
           background: disabled ? EDL_COLORS.card2 : color,
           color: disabled ? EDL_COLORS.text3 : textColor,

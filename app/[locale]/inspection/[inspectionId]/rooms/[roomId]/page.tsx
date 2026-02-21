@@ -23,7 +23,42 @@ import {
 } from '@/lib/inspection';
 import type { RoomPhase } from '@/lib/inspection';
 import type { ElementCondition } from '@prisma/client';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Check, CircleCheck } from 'lucide-react';
+
+function PhotoPreview({ src, alt, onRetake }: { src: string; alt: string; onRetake: () => void }) {
+  const [loaded, setLoaded] = useState(false);
+  // Generate a tiny blurred placeholder from Cloudinary
+  const blurSrc = src.replace('/upload/', '/upload/w_40,e_blur:800,q_10/');
+  return (
+    <div className="relative mb-5 rounded-2xl overflow-hidden h-48" style={{ background: EDL_COLORS.card }}>
+      {/* Blurred placeholder — loads instantly (< 1KB) */}
+      {!loaded && (
+        <img
+          src={blurSrc}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover scale-105"
+        />
+      )}
+      {/* Actual image with fade-in */}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        className={`relative w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      />
+      {loaded && (
+        <button
+          onClick={onRetake}
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[15px] font-bold"
+          style={{ background: 'rgba(0,0,0,0.7)', color: '#fff' }}
+        >
+          <RotateCcw size={16} />
+          Reprendre
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function RoomInspectionPage() {
   const params = useParams();
@@ -88,10 +123,13 @@ export default function RoomInspectionPage() {
   if (phase === 'OVERVIEW') {
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
         <CameraCapture
-          label={`${currentRoom.name} — Vue d'ensemble`}
+          title={currentRoom.name}
+          label="Vue d'ensemble"
           instruction="Cadrez la pièce en entier · Mode paysage recommandé"
+          allowMultiple
+          doneLabel="Noter les surfaces"
           onCapture={async (url, thumbnailUrl, sha256) => {
             await addPhoto({
               type: 'OVERVIEW',
@@ -101,6 +139,8 @@ export default function RoomInspectionPage() {
               inspectionRoomId: roomId,
               deviceInfo: navigator.userAgent,
             });
+          }}
+          onDone={() => {
             setPhase('SURFACE_PHOTO');
             setCurrentSurfaceIndex(0);
           }}
@@ -115,10 +155,10 @@ export default function RoomInspectionPage() {
     const surface = SURFACE_ELEMENTS[currentSurfaceIndex];
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         {/* Surface tabs */}
-        <div className="flex px-4 pt-2 gap-2.5" style={{ background: EDL_COLORS.bg }}>
+        <div className="flex px-4 pt-0 pb-4 gap-2.5" style={{ background: EDL_COLORS.bg }}>
           {SURFACE_ELEMENTS.map((s, i) => {
             const el = surfaceElements[i];
             const isDone = el?.condition != null;
@@ -127,14 +167,14 @@ export default function RoomInspectionPage() {
               <button
                 key={s.category}
                 onClick={() => { setCurrentSurfaceIndex(i); }}
-                className="flex-1 py-3 rounded-xl text-[16px] font-bold text-center"
+                className="flex-1 py-2 rounded-2xl text-[16px] font-medium text-center"
                 style={{
-                  background: isActive ? EDL_COLORS.accent : isDone ? `${EDL_COLORS.green}20` : EDL_COLORS.card2,
-                  color: isActive ? '#000' : isDone ? EDL_COLORS.green : EDL_COLORS.text3,
-                  border: `2px solid ${isActive ? EDL_COLORS.accent : isDone ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
+                  background: isActive ? EDL_COLORS.accent : isDone ? `${EDL_COLORS.green}` : EDL_COLORS.card2,
+                  color: isActive ? '#fff' : isDone ? EDL_COLORS.text : EDL_COLORS.text3,
+                  border: `0px solid ${isActive ? EDL_COLORS.accent : isDone ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
                 }}
               >
-                {s.name} {isDone && !isActive ? '✓' : ''}
+                {s.name} {isDone && !isActive ? <Check size={14} className="inline" /> : ''}
               </button>
             );
           })}
@@ -143,6 +183,8 @@ export default function RoomInspectionPage() {
         <CameraCapture
           label={`Photographiez les ${surface.name.toLowerCase()}`}
           instruction={`${currentRoom.name} — ${surface.name}`}
+          allowMultiple
+          doneLabel="Noter l'état"
           onCapture={async (url, thumbnailUrl, sha256) => {
             if (currentSurface) {
               await addPhoto({
@@ -155,8 +197,8 @@ export default function RoomInspectionPage() {
                 deviceInfo: navigator.userAgent,
               });
             }
-            setPhase('SURFACE_QUALIFY');
           }}
+          onDone={() => setPhase('SURFACE_QUALIFY')}
         />
       </div>
     );
@@ -169,22 +211,16 @@ export default function RoomInspectionPage() {
 
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {/* Photo preview */}
           {surfacePhoto && (
-            <div className="relative mb-5 rounded-2xl overflow-hidden">
-              <img src={surfacePhoto.url} alt={surface.name} className="w-full h-48 object-cover" />
-              <button
-                onClick={() => setPhase('SURFACE_PHOTO')}
-                className="absolute bottom-3 right-3 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[15px] font-bold"
-                style={{ background: 'rgba(0,0,0,0.7)', color: '#fff' }}
-              >
-                <RotateCcw size={16} />
-                Reprendre
-              </button>
-            </div>
+            <PhotoPreview
+              src={surfacePhoto.thumbnailUrl || surfacePhoto.url}
+              alt={surface.name}
+              onRetake={() => setPhase('SURFACE_PHOTO')}
+            />
           )}
 
           {/* Nature selector */}
@@ -305,7 +341,7 @@ export default function RoomInspectionPage() {
 
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="text-[26px] font-bold mb-1 tracking-tight" style={{ color: EDL_COLORS.text }}>
@@ -362,7 +398,7 @@ export default function RoomInspectionPage() {
   if (phase === 'OBS') {
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         <div className="flex-1 px-5 py-6">
           <div className="text-[26px] font-bold mb-1 tracking-tight" style={{ color: EDL_COLORS.text }}>
@@ -382,7 +418,7 @@ export default function RoomInspectionPage() {
         </div>
 
         <InspectionBtn onClick={() => { setPhase('DONE'); completeRoom(); }}>
-          ✓ Valider {currentRoom.name}
+          <Check size={18} className="inline mr-1" /> Valider {currentRoom.name}
         </InspectionBtn>
       </div>
     );
@@ -394,7 +430,7 @@ export default function RoomInspectionPage() {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center animate-pulse">
-          <div className="text-[64px] mb-4">✓</div>
+          <CircleCheck size={64} color={EDL_COLORS.green} className="mx-auto mb-4" />
           <div className="text-[28px] font-bold" style={{ color: EDL_COLORS.green }}>
             {currentRoom.name} validée
           </div>

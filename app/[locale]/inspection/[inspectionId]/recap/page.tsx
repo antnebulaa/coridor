@@ -8,7 +8,7 @@ import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
 import { EDL_COLORS, ROOM_TYPE_CONFIG, CONDITION_MAP, ANTI_FORGET_CHECKLIST, AI_TIPS } from '@/lib/inspection';
-import { CheckCircle2, AlertTriangle, Camera, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, CheckCircle2, AlertTriangle, Camera, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function RecapPage() {
   const params = useParams();
@@ -147,7 +147,7 @@ export default function RecapPage() {
                     border: checkedItems.has(item.id) ? 'none' : `2px solid ${EDL_COLORS.border}`,
                   }}
                 >
-                  {checkedItems.has(item.id) && <span className="text-[12px] font-bold">✓</span>}
+                  {checkedItems.has(item.id) && <Check size={14} color="#fff" strokeWidth={3} />}
                 </div>
                 <span className="text-[16px]">{item.icon}</span>
                 <span className="text-[16px] font-medium" style={{ color: EDL_COLORS.text2 }}>

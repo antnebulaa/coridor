@@ -4,27 +4,53 @@ import React, { useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useInspection } from '@/hooks/useInspection';
+import type { InspectionRoomWithElements } from '@/hooks/useInspection';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
 import { EDL_COLORS, ROOM_TYPE_CONFIG, AI_TIPS } from '@/lib/inspection';
 import type { InspectionRoomType } from '@prisma/client';
-import { Plus, CheckCircle2, ChevronRight } from 'lucide-react';
+import {
+  Plus, CheckCircle2, ChevronRight,
+  DoorOpen, ArrowLeftRight, Sofa, BedDouble, CookingPot, ShowerHead,
+  Droplets, WashingMachine, Monitor, Shirt, Flower2, Sun,
+  Warehouse, CircleParking, Car, Package,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const ADD_ROOM_CHIPS: { type: InspectionRoomType; label: string; icon: string }[] = [
-  { type: 'BEDROOM', label: 'Chambre', icon: '🛏️' },
-  { type: 'BATHROOM', label: 'Salle de bain', icon: '🚿' },
-  { type: 'WC', label: 'WC', icon: '🚽' },
-  { type: 'OFFICE', label: 'Bureau', icon: '💻' },
-  { type: 'DRESSING', label: 'Dressing', icon: '👔' },
-  { type: 'BALCONY', label: 'Balcon', icon: '🌿' },
-  { type: 'TERRACE', label: 'Terrasse', icon: '☀️' },
-  { type: 'CELLAR', label: 'Cave', icon: '🏚️' },
-  { type: 'PARKING', label: 'Parking', icon: '🅿️' },
-  { type: 'GARAGE', label: 'Garage', icon: '🚗' },
-  { type: 'LAUNDRY', label: 'Buanderie', icon: '🧺' },
-  { type: 'HALLWAY', label: 'Couloir', icon: '🚶' },
-  { type: 'OTHER', label: 'Autre', icon: '📦' },
+const ROOM_ICONS: Record<InspectionRoomType, LucideIcon> = {
+  ENTRY: DoorOpen,
+  HALLWAY: ArrowLeftRight,
+  LIVING: Sofa,
+  BEDROOM: BedDouble,
+  KITCHEN: CookingPot,
+  BATHROOM: ShowerHead,
+  WC: Droplets,
+  LAUNDRY: WashingMachine,
+  OFFICE: Monitor,
+  DRESSING: Shirt,
+  BALCONY: Flower2,
+  TERRACE: Sun,
+  CELLAR: Warehouse,
+  PARKING: CircleParking,
+  GARAGE: Car,
+  OTHER: Package,
+};
+
+const ADD_ROOM_CHIPS: { type: InspectionRoomType; label: string }[] = [
+  { type: 'BEDROOM', label: 'Chambre' },
+  { type: 'BATHROOM', label: 'Salle de bain' },
+  { type: 'WC', label: 'WC' },
+  { type: 'OFFICE', label: 'Bureau' },
+  { type: 'DRESSING', label: 'Dressing' },
+  { type: 'BALCONY', label: 'Balcon' },
+  { type: 'TERRACE', label: 'Terrasse' },
+  { type: 'CELLAR', label: 'Cave' },
+  { type: 'PARKING', label: 'Parking' },
+  { type: 'GARAGE', label: 'Garage' },
+  { type: 'LAUNDRY', label: 'Buanderie' },
+  { type: 'HALLWAY', label: 'Couloir' },
+  { type: 'OTHER', label: 'Autre' },
 ];
 
 export default function RoomsHubPage() {
@@ -35,14 +61,13 @@ export default function RoomsHubPage() {
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
-  const rooms = inspection?.rooms || [];
+  const rooms: InspectionRoomWithElements[] = inspection?.rooms || [];
   const completedCount = rooms.filter((r) => r.isCompleted).length;
   const allCompleted = rooms.length > 0 && completedCount === rooms.length;
 
   const handleAddRoom = useCallback(async (type: InspectionRoomType) => {
     setIsAdding(true);
     const config = ROOM_TYPE_CONFIG[type];
-    // Count existing rooms of this type for naming
     const existingOfType = rooms.filter((r) => r.roomType === type).length;
     const name = existingOfType > 0 ? `${config.label} ${existingOfType + 1}` : config.label;
 
@@ -54,6 +79,33 @@ export default function RoomsHubPage() {
   const handleRoomClick = (roomId: string) => {
     router.push(`/inspection/${inspectionId}/rooms/${roomId}`);
   };
+
+  // Skeleton loading state
+  if (!inspection) {
+    return (
+      <div className="h-full flex flex-col" style={{ background: EDL_COLORS.bg }}>
+        <InspectionTopBar title="Pièces" subtitle="Chargement..." onBack={() => router.back()} />
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          <div className="space-y-3">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="w-full rounded-2xl p-4 flex items-center gap-4 animate-pulse"
+                style={{ background: EDL_COLORS.card }}
+              >
+                <div className="w-[26px] h-[26px] rounded-lg" style={{ background: EDL_COLORS.card2 }} />
+                <div className="flex-1">
+                  <div className="h-5 w-28 rounded-lg mb-2" style={{ background: EDL_COLORS.card2 }} />
+                  <div className="h-3.5 w-40 rounded-lg" style={{ background: EDL_COLORS.card2 }} />
+                </div>
+                <div className="w-5 h-5 rounded-full" style={{ background: EDL_COLORS.card2 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -69,7 +121,6 @@ export default function RoomsHubPage() {
         {/* Room cards */}
         <div className="space-y-3">
           {rooms.map((room) => {
-            const config = ROOM_TYPE_CONFIG[room.roomType];
             const photoCount = room.photos?.length || 0;
             const elementCount = room.elements?.length || 0;
             const qualifiedCount = room.elements?.filter((e) => e.condition || e.isAbsent).length || 0;
@@ -81,17 +132,19 @@ export default function RoomsHubPage() {
                 className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.98]"
                 style={{
                   background: EDL_COLORS.card,
-                  border: `1px solid ${room.isCompleted ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
+                  border: `0px solid ${room.isCompleted ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
                 }}
               >
-                <div className="text-[32px]">{config?.icon || '📦'}</div>
+                <div style={{ color: EDL_COLORS.text2 }}>
+                  {React.createElement(ROOM_ICONS[room.roomType] || Package, { size: 26 })}
+                </div>
                 <div className="flex-1 text-left">
-                  <div className="text-[18px] font-bold" style={{ color: EDL_COLORS.text }}>
+                  <div className="text-[18px] font-medium" style={{ color: EDL_COLORS.text }}>
                     {room.name}
                   </div>
-                  <div className="text-[14px] mt-0.5" style={{ color: EDL_COLORS.text3 }}>
+                  <div className="text-[14px] mt-0" style={{ color: EDL_COLORS.text3 }}>
                     {room.isCompleted
-                      ? `✓ ${photoCount} photos · ${qualifiedCount} éléments`
+                      ? `${photoCount} photos · ${qualifiedCount} éléments`
                       : elementCount > 0
                       ? `${qualifiedCount}/${elementCount} éléments qualifiés`
                       : 'Non commencée'}
@@ -110,7 +163,7 @@ export default function RoomsHubPage() {
         {/* Add room section */}
         {showAddRoom ? (
           <div className="mt-4">
-            <div className="text-[17px] font-bold mb-3" style={{ color: EDL_COLORS.text2 }}>
+            <div className="text-[17px] font-semibold mb-3" style={{ color: EDL_COLORS.text2 }}>
               Choisir un type de pièce
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -126,7 +179,7 @@ export default function RoomsHubPage() {
                     border: `1px solid ${EDL_COLORS.border}`,
                   }}
                 >
-                  <span>{chip.icon}</span>
+                  {React.createElement(ROOM_ICONS[chip.type] || Package, { size: 16 })}
                   <span>{chip.label}</span>
                 </button>
               ))}
@@ -142,11 +195,11 @@ export default function RoomsHubPage() {
         ) : (
           <button
             onClick={() => setShowAddRoom(true)}
-            className="w-full mt-4 py-4 rounded-2xl text-[17px] font-bold flex items-center justify-center gap-2"
+            className="w-full mt-4 py-4 rounded-2xl text-[17px] font-medium flex items-center justify-center gap-2"
             style={{
-              background: EDL_COLORS.card2,
-              color: EDL_COLORS.text2,
-              border: `1px dashed ${EDL_COLORS.border}`,
+              background: EDL_COLORS.accent,
+              color: EDL_COLORS.text,
+              border: `0px solid ${EDL_COLORS.border}`,
             }}
           >
             <Plus size={18} />
