@@ -2,18 +2,23 @@ import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import webPush from "web-push";
 
-// Configure Web Push with VAPID keys
-webPush.setVapidDetails(
-    process.env.NEXT_PUBLIC_VAPID_EMAIL || "mailto:admin@example.com",
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-);
+// Configure Web Push with VAPID keys (lazy — only if keys are present)
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+if (vapidPublicKey && vapidPrivateKey) {
+    webPush.setVapidDetails(
+        process.env.NEXT_PUBLIC_VAPID_EMAIL || "mailto:admin@example.com",
+        vapidPublicKey,
+        vapidPrivateKey
+    );
+}
 
 export async function POST(request: Request) {
     try {
-        // SECURITY: This endpoint should be protected.
-        // For now, checks if user is authenticated (but doesn't check admin role).
-        // Ideally, this is called by internal server actions or webhooks (e.g. Stripe, Chat).
+        if (!vapidPublicKey || !vapidPrivateKey) {
+            return NextResponse.json({ error: "VAPID keys not configured" }, { status: 503 });
+        }
 
         // Allow payload to specify userId (who receives notification)
         const body = await request.json();
