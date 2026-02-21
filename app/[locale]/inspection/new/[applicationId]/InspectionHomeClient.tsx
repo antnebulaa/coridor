@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
+import { toast } from 'react-hot-toast';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
@@ -49,7 +50,20 @@ const InspectionHomeClient: React.FC<InspectionHomeClientProps> = ({
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to create inspection');
+      // If inspection already exists, redirect to it
+      if (res.status === 409) {
+        const data = await res.json();
+        if (data.existingId) {
+          toast.success('Un état des lieux existe déjà, redirection…');
+          router.push(`/inspection/${data.existingId}`);
+          return;
+        }
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to create inspection');
+      }
 
       const inspection = await res.json();
 
@@ -68,6 +82,7 @@ const InspectionHomeClient: React.FC<InspectionHomeClientProps> = ({
       router.push(`/inspection/${inspection.id}/meters`);
     } catch (err) {
       console.error('Failed to create inspection:', err);
+      toast.error('Impossible de démarrer l\'état des lieux. Réessayez.');
       setIsCreating(false);
     }
   };

@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     });
 
     if (existing) {
-      return NextResponse.json({ error: `An ${type} inspection already exists for this lease` }, { status: 409 });
+      return NextResponse.json({ error: `An ${type} inspection already exists for this lease`, existingId: existing.id, status: existing.status }, { status: 409 });
     }
 
     // Determine room template from listing data
