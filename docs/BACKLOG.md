@@ -96,7 +96,11 @@
 - [✅] Rectification post-signature — `InspectionAmendment` (PENDING/ACCEPTED/REJECTED), formulaire "Signaler un défaut" (locataire, 10 jours), accepter/refuser (bailleur), messages système, notifications
 - [✅] Dashboard propriétaire — section EDL dans la page property, lien vers inspection en cours ou signée
 - [✅] Calendrier — inspections affichées dans l'agenda (amber, statut badge), navigation par statut
-- [🔧] Auto-email PDF — bouton "Renvoyer par email" fonctionne, envoi automatique après génération à câbler
+- [✅] Auto-email PDF — envoi automatique aux deux parties après génération (`generate-pdf/route.ts` lignes 242-245), bouton "Renvoyer par email" via `/api/inspection/.../send-email`
+- [✅] Widget dashboard propriétaire — section EDL dans `DashboardClient.tsx` avec "Reprendre l'EDL" (DRAFT) et "Renvoyer le lien" (PENDING_SIGNATURE), progression par pièces
+- [✅] Intégration locataire — cards inspection dans `MyRentalClient.tsx` (statut, lien signature, téléchargement PDF)
+- [✅] Section EDL dans l'édition de propriété — `EdlSection.tsx` dans `EditPropertyClient`, lien vers inspection en cours ou création
+- [✅] Broadcast temps réel — `broadcastNewMessage` via Supabase sur `send-sign-link`, refresh automatique côté locataire
 - [❌] EDL de sortie — diff avec EDL d'entrée (`entryInspectionId`), comparaison pièce par pièce
 
 ### Gestion financière
@@ -318,7 +322,7 @@
 
 ## ⚠️ Notes déploiement
 
-- **Cron jobs activés** : 6 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h).
+- **Cron jobs activés** : 7 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h), `inspection-reminders` (7h).
 
 ---
 
@@ -332,3 +336,7 @@
 - [x] ~~Inbox affiche "En attente" au lieu du statut bail~~ (corrigé — priorité leaseStatus sur applicationStatus dans ConversationBox)
 - [x] ~~Message système LEASE_SENT_FOR_SIGNATURE sans bouton d'action~~ (corrigé — ajout bouton "Signer le bail" / "Consulter le bail" dans MessageBox)
 - [x] ~~Lease viewer locataire : pas de bouton pour signer~~ (corrigé — récupération `signature_link` Yousign + bouton "Signer le bail" dans LeaseViewerClient)
+- [x] ~~Message système INSPECTION_SIGN_LINK_SENT affiché en texte brut~~ (corrigé — `send-sign-link/route.ts` n'appelait pas `broadcastNewMessage`, le locataire ne recevait pas le refresh temps réel → ajout broadcast Supabase + nettoyage cache `.next`)
+- [x] ~~iOS Safari : `-webkit-fill-available` casse le positionnement fixed~~ (corrigé — remplacement par `min-height: 100dvh` dans globals.css)
+- [x] ~~Tailwind v4 : utilitaires custom silencieusement ignorés en production~~ (corrigé — migration de `@layer utilities` vers `@utility` pour `pt-safe`, `pb-safe`, etc.)
+- [x] ~~22 erreurs TypeScript à travers 8 fichiers~~ (corrigé — types Prisma, params async, imports manquants)

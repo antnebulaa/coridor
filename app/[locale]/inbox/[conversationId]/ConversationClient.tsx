@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { SafeUser, SafeMessage, SafeListing } from "@/types";
 import clsx from "clsx";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import AddToCalendarButton from "@/components/calendar/AddToCalendarButton";
 import Header from "./components/Header";
 import Body from "./components/Body";
@@ -19,7 +20,8 @@ import { toast } from "react-hot-toast";
 import Modal from "@/components/modals/Modal";
 import Heading from "@/components/Heading";
 import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
-import { XCircle } from "lucide-react";
+import { XCircle, CalendarDays, Play } from "lucide-react";
+import BottomSheet from "@/components/ui/BottomSheet";
 
 const REJECTION_REASONS = [
     "Le logement a déjà trouvé preneur",
@@ -117,6 +119,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const [isDeclining, setIsDeclining] = useState(false);
 
     // EDL scheduling
+    const [isEdlSheetOpen, setIsEdlSheetOpen] = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [scheduleDate, setScheduleDate] = useState('');
     const [scheduleTime, setScheduleTime] = useState('10:00');
@@ -444,11 +447,11 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         flex
                         border-b
                         border-gray-200 dark:border-neutral-800
+                        pt-safe
                         py-3
                         px-6
                         items-center
                         justify-between
-                        h-[73px]
                     ">
                         <div className="flex items-center gap-3">
                             <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
@@ -491,6 +494,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                             border-t
                             border-gray-200 dark:border-neutral-800
                             p-4
+                            pb-12
                             flex flex-col gap-2
                         ">
                             {/* Lease status-based actions */}
@@ -508,25 +512,54 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     {/* EDL action button — landlord only for actions, PDF visible to both */}
                                     {isLandlord ? (
                                         !inspectionData || inspectionData.status === 'CANCELLED' ? (
-                                            /* No inspection or cancelled — show Planifier + Démarrer */
-                                            <div className="flex flex-col gap-2">
-                                                <button
-                                                    onClick={() => setIsScheduleModalOpen(true)}
-                                                    className="w-full py-2.5 px-4 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition"
+                                            /* No inspection or cancelled — show EDL button with BottomSheet */
+                                            <>
+                                                <Button
+                                                    label="État des lieux"
+                                                    onClick={() => setIsEdlSheetOpen(true)}
+                                                />
+                                                <BottomSheet
+                                                    isOpen={isEdlSheetOpen}
+                                                    onClose={() => setIsEdlSheetOpen(false)}
+                                                    title="État des lieux"
                                                 >
-                                                    🗓️ Planifier l&apos;état des lieux
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        if (applicationId) {
-                                                            router.push(`/inspection/new/${applicationId}`);
-                                                        }
-                                                    }}
-                                                    className="w-full py-2 px-4 text-xs font-medium text-neutral-500 hover:text-neutral-700 transition"
-                                                >
-                                                    Démarrer maintenant →
-                                                </button>
-                                            </div>
+                                                    <div className="flex flex-col p-2 pb-8">
+                                                        <button
+                                                            onClick={() => {
+                                                                setIsEdlSheetOpen(false);
+                                                                setIsScheduleModalOpen(true);
+                                                            }}
+                                                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                                                        >
+                                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                                                                <CalendarDays size={20} className="text-amber-600" />
+                                                            </div>
+                                                            <div className="flex flex-col text-left">
+                                                                <span className="font-medium text-[16px]">Planifier un état des lieux</span>
+                                                                <span className="text-sm text-neutral-500">Choisir une date et notifier le locataire</span>
+                                                            </div>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setIsEdlSheetOpen(false);
+                                                                if (applicationId) {
+                                                                    router.push(`/inspection/new/${applicationId}`);
+                                                                }
+                                                            }}
+                                                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                                                        >
+                                                            <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+                                                                <Play size={20} className="text-green-600" />
+                                                            </div>
+                                                            <div className="flex flex-col text-left">
+                                                                <span className="font-medium text-[16px]">Démarrer l&apos;état des lieux</span>
+                                                                <span className="text-sm text-neutral-500">Commencer immédiatement</span>
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                </BottomSheet>
+                                            </>
+
                                         ) : inspectionData.status === 'DRAFT' ? (
                                             /* DRAFT — show scheduled info if scheduled, or just Reprendre */
                                             <div className="flex flex-col gap-2">
@@ -621,16 +654,18 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     }}
                                 />
                             )}
-                            <button
-                                onClick={() => {
-                                    setSelectedReason('');
-                                    setCustomReason('');
-                                    setIsDeclineModalOpen(true);
-                                }}
-                                className="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
-                            >
-                                Décliner la candidature
-                            </button>
+                            {!initialLeaseStatus && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedReason('');
+                                        setCustomReason('');
+                                        setIsDeclineModalOpen(true);
+                                    }}
+                                    className="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
+                                >
+                                    Décliner la candidature
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -748,49 +783,93 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 }
             />
 
-            {/* Schedule EDL Modal */}
-            <Modal
+            {/* Schedule EDL BottomSheet */}
+            <BottomSheet
                 isOpen={isScheduleModalOpen}
                 onClose={() => setIsScheduleModalOpen(false)}
                 title="Planifier l'état des lieux"
-                actionLabel={isScheduling ? "Planification..." : "Planifier"}
-                onSubmit={handleScheduleEdl}
-                disabled={isScheduling || !scheduleDate}
-                body={
-                    <div className="flex flex-col gap-5">
-                        <p className="text-neutral-500 text-sm">
-                            Choisissez la date et l&apos;heure de l&apos;état des lieux d&apos;entrée. Le locataire sera notifié automatiquement.
-                        </p>
-                        <div className="flex flex-col gap-3">
-                            <label className="text-sm font-medium text-neutral-700">
-                                Date
-                                <input
-                                    type="date"
-                                    value={scheduleDate}
-                                    onChange={(e) => setScheduleDate(e.target.value)}
-                                    min={new Date().toISOString().split('T')[0]}
-                                    className="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition"
-                                />
-                            </label>
-                            <label className="text-sm font-medium text-neutral-700">
-                                Heure
-                                <input
-                                    type="time"
-                                    value={scheduleTime}
-                                    onChange={(e) => setScheduleTime(e.target.value)}
-                                    className="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition"
-                                />
-                            </label>
-                        </div>
-                        <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                            <span className="text-amber-500 mt-0.5">💡</span>
-                            <p className="text-xs text-amber-700">
-                                Prévoyez 1h à 1h30 selon la taille du logement. L&apos;état des lieux peut être démarré à tout moment, même avant la date planifiée.
-                            </p>
+            >
+                <div className="flex flex-col px-6 pb-8">
+                    {/* Hero date display */}
+                    {(() => {
+                        const displayDate = scheduleDate
+                            ? new Date(scheduleDate + 'T12:00')
+                            : new Date();
+                        const hasSelected = !!scheduleDate;
+                        return (
+                            <div className="flex flex-col items-center py-6">
+                                <span className={clsx(
+                                    "text-sm font-medium uppercase tracking-widest",
+                                    hasSelected ? "text-neutral-400" : "text-neutral-300 dark:text-neutral-600"
+                                )}>
+                                    {format(displayDate, 'EEEE', { locale: fr })}
+                                </span>
+                                <span className={clsx(
+                                    "text-7xl font-bold leading-none mt-1",
+                                    hasSelected ? "text-neutral-900 dark:text-white" : "text-neutral-200 dark:text-neutral-700"
+                                )}>
+                                    {format(displayDate, 'd')}
+                                </span>
+                                <span className={clsx(
+                                    "text-xl font-medium mt-1",
+                                    hasSelected ? "text-neutral-400" : "text-neutral-300 dark:text-neutral-600"
+                                )}>
+                                    {format(displayDate, 'MMMM yyyy', { locale: fr })}
+                                </span>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Date picker */}
+                    <div className="relative mb-5">
+                        <input
+                            type="date"
+                            value={scheduleDate}
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full px-4 py-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-2xl text-center text-sm font-medium text-transparent focus:outline-none transition appearance-none"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-xl font-medium text-neutral-500 dark:text-neutral-400 pointer-events-none">
+                            {scheduleDate ? 'Modifier la date' : 'Choisir une date'}
+                        </span>
+                    </div>
+
+                    {/* Time selector */}
+                    <div className="mb-5">
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-3 block">Heure</span>
+                        <div className="flex flex-wrap gap-2">
+                            {['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time) => (
+                                <button
+                                    key={time}
+                                    onClick={() => setScheduleTime(time)}
+                                    className={clsx(
+                                        "px-4 py-2.5 rounded-full text-sm font-semibold transition-all",
+                                        scheduleTime === time
+                                            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 scale-105"
+                                            : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                    )}
+                                >
+                                    {time}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                }
-            />
+
+                    {/* Tip */}
+                    <p className="text-xs text-neutral-400 text-center mb-5">
+                        Prévoyez 1h à 1h30 selon la taille du logement
+                    </p>
+
+                    {/* CTA */}
+                    <button
+                        onClick={handleScheduleEdl}
+                        disabled={isScheduling || !scheduleDate}
+                        className="w-full py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-base font-semibold disabled:opacity-30 transition-all active:scale-[0.98]"
+                    >
+                        {isScheduling ? "Planification..." : "Confirmer"}
+                    </button>
+                </div>
+            </BottomSheet>
 
             {/* Right Sidebar (Visit Selection or Listing Recap) */}
             {
