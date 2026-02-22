@@ -4,12 +4,14 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { format, addDays, subDays, isSameDay, parseISO, startOfToday, isAfter, isBefore } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, MapPin, User, Clock, Calendar, List, ClipboardCheck, MoreHorizontal, CalendarClock, X as XIcon } from "lucide-react";
+import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import VisitDetailsModal from "./VisitDetailsModal";
 import Avatar from "@/components/Avatar";
+import BottomSheet from "@/components/ui/BottomSheet";
 import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 
 interface PropertyData {
@@ -367,50 +369,121 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 onEvaluationSaved={() => router.refresh()}
             />
 
-            {/* Reschedule Modal */}
-            {rescheduleId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setRescheduleId(null)}>
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold text-neutral-900">Reprogrammer l&apos;EDL</h3>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="text-sm text-neutral-600 mb-1 block">Date</label>
-                                <input
-                                    type="date"
-                                    value={rescheduleDate}
-                                    onChange={(e) => setRescheduleDate(e.target.value)}
-                                    min={format(new Date(), 'yyyy-MM-dd')}
-                                    className="w-full border border-neutral-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm text-neutral-600 mb-1 block">Heure</label>
-                                <input
-                                    type="time"
-                                    value={rescheduleTime}
-                                    onChange={(e) => setRescheduleTime(e.target.value)}
-                                    className="w-full border border-neutral-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                />
-                            </div>
+            {/* Action Menu BottomSheet */}
+            <BottomSheet
+                isOpen={!!actionMenuId}
+                onClose={() => setActionMenuId(null)}
+                title="Actions"
+            >
+                <div className="flex flex-col p-2 pb-8">
+                    <button
+                        onClick={() => {
+                            const id = actionMenuId;
+                            setActionMenuId(null);
+                            if (id) setRescheduleId(id);
+                        }}
+                        className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                            <CalendarClock size={20} className="text-amber-600" />
                         </div>
-                        <div className="flex gap-2 pt-2">
-                            <button
-                                onClick={handleRescheduleInspection}
-                                disabled={isSubmitting || !rescheduleDate}
-                                className="flex-1 py-2.5 bg-amber-500 text-white rounded-lg font-medium text-sm hover:bg-amber-600 transition disabled:opacity-50"
-                            >
-                                {isSubmitting ? 'Envoi...' : 'Reprogrammer'}
-                            </button>
-                            <button
-                                onClick={() => setRescheduleId(null)}
-                                className="px-4 py-2.5 text-neutral-500 text-sm hover:text-neutral-700"
-                            >
-                                Annuler
-                            </button>
+                        <div className="flex flex-col text-left">
+                            <span className="font-medium text-[16px]">Reprogrammer</span>
+                            <span className="text-sm text-neutral-500">Choisir une nouvelle date</span>
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => {
+                            const id = actionMenuId;
+                            setActionMenuId(null);
+                            if (id) handleCancelInspection(id);
+                        }}
+                        disabled={isSubmitting}
+                        className="flex items-center gap-3 p-3 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition disabled:opacity-50"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                            <XIcon size={20} className="text-red-600" />
+                        </div>
+                        <div className="flex flex-col text-left">
+                            <span className="font-medium text-[16px] text-red-600">Annuler l&apos;EDL</span>
+                            <span className="text-sm text-neutral-500">Le locataire sera notifié</span>
+                        </div>
+                    </button>
+                </div>
+            </BottomSheet>
+
+            {/* Reschedule BottomSheet */}
+            <BottomSheet
+                isOpen={!!rescheduleId}
+                onClose={() => setRescheduleId(null)}
+                title="Reprogrammer l'état des lieux"
+            >
+                <div className="flex flex-col px-6 pb-8">
+                    {/* Hero date */}
+                    {(() => {
+                        const displayDate = rescheduleDate ? new Date(rescheduleDate + 'T12:00') : new Date();
+                        const hasSelected = !!rescheduleDate;
+                        return (
+                            <div className="flex flex-col items-center py-6">
+                                <span className={clsx("text-sm font-medium uppercase tracking-widest", hasSelected ? "text-neutral-400" : "text-neutral-300 dark:text-neutral-600")}>
+                                    {format(displayDate, 'EEEE', { locale: fr })}
+                                </span>
+                                <span className={clsx("text-7xl font-bold leading-none mt-1", hasSelected ? "text-neutral-900 dark:text-white" : "text-neutral-200 dark:text-neutral-700")}>
+                                    {format(displayDate, 'd')}
+                                </span>
+                                <span className={clsx("text-xl font-medium mt-1", hasSelected ? "text-neutral-400" : "text-neutral-300 dark:text-neutral-600")}>
+                                    {format(displayDate, 'MMMM yyyy', { locale: fr })}
+                                </span>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Date picker */}
+                    <div className="relative mb-5">
+                        <input
+                            type="date"
+                            value={rescheduleDate}
+                            onChange={(e) => setRescheduleDate(e.target.value)}
+                            min={format(new Date(), 'yyyy-MM-dd')}
+                            className="w-full px-4 py-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-2xl text-center text-sm font-medium text-transparent focus:outline-none transition appearance-none"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-xl font-medium text-neutral-500 dark:text-neutral-400 pointer-events-none">
+                            {rescheduleDate ? 'Modifier la date' : 'Choisir une date'}
+                        </span>
+                    </div>
+
+                    {/* Time pills */}
+                    <div className="mb-5">
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-3 block">Heure</span>
+                        <div className="flex flex-wrap gap-2">
+                            {['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00'].map((time) => (
+                                <button
+                                    key={time}
+                                    onClick={() => setRescheduleTime(time)}
+                                    className={clsx(
+                                        "px-4 py-2.5 rounded-full text-sm font-semibold transition-all",
+                                        rescheduleTime === time
+                                            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 scale-105"
+                                            : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                    )}
+                                >
+                                    {time}
+                                </button>
+                            ))}
                         </div>
                     </div>
+
+                    <p className="text-xs text-neutral-400 text-center mb-5">Le locataire sera notifié du changement</p>
+
+                    <button
+                        onClick={handleRescheduleInspection}
+                        disabled={isSubmitting || !rescheduleDate}
+                        className="w-full py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-base font-semibold disabled:opacity-30 transition-all active:scale-[0.98]"
+                    >
+                        {isSubmitting ? 'Reprogrammation...' : 'Confirmer'}
+                    </button>
                 </div>
-            )}
+            </BottomSheet>
 
             <div className="flex flex-col gap-6">
 
@@ -638,43 +711,15 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                 {/* Actions */}
                                                                 <div className="flex items-center gap-1">
                                                                     {event.inspectionStatus === 'DRAFT' && !isPastEvent && (
-                                                                        <div className="relative">
-                                                                            <button
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setActionMenuId(actionMenuId === event.id ? null : event.id);
-                                                                                }}
-                                                                                className="p-1.5 rounded-full hover:bg-amber-100 transition text-amber-500 hover:text-amber-700"
-                                                                            >
-                                                                                <MoreHorizontal size={18} />
-                                                                            </button>
-                                                                            {actionMenuId === event.id && (
-                                                                                <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 z-50 min-w-[180px]">
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            setActionMenuId(null);
-                                                                                            setRescheduleId(event.id);
-                                                                                        }}
-                                                                                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-neutral-50 text-neutral-700"
-                                                                                    >
-                                                                                        <CalendarClock size={15} />
-                                                                                        Reprogrammer
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            handleCancelInspection(event.id);
-                                                                                        }}
-                                                                                        disabled={isSubmitting}
-                                                                                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-red-50 text-red-600 disabled:opacity-50"
-                                                                                    >
-                                                                                        <XIcon size={15} />
-                                                                                        Annuler l&apos;EDL
-                                                                                    </button>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActionMenuId(event.id);
+                                                                            }}
+                                                                            className="p-1.5 rounded-full hover:bg-amber-100 transition text-amber-500 hover:text-amber-700"
+                                                                        >
+                                                                            <MoreHorizontal size={18} />
+                                                                        </button>
                                                                     )}
                                                                     <div className={`hidden sm:flex items-center transition ${isPastEvent ? 'text-neutral-300' : 'text-amber-400 group-hover:text-amber-700'}`}>
                                                                         <ChevronRight size={20} />
