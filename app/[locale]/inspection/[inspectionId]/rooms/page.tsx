@@ -115,6 +115,7 @@ export default function RoomsHubPage() {
         title="Pièces"
         subtitle={`${completedCount}/${rooms.length} complétées`}
         onBack={() => router.back()}
+        onClose={() => router.push('/dashboard')}
       />
 
       <div className="flex-1 overflow-y-auto px-5 py-5">
