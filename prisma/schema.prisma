@@ -1881,7 +1881,7 @@ model InspectionElement {
   inspectionRoomId      String
   category              ElementCategory  // FLOOR, WALL, CEILING, EQUIPMENT
   name                  String           // "Sols", "Murs", "Plafond", "Fenêtre(s)", "Évier", etc.
-  nature                String[]         // Nature(s) du revêtement : ["Parquet", "Carrelage"]...
+  nature                String[]         @default([]) // Nature(s) du revêtement : ["Parquet", "Carrelage"]...
   condition             ElementCondition? // Neuf, Bon, Usure norm., Dégradé, H.S.
   isAbsent              Boolean          @default(false) // Équipement inexistant (chip "Absent")
   observations          String?          // Observation texte (dictée ou clavier)

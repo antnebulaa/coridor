@@ -561,20 +561,11 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             </>
 
                                         ) : inspectionData.status === 'DRAFT' ? (
-                                            /* DRAFT — show scheduled info if scheduled, or just Reprendre */
-                                            <div className="flex flex-col gap-2">
-                                                {inspectionData.scheduledAt && (
-                                                    <div className="text-xs text-amber-600 text-center">
-                                                        🗓️ Planifié le {new Date(inspectionData.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à {new Date(inspectionData.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                                    </div>
-                                                )}
-                                                <button
-                                                    onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
-                                                    className="w-full py-2.5 px-4 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200 transition"
-                                                >
-                                                    🏠 {inspectionData.scheduledAt ? "Démarrer l'EDL" : "Reprendre l'EDL"}
-                                                </button>
-                                            </div>
+                                            /* DRAFT — Démarrer / Reprendre l'EDL */
+                                            <Button
+                                                label={inspectionData.scheduledAt ? "Démarrer l'état des lieux" : "Reprendre l'état des lieux"}
+                                                onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
+                                            />
                                         ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
                                             inspectionData.pdfUrl && (
                                                 <a
