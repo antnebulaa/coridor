@@ -13,6 +13,7 @@ interface CameraCaptureProps {
   onCapture: (url: string, thumbnailUrl: string, sha256: string) => void;
   onCancel?: () => void;
   onDone?: () => void;
+  onExit?: () => void;
   doneLabel?: string;
   accentColor?: string;
   allowMultiple?: boolean;
@@ -66,6 +67,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   onCapture,
   onCancel,
   onDone,
+  onExit,
   doneLabel = 'Continuer',
   accentColor = EDL_COLORS.accent,
   allowMultiple = false,
@@ -278,15 +280,28 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               <ArrowRight size={18} />
             </button>
           </div>
-        ) : onCancel ? (
-          <button
-            onClick={onCancel}
-            className="mt-6 text-[16px] font-medium"
-            style={{ color: 'rgba(255,255,255,0.35)' }}
-          >
-            Annuler
-          </button>
-        ) : null}
+        ) : (
+          <div className="flex flex-col items-center gap-3 mt-6">
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                className="text-[16px] font-medium"
+                style={{ color: 'rgba(255,255,255,0.35)' }}
+              >
+                Annuler
+              </button>
+            )}
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="text-[15px] font-medium"
+                style={{ color: 'rgba(255,255,255,0.25)' }}
+              >
+                Reprendre plus tard
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Delete confirmation overlay */}
         {deletingIndex !== null && (

@@ -154,6 +154,7 @@ export default function RoomInspectionPage() {
             setCurrentSurfaceIndex(0);
           }}
           onCancel={() => router.push(`/inspection/${inspectionId}/rooms`)}
+          onExit={() => router.push('/dashboard')}
         />
       </div>
     );
