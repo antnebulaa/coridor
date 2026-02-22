@@ -260,15 +260,15 @@ const Modal: React.FC<ModalProps> = ({
                                     <button
                                         onClick={handleClose}
                                         className={`
-                                        w-10 
-                                        h-10 
-                                        rounded-full 
-                                        flex 
-                                        items-center 
-                                        justify-center 
-                                        transition 
-                                        absolute 
-                                        top-6
+                                        w-10
+                                        h-10
+                                        rounded-full
+                                        flex
+                                        items-center
+                                        justify-center
+                                        transition
+                                        absolute
+                                        ${transparentHeader ? '' : 'top-6'}
                                         ${closeButtonPosition === 'left' ? 'left-6' : 'right-6'}
                                         ${closeButtonVariant === 'transparent-white'
                                                 ? 'bg-transparent border border-white text-white hover:bg-white/20 shadow-none'
@@ -276,6 +276,7 @@ const Modal: React.FC<ModalProps> = ({
                                             }
                                         pointer-events-auto z-50
                                     `}
+                                    style={transparentHeader ? { top: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' } : undefined}
                                     >
                                         <X size={18} />
                                     </button>
