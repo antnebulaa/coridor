@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback, useState } from 'react';
 import { Camera, RotateCcw, ArrowRight, Check, X } from 'lucide-react';
-import { compressImage } from '@/lib/imageCompression';
+import { compressImage, type CompressionOptions } from '@/lib/imageCompression';
 import axios from 'axios';
 import { EDL_COLORS } from '@/lib/inspection';
 
@@ -17,6 +17,7 @@ interface CameraCaptureProps {
   doneLabel?: string;
   accentColor?: string;
   allowMultiple?: boolean;
+  compressionOptions?: CompressionOptions;
 }
 
 async function computeSHA256(file: File): Promise<string> {
@@ -69,6 +70,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   onDone,
   onExit,
   doneLabel = 'Continuer',
+  compressionOptions,
   accentColor = EDL_COLORS.accent,
   allowMultiple = false,
 }) => {
@@ -97,17 +99,21 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     setIsUploading(true);
 
     try {
-      const compressed = await compressImage(capturedFile);
-      const sha256 = await computeSHA256(compressed);
+      // Step 1: Compress (uses custom options if provided)
+      const compressed = await compressImage(capturedFile, compressionOptions);
 
+      // Step 2: SHA-256 + Cloudinary upload IN PARALLEL
       const formData = new FormData();
       formData.append('file', compressed);
       formData.append('upload_preset', 'airbnb-clone');
 
-      const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        formData
-      );
+      const [sha256, response] = await Promise.all([
+        computeSHA256(compressed),
+        axios.post(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          formData
+        ),
+      ]);
 
       const url = response.data.secure_url;
       const thumbnailUrl = url.replace('/upload/', '/upload/w_400,c_fill/');
@@ -138,7 +144,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       setIsUploading(false);
       isProcessingRef.current = false;
     }
-  }, [capturedFile, onCapture, allowMultiple]);
+  }, [capturedFile, onCapture, allowMultiple, compressionOptions]);
 
   const handleRetake = () => {
     setPreview(null);

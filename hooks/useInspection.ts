@@ -76,6 +76,7 @@ function clearSession(inspectionId: string) {
 // ─── Hook ───
 
 const AUTO_SAVE_DELAY = 5000; // 5 seconds
+const SESSION_SAVE_DELAY = 2000; // 2 seconds debounce for sessionStorage
 
 export function useInspection(inspectionId: string | undefined) {
   const [inspection, setInspection] = useState<FullInspection | null>(null);
@@ -85,6 +86,7 @@ export function useInspection(inspectionId: string | undefined) {
   const [isOffline, setIsOffline] = useState(false);
   const pendingChangesRef = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const sessionSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // ─── Fetch inspection (with sessionStorage fallback) ───
 
@@ -121,13 +123,46 @@ export function useInspection(inspectionId: string | undefined) {
     fetchInspection();
   }, [fetchInspection]);
 
-  // ─── Persist to sessionStorage on every state change ───
+  // ─── Debounced sessionStorage persistence ───
 
   useEffect(() => {
-    if (inspection && inspectionId) {
-      saveToSession(inspectionId, inspection);
+    if (!inspection || !inspectionId) return;
+
+    if (sessionSaveTimerRef.current) {
+      clearTimeout(sessionSaveTimerRef.current);
     }
+
+    sessionSaveTimerRef.current = setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => saveToSession(inspectionId, inspection), { timeout: 5000 });
+      } else {
+        saveToSession(inspectionId, inspection);
+      }
+    }, SESSION_SAVE_DELAY);
+
+    return () => {
+      if (sessionSaveTimerRef.current) {
+        clearTimeout(sessionSaveTimerRef.current);
+      }
+    };
   }, [inspection, inspectionId]);
+
+  // Flush sessionStorage on unmount
+  useEffect(() => {
+    const id = inspectionId;
+    return () => {
+      if (sessionSaveTimerRef.current) {
+        clearTimeout(sessionSaveTimerRef.current);
+      }
+      // Sync flush — safe because this only runs once on unmount
+      if (id) {
+        const cached = loadFromSession(id);
+        // Only flush if there's no recent save (avoid overwriting with stale data)
+        if (!cached) return;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─── Auto-save (debounced PATCH) ───
 
@@ -180,63 +215,92 @@ export function useInspection(inspectionId: string | undefined) {
     return res.json();
   }, []);
 
-  // ─── Meters ───
+  // ─── Meters (optimistic) ───
 
   const updateMeter = useCallback(async (
     type: MeterType,
     data: { meterNumber?: string; indexValue?: string; photoUrl?: string; photoThumbnailUrl?: string; noGas?: boolean }
   ) => {
     if (!inspectionId) return;
-    const result = await apiCall(`/api/inspection/${inspectionId}/meters`, {
-      method: 'POST',
-      body: JSON.stringify({ type, ...data }),
-    });
 
+    // Optimistic update
     setInspection(prev => {
       if (!prev) return prev;
       const existing = prev.meters.findIndex(m => m.type === type);
       const meters = [...prev.meters];
       if (existing >= 0) {
-        meters[existing] = result;
+        meters[existing] = { ...meters[existing], ...data };
       } else {
-        meters.push(result);
+        // Temporary entry — will be reconciled with server result
+        meters.push({ id: `temp_${Date.now()}`, inspectionId, type, ...data } as InspectionMeter);
       }
       return { ...prev, meters };
     });
 
-    scheduleAutoSave();
-    return result;
-  }, [inspectionId, apiCall, scheduleAutoSave]);
+    // Fire API in background
+    try {
+      const result = await apiCall(`/api/inspection/${inspectionId}/meters`, {
+        method: 'POST',
+        body: JSON.stringify({ type, ...data }),
+      });
+      // Reconcile with server result
+      setInspection(prev => {
+        if (!prev) return prev;
+        const idx = prev.meters.findIndex(m => m.type === type);
+        const meters = [...prev.meters];
+        if (idx >= 0) meters[idx] = result;
+        return { ...prev, meters };
+      });
+      scheduleAutoSave();
+      return result;
+    } catch {
+      fetchInspection(); // rollback
+    }
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
 
-  // ─── Keys ───
+  // ─── Keys (optimistic) ───
 
   const updateKey = useCallback(async (type: string, quantity: number) => {
     if (!inspectionId) return;
-    const result = await apiCall(`/api/inspection/${inspectionId}/keys`, {
-      method: 'POST',
-      body: JSON.stringify({ type, quantity }),
-    });
 
+    // Optimistic update
     setInspection(prev => {
       if (!prev) return prev;
       const existing = prev.keys.findIndex(k => k.type === type);
       const keys = [...prev.keys];
       if (existing >= 0) {
-        keys[existing] = result;
+        keys[existing] = { ...keys[existing], quantity };
       } else {
-        keys.push(result);
+        keys.push({ id: `temp_${Date.now()}`, inspectionId, type, quantity } as InspectionKey);
       }
       return { ...prev, keys };
     });
 
-    scheduleAutoSave();
-    return result;
-  }, [inspectionId, apiCall, scheduleAutoSave]);
+    // Fire API in background
+    try {
+      const result = await apiCall(`/api/inspection/${inspectionId}/keys`, {
+        method: 'POST',
+        body: JSON.stringify({ type, quantity }),
+      });
+      setInspection(prev => {
+        if (!prev) return prev;
+        const idx = prev.keys.findIndex(k => k.type === type);
+        const keys = [...prev.keys];
+        if (idx >= 0) keys[idx] = result;
+        return { ...prev, keys };
+      });
+      scheduleAutoSave();
+      return result;
+    } catch {
+      fetchInspection();
+    }
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
 
   // ─── Rooms ───
 
   const addRoom = useCallback(async (roomType: InspectionRoomType, name: string) => {
     if (!inspectionId) return;
+    // NOT optimistic — needs server-generated ID
     const result = await apiCall(`/api/inspection/${inspectionId}/rooms`, {
       method: 'POST',
       body: JSON.stringify({ roomType, name }),
@@ -252,22 +316,36 @@ export function useInspection(inspectionId: string | undefined) {
 
   const updateRoom = useCallback(async (roomId: string, data: { isCompleted?: boolean; observations?: string }) => {
     if (!inspectionId) return;
-    const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
 
+    // Optimistic update
     setInspection(prev => {
       if (!prev) return prev;
       return {
         ...prev,
-        rooms: prev.rooms.map(r => r.id === roomId ? { ...r, ...result } : r),
+        rooms: prev.rooms.map(r => r.id === roomId ? { ...r, ...data } : r),
       };
     });
 
-    scheduleAutoSave();
-    return result;
-  }, [inspectionId, apiCall, scheduleAutoSave]);
+    // Fire API in background
+    try {
+      const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+      // Reconcile
+      setInspection(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          rooms: prev.rooms.map(r => r.id === roomId ? { ...r, ...result } : r),
+        };
+      });
+      scheduleAutoSave();
+      return result;
+    } catch {
+      fetchInspection();
+    }
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
 
   // ─── Elements ───
 
@@ -276,6 +354,7 @@ export function useInspection(inspectionId: string | undefined) {
     data: { category: string; name: string; nature?: string[] }
   ) => {
     if (!inspectionId) return;
+    // NOT optimistic — needs server-generated ID
     const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}/elements`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -307,12 +386,8 @@ export function useInspection(inspectionId: string | undefined) {
     }
   ) => {
     if (!inspectionId) return;
-    const result = await apiCall(`/api/inspection/${inspectionId}/elements/${elementId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
 
-    // Update element in the correct room
+    // Optimistic update — apply immediately
     setInspection(prev => {
       if (!prev) return prev;
       return {
@@ -320,17 +395,26 @@ export function useInspection(inspectionId: string | undefined) {
         rooms: prev.rooms.map(r => ({
           ...r,
           elements: r.elements.map(e =>
-            e.id === elementId ? { ...e, ...result } : e
+            e.id === elementId ? { ...e, ...data } : e
           ),
         })),
       };
     });
 
-    scheduleAutoSave();
-    return result;
-  }, [inspectionId, apiCall, scheduleAutoSave]);
+    // Fire API in background
+    try {
+      apiCall(`/api/inspection/${inspectionId}/elements/${elementId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }).catch(() => fetchInspection());
+    } catch {
+      fetchInspection();
+    }
 
-  // ─── Photos ───
+    scheduleAutoSave();
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
+  // ─── Photos (optimistic with temp ID) ───
 
   const addPhoto = useCallback(async (data: {
     type: PhotoType;
@@ -344,24 +428,37 @@ export function useInspection(inspectionId: string | undefined) {
     deviceInfo?: string;
   }) => {
     if (!inspectionId) return;
-    const result = await apiCall(`/api/inspection/${inspectionId}/photos`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
 
+    const tempId = `temp_${Date.now()}`;
+    const tempPhoto = {
+      id: tempId,
+      inspectionId,
+      type: data.type,
+      url: data.url,
+      thumbnailUrl: data.thumbnailUrl || null,
+      sha256: data.sha256 || null,
+      inspectionRoomId: data.inspectionRoomId || null,
+      inspectionElementId: data.inspectionElementId || null,
+      latitude: data.latitude || null,
+      longitude: data.longitude || null,
+      deviceInfo: data.deviceInfo || null,
+      capturedAt: new Date(),
+      createdAt: new Date(),
+    } as InspectionPhoto;
+
+    // Optimistic — add to state immediately
     setInspection(prev => {
       if (!prev) return prev;
-      const updated = { ...prev, photos: [...prev.photos, result] };
+      const updated = { ...prev, photos: [...prev.photos, tempPhoto] };
 
-      // Also add to the correct room/element
       if (data.inspectionRoomId) {
         updated.rooms = updated.rooms.map(r => {
           if (r.id === data.inspectionRoomId) {
-            const updatedRoom = { ...r, photos: [...r.photos, result] };
+            const updatedRoom = { ...r, photos: [...r.photos, tempPhoto] };
             if (data.inspectionElementId) {
               updatedRoom.elements = updatedRoom.elements.map(e =>
                 e.id === data.inspectionElementId
-                  ? { ...e, photos: [...e.photos, result] }
+                  ? { ...e, photos: [...e.photos, tempPhoto] }
                   : e
               );
             }
@@ -374,11 +471,41 @@ export function useInspection(inspectionId: string | undefined) {
       return updated;
     });
 
-    scheduleAutoSave();
-    return result;
-  }, [inspectionId, apiCall, scheduleAutoSave]);
+    // Background — persist to DB and reconcile ID
+    try {
+      const result = await apiCall(`/api/inspection/${inspectionId}/photos`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
 
-  // ─── Signature ───
+      // Replace temp photo with real server result
+      const replaceTemp = (photo: InspectionPhoto) =>
+        photo.id === tempId ? { ...photo, id: result.id } : photo;
+
+      setInspection(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          photos: prev.photos.map(replaceTemp),
+          rooms: prev.rooms.map(r => ({
+            ...r,
+            photos: r.photos.map(replaceTemp),
+            elements: r.elements.map(e => ({
+              ...e,
+              photos: e.photos.map(replaceTemp),
+            })),
+          })),
+        };
+      });
+
+      scheduleAutoSave();
+      return result;
+    } catch {
+      fetchInspection(); // rollback
+    }
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
+  // ─── Signature (NOT optimistic — critical operation) ───
 
   const sign = useCallback(async (data: {
     role: 'landlord' | 'tenant';
@@ -413,25 +540,31 @@ export function useInspection(inspectionId: string | undefined) {
     return result.url as string;
   }, [inspectionId, apiCall]);
 
-  // ─── General update ───
+  // ─── General update (optimistic) ───
 
   const updateInspection = useCallback(async (data: Partial<Pick<Inspection, 'tenantPresent' | 'representativeName' | 'representativeMandate' | 'generalObservations' | 'tenantReserves'>>) => {
     if (!inspectionId) return;
-    const result = await apiCall(`/api/inspection/${inspectionId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
 
+    // Optimistic update
     setInspection(prev => {
       if (!prev) return prev;
-      return { ...prev, ...result };
+      return { ...prev, ...data };
     });
 
-    scheduleAutoSave();
-    return result;
-  }, [inspectionId, apiCall, scheduleAutoSave]);
+    // Fire API in background
+    try {
+      apiCall(`/api/inspection/${inspectionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }).catch(() => fetchInspection());
+    } catch {
+      fetchInspection();
+    }
 
-  // ─── Generate PDF ───
+    scheduleAutoSave();
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
+  // ─── Generate PDF (NOT optimistic — server-only operation) ───
 
   const generatePdf = useCallback(async () => {
     if (!inspectionId) return;

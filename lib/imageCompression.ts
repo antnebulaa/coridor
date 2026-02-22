@@ -16,6 +16,21 @@ const DEFAULT_OPTIONS: CompressionOptions = {
     fileType: 'image/webp',
 };
 
+// EDL-specific presets
+export const EDL_OVERVIEW_OPTIONS: CompressionOptions = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 2048,  // Full resolution for overview (valeur probante)
+    useWebWorker: true,
+    fileType: 'image/webp',
+};
+
+export const EDL_DETAIL_OPTIONS: CompressionOptions = {
+    maxSizeMB: 0.5,
+    maxWidthOrHeight: 1200,  // Sufficient for retina (2.8x) — faster compress + upload
+    useWebWorker: true,
+    fileType: 'image/webp',
+};
+
 /**
  * Compresses an image file before upload.
  * - Converts to WebP for better compression

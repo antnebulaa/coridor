@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useInspection } from '@/hooks/useInspection';
@@ -21,6 +21,7 @@ import {
   AI_TIPS,
   ROOM_TYPE_CONFIG,
 } from '@/lib/inspection';
+import { EDL_OVERVIEW_OPTIONS, EDL_DETAIL_OPTIONS } from '@/lib/imageCompression';
 import type { RoomPhase } from '@/lib/inspection';
 import type { ElementCondition } from '@prisma/client';
 import { RotateCcw, Check, CircleCheck, Plus } from 'lucide-react';
@@ -72,6 +73,8 @@ export default function RoomInspectionPage() {
   const [currentDegradElementId, setCurrentDegradElementId] = useState<string | null>(null);
   const [showAddEquip, setShowAddEquip] = useState(false);
   const [newEquipName, setNewEquipName] = useState('');
+  const [pendingNatures, setPendingNatures] = useState<Record<string, string[]>>({});
+  const natureDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const rooms = inspection?.rooms || [];
   const currentRoom = rooms.find((r) => r.id === roomId);
@@ -117,6 +120,24 @@ export default function RoomInspectionPage() {
     setShowAddEquip(false);
   }, [addElement, roomId]);
 
+  // Prefetch next room + hub for instant navigation
+  useEffect(() => {
+    if (currentRoomIndex >= 0 && currentRoomIndex < rooms.length - 1) {
+      router.prefetch(`/inspection/${inspectionId}/rooms/${rooms[currentRoomIndex + 1].id}`);
+    }
+    router.prefetch(`/inspection/${inspectionId}/rooms`);
+  }, [currentRoomIndex, rooms, inspectionId, router]);
+
+  // Debounced nature change — instant UI feedback, single API call after 600ms
+  const handleNatureChange = useCallback((elementId: string, natures: string[]) => {
+    setPendingNatures(prev => ({ ...prev, [elementId]: natures }));
+    if (natureDebounceRef.current) clearTimeout(natureDebounceRef.current);
+    natureDebounceRef.current = setTimeout(() => {
+      updateElement(elementId, { nature: natures });
+      setPendingNatures(prev => { const next = { ...prev }; delete next[elementId]; return next; });
+    }, 600);
+  }, [updateElement]);
+
   if (!currentRoom) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -139,6 +160,7 @@ export default function RoomInspectionPage() {
           instruction="Cadrez la pièce en entier · Mode paysage recommandé"
           allowMultiple
           doneLabel="Noter les surfaces"
+          compressionOptions={EDL_OVERVIEW_OPTIONS}
           onCapture={async (url, thumbnailUrl, sha256) => {
             await addPhoto({
               type: 'OVERVIEW',
@@ -195,6 +217,7 @@ export default function RoomInspectionPage() {
           instruction={`${currentRoom.name} — ${surface.name}`}
           allowMultiple
           doneLabel="Noter l'état"
+          compressionOptions={EDL_DETAIL_OPTIONS}
           onCapture={async (url, thumbnailUrl, sha256) => {
             if (currentSurface) {
               await addPhoto({
@@ -240,10 +263,10 @@ export default function RoomInspectionPage() {
             </div>
             <NatureSelector
               category={surface.category as 'FLOOR' | 'WALL' | 'CEILING'}
-              value={(currentSurface?.nature as unknown as string[]) || []}
-              onChange={async (natures) => {
+              value={currentSurface ? (pendingNatures[currentSurface.id] ?? (currentSurface.nature as unknown as string[]) ?? []) : []}
+              onChange={(natures) => {
                 if (currentSurface) {
-                  await updateElement(currentSurface.id, { nature: natures });
+                  handleNatureChange(currentSurface.id, natures);
                 }
               }}
             />
