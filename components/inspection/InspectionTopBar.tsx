@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { ChevronLeft, X } from 'lucide-react';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 interface InspectionTopBarProps {
   title: string;
@@ -30,39 +30,26 @@ const InspectionTopBar: React.FC<InspectionTopBarProps> = ({
   };
 
   return (
-    <div
-      className="flex-shrink-0"
-      style={{
-        background: EDL_COLORS.bg,
-        borderBottom: `1px solid ${EDL_COLORS.border}`,
-      }}
-    >
+    <div className={`flex-shrink-0 ${t.topBarBg}`}>
       <div className="flex items-center gap-3 px-5 py-3">
         <button
           onClick={handleBack}
-          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center active:scale-95"
-          style={{ background: EDL_COLORS.card }}
+          className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center active:scale-95 ${t.btnSecondary}`}
         >
-          <ChevronLeft size={24} color={EDL_COLORS.text} />
+          <ChevronLeft size={24} className={t.textPrimary} />
         </button>
         <div className="flex-1 min-w-0">
-          <div
-            className="text-[20px] font-bold tracking-tight truncate"
-            style={{ color: EDL_COLORS.text }}
-          >
+          <div className={`text-[20px] font-bold tracking-tight truncate ${t.topBarTitle}`}>
             {title}
           </div>
           {subtitle && (
-            <div className="text-[14px] mt-0.5" style={{ color: EDL_COLORS.text2 }}>
+            <div className={`text-[14px] mt-0.5 ${t.topBarSubtitle}`}>
               {subtitle}
             </div>
           )}
         </div>
         {step && (
-          <div
-            className="text-[14px] font-bold px-3 py-1.5 rounded-full"
-            style={{ background: EDL_COLORS.card, color: EDL_COLORS.text2 }}
-          >
+          <div className={`text-[14px] font-bold px-3 py-1.5 rounded-full ${t.btnSecondary}`}>
             {step.current}/{step.total}
           </div>
         )}
@@ -70,10 +57,9 @@ const InspectionTopBar: React.FC<InspectionTopBarProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center active:scale-95"
-            style={{ background: EDL_COLORS.card2 }}
+            className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center active:scale-95 bg-gray-200`}
           >
-            <X size={18} color={EDL_COLORS.text3} />
+            <X size={18} className={t.btnClose} />
           </button>
         )}
       </div>

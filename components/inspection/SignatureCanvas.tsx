@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 interface SignatureData {
   svg: string;
@@ -38,7 +38,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     ctx.scale(2, 2);
-    ctx.strokeStyle = EDL_COLORS.text;
+    ctx.strokeStyle = '#111827'; // gray-900 for signature on white bg
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -109,7 +109,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
       const d = path
         .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
         .join(' ');
-      svgPaths += `<path d="${d}" stroke="#F5F5F5" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+      svgPaths += `<path d="${d}" stroke="#111827" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
     }
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${rect.width} ${rect.height}">${svgPaths}</svg>`;
@@ -136,14 +136,13 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="text-[20px] font-bold" style={{ color: EDL_COLORS.text }}>
+        <div className={`text-[20px] font-bold ${t.textPrimary}`}>
           {label}
         </div>
         {hasDrawn && (
           <button
             onClick={handleClear}
-            className="flex items-center gap-1.5 text-[16px] font-medium"
-            style={{ color: EDL_COLORS.text3 }}
+            className={`flex items-center gap-1.5 text-[16px] font-medium ${t.textMuted}`}
           >
             <RotateCcw size={16} />
             Effacer
@@ -151,14 +150,11 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
         )}
       </div>
 
-      <div
-        className="rounded-xl overflow-hidden relative"
-        style={{ border: `1px solid ${EDL_COLORS.border}` }}
-      >
+      <div className={`rounded-xl overflow-hidden relative ${t.signatureCanvasBg}`}>
         <canvas
           ref={canvasRef}
-          className="w-full touch-none"
-          style={{ height: 200, background: EDL_COLORS.card }}
+          className="w-full touch-none bg-white"
+          style={{ height: 200 }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -166,7 +162,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
         />
         {!hasDrawn && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="text-[15px]" style={{ color: EDL_COLORS.text3, opacity: 0.4 }}>
+            <span className={`text-[15px] opacity-40 ${t.textMuted}`}>
               Signez ici
             </span>
           </div>
@@ -176,8 +172,7 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
       {hasDrawn && (
         <button
           onClick={handleConfirm}
-          className="w-full py-4 rounded-2xl text-[18px] font-bold active:scale-[0.98]"
-          style={{ background: EDL_COLORS.accent, color: '#000' }}
+          className={`w-full py-4 rounded-2xl text-[18px] font-bold active:scale-[0.98] ${t.btnPrimary}`}
         >
           Valider la signature
         </button>

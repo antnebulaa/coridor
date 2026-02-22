@@ -8,7 +8,8 @@ import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
 import CameraCapture from '@/components/inspection/CameraCapture';
-import { EDL_COLORS, DEFAULT_KEY_TYPES, AI_TIPS } from '@/lib/inspection';
+import { DEFAULT_KEY_TYPES, AI_TIPS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import { Plus, Minus } from 'lucide-react';
 
 type Phase = 'PHOTO' | 'KEYS';
@@ -104,31 +105,27 @@ export default function KeysPage() {
             return (
               <div
                 key={type}
-                className="flex items-center gap-4 p-4 rounded-2xl"
-                style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
+                className={`flex items-center gap-4 p-4 rounded-2xl ${t.bgCard} border ${t.border}`}
               >
                 <div className="text-[22px]">{defaultKey?.icon || '🔑'}</div>
-                <div className="flex-1 text-[17px] font-bold" style={{ color: EDL_COLORS.text }}>
+                <div className={`flex-1 text-[17px] font-bold ${t.textPrimary}`}>
                   {type}
                 </div>
                 <div className="flex items-center gap-3.5">
                   <button
                     onClick={() => updateCount(type, -1)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: EDL_COLORS.card2, border: `1px solid ${EDL_COLORS.border}` }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 border ${t.border}`}
                   >
-                    <Minus size={18} color={EDL_COLORS.text3} />
+                    <Minus size={18} className={t.textMuted} />
                   </button>
                   <span
-                    className="w-8 text-center text-[20px] font-bold"
-                    style={{ color: keyCounts[type] > 0 ? EDL_COLORS.text : EDL_COLORS.text3 }}
+                    className={`w-8 text-center text-[20px] font-bold ${keyCounts[type] > 0 ? t.textPrimary : t.textMuted}`}
                   >
                     {keyCounts[type]}
                   </span>
                   <button
                     onClick={() => updateCount(type, 1)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: EDL_COLORS.accent, color: '#000' }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${t.accentBg} text-black`}
                   >
                     <Plus size={18} />
                   </button>
@@ -147,18 +144,12 @@ export default function KeysPage() {
               onChange={(e) => setCustomType(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addCustomType()}
               placeholder="Nom du type de clé"
-              className="flex-1 p-3.5 rounded-xl text-[17px] outline-none"
-              style={{
-                background: EDL_COLORS.card,
-                color: EDL_COLORS.text,
-                border: `1px solid ${EDL_COLORS.border}`,
-              }}
+              className={`flex-1 p-3.5 rounded-xl text-[17px] outline-none ${t.bgCard} ${t.textPrimary} border ${t.border}`}
               autoFocus
             />
             <button
               onClick={addCustomType}
-              className="px-5 rounded-xl text-[17px] font-bold"
-              style={{ background: EDL_COLORS.accent, color: '#000' }}
+              className={`px-5 rounded-xl text-[17px] font-bold ${t.accentBg} text-black`}
             >
               OK
             </button>
@@ -166,8 +157,7 @@ export default function KeysPage() {
         ) : (
           <button
             onClick={() => setShowAddCustom(true)}
-            className="w-full mt-4 py-3.5 rounded-xl text-[17px] font-bold flex items-center justify-center gap-2"
-            style={{ background: EDL_COLORS.card2, color: EDL_COLORS.text2, border: `1px solid ${EDL_COLORS.border}` }}
+            className={`w-full mt-4 py-3.5 rounded-xl text-[17px] font-bold flex items-center justify-center gap-2 bg-gray-100 ${t.textSecondary} border-dashed border ${t.border}`}
           >
             <Plus size={18} />
             Ajouter un type

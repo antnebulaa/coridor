@@ -8,7 +8,8 @@ import type { InspectionRoomWithElements } from '@/hooks/useInspection';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
-import { EDL_COLORS, ROOM_TYPE_CONFIG, AI_TIPS } from '@/lib/inspection';
+import { ROOM_TYPE_CONFIG, AI_TIPS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import type { InspectionRoomType } from '@prisma/client';
 import {
   Plus, CheckCircle2, ChevronRight, LogOut,
@@ -85,22 +86,21 @@ export default function RoomsHubPage() {
   // Skeleton loading state
   if (!inspection) {
     return (
-      <div className="h-full flex flex-col" style={{ background: EDL_COLORS.bg }}>
+      <div className="h-full flex flex-col">
         <InspectionTopBar title="Pièces" subtitle="Chargement..." onBack={() => router.back()} />
         <div className="flex-1 overflow-y-auto px-5 py-5">
           <div className="space-y-3">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="w-full rounded-2xl p-4 flex items-center gap-4 animate-pulse"
-                style={{ background: EDL_COLORS.card }}
+                className={`w-full rounded-2xl p-4 flex items-center gap-4 animate-pulse ${t.bgCard}`}
               >
-                <div className="w-[26px] h-[26px] rounded-lg" style={{ background: EDL_COLORS.card2 }} />
+                <div className="w-[26px] h-[26px] rounded-lg bg-gray-100" />
                 <div className="flex-1">
-                  <div className="h-5 w-28 rounded-lg mb-2" style={{ background: EDL_COLORS.card2 }} />
-                  <div className="h-3.5 w-40 rounded-lg" style={{ background: EDL_COLORS.card2 }} />
+                  <div className="h-5 w-28 rounded-lg mb-2 bg-gray-100" />
+                  <div className="h-3.5 w-40 rounded-lg bg-gray-100" />
                 </div>
-                <div className="w-5 h-5 rounded-full" style={{ background: EDL_COLORS.card2 }} />
+                <div className="w-5 h-5 rounded-full bg-gray-100" />
               </div>
             ))}
           </div>
@@ -132,20 +132,16 @@ export default function RoomsHubPage() {
               <button
                 key={room.id}
                 onClick={() => handleRoomClick(room.id)}
-                className="w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.98]"
-                style={{
-                  background: EDL_COLORS.card,
-                  border: `0px solid ${room.isCompleted ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
-                }}
+                className={`w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.98] ${room.isCompleted ? t.roomCardCompleted : t.roomCardDefault}`}
               >
-                <div style={{ color: EDL_COLORS.text2 }}>
+                <div className={room.isCompleted ? t.roomCardIconCompleted : t.roomCardIcon}>
                   {React.createElement(ROOM_ICONS[room.roomType] || Package, { size: 26 })}
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="text-[18px] font-medium" style={{ color: EDL_COLORS.text }}>
+                  <div className={`text-[18px] font-medium ${t.textPrimary}`}>
                     {room.name}
                   </div>
-                  <div className="text-[14px] mt-0" style={{ color: EDL_COLORS.text3 }}>
+                  <div className={`text-[14px] mt-0 ${t.textMuted}`}>
                     {room.isCompleted
                       ? `${photoCount} photos · ${qualifiedCount} éléments`
                       : elementCount > 0
@@ -154,9 +150,9 @@ export default function RoomsHubPage() {
                   </div>
                 </div>
                 {room.isCompleted ? (
-                  <CheckCircle2 size={22} color={EDL_COLORS.green} />
+                  <CheckCircle2 size={22} color={t.green} />
                 ) : (
-                  <ChevronRight size={20} color={EDL_COLORS.text3} />
+                  <ChevronRight size={20} className={t.textMuted} />
                 )}
               </button>
             );
@@ -166,7 +162,7 @@ export default function RoomsHubPage() {
         {/* Add room section */}
         {showAddRoom ? (
           <div className="mt-4">
-            <div className="text-[17px] font-semibold mb-3" style={{ color: EDL_COLORS.text2 }}>
+            <div className={`text-[17px] font-semibold mb-3 ${t.textSecondary}`}>
               Choisir un type de pièce
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -175,12 +171,7 @@ export default function RoomsHubPage() {
                   key={chip.type}
                   onClick={() => handleAddRoom(chip.type)}
                   disabled={isAdding}
-                  className="px-4 py-2.5 rounded-2xl text-[15px] font-bold flex items-center gap-2 active:scale-95"
-                  style={{
-                    background: EDL_COLORS.card2,
-                    color: EDL_COLORS.text2,
-                    border: `1px solid ${EDL_COLORS.border}`,
-                  }}
+                  className={`px-4 py-2.5 rounded-2xl text-[15px] font-bold flex items-center gap-2 active:scale-95 bg-gray-100 ${t.textSecondary} border ${t.border}`}
                 >
                   {React.createElement(ROOM_ICONS[chip.type] || Package, { size: 16 })}
                   <span>{chip.label}</span>
@@ -189,8 +180,7 @@ export default function RoomsHubPage() {
             </div>
             <button
               onClick={() => setShowAddRoom(false)}
-              className="mt-3 text-[15px] font-medium"
-              style={{ color: EDL_COLORS.text3 }}
+              className={`mt-3 text-[15px] font-medium ${t.textMuted}`}
             >
               Annuler
             </button>
@@ -198,12 +188,7 @@ export default function RoomsHubPage() {
         ) : (
           <button
             onClick={() => setShowAddRoom(true)}
-            className="w-full mt-4 py-4 rounded-2xl text-[17px] font-medium flex items-center justify-center gap-2"
-            style={{
-              background: EDL_COLORS.accent,
-              color: EDL_COLORS.text,
-              border: `0px solid ${EDL_COLORS.border}`,
-            }}
+            className={`w-full mt-4 py-4 rounded-2xl text-[17px] font-medium flex items-center justify-center gap-2 ${t.accentBg} text-white`}
           >
             <Plus size={18} />
             Ajouter une pièce
@@ -213,8 +198,7 @@ export default function RoomsHubPage() {
         {/* Save and exit */}
         <button
           onClick={() => router.push('/dashboard')}
-          className="w-full mt-6 mb-4 py-3 flex items-center justify-center gap-2 text-[15px] font-medium rounded-xl active:scale-[0.97] transition"
-          style={{ color: EDL_COLORS.text3 }}
+          className={`w-full mt-6 mb-4 py-3 flex items-center justify-center gap-2 text-[15px] font-medium rounded-xl active:scale-[0.97] transition ${t.textMuted}`}
         >
           <LogOut size={16} />
           Reprendre plus tard

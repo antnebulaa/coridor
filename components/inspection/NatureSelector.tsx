@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { SURFACE_NATURES, EDL_COLORS } from '@/lib/inspection';
+import { SURFACE_NATURES } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 interface NatureSelectorProps {
   category: 'FLOOR' | 'WALL' | 'CEILING';
@@ -28,12 +29,9 @@ const NatureSelector: React.FC<NatureSelectorProps> = ({ category, value = [], o
           <button
             key={nature}
             onClick={() => handleToggle(nature)}
-            className="px-5 py-3 rounded-2xl text-[17px] font-bold active:scale-95"
-            style={{
-              background: isSelected ? EDL_COLORS.accent : EDL_COLORS.card2,
-              color: isSelected ? '#fff' : EDL_COLORS.text2,
-              border: `2px solid ${isSelected ? EDL_COLORS.accent : EDL_COLORS.border}`,
-            }}
+            className={`px-5 py-3 rounded-2xl text-[17px] font-medium active:scale-95 ${
+              isSelected ? t.natureChipSelected : t.natureChipDefault
+            }`}
           >
             {nature}
           </button>

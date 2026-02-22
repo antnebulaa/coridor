@@ -15,12 +15,12 @@ import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
 import {
-  EDL_COLORS,
   DEGRADATION_CONDITIONS,
   SURFACE_ELEMENTS,
   AI_TIPS,
   ROOM_TYPE_CONFIG,
 } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import { EDL_OVERVIEW_OPTIONS, EDL_DETAIL_OPTIONS } from '@/lib/imageCompression';
 import type { RoomPhase } from '@/lib/inspection';
 import type { ElementCondition } from '@prisma/client';
@@ -31,7 +31,7 @@ function PhotoPreview({ src, alt, onRetake }: { src: string; alt: string; onReta
   // Generate a tiny blurred placeholder from Cloudinary
   const blurSrc = src.replace('/upload/', '/upload/w_40,e_blur:800,q_10/');
   return (
-    <div className="relative mb-5 rounded-2xl overflow-hidden h-48" style={{ background: EDL_COLORS.card }}>
+    <div className={`relative mb-5 rounded-2xl overflow-hidden h-48 ${t.bgCard}`}>
       {/* Blurred placeholder — loads instantly (< 1KB) */}
       {!loaded && (
         <img
@@ -50,8 +50,7 @@ function PhotoPreview({ src, alt, onRetake }: { src: string; alt: string; onReta
       {loaded && (
         <button
           onClick={onRetake}
-          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[15px] font-bold"
-          style={{ background: 'rgba(0,0,0,0.7)', color: '#fff' }}
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[15px] font-bold bg-black/70 text-white"
         >
           <RotateCcw size={16} />
           Reprendre
@@ -75,6 +74,7 @@ export default function RoomInspectionPage() {
   const [newEquipName, setNewEquipName] = useState('');
   const [pendingNatures, setPendingNatures] = useState<Record<string, string[]>>({});
   const natureDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [showIntro, setShowIntro] = useState(true);
 
   const rooms = inspection?.rooms || [];
   const currentRoom = rooms.find((r) => r.id === roomId);
@@ -128,6 +128,21 @@ export default function RoomInspectionPage() {
     router.prefetch(`/inspection/${inspectionId}/rooms`);
   }, [currentRoomIndex, rooms, inspectionId, router]);
 
+  // Room intro animation — reset on room change
+  useEffect(() => {
+    setShowIntro(true);
+    setPhase('OVERVIEW');
+    setCurrentSurfaceIndex(0);
+  }, [roomId]);
+
+  // Auto-dismiss intro after 1s once room data is available
+  useEffect(() => {
+    if (showIntro && currentRoom) {
+      const timer = setTimeout(() => setShowIntro(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [showIntro, currentRoom]);
+
   // Debounced nature change — instant UI feedback, single API call after 600ms
   const handleNatureChange = useCallback((elementId: string, natures: string[]) => {
     setPendingNatures(prev => ({ ...prev, [elementId]: natures }));
@@ -141,13 +156,27 @@ export default function RoomInspectionPage() {
   if (!currentRoom) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div style={{ color: EDL_COLORS.text2 }}>Chargement...</div>
+        <div className={t.textSecondary}>Chargement...</div>
       </div>
     );
   }
 
   const roomConfig = ROOM_TYPE_CONFIG[currentRoom.roomType];
   const aiTip = AI_TIPS[currentRoom.roomType] || AI_TIPS.ROOMS_HUB;
+
+  // ─── INTRO ANIMATION ───
+  if (showIntro) {
+    return (
+      <div className={`h-full flex items-center justify-center ${t.bgPage}`}>
+        <div className="text-center">
+          <div className="text-[80px] mb-2 animate-room-icon">{roomConfig?.icon || '📦'}</div>
+          <div className={`text-[36px] font-semibold tracking-tight animate-room-name ${t.textPrimary}`}>
+            {currentRoom.name}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── PHASE: OVERVIEW (plan large) ───
   if (phase === 'OVERVIEW') {
@@ -156,8 +185,8 @@ export default function RoomInspectionPage() {
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
         <CameraCapture
           title={currentRoom.name}
-          label="Vue d'ensemble"
-          instruction="Cadrez la pièce en entier · Mode paysage recommandé"
+          label="Veuillez cadrer la pièce dans son ensemble"
+          instruction="Mode paysage recommandé"
           allowMultiple
           doneLabel="Noter les surfaces"
           compressionOptions={EDL_OVERVIEW_OPTIONS}
@@ -190,21 +219,17 @@ export default function RoomInspectionPage() {
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         {/* Surface tabs */}
-        <div className="flex px-4 pt-0 pb-4 gap-2.5" style={{ background: EDL_COLORS.bg }}>
+        <div className={`flex px-4 pt-0 pb-4 gap-2.5 ${t.bgPage}`}>
           {SURFACE_ELEMENTS.map((s, i) => {
             const el = surfaceElements[i];
             const isDone = el?.condition != null;
             const isActive = i === currentSurfaceIndex;
+            const tabClass = isActive ? t.tabActive : isDone ? t.tabCompleted : t.tabDefault;
             return (
               <button
                 key={s.category}
                 onClick={() => { setCurrentSurfaceIndex(i); }}
-                className="flex-1 py-2 rounded-2xl text-[16px] font-medium text-center"
-                style={{
-                  background: isActive ? EDL_COLORS.accent : isDone ? `${EDL_COLORS.green}` : EDL_COLORS.card2,
-                  color: isActive ? '#fff' : isDone ? EDL_COLORS.text : EDL_COLORS.text3,
-                  border: `0px solid ${isActive ? EDL_COLORS.accent : isDone ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
-                }}
+                className={`flex-1 py-2 rounded-2xl text-[16px] font-medium text-center ${tabClass}`}
               >
                 {s.name} {isDone && !isActive ? <Check size={14} className="inline" /> : ''}
               </button>
@@ -258,7 +283,7 @@ export default function RoomInspectionPage() {
 
           {/* Nature selector */}
           <div className="mb-5">
-            <div className="text-[20px] font-bold mb-3" style={{ color: EDL_COLORS.text }}>
+            <div className={`text-[20px] font-bold mb-3 ${t.textPrimary}`}>
               Revêtement — {surface.name}
             </div>
             <NatureSelector
@@ -274,7 +299,7 @@ export default function RoomInspectionPage() {
 
           {/* Condition chips */}
           <div className="mb-5">
-            <div className="text-[20px] font-bold mb-3" style={{ color: EDL_COLORS.text }}>
+            <div className={`text-[20px] font-bold mb-3 ${t.textPrimary}`}>
               État
             </div>
             <ConditionChips
@@ -377,10 +402,10 @@ export default function RoomInspectionPage() {
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className="text-[26px] font-bold mb-1 tracking-tight" style={{ color: EDL_COLORS.text }}>
+          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
             Équipements
           </div>
-          <div className="text-[17px] mb-4" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[17px] mb-4 ${t.textSecondary}`}>
             {currentRoom.name} — Qualifiez chaque équipement
           </div>
 
@@ -390,10 +415,9 @@ export default function RoomInspectionPage() {
             {equipmentElements.map((equip) => (
               <div
                 key={equip.id}
-                className="rounded-2xl p-4"
-                style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
+                className={`rounded-2xl p-4 ${t.equipRow}`}
               >
-                <div className="text-[18px] font-bold mb-2.5" style={{ color: EDL_COLORS.text }}>
+                <div className={`text-[18px] font-bold mb-2.5 ${t.textPrimary}`}>
                   {equip.name}
                 </div>
                 <ConditionChips
@@ -421,8 +445,8 @@ export default function RoomInspectionPage() {
             {/* + Ajouter un équipement */}
             {showAddEquip ? (
               <div
-                className="rounded-2xl p-4"
-                style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.accent}40` }}
+                className={`rounded-2xl p-4 ${t.bgCard}`}
+                style={{ border: `1px solid ${t.accent}40` }}
               >
                 <input
                   autoFocus
@@ -430,20 +454,19 @@ export default function RoomInspectionPage() {
                   onChange={(e) => setNewEquipName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && newEquipName.trim()) handleAddEquipment(newEquipName); }}
                   placeholder="Nom de l'équipement..."
-                  className="w-full bg-transparent text-[17px] font-medium outline-none mb-3 pb-2"
-                  style={{ color: EDL_COLORS.text, borderBottom: `2px solid ${EDL_COLORS.accent}` }}
+                  className={`w-full bg-transparent text-[17px] font-medium outline-none mb-3 pb-2 ${t.textPrimary}`}
+                  style={{ borderBottom: `2px solid ${t.accent}` }}
                 />
                 <div className="flex flex-wrap gap-2 mb-4">
                   {['Détecteur de fumée', 'Sèche-serviettes', 'Climatisation', 'Store', 'Prise TV', 'Thermostat', 'Meuble vasque', 'Porte-serviettes', 'Tableau électrique'].map((sugg) => (
                     <button
                       key={sugg}
                       onClick={() => { setNewEquipName(sugg); }}
-                      className="px-3 py-1.5 rounded-xl text-[13px]"
-                      style={{
-                        background: newEquipName === sugg ? `${EDL_COLORS.accent}20` : EDL_COLORS.card2,
-                        color: newEquipName === sugg ? EDL_COLORS.accent : EDL_COLORS.text2,
-                        border: `1px solid ${newEquipName === sugg ? EDL_COLORS.accent : EDL_COLORS.border}`,
-                      }}
+                      className={`px-3 py-1.5 rounded-xl text-[13px] border ${
+                        newEquipName === sugg
+                          ? 'bg-amber-100 text-amber-600 border-amber-500'
+                          : `bg-gray-100 ${t.textSecondary} ${t.border}`
+                      }`}
                     >
                       {sugg}
                     </button>
@@ -452,19 +475,16 @@ export default function RoomInspectionPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setShowAddEquip(false); setNewEquipName(''); }}
-                    className="flex-1 py-2.5 rounded-xl text-[15px] font-medium"
-                    style={{ color: EDL_COLORS.text3 }}
+                    className={`flex-1 py-2.5 rounded-xl text-[15px] font-medium ${t.textMuted}`}
                   >
                     Annuler
                   </button>
                   <button
                     onClick={() => handleAddEquipment(newEquipName)}
                     disabled={!newEquipName.trim()}
-                    className="flex-1 py-2.5 rounded-xl text-[15px] font-bold"
-                    style={{
-                      background: newEquipName.trim() ? EDL_COLORS.accent : EDL_COLORS.card2,
-                      color: newEquipName.trim() ? '#fff' : EDL_COLORS.text3,
-                    }}
+                    className={`flex-1 py-2.5 rounded-xl text-[15px] font-bold ${
+                      newEquipName.trim() ? `${t.accentBg} text-white` : `bg-gray-100 ${t.textMuted}`
+                    }`}
                   >
                     Ajouter
                   </button>
@@ -473,8 +493,7 @@ export default function RoomInspectionPage() {
             ) : (
               <button
                 onClick={() => setShowAddEquip(true)}
-                className="w-full py-3.5 rounded-2xl text-[16px] font-medium flex items-center justify-center gap-2"
-                style={{ background: EDL_COLORS.card2, color: EDL_COLORS.text2, border: `1px dashed ${EDL_COLORS.border}` }}
+                className={`w-full py-3.5 rounded-2xl text-[16px] font-medium flex items-center justify-center gap-2 bg-gray-100 ${t.textSecondary} border-dashed border ${t.border}`}
               >
                 <Plus size={16} /> Ajouter un équipement
               </button>
@@ -496,10 +515,10 @@ export default function RoomInspectionPage() {
         <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
 
         <div className="flex-1 px-5 py-6">
-          <div className="text-[26px] font-bold mb-1 tracking-tight" style={{ color: EDL_COLORS.text }}>
+          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
             Observation générale
           </div>
-          <div className="text-[17px] mb-5" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[17px] mb-5 ${t.textSecondary}`}>
             {currentRoom.name} — Commentaire libre
           </div>
 
@@ -525,12 +544,12 @@ export default function RoomInspectionPage() {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center animate-pulse">
-          <CircleCheck size={64} color={EDL_COLORS.green} className="mx-auto mb-4" />
-          <div className="text-[28px] font-bold" style={{ color: EDL_COLORS.green }}>
+          <CircleCheck size={64} color={t.green} className="mx-auto mb-4" />
+          <div className="text-[28px] font-bold" style={{ color: t.green }}>
             {currentRoom.name} validée
           </div>
           {nextRoom && (
-            <div className="text-[18px] mt-3" style={{ color: EDL_COLORS.text2 }}>
+            <div className={`text-[18px] mt-3 ${t.textSecondary}`}>
               → {nextRoom.name}
             </div>
           )}

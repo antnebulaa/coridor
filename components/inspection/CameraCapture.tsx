@@ -4,7 +4,7 @@ import React, { useRef, useCallback, useState } from 'react';
 import { Camera, RotateCcw, ArrowRight, Check, X } from 'lucide-react';
 import { compressImage, type CompressionOptions } from '@/lib/imageCompression';
 import axios from 'axios';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 interface CameraCaptureProps {
   label: string;
@@ -41,14 +41,14 @@ function Thumbnail({ src, index, onDelete, dimmed }: { src: string; index: numbe
   return (
     <button
       onClick={onDelete}
-      className="w-[48px] h-[48px] rounded-lg overflow-hidden flex-shrink-0 relative"
+      className="w-[48px] h-[48px] rounded-lg overflow-hidden shrink-0 relative"
       style={{
         border: '2px solid rgba(255,255,255,0.2)',
         opacity: dimmed ? 0.5 : 1,
       }}
     >
       {!visible && (
-        <div className="absolute inset-0 animate-pulse" style={{ background: 'rgba(255,255,255,0.1)' }} />
+        <div className="absolute inset-0 animate-pulse bg-white/10" />
       )}
       <img
         src={src}
@@ -71,7 +71,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   onExit,
   doneLabel = 'Continuer',
   compressionOptions,
-  accentColor = EDL_COLORS.accent,
+  accentColor = t.accent,
   allowMultiple = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,10 +153,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     fileInputRef.current?.click();
   };
 
-  // Preview mode — show the photo with confirm/retake
+  // Preview mode — show the photo with confirm/retake (stays dark — it's a photo review)
   if (preview) {
     return (
-      <div className="flex-1 flex flex-col px-4 pb-4" style={{ background: EDL_COLORS.bg }}>
+      <div className={`flex-1 flex flex-col px-4 pb-4 ${t.cameraBg}`}>
         <div className="flex-1 relative rounded-3xl overflow-hidden">
           <img
             src={preview}
@@ -168,12 +168,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           <button
             onClick={handleRetake}
             disabled={isUploading || isValidated}
-            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-[18px] font-bold"
-            style={{
-              background: EDL_COLORS.card2,
-              color: EDL_COLORS.text,
-              border: `1px solid ${EDL_COLORS.border}`,
-            }}
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-[18px] font-bold bg-gray-800 text-white border border-gray-700"
           >
             <RotateCcw size={18} />
             Reprendre
@@ -181,10 +176,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           <button
             onClick={handleConfirm}
             disabled={isUploading || isProcessingRef.current || isValidated}
-            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-[18px] font-bold transition-colors duration-200"
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-[18px] font-bold text-white transition-colors duration-200"
             style={{
-              background: isValidated ? EDL_COLORS.green : accentColor,
-              color: '#fff',
+              background: isValidated ? t.green : accentColor,
             }}
           >
             {isUploading ? (
@@ -206,16 +200,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   // Split instruction into separate lines (split on " · " or " — ")
   const instructionLines = instruction?.split(/\s*[·—]\s*/).filter(Boolean) || [];
 
-  // Camera mode — show viewfinder UI
+  // Camera mode — show viewfinder UI (stays dark — it's a viewfinder)
   return (
-    <div
-      className="flex-1 flex flex-col px-4"
-      style={{ background: EDL_COLORS.bg }}
-    >
+    <div className={`flex-1 flex flex-col px-4 ${t.cameraBg}`}>
       <div
         className="flex-1 flex flex-col items-center justify-center relative rounded-3xl overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, #0d1117, #070b10)',
+          background: t.cameraViewfinder,
         }}
       >
         {/* Subtle grid overlay */}
@@ -231,23 +222,22 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         <div className="text-center mb-10 px-8 pointer-events-none">
           {title ? (
             <>
-              <div className="text-[36px] font-semibold tracking-tight mb-1" style={{ color: '#fff' }}>
+              <div className="text-[36px] font-semibold tracking-tight mb-1 text-white">
                 {title}
               </div>
-              <div className="text-[18px] font-medium mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <div className="text-[18px] font-medium mb-4 text-white/50">
                 {label}
               </div>
             </>
           ) : (
-            <div className="text-[22px] font-bold mb-4" style={{ color: '#fff' }}>
+            <div className="text-[22px] font-bold mb-4 text-white">
               {label}
             </div>
           )}
           {instructionLines.map((line, i) => (
             <div
               key={i}
-              className="text-[15px] leading-relaxed"
-              style={{ color: i === 0 ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.3)' }}
+              className={`text-[15px] leading-relaxed ${i === 0 ? 'text-white/45' : 'text-white/30'}`}
             >
               {line}
             </div>
@@ -279,8 +269,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             {/* Done button */}
             <button
               onClick={onDone}
-              className="flex items-center gap-2 px-8 py-3 rounded-full text-[17px] font-bold"
-              style={{ background: accentColor, color: '#fff' }}
+              className="flex items-center gap-2 px-8 py-3 rounded-full text-[17px] font-medium text-white"
+              style={{ background: accentColor }}
             >
               {doneLabel}
               <ArrowRight size={18} />
@@ -291,8 +281,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="text-[16px] font-medium"
-                style={{ color: 'rgba(255,255,255,0.35)' }}
+                className="text-[16px] font-medium text-white/35"
               >
                 Annuler
               </button>
@@ -300,8 +289,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             {onExit && (
               <button
                 onClick={onExit}
-                className="text-[15px] font-medium"
-                style={{ color: 'rgba(255,255,255,0.25)' }}
+                className="text-[15px] font-medium text-white/25"
               >
                 Reprendre plus tard
               </button>
@@ -311,21 +299,20 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
         {/* Delete confirmation overlay */}
         {deletingIndex !== null && (
-          <div className="absolute inset-0 flex items-center justify-center z-10" style={{ background: 'rgba(0,0,0,0.8)' }}>
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/80">
             <div className="flex flex-col items-center gap-4">
               <img
                 src={thumbnails[deletingIndex]}
                 alt="Photo à supprimer"
                 className="w-56 h-56 rounded-2xl object-cover"
               />
-              <div className="text-[16px] font-medium" style={{ color: '#fff' }}>
+              <div className="text-[16px] font-medium text-white">
                 Supprimer cette photo ?
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeletingIndex(null)}
-                  className="px-6 py-2.5 rounded-full text-[15px] font-bold"
-                  style={{ background: EDL_COLORS.card2, color: '#fff' }}
+                  className="px-6 py-2.5 rounded-full text-[15px] font-bold bg-gray-700 text-white"
                 >
                   Annuler
                 </button>
@@ -334,8 +321,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                     setThumbnails((prev) => prev.filter((_, j) => j !== deletingIndex));
                     setDeletingIndex(null);
                   }}
-                  className="px-6 py-2.5 rounded-full text-[15px] font-bold"
-                  style={{ background: EDL_COLORS.red, color: '#fff' }}
+                  className="px-6 py-2.5 rounded-full text-[15px] font-bold bg-red-500 text-white"
                 >
                   <X size={16} className="inline mr-1" />
                   Supprimer

@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import InspectionTopBar from './InspectionTopBar';
 import InspectionBtn from './InspectionBtn';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 interface WizardInputProps {
   title: string;
@@ -43,7 +43,7 @@ const WizardInput: React.FC<WizardInputProps> = ({
   const canContinue = optional || value.trim().length > 0;
 
   return (
-    <div className="flex flex-col h-full" style={{ background: EDL_COLORS.bg }}>
+    <div className={`flex flex-col h-full ${t.bgPage}`}>
       <InspectionTopBar
         title={title}
         onBack={onBack}
@@ -55,10 +55,7 @@ const WizardInput: React.FC<WizardInputProps> = ({
         <div className="text-[56px] mb-4">{icon}</div>
 
         {/* Label */}
-        <div
-          className="text-[26px] font-bold text-center mb-6 tracking-tight"
-          style={{ color: EDL_COLORS.text }}
-        >
+        <div className={`text-[26px] font-bold text-center mb-6 tracking-tight ${t.textPrimary}`}>
           {label}
         </div>
 
@@ -73,16 +70,15 @@ const WizardInput: React.FC<WizardInputProps> = ({
             if (e.key === 'Enter' && canContinue) onNext(value);
           }}
           placeholder={hint}
-          className="w-full max-w-xs text-center text-[28px] font-bold py-4 bg-transparent outline-none"
+          className={`w-full max-w-xs text-center text-[28px] font-bold py-4 bg-transparent outline-none ${t.textPrimary}`}
           style={{
-            color: EDL_COLORS.text,
-            borderBottom: `3px solid ${value ? EDL_COLORS.accent : EDL_COLORS.border}`,
-            caretColor: EDL_COLORS.accent,
+            borderBottom: `3px solid ${value ? t.accent : '#d1d5db'}`,
+            caretColor: t.accent,
           }}
         />
 
         {hint && !value && (
-          <div className="mt-3 text-[16px]" style={{ color: EDL_COLORS.text3 }}>
+          <div className={`mt-3 text-[16px] ${t.textMuted}`}>
             {hint}
           </div>
         )}

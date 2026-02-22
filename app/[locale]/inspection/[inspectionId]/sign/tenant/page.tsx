@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import SignatureCanvas from '@/components/inspection/SignatureCanvas';
 import AudioRecorder from '@/components/inspection/AudioRecorder';
-import { EDL_COLORS, ROOM_TYPE_CONFIG, CONDITION_MAP } from '@/lib/inspection';
+import { ROOM_TYPE_CONFIG, CONDITION_MAP } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import type { FullInspection } from '@/hooks/useInspection';
 import {
   ChevronDown,
@@ -22,7 +23,7 @@ import {
   Home,
 } from 'lucide-react';
 
-const ROOM_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+const ROOM_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string; className?: string }>> = {
   LIVING_ROOM: Sofa,
   BEDROOM: BedDouble,
   KITCHEN: CookingPot,
@@ -101,7 +102,7 @@ export default function TenantSignPage() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-[14px]" style={{ color: EDL_COLORS.text2 }}>Chargement...</div>
+        <div className={`text-[14px] ${t.textSecondary}`}>Chargement...</div>
       </div>
     );
   }
@@ -110,11 +111,11 @@ export default function TenantSignPage() {
     return (
       <div className="h-full flex items-center justify-center px-6">
         <div className="text-center max-w-md mx-auto">
-          <AlertTriangle size={48} color={EDL_COLORS.orange} className="mx-auto mb-4" />
-          <div className="text-[16px] font-semibold" style={{ color: EDL_COLORS.text }}>
+          <AlertTriangle size={48} color={t.orange} className="mx-auto mb-4" />
+          <div className={`text-[16px] font-semibold ${t.textPrimary}`}>
             Lien invalide ou expiré
           </div>
-          <div className="text-[13px] mt-2" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[13px] mt-2 ${t.textSecondary}`}>
             Demandez au propriétaire de vous renvoyer un nouveau lien de signature.
           </div>
         </div>
@@ -126,14 +127,14 @@ export default function TenantSignPage() {
     return (
       <div className="h-full flex items-center justify-center px-6">
         <div className="text-center max-w-md mx-auto">
-          <CircleCheck size={64} color={EDL_COLORS.green} className="mx-auto mb-4" />
-          <div className="text-[24px] font-bold" style={{ color: EDL_COLORS.text }}>
+          <CircleCheck size={64} color={t.green} className="mx-auto mb-4" />
+          <div className={`text-[24px] font-bold ${t.textPrimary}`}>
             Signé !
           </div>
-          <div className="text-[14px] mt-2" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[14px] mt-2 ${t.textSecondary}`}>
             Votre état des lieux est maintenant complet. Vous recevrez le PDF par email.
           </div>
-          <div className="text-[12px] mt-3" style={{ color: EDL_COLORS.text3 }}>
+          <div className={`text-[12px] mt-3 ${t.textMuted}`}>
             Signé le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
@@ -147,21 +148,19 @@ export default function TenantSignPage() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div
-        className="flex-shrink-0 px-5 py-4 flex items-start justify-between"
-        style={{ borderBottom: `1px solid ${EDL_COLORS.border}` }}
+        className={`shrink-0 px-5 py-4 flex items-start justify-between border-b ${t.border}`}
       >
         <div className="pt-2">
-          <div className="text-[20px] font-bold" style={{ color: EDL_COLORS.text }}>
+          <div className={`text-[20px] font-bold ${t.textPrimary}`}>
             État des lieux
           </div>
-          <div className="text-[13px] mt-0.5" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[13px] mt-0.5 ${t.textSecondary}`}>
             Vérifiez le récapitulatif et signez
           </div>
         </div>
         <button
           onClick={handleClose}
-          className="mt-2 p-2 rounded-full active:scale-95"
-          style={{ color: EDL_COLORS.text3 }}
+          className={`mt-2 p-2 rounded-full active:scale-95 ${t.textMuted}`}
         >
           <X size={22} />
         </button>
@@ -183,55 +182,51 @@ export default function TenantSignPage() {
               return (
                 <div
                   key={room.id}
-                  className="rounded-xl overflow-hidden"
-                  style={{
-                    background: EDL_COLORS.card,
-                    border: `1px solid ${hasAnomalies ? `${EDL_COLORS.orange}40` : EDL_COLORS.border}`,
-                  }}
+                  className={`rounded-xl overflow-hidden ${t.bgCard} ${!hasAnomalies ? `border ${t.border}` : ''}`}
+                  style={hasAnomalies ? { border: `1px solid ${t.orange}40` } : undefined}
                 >
                   <button
                     onClick={() => setExpandedRoom(isExpanded ? null : room.id)}
                     className="w-full p-3 flex items-center gap-3"
                   >
-                    <RoomIcon size={18} color={EDL_COLORS.text2} />
+                    <RoomIcon size={18} className={t.textSecondary} />
                     <div className="flex-1 text-left">
-                      <div className="text-[14px] font-medium" style={{ color: EDL_COLORS.text }}>
+                      <div className={`text-[14px] font-medium ${t.textPrimary}`}>
                         {room.name}
                       </div>
                     </div>
                     {hasAnomalies ? (
                       <span
                         className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
-                        style={{ background: `${EDL_COLORS.orange}15`, color: EDL_COLORS.orange }}
+                        style={{ background: `${t.orange}15`, color: t.orange }}
                       >
                         <AlertTriangle size={11} />
                         {anomalies.length} dégradation{anomalies.length > 1 ? 's' : ''}
                       </span>
                     ) : (
                       <span
-                        className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                        style={{ background: EDL_COLORS.green, color: '#fff' }}
+                        className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
+                        style={{ background: t.green }}
                       >
                         Conforme
                       </span>
                     )}
                     {isExpanded
-                      ? <ChevronUp size={14} color={EDL_COLORS.text3} />
-                      : <ChevronDown size={14} color={EDL_COLORS.text3} />
+                      ? <ChevronUp size={14} className={t.textMuted} />
+                      : <ChevronDown size={14} className={t.textMuted} />
                     }
                   </button>
 
                   {isExpanded && (
                     <div
-                      className="px-3 pb-3 space-y-1.5"
-                      style={{ borderTop: `1px solid ${EDL_COLORS.border}` }}
+                      className={`px-3 pb-3 space-y-1.5 border-t ${t.border}`}
                     >
                       <div className="pt-2">
                         {room.elements?.filter((e) => !e.isAbsent).map((el) => {
                           const cond = el.condition ? CONDITION_MAP[el.condition] : null;
                           return (
                             <div key={el.id} className="flex items-center gap-2 py-1">
-                              <div className="flex-1 text-[13px]" style={{ color: EDL_COLORS.text2 }}>
+                              <div className={`flex-1 text-[13px] ${t.textSecondary}`}>
                                 {el.name}
                               </div>
                               {cond && (
@@ -254,22 +249,16 @@ export default function TenantSignPage() {
           </div>
 
           {/* 10-day legal banner */}
-          <div
-            className="flex gap-3 p-4 rounded-xl mb-6"
-            style={{
-              background: `${EDL_COLORS.blue}10`,
-              border: `1px solid ${EDL_COLORS.blue}30`,
-            }}
-          >
-            <Info size={20} color={EDL_COLORS.blue} className="flex-shrink-0 mt-0.5" />
-            <div className="text-[13px] leading-relaxed" style={{ color: EDL_COLORS.text2 }}>
-              Vous disposez de <strong style={{ color: EDL_COLORS.text }}>10 jours</strong> après la remise des clés pour signaler par lettre recommandée tout défaut non visible lors de l&apos;état des lieux (art. 3-2 loi du 6 juillet 1989).
+          <div className={`flex gap-3 p-4 rounded-xl mb-6 ${t.legalBannerBg}`}>
+            <Info size={20} color={t.blue} className="shrink-0 mt-0.5" />
+            <div className={`text-[13px] leading-relaxed ${t.textSecondary}`}>
+              Vous disposez de <strong className={t.textPrimary}>10 jours</strong> après la remise des clés pour signaler par lettre recommandée tout défaut non visible lors de l&apos;état des lieux (art. 3-2 loi du 6 juillet 1989).
             </div>
           </div>
 
           {/* Reserves */}
           <div className="mb-6">
-            <div className="text-[14px] font-semibold mb-2" style={{ color: EDL_COLORS.text }}>
+            <div className={`text-[14px] font-semibold mb-2 ${t.textPrimary}`}>
               Réserves (optionnel)
             </div>
             <AudioRecorder

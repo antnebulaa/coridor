@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CONDITIONS, EDL_COLORS } from '@/lib/inspection';
+import { CONDITIONS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import type { ElementCondition } from '@prisma/client';
 
 interface ConditionChipsProps {
@@ -40,13 +41,11 @@ const ConditionChips: React.FC<ConditionChipsProps> = ({
               setOptimisticAbsent(false);
               onChange(cond.key);
             }}
-            className={`rounded-2xl font-bold transition-transform active:scale-95 ${
+            className={`rounded-2xl font-medium transition-transform active:scale-95 ${
               compact ? 'px-4 py-2.5 text-[15px]' : 'px-5 py-3 text-[17px]'
-            }`}
+            } ${isSelected ? t.chipSelected : t.chipDefault}`}
             style={{
-              background: isSelected ? cond.color : EDL_COLORS.card2,
-              color: isSelected ? '#000' : EDL_COLORS.text3,
-              border: `2px solid ${isSelected ? cond.color : EDL_COLORS.border}`,
+              ...(isSelected ? { background: cond.color, borderColor: cond.color } : {}),
               opacity: optimisticAbsent ? 0.3 : 1,
             }}
           >
@@ -60,14 +59,9 @@ const ConditionChips: React.FC<ConditionChipsProps> = ({
             setOptimisticAbsent(!optimisticAbsent);
             onAbsentToggle();
           }}
-          className={`rounded-2xl font-bold transition-transform active:scale-95 ${
+          className={`rounded-2xl font-medium transition-transform active:scale-95 ${
             compact ? 'px-4 py-2.5 text-[15px]' : 'px-5 py-3 text-[17px]'
-          }`}
-          style={{
-            background: optimisticAbsent ? EDL_COLORS.text3 : EDL_COLORS.card2,
-            color: optimisticAbsent ? '#fff' : EDL_COLORS.text3,
-            border: `2px solid ${optimisticAbsent ? EDL_COLORS.text3 : EDL_COLORS.border}`,
-          }}
+          } ${optimisticAbsent ? 'bg-gray-500 text-white border-2 border-gray-500' : t.chipDefault}`}
         >
           Absent
         </button>

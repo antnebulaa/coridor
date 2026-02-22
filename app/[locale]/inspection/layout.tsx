@@ -1,6 +1,6 @@
 'use client';
 
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 export default function InspectionLayout({
   children,
@@ -8,8 +8,8 @@ export default function InspectionLayout({
   children: React.ReactNode;
 }) {
   return (
-    // Outer: covers full viewport including behind status bar — dark bg visible through translucent status bar
-    <div className="fixed inset-0 z-[10000]" style={{ background: EDL_COLORS.bg }}>
+    // Outer: covers full viewport including behind status bar
+    <div className={`fixed inset-0 z-[10000] ${t.bgPage}`}>
       {/* Inner: pt-safe pushes content below iOS status bar, pb-safe clears home indicator */}
       <div className="h-full flex flex-col pt-safe pb-safe overflow-hidden">
         {children}

@@ -24,7 +24,7 @@ const WizardPhoto: React.FC<WizardPhotoProps> = ({
   total,
 }) => {
   return (
-    <div className="flex flex-col h-full" style={{ background: '#0A0A0A' }}>
+    <div className="flex flex-col h-full bg-black">
       <InspectionTopBar
         title={title}
         onBack={onBack}

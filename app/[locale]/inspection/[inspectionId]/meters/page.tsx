@@ -9,7 +9,8 @@ import WizardPhoto from '@/components/inspection/WizardPhoto';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
-import { EDL_COLORS, METER_WIZARD_STEPS, METER_TYPE_LABELS, AI_TIPS } from '@/lib/inspection';
+import { METER_WIZARD_STEPS, METER_TYPE_LABELS, AI_TIPS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import { Check, CheckCircle2 } from 'lucide-react';
 
 // 7 steps: elec number, elec index, elec photo, water number, water index, water photo, summary
@@ -97,17 +98,16 @@ export default function MetersPage() {
       icon: string; label: string; number: string; index: string; hasPhoto: boolean;
     }) => (
       <div
-        className="rounded-2xl p-4 flex items-center gap-4"
-        style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
+        className={`rounded-2xl p-4 flex items-center gap-4 ${t.bgCard} border ${t.border}`}
       >
         <div className="text-[28px]">{icon}</div>
         <div className="flex-1">
-          <div className="text-[18px] font-bold" style={{ color: EDL_COLORS.text }}>{label}</div>
-          <div className="text-[15px] mt-0.5" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[18px] font-bold ${t.textPrimary}`}>{label}</div>
+          <div className={`text-[15px] mt-0.5 ${t.textSecondary}`}>
             N° {number || '—'} · {index || '—'} {label === 'Électricité' ? 'kWh' : 'm³'}
           </div>
         </div>
-        {hasPhoto && <CheckCircle2 size={22} color={EDL_COLORS.green} />}
+        {hasPhoto && <CheckCircle2 size={22} color={t.green} />}
       </div>
     );
 
@@ -140,24 +140,19 @@ export default function MetersPage() {
           {/* No gas toggle */}
           <button
             onClick={() => setNoGas(!noGas)}
-            className="flex items-center gap-4 w-full rounded-2xl p-4"
-            style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
+            className={`flex items-center gap-4 w-full rounded-2xl p-4 ${t.bgCard} border ${t.border}`}
           >
             <div className="text-[28px]">🔥</div>
             <div className="flex-1 text-left">
-              <div className="text-[18px] font-bold" style={{ color: EDL_COLORS.text }}>
+              <div className={`text-[18px] font-bold ${t.textPrimary}`}>
                 Gaz
               </div>
-              <div className="text-[15px]" style={{ color: EDL_COLORS.text2 }}>
+              <div className={`text-[15px] ${t.textSecondary}`}>
                 {noGas ? 'Pas de gaz dans ce logement' : 'Touchez pour indiquer "pas de gaz"'}
               </div>
             </div>
             <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{
-                background: noGas ? EDL_COLORS.text3 : 'transparent',
-                border: noGas ? 'none' : `2px solid ${EDL_COLORS.border}`,
-              }}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center ${noGas ? 'bg-gray-500' : `border-2 ${t.border}`}`}
             >
               {noGas && <Check size={14} color="#fff" strokeWidth={3} />}
             </div>

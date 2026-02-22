@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, Square } from 'lucide-react';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 
 interface AudioRecorderProps {
   value?: string;
@@ -118,12 +118,12 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   return (
     <div className="flex flex-col gap-4">
       {label && (
-        <div className="text-[20px] font-bold" style={{ color: EDL_COLORS.text }}>
+        <div className={`text-[20px] font-bold ${t.textPrimary}`}>
           {label}
         </div>
       )}
 
-      {/* Textarea — big readable text */}
+      {/* Textarea */}
       <textarea
         value={transcript}
         onChange={(e) => {
@@ -131,26 +131,21 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           onChange(e.target.value);
         }}
         placeholder="Saisissez ou dictez..."
-        className="w-full p-4 rounded-2xl text-[18px] font-medium leading-relaxed min-h-28 resize-none outline-none"
-        style={{
-          background: EDL_COLORS.card,
-          color: EDL_COLORS.text,
-          border: `2px solid ${EDL_COLORS.border}`,
-        }}
+        className={`w-full p-4 rounded-2xl text-[18px] font-medium leading-relaxed min-h-28 resize-none outline-none ${t.transcriptionBg} ${t.textPrimary}`}
       />
 
       {/* Mic button */}
       <button
         onClick={isTranscribing ? undefined : toggleRecording}
         disabled={isTranscribing}
-        className="flex items-center justify-center gap-3 py-4 rounded-2xl text-[18px] font-bold"
-        style={{
-          background: isRecording ? EDL_COLORS.red : isTranscribing ? EDL_COLORS.card2 : EDL_COLORS.accent,
-          color: isRecording ? '#fff' : isTranscribing ? EDL_COLORS.text : '#fff',
-          border: `2px solid ${isRecording ? EDL_COLORS.red : isTranscribing ? EDL_COLORS.border : EDL_COLORS.accent}`,
-          boxShadow: isRecording ? `0 0 30px ${EDL_COLORS.red}50` : 'none',
-          opacity: isTranscribing ? 0.6 : 1,
-        }}
+        className={`flex items-center justify-center gap-3 py-4 rounded-2xl text-[18px] font-bold border-2 ${
+          isRecording
+            ? 'bg-red-500 text-white border-red-500'
+            : isTranscribing
+            ? 'bg-gray-100 text-gray-500 border-gray-200 opacity-60'
+            : `${t.accentBg} text-white ${t.accentBorder}`
+        }`}
+        style={isRecording ? { boxShadow: `0 0 30px ${t.red}50` } : undefined}
       >
         {isTranscribing ? (
           <>

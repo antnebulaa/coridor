@@ -139,6 +139,15 @@ hr {
   scrollbar-width: none;
 }
 
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ──── Safe Area Utilities ──── */
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
@@ -323,6 +332,27 @@ hr {
 
 @utility animate-scaleIn {
   animation: scaleIn 0.5s ease forwards;
+}
+
+/* ──── Room Intro Animation (EDL) ──── */
+@keyframes roomIconPop {
+  0% { opacity: 0; transform: scale(0.3); }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes roomNameSlide {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-room-icon {
+  animation: roomIconPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@utility animate-room-name {
+  opacity: 0;
+  animation: roomNameSlide 0.35s ease-out 0.15s forwards;
 }
 
 /* Leaflet Dark Mode Overrides */

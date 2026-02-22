@@ -7,7 +7,7 @@ import { useInspection } from '@/hooks/useInspection';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import SignatureCanvas from '@/components/inspection/SignatureCanvas';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import { Send, CheckCircle2, Clock, Loader2, Share2, LayoutDashboard } from 'lucide-react';
 
 export default function SignLandlordPage() {
@@ -127,27 +127,27 @@ export default function SignLandlordPage() {
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-[16px] font-bold"
               style={{
-                background: isAlreadySigned || landlordSigned ? EDL_COLORS.green : EDL_COLORS.accent,
+                background: isAlreadySigned || landlordSigned ? t.green : t.accent,
                 color: '#000',
               }}
             >
               1
             </div>
-            <div className="text-[20px] font-bold" style={{ color: EDL_COLORS.text }}>
+            <div className={`text-[20px] font-bold ${t.textPrimary}`}>
               Signature du bailleur
             </div>
             {(isAlreadySigned || landlordSigned) && (
-              <CheckCircle2 size={22} color={EDL_COLORS.green} />
+              <CheckCircle2 size={22} color={t.green} />
             )}
           </div>
 
           {isAlreadySigned || landlordSigned ? (
             <div
               className="rounded-2xl p-5 text-center"
-              style={{ background: `${EDL_COLORS.green}10`, border: `1px solid ${EDL_COLORS.green}30` }}
+              style={{ background: `${t.green}10`, border: `1px solid ${t.green}30` }}
             >
-              <CheckCircle2 size={40} color={EDL_COLORS.green} className="mx-auto mb-2" />
-              <div className="text-[18px] font-bold" style={{ color: EDL_COLORS.green }}>
+              <CheckCircle2 size={40} color={t.green} className="mx-auto mb-2" />
+              <div className="text-[18px] font-bold" style={{ color: t.green }}>
                 Signé
               </div>
             </div>
@@ -160,33 +160,32 @@ export default function SignLandlordPage() {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[16px] font-bold"
-              style={{
-                background: isTenantSigned ? EDL_COLORS.green : EDL_COLORS.card2,
-                color: isTenantSigned ? '#000' : EDL_COLORS.text3,
-              }}
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-[16px] font-bold ${
+                isTenantSigned ? '' : `bg-gray-100 ${t.textMuted}`
+              }`}
+              style={isTenantSigned ? { background: t.green, color: '#000' } : undefined}
             >
               2
             </div>
-            <div className="text-[20px] font-bold" style={{ color: EDL_COLORS.text }}>
+            <div className={`text-[20px] font-bold ${t.textPrimary}`}>
               Signature du locataire
             </div>
-            {isTenantSigned && <CheckCircle2 size={22} color={EDL_COLORS.green} />}
+            {isTenantSigned && <CheckCircle2 size={22} color={t.green} />}
           </div>
 
           {isTenantSigned ? (
             <div
               className="rounded-2xl p-5 text-center"
-              style={{ background: `${EDL_COLORS.green}10`, border: `1px solid ${EDL_COLORS.green}30` }}
+              style={{ background: `${t.green}10`, border: `1px solid ${t.green}30` }}
             >
-              <CheckCircle2 size={40} color={EDL_COLORS.green} className="mx-auto mb-2" />
-              <div className="text-[18px] font-bold" style={{ color: EDL_COLORS.green }}>
+              <CheckCircle2 size={40} color={t.green} className="mx-auto mb-2" />
+              <div className="text-[18px] font-bold" style={{ color: t.green }}>
                 Signé
               </div>
             </div>
           ) : (isAlreadySigned || landlordSigned) ? (
             <div className="space-y-4">
-              <div className="text-[16px]" style={{ color: EDL_COLORS.text2 }}>
+              <div className={`text-[16px] ${t.textSecondary}`}>
                 {linkSent
                   ? 'Le locataire a été notifié. Il a 24h pour signer depuis son téléphone.'
                   : 'Envoyez une notification au locataire pour qu\'il signe l\'état des lieux.'}
@@ -198,9 +197,9 @@ export default function SignLandlordPage() {
                 disabled={isSending || linkSent}
                 className="w-full py-4 rounded-2xl text-[18px] font-bold flex items-center justify-center gap-2 active:scale-[0.98]"
                 style={{
-                  background: linkSent ? `${EDL_COLORS.green}20` : EDL_COLORS.accent,
-                  color: linkSent ? EDL_COLORS.green : '#fff',
-                  border: linkSent ? `1px solid ${EDL_COLORS.green}40` : 'none',
+                  background: linkSent ? `${t.green}20` : t.accent,
+                  color: linkSent ? t.green : '#fff',
+                  border: linkSent ? `1px solid ${t.green}40` : 'none',
                 }}
               >
                 {isSending ? (
@@ -220,10 +219,7 @@ export default function SignLandlordPage() {
 
               {/* Error message */}
               {sendError && (
-                <div
-                  className="rounded-xl p-3 text-[14px] text-center"
-                  style={{ background: '#ff4d4f15', color: '#ff4d4f', border: '1px solid #ff4d4f30' }}
-                >
+                <div className="rounded-xl p-3 text-[14px] text-center bg-red-50 text-red-500 border border-red-200">
                   {sendError}
                 </div>
               )}
@@ -231,19 +227,14 @@ export default function SignLandlordPage() {
               {/* Share link button — always visible after landlord signed */}
               <button
                 onClick={handleShareLink}
-                className="w-full py-3.5 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-2 active:scale-[0.98]"
-                style={{
-                  background: EDL_COLORS.card2,
-                  color: EDL_COLORS.text2,
-                  border: `1px solid ${EDL_COLORS.border}`,
-                }}
+                className={`w-full py-3.5 rounded-2xl text-[16px] font-bold flex items-center justify-center gap-2 active:scale-[0.98] bg-gray-100 ${t.textSecondary} border ${t.border}`}
               >
                 <Share2 size={18} />
                 {copied ? 'Lien copié !' : 'Partager le lien'}
               </button>
 
               {linkSent && (
-                <div className="flex items-center gap-2 text-[15px]" style={{ color: EDL_COLORS.text3 }}>
+                <div className={`flex items-center gap-2 text-[15px] ${t.textMuted}`}>
                   <Clock size={15} />
                   En attente de la signature du locataire...
                 </div>
@@ -252,23 +243,15 @@ export default function SignLandlordPage() {
               {/* Back to dashboard button */}
               <button
                   onClick={() => router.push('/dashboard')}
-                  className="w-full py-3.5 rounded-2xl text-[16px] font-medium flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
-                  style={{
-                    background: 'transparent',
-                    color: EDL_COLORS.text3,
-                    border: `1px solid ${EDL_COLORS.border}`,
-                  }}
+                  className={`w-full py-3.5 rounded-2xl text-[16px] font-medium flex items-center justify-center gap-2 active:scale-[0.98] mt-2 ${t.textMuted} border ${t.border}`}
                 >
                   <LayoutDashboard size={18} />
                   Retour au tableau de bord
                 </button>
             </div>
           ) : (
-            <div
-              className="rounded-2xl p-5 text-center"
-              style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
-            >
-              <div className="text-[16px] font-medium" style={{ color: EDL_COLORS.text3 }}>
+            <div className={`rounded-2xl p-5 text-center ${t.bgCard} border ${t.border}`}>
+              <div className={`text-[16px] font-medium ${t.textMuted}`}>
                 Le bailleur doit signer en premier
               </div>
             </div>

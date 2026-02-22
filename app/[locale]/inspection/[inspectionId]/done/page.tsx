@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useInspection } from '@/hooks/useInspection';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import { FileText, Mail, ArrowRight, CircleCheck, CheckCircle2, Info, Loader2, AlertTriangle, Check, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
@@ -158,11 +158,11 @@ export default function DonePage() {
     <div className="h-full flex flex-col items-center overflow-y-auto px-6 py-12">
       {/* Success animation */}
       <div className="text-center mb-6">
-        <CircleCheck size={72} color={EDL_COLORS.green} className="mx-auto mb-4 animate-bounce" />
-        <h1 className="text-[28px] font-bold tracking-tight" style={{ color: EDL_COLORS.text }}>
+        <CircleCheck size={72} color={t.green} className="mx-auto mb-4 animate-bounce" />
+        <h1 className={`text-[28px] font-bold tracking-tight ${t.textPrimary}`}>
           État des lieux terminé !
         </h1>
-        <p className="text-[17px] mt-3 max-w-xs" style={{ color: EDL_COLORS.text2 }}>
+        <p className={`text-[17px] mt-3 max-w-xs ${t.textSecondary}`}>
           Le document a été envoyé par email aux deux parties.
         </p>
       </div>
@@ -170,21 +170,20 @@ export default function DonePage() {
       {/* Signature recap */}
       {(landlordSignedDate || tenantSignedDate) && (
         <div
-          className="w-full max-w-sm rounded-2xl p-4 mb-4 space-y-2"
-          style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
+          className={`w-full max-w-sm rounded-2xl p-4 mb-4 space-y-2 ${t.bgCard} border ${t.border}`}
         >
           {landlordSignedDate && (
             <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} color={EDL_COLORS.green} />
-              <span className="text-[14px]" style={{ color: EDL_COLORS.text2 }}>
+              <CheckCircle2 size={16} color={t.green} />
+              <span className={`text-[14px] ${t.textSecondary}`}>
                 Bailleur signé le {landlordSignedDate}
               </span>
             </div>
           )}
           {tenantSignedDate && (
             <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} color={EDL_COLORS.green} />
-              <span className="text-[14px]" style={{ color: EDL_COLORS.text2 }}>
+              <CheckCircle2 size={16} color={t.green} />
+              <span className={`text-[14px] ${t.textSecondary}`}>
                 Locataire signé le {tenantSignedDate}
               </span>
             </div>
@@ -193,17 +192,11 @@ export default function DonePage() {
       )}
 
       {/* 10-day legal banner */}
-      <div
-        className="w-full max-w-sm flex gap-3 p-4 rounded-xl mb-4"
-        style={{
-          background: `${EDL_COLORS.blue}10`,
-          border: `1px solid ${EDL_COLORS.blue}30`,
-        }}
-      >
-        <Info size={18} color={EDL_COLORS.blue} className="shrink-0 mt-0.5" />
-        <div className="text-[12px] leading-relaxed" style={{ color: EDL_COLORS.text2 }}>
+      <div className={`w-full max-w-sm flex gap-3 p-4 rounded-xl mb-4 ${t.legalBannerBg}`}>
+        <Info size={18} color={t.blue} className="shrink-0 mt-0.5" />
+        <div className={`text-[12px] leading-relaxed ${t.textSecondary}`}>
           {isWithin10Days ? (
-            <>Le locataire dispose de <strong style={{ color: EDL_COLORS.text }}>{daysRemaining} jour{daysRemaining > 1 ? 's' : ''}</strong> pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989).</>
+            <>Le locataire dispose de <strong className={t.textPrimary}>{daysRemaining} jour{daysRemaining > 1 ? 's' : ''}</strong> pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989).</>
           ) : (
             <>Le délai de 10 jours pour signaler des défauts est expiré.</>
           )}
@@ -219,9 +212,9 @@ export default function DonePage() {
               onClick={() => setShowAmendmentForm(true)}
               className="w-full py-3 rounded-xl text-[15px] font-semibold flex items-center justify-center gap-2 mb-3"
               style={{
-                background: `${EDL_COLORS.blue}10`,
-                color: EDL_COLORS.blue,
-                border: `1px solid ${EDL_COLORS.blue}30`,
+                background: `${t.blue}10`,
+                color: t.blue,
+                border: `1px solid ${t.blue}30`,
               }}
             >
               <AlertTriangle size={16} />
@@ -232,10 +225,9 @@ export default function DonePage() {
           {/* Amendment form */}
           {showAmendmentForm && (
             <div
-              className="rounded-xl p-4 mb-3 space-y-3"
-              style={{ background: EDL_COLORS.card, border: `1px solid ${EDL_COLORS.border}` }}
+              className={`rounded-xl p-4 mb-3 space-y-3 ${t.bgCard} border ${t.border}`}
             >
-              <p className="text-[13px] font-medium" style={{ color: EDL_COLORS.text }}>
+              <p className={`text-[13px] font-medium ${t.textPrimary}`}>
                 Décrivez le défaut constaté
               </p>
               <textarea
@@ -244,26 +236,20 @@ export default function DonePage() {
                 placeholder="Ex: Fissure non visible derrière le meuble de la chambre..."
                 rows={3}
                 maxLength={500}
-                className="w-full text-[14px] border rounded-lg p-3 resize-none focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: EDL_COLORS.border,
-                  color: EDL_COLORS.text,
-                  background: 'transparent',
-                }}
+                className={`w-full text-[14px] border rounded-lg p-3 resize-none focus:outline-none focus:ring-2 ${t.textPrimary} ${t.border} bg-transparent`}
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSubmitAmendment}
                   disabled={isSubmittingAmendment || !amendmentText.trim()}
                   className="flex-1 py-2.5 rounded-lg text-[14px] font-semibold text-white disabled:opacity-50"
-                  style={{ background: EDL_COLORS.blue }}
+                  style={{ background: t.blue }}
                 >
                   {isSubmittingAmendment ? 'Envoi...' : 'Envoyer'}
                 </button>
                 <button
                   onClick={() => { setShowAmendmentForm(false); setAmendmentText(''); }}
-                  className="px-4 py-2.5 rounded-lg text-[14px]"
-                  style={{ color: EDL_COLORS.text3 }}
+                  className={`px-4 py-2.5 rounded-lg text-[14px] ${t.textMuted}`}
                 >
                   Annuler
                 </button>
@@ -274,7 +260,7 @@ export default function DonePage() {
           {/* Amendments list */}
           {amendments.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[13px] font-medium mb-2" style={{ color: EDL_COLORS.text2 }}>
+              <p className={`text-[13px] font-medium mb-2 ${t.textSecondary}`}>
                 Demandes de rectification ({amendments.length})
               </p>
               {amendments.map((a) => (
@@ -282,37 +268,37 @@ export default function DonePage() {
                   key={a.id}
                   className="rounded-xl p-3 space-y-2"
                   style={{
-                    background: a.status === 'PENDING' ? `${EDL_COLORS.blue}08` : EDL_COLORS.card,
+                    background: a.status === 'PENDING' ? `${t.blue}08` : 'white',
                     border: `1px solid ${
-                      a.status === 'ACCEPTED' ? `${EDL_COLORS.green}40`
+                      a.status === 'ACCEPTED' ? `${t.green}40`
                       : a.status === 'REJECTED' ? '#ef444440'
-                      : EDL_COLORS.border
+                      : '#e5e7eb'
                     }`,
                   }}
                 >
-                  <p className="text-[13px]" style={{ color: EDL_COLORS.text }}>
+                  <p className={`text-[13px] ${t.textPrimary}`}>
                     {a.description}
                   </p>
                   <div className="flex items-center justify-between">
                     <span
                       className="text-[11px] px-2 py-0.5 rounded-full font-medium"
                       style={{
-                        background: a.status === 'ACCEPTED' ? `${EDL_COLORS.green}20`
+                        background: a.status === 'ACCEPTED' ? `${t.green}20`
                           : a.status === 'REJECTED' ? '#ef444420'
-                          : `${EDL_COLORS.blue}15`,
-                        color: a.status === 'ACCEPTED' ? EDL_COLORS.green
+                          : `${t.blue}15`,
+                        color: a.status === 'ACCEPTED' ? t.green
                           : a.status === 'REJECTED' ? '#ef4444'
-                          : EDL_COLORS.blue,
+                          : t.blue,
                       }}
                     >
                       {a.status === 'PENDING' ? 'En attente' : a.status === 'ACCEPTED' ? 'Acceptée' : 'Refusée'}
                     </span>
-                    <span className="text-[11px]" style={{ color: EDL_COLORS.text3 }}>
+                    <span className={`text-[11px] ${t.textMuted}`}>
                       {new Date(a.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                   {a.responseNote && (
-                    <p className="text-[12px] italic" style={{ color: EDL_COLORS.text3 }}>
+                    <p className={`text-[12px] italic ${t.textMuted}`}>
                       Réponse : {a.responseNote}
                     </p>
                   )}
@@ -323,7 +309,7 @@ export default function DonePage() {
                         onClick={() => handleRespondAmendment(a.id, 'ACCEPTED')}
                         disabled={respondingId === a.id}
                         className="flex-1 py-2 rounded-lg text-[13px] font-medium text-white flex items-center justify-center gap-1"
-                        style={{ background: EDL_COLORS.green }}
+                        style={{ background: t.green }}
                       >
                         <Check size={14} /> Accepter
                       </button>
@@ -350,8 +336,7 @@ export default function DonePage() {
             href={inspection.pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 rounded-2xl text-[18px] font-bold flex items-center justify-center gap-2"
-            style={{ background: EDL_COLORS.accent, color: '#000' }}
+            className={`w-full py-4 rounded-2xl text-[18px] font-bold flex items-center justify-center gap-2 ${t.accentBg} text-black`}
           >
             <FileText size={20} />
             Voir le PDF
@@ -361,12 +346,8 @@ export default function DonePage() {
         <button
           onClick={handleResendEmail}
           disabled={isSendingEmail || emailSent}
-          className="w-full py-4 rounded-2xl text-[18px] font-bold flex items-center justify-center gap-2"
-          style={{
-            background: emailSent ? `${EDL_COLORS.green}20` : EDL_COLORS.card,
-            color: emailSent ? EDL_COLORS.green : EDL_COLORS.text,
-            border: `1px solid ${emailSent ? `${EDL_COLORS.green}40` : EDL_COLORS.border}`,
-          }}
+          className={`w-full py-4 rounded-2xl text-[18px] font-bold flex items-center justify-center gap-2 ${t.bgCard} ${emailSent ? '' : `border ${t.border}`} ${emailSent ? '' : t.textPrimary}`}
+          style={emailSent ? { background: `${t.green}20`, color: t.green, border: `1px solid ${t.green}40` } : undefined}
         >
           {isSendingEmail ? (
             <Loader2 size={20} className="animate-spin" />
@@ -385,8 +366,7 @@ export default function DonePage() {
 
         <button
           onClick={() => router.push('/dashboard')}
-          className="w-full py-4 rounded-2xl text-[17px] font-bold flex items-center justify-center gap-2"
-          style={{ color: EDL_COLORS.text3 }}
+          className={`w-full py-4 rounded-2xl text-[17px] font-bold flex items-center justify-center gap-2 ${t.textMuted}`}
         >
           Retour au tableau de bord
           <ArrowRight size={18} />

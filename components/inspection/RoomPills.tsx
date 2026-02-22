@@ -7,7 +7,7 @@ import {
   Warehouse, CircleParking, Car, Package, ArrowLeftRight,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { EDL_COLORS } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import type { InspectionRoomType } from '@prisma/client';
 
 const ROOM_ICONS: Record<InspectionRoomType, LucideIcon> = {
@@ -62,10 +62,7 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
   }, [activeRoomId]);
 
   return (
-    <div
-      className="flex items-center gap-2 flex-shrink-0"
-      style={{ background: EDL_COLORS.bg }}
-    >
+    <div className={`flex items-center gap-2 shrink-0 ${t.pillContainer}`}>
       <div
         ref={scrollRef}
         className="flex-1 flex gap-2 px-4 py-2.5 overflow-x-auto no-scrollbar"
@@ -74,15 +71,11 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
         const isActive = room.id === activeRoomId;
         const isDone = room.isCompleted;
 
-        let bg: string = EDL_COLORS.card2;
-        let textColor: string = EDL_COLORS.text3;
-
+        let pillClass: string = t.pillDefault;
         if (isActive) {
-          bg = EDL_COLORS.accent;
-          textColor = '#fff';
+          pillClass = t.pillActive;
         } else if (isDone) {
-          bg = `${EDL_COLORS.green}20`;
-          textColor = EDL_COLORS.green;
+          pillClass = t.pillCompleted;
         }
 
         return (
@@ -90,8 +83,7 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
             key={room.id}
             ref={isActive ? activeRef : undefined}
             onClick={() => onRoomSelect(room.id)}
-            className="flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-2xl text-[13px] font-medium whitespace-nowrap"
-            style={{ background: bg, color: textColor }}
+            className={`shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-2xl text-[13px] font-medium whitespace-nowrap ${pillClass}`}
           >
             {React.createElement(ROOM_ICONS[room.roomType] || Package, { size: 22 })}
             <span className="flex items-center gap-1">{room.name}{isDone && !isActive && <Check size={12} />}</span>
@@ -102,10 +94,9 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
       {onClose && (
         <button
           onClick={onClose}
-          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center mr-3 active:scale-95"
-          style={{ background: EDL_COLORS.card2 }}
+          className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center mr-3 active:scale-95 bg-gray-200"
         >
-          <X size={18} color={EDL_COLORS.text3} />
+          <X size={18} className={t.btnClose} />
         </button>
       )}
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DEGRADATION_TYPES, EDL_COLORS } from '@/lib/inspection';
+import { DEGRADATION_TYPES } from '@/lib/inspection';
+import { EDL_THEME as t } from '@/lib/inspection-theme';
 import CameraCapture from './CameraCapture';
 import AudioRecorder from './AudioRecorder';
 import InspectionBtn from './InspectionBtn';
@@ -41,12 +42,12 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
   // Phase TYPE — Select degradation types
   if (phase === 'TYPE') {
     return (
-      <div className="flex flex-col h-full" style={{ background: EDL_COLORS.bg }}>
+      <div className={`flex flex-col h-full ${t.bgPage}`}>
         <div className="flex-1 px-5 pt-6 overflow-y-auto">
-          <div className="text-[26px] font-bold mb-1 tracking-tight" style={{ color: EDL_COLORS.text }}>
+          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
             Type de dégradation
           </div>
-          <div className="text-[17px] mb-5" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[17px] mb-5 ${t.textSecondary}`}>
             {elementName} — Sélectionnez un ou plusieurs types
           </div>
 
@@ -57,12 +58,9 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
                 <button
                   key={type}
                   onClick={() => toggleType(type)}
-                  className="px-5 py-3 rounded-2xl text-[17px] font-bold active:scale-95"
-                  style={{
-                    background: isSelected ? EDL_COLORS.orange : EDL_COLORS.card2,
-                    color: isSelected ? '#000' : EDL_COLORS.text2,
-                    border: `2px solid ${isSelected ? EDL_COLORS.orange : EDL_COLORS.border}`,
-                  }}
+                  className={`px-5 py-3 rounded-2xl text-[17px] font-bold active:scale-95 ${
+                    isSelected ? t.degradChipSelected : t.degradChipDefault
+                  }`}
                 >
                   {type}
                 </button>
@@ -84,7 +82,7 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
   // Phase CLOSEUP — Take close-up photo
   if (phase === 'CLOSEUP') {
     return (
-      <div className="flex flex-col h-full" style={{ background: EDL_COLORS.bg }}>
+      <div className={`flex flex-col h-full ${t.cameraBg}`}>
         <CameraCapture
           label="Plan serré"
           instruction="Zoomez sur la dégradation"
@@ -95,7 +93,7 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
             setPhase('AUDIO');
           }}
           onCancel={() => setPhase('TYPE')}
-          accentColor={EDL_COLORS.orange}
+          accentColor={t.orange}
         />
       </div>
     );
@@ -104,12 +102,12 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
   // Phase AUDIO — Dictate or type observation
   if (phase === 'AUDIO') {
     return (
-      <div className="flex flex-col h-full" style={{ background: EDL_COLORS.bg }}>
+      <div className={`flex flex-col h-full ${t.bgPage}`}>
         <div className="flex-1 px-5 pt-6 overflow-y-auto">
-          <div className="text-[26px] font-bold mb-1 tracking-tight" style={{ color: EDL_COLORS.text }}>
+          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
             Observation
           </div>
-          <div className="text-[17px] mb-5" style={{ color: EDL_COLORS.text2 }}>
+          <div className={`text-[17px] mb-5 ${t.textSecondary}`}>
             {elementName} — {selectedTypes.join(', ')}
           </div>
 
