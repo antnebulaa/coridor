@@ -11,7 +11,7 @@ import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
 import { EDL_COLORS, ROOM_TYPE_CONFIG, AI_TIPS } from '@/lib/inspection';
 import type { InspectionRoomType } from '@prisma/client';
 import {
-  Plus, CheckCircle2, ChevronRight,
+  Plus, CheckCircle2, ChevronRight, LogOut,
   DoorOpen, ArrowLeftRight, Sofa, BedDouble, CookingPot, ShowerHead,
   Droplets, WashingMachine, Monitor, Shirt, Flower2, Sun,
   Warehouse, CircleParking, Car, Package,
@@ -208,6 +208,16 @@ export default function RoomsHubPage() {
             Ajouter une pièce
           </button>
         )}
+
+        {/* Save and exit */}
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="w-full mt-6 mb-4 py-3 flex items-center justify-center gap-2 text-[15px] font-medium rounded-xl active:scale-[0.97] transition"
+          style={{ color: EDL_COLORS.text3 }}
+        >
+          <LogOut size={16} />
+          Reprendre plus tard
+        </button>
       </div>
 
       <InspectionBtn onClick={() => router.push(`/inspection/${inspectionId}/recap`)} disabled={!allCompleted}>
