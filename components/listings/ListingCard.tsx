@@ -233,7 +233,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0 mt-1 md:-mt-1">
-                                    <div className="font-medium text-base  text-neutral-600  line-clamp-1">
+                                    <div className="font-medium text-base  text-neutral-900  line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                                             ? t('privateRoom')
                                             : data.category}

@@ -7,16 +7,15 @@ import { useRouter } from 'next/navigation';
 import {
     Scale,
     Building2,
-    Droplets,
     Warehouse,
     MapPin,
-    ShieldCheck,
-    Loader2,
     Info,
+    CheckCircle2,
 } from 'lucide-react';
 import { SafeListing } from '@/types';
 import EditSectionFooter from './EditSectionFooter';
 import CustomToast from '@/components/ui/CustomToast';
+import { checkZoneTendue } from '@/lib/zoneTendue';
 
 interface LegalInfoSectionProps {
     listing: SafeListing;
@@ -39,9 +38,6 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
     // --- Regime juridique ---
     const [legalRegime, setLegalRegime] = useState(property?.legalRegime || '');
 
-    // --- Production d'eau chaude ---
-    const [waterHeatingSystem, setWaterHeatingSystem] = useState(property?.waterHeatingSystem || '');
-
     // --- Annexes ---
     const [hasCave, setHasCave] = useState(property?.hasCave ?? false);
     const [caveReference, setCaveReference] = useState(property?.caveReference || '');
@@ -50,19 +46,14 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
     const [hasGarage, setHasGarage] = useState(property?.hasGarage ?? false);
     const [garageReference, setGarageReference] = useState(property?.garageReference || '');
 
-    // --- Zone tendue ---
-    const [isZoneTendue, setIsZoneTendue] = useState(property?.isZoneTendue ?? false);
+    // --- Zone tendue (auto-detected) ---
+    const detectedZoneTendue = checkZoneTendue(property?.zipCode);
+    const isZoneTendue = detectedZoneTendue || (property?.isZoneTendue ?? false);
     const [referenceRent, setReferenceRent] = useState<number | ''>(property?.referenceRent ?? '');
     const [referenceRentIncreased, setReferenceRentIncreased] = useState<number | ''>(property?.referenceRentIncreased ?? '');
     const [rentSupplement, setRentSupplement] = useState<number | ''>(property?.rentSupplement ?? '');
     const [previousRent, setPreviousRent] = useState<number | ''>(property?.previousRent ?? '');
     const [previousRentDate, setPreviousRentDate] = useState(toInputDate((property as any)?.previousRentDate));
-
-    // --- Diagnostics complementaires ---
-    const [leadDiagnosticDate, setLeadDiagnosticDate] = useState(toInputDate((property as any)?.leadDiagnosticDate));
-    const [leadDiagnosticResult, setLeadDiagnosticResult] = useState((property as any)?.leadDiagnosticResult || '');
-    const [asbestosDiagnosticDate, setAsbestosDiagnosticDate] = useState(toInputDate((property as any)?.asbestosDiagnosticDate));
-    const [asbestosDiagnosticResult, setAsbestosDiagnosticResult] = useState((property as any)?.asbestosDiagnosticResult || '');
 
     // --- Qualite du bailleur ---
     const [ownerLegalStatus, setOwnerLegalStatus] = useState(property?.ownerLegalStatus || '');
@@ -75,7 +66,6 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
         try {
             await axios.patch(`/api/properties/${propertyId}/legal`, {
                 legalRegime: legalRegime || null,
-                waterHeatingSystem: waterHeatingSystem || null,
                 hasCave,
                 caveReference: caveReference || null,
                 hasParking,
@@ -88,10 +78,6 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                 rentSupplement: rentSupplement || null,
                 previousRent: previousRent || null,
                 previousRentDate: previousRentDate || null,
-                leadDiagnosticDate: leadDiagnosticDate || null,
-                leadDiagnosticResult: leadDiagnosticResult || null,
-                asbestosDiagnosticDate: asbestosDiagnosticDate || null,
-                asbestosDiagnosticResult: asbestosDiagnosticResult || null,
                 ownerLegalStatus: ownerLegalStatus || null,
                 ownerSiren: ownerSiren || null,
                 ownerSiege: ownerSiege || null,
@@ -118,10 +104,9 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
         }
     }, [
         propertyId, router,
-        legalRegime, waterHeatingSystem,
+        legalRegime,
         hasCave, caveReference, hasParking, parkingReference, hasGarage, garageReference,
         isZoneTendue, referenceRent, referenceRentIncreased, rentSupplement, previousRent, previousRentDate,
-        leadDiagnosticDate, leadDiagnosticResult, asbestosDiagnosticDate, asbestosDiagnosticResult,
         ownerLegalStatus, ownerSiren, ownerSiege,
     ]);
 
@@ -148,31 +133,6 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                         <option value="">-- Selectionner --</option>
                         <option value="COPROPRIETE">Copropriete</option>
                         <option value="MONOPROPRIETE">Monopropriete</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* --- Production d'eau chaude --- */}
-            <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                    <Droplets size={18} className="text-neutral-600" />
-                    <h3 className="font-medium text-neutral-800">Production d&apos;eau chaude</h3>
-                </div>
-                <div>
-                    <label className={labelClass}>Systeme de production</label>
-                    <select
-                        value={waterHeatingSystem}
-                        onChange={(e) => setWaterHeatingSystem(e.target.value)}
-                        disabled={isLoading}
-                        className={selectClass}
-                    >
-                        <option value="">-- Selectionner --</option>
-                        <option value="IND_ELEC">Individuel electrique</option>
-                        <option value="COL_GAZ">Collectif gaz</option>
-                        <option value="COL_FIO">Collectif fioul</option>
-                        <option value="IND_GAZ">Individuel gaz</option>
-                        <option value="COL">Collectif (autre)</option>
-                        <option value="IND">Individuel (autre)</option>
                     </select>
                 </div>
             </div>
@@ -294,23 +254,20 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                     <h3 className="font-medium text-neutral-800">Zone tendue</h3>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => setIsZoneTendue(!isZoneTendue)}
-                        disabled={isLoading}
-                        className={`relative w-11 h-6 rounded-full transition-colors ${
-                            isZoneTendue ? 'bg-neutral-900' : 'bg-neutral-300'
-                        }`}
-                    >
-                        <span
-                            className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                                isZoneTendue ? 'translate-x-[22px]' : 'translate-x-[2px]'
-                            }`}
-                        />
-                    </button>
-                    <span className="text-sm text-neutral-700">Ce bien est situe en zone tendue</span>
-                </div>
+                {detectedZoneTendue ? (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                        <CheckCircle2 size={16} className="text-green-600 shrink-0" />
+                        <span className="text-sm font-medium text-green-700">
+                            Zone tendue detectee automatiquement
+                        </span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg">
+                        <span className="text-sm text-neutral-500">
+                            Ce bien n&apos;est pas situe en zone tendue
+                        </span>
+                    </div>
+                )}
 
                 {isZoneTendue && (
                     <div className="space-y-4 pt-2">
@@ -384,78 +341,6 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                         </div>
                     </div>
                 )}
-            </div>
-
-            {/* --- Diagnostics complementaires --- */}
-            <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                    <ShieldCheck size={18} className="text-neutral-600" />
-                    <h3 className="font-medium text-neutral-800">Diagnostics complementaires</h3>
-                </div>
-
-                {/* Plomb (CREP) */}
-                <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-neutral-600">Plomb (CREP)</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className={labelClass}>Date du diagnostic</label>
-                            <input
-                                type="date"
-                                value={leadDiagnosticDate}
-                                onChange={(e) => setLeadDiagnosticDate(e.target.value)}
-                                disabled={isLoading}
-                                className={inputClass}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Resultat</label>
-                            <select
-                                value={leadDiagnosticResult}
-                                onChange={(e) => setLeadDiagnosticResult(e.target.value)}
-                                disabled={isLoading}
-                                className={selectClass}
-                            >
-                                <option value="">-- Selectionner --</option>
-                                <option value="POSITIF">Positif (presence de plomb)</option>
-                                <option value="NEGATIF">Negatif (absence de plomb)</option>
-                                <option value="NON_APPLICABLE">Non applicable</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <hr className="border-neutral-200" />
-
-                {/* Amiante */}
-                <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-neutral-600">Amiante</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className={labelClass}>Date du diagnostic</label>
-                            <input
-                                type="date"
-                                value={asbestosDiagnosticDate}
-                                onChange={(e) => setAsbestosDiagnosticDate(e.target.value)}
-                                disabled={isLoading}
-                                className={inputClass}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Resultat</label>
-                            <select
-                                value={asbestosDiagnosticResult}
-                                onChange={(e) => setAsbestosDiagnosticResult(e.target.value)}
-                                disabled={isLoading}
-                                className={selectClass}
-                            >
-                                <option value="">-- Selectionner --</option>
-                                <option value="POSITIF">Positif (presence d&apos;amiante)</option>
-                                <option value="NEGATIF">Negatif (absence d&apos;amiante)</option>
-                                <option value="NON_APPLICABLE">Non applicable</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* --- Qualite du bailleur --- */}

@@ -23,7 +23,7 @@ import RoomsConfigSection from "./components/RoomsConfigSection";
 import LeaseTypeSection from "./components/LeaseTypeSection";
 import LegalInfoSection from "./components/LegalInfoSection";
 import LeaseConditionsSection from "./components/LeaseConditionsSection";
-import DiagnosticsSection from "@/components/properties/DiagnosticsSection";
+import EnergyDiagnosticsSection from "./components/EnergyDiagnosticsSection";
 import EdlSection from "./components/EdlSection";
 import DepositSection from "./components/DepositSection";
 import { sidebarLinks } from "./constants";
@@ -57,7 +57,7 @@ export type SectionType =
     | 'expenses'
     | 'legalInfo'
     | 'leaseConditions'
-    | 'diagnostics'
+    | 'energyDiagnostics'
     | 'edl'
     | 'deposit';
 
@@ -141,7 +141,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         expenses: 'Dépenses & Charges',
         legalInfo: 'Informations Legales',
         leaseConditions: 'Conditions du Bail',
-        diagnostics: 'Diagnostics Immobiliers',
+        energyDiagnostics: 'Énergie & Diagnostics',
         edl: 'États des lieux',
         deposit: 'Dépôt de garantie',
     };
@@ -193,23 +193,8 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                 return <LegalInfoSection listing={listing} />;
             case 'leaseConditions':
                 return <LeaseConditionsSection listing={listing} />;
-            case 'diagnostics':
-                return (
-                    <DiagnosticsSection
-                        propertyId={listing.rentalUnit?.property?.id || ''}
-                        initialData={{
-                            dpe: (listing as any).dpe,
-                            dpeDate: (listing.rentalUnit?.property as any)?.dpeDate,
-                            dpeExpiryDate: (listing.rentalUnit?.property as any)?.dpeExpiryDate,
-                            electricalDiagnosticDate: (listing.rentalUnit?.property as any)?.electricalDiagnosticDate,
-                            electricalInstallYear: (listing.rentalUnit?.property as any)?.electricalInstallYear,
-                            gasDiagnosticDate: (listing.rentalUnit?.property as any)?.gasDiagnosticDate,
-                            gasInstallYear: (listing.rentalUnit?.property as any)?.gasInstallYear,
-                            hasGasInstallation: (listing.rentalUnit?.property as any)?.hasGasInstallation,
-                            erpDate: (listing.rentalUnit?.property as any)?.erpDate,
-                        }}
-                    />
-                );
+            case 'energyDiagnostics':
+                return <EnergyDiagnosticsSection listing={listing} />;
             case 'edl':
                 return <EdlSection listing={listing} />;
             case 'deposit':

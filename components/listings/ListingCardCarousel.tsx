@@ -114,23 +114,25 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                             draggable={false}
                         />
 
-                        {/* Label Badge */}
-                        {image.label && (
-                            <div className={`
-                                absolute 
-                                z-10
-                                pointer-events-none
-                                ${centeredLabel
-                                    ? 'bottom-20 left-0 right-0 text-center text-white text-lg font-medium drop-shadow-md'
-                                    : 'bottom-3 left-3 bg-white/90 backdrop-blur-md text-neutral-900 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm'
-                                }
-                            `}>
-                                {image.label}
-                            </div>
-                        )}
                     </div>
                 ))}
             </div>
+
+            {/* Room Label Pill - outside scroll container so it's above overlays */}
+            {images[currentIndex]?.label && (
+                <div className={`
+                    absolute
+                    z-20
+                    pointer-events-none
+                    ${centeredLabel
+                        ? 'bottom-18 right-6 text-sm'
+                        : 'bottom-7 right-3 text-xs'
+                    }
+                    bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-medium
+                `}>
+                    {images[currentIndex].label}
+                </div>
+            )}
 
             {/* Navigation Arrows - Only show if more than 1 image */}
             {images.length > 1 && (

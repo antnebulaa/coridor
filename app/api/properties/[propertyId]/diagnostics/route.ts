@@ -41,6 +41,13 @@ export async function PATCH(
         gasInstallYear,
         hasGasInstallation,
         erpDate,
+        // Energy fields (moved from CategorySection)
+        waterHeatingSystem,
+        // Diagnostic fields (moved from LegalInfoSection)
+        leadDiagnosticDate,
+        leadDiagnosticResult,
+        asbestosDiagnosticDate,
+        asbestosDiagnosticResult,
     } = body;
 
     // Auto-compute DPE expiry date (date + 10 years)
@@ -63,6 +70,11 @@ export async function PATCH(
                 gasInstallYear: gasInstallYear ? parseInt(String(gasInstallYear)) : null,
                 hasGasInstallation: Boolean(hasGasInstallation),
                 erpDate: erpDate ? new Date(erpDate) : null,
+                ...(waterHeatingSystem !== undefined && { waterHeatingSystem: waterHeatingSystem || null }),
+                ...(leadDiagnosticDate !== undefined && { leadDiagnosticDate: leadDiagnosticDate ? new Date(leadDiagnosticDate) : null }),
+                ...(leadDiagnosticResult !== undefined && { leadDiagnosticResult: leadDiagnosticResult || null }),
+                ...(asbestosDiagnosticDate !== undefined && { asbestosDiagnosticDate: asbestosDiagnosticDate ? new Date(asbestosDiagnosticDate) : null }),
+                ...(asbestosDiagnosticResult !== undefined && { asbestosDiagnosticResult: asbestosDiagnosticResult || null }),
             },
         });
 

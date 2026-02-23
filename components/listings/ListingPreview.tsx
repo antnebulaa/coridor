@@ -124,11 +124,14 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
     }, [listing.surface, currentUser?.measurementSystem]);
 
     const titleDisplay = useMemo(() => {
-        if (listing.category && surfaceDisplay) {
-            return `${listing.category} de ${surfaceDisplay}`;
+        const label = listing.rentalUnit?.type === 'PRIVATE_ROOM'
+            ? 'Chambre privée'
+            : listing.category;
+        if (label && surfaceDisplay) {
+            return `${label} de ${surfaceDisplay}`;
         }
         return listing.title;
-    }, [listing.category, surfaceDisplay, listing.title]);
+    }, [listing.category, listing.rentalUnit?.type, surfaceDisplay, listing.title]);
 
 
 

@@ -23,7 +23,7 @@ export const sidebarLinks: Record<TabType, { id: string; label: string; icon: an
         { id: 'furniture', label: 'Équipements', icon: Armchair },
         { id: 'photos', label: 'Gestion des photos', icon: Camera },
         { id: 'legalInfo', label: 'Informations Legales', icon: Scale },
-        { id: 'diagnostics', label: 'Diagnostics Immobiliers', icon: Thermometer },
+        { id: 'energyDiagnostics', label: 'Énergie & Diagnostics', icon: Thermometer },
     ],
     location: [
         { id: 'leaseType', label: 'Mode de location', icon: Home },
