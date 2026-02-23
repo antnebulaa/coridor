@@ -115,34 +115,37 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
 
                 <hr className="border-neutral-100" />
 
-                {/* Status Section */}
-                <div className="flex flex-col gap-0">
-                    <div className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">
-                        {t('status.label')}
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2 font-medium text-lg text-neutral-800">
-                            <div className={`w-3.5 h-3.5 rounded-full ${isOccupied ? 'bg-green-600' : hasPendingSignature ? 'bg-blue-500' : 'bg-orange-500'}`}></div>
+                {/* Status + Rent Section */}
+                <div className="flex justify-between items-center">
+                    {/* Left: Status */}
+                    <div>
+                        <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-0.5">
+                            {t('status.label')}
+                        </div>
+                        <div className="flex items-center gap-2 font-medium text-[16px] text-neutral-800">
+                            <div className={`w-2.5 h-2.5 rounded-full ${isOccupied ? 'bg-green-600' : hasPendingSignature ? 'bg-blue-500' : 'bg-orange-500'}`} />
                             {isOccupied ? t('status.occupied') : hasPendingSignature ? 'Bail en signature' : t('status.vacant')}
                         </div>
-                        {isOccupied && nextFreeDate && (
-                            <div className="text-neutral-500 text-sm flex items-center gap-0">
-                                <span>→</span>
-                                {format(new Date(nextFreeDate), 'MMM yyyy', { locale: fr })}
-                            </div>
-                        )}
+                    </div>
+
+                    {/* Right: Rent */}
+                    <div className="text-right">
+                        <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-0.5">
+                            {t('rent.label')}
+                        </div>
+                        <div className="font-semibold text-[16px] text-neutral-800">
+                            {displayRent}€<span className="text-neutral-400 text-sm font-medium">/mois</span>
+                        </div>
                     </div>
                 </div>
 
-                <hr className="border-neutral-100" />
-
-                {/* Rent Section */}
-                <div className="flex flex-col gap-0">
-                    <div className="flex justify-between items-center">
-                        <div className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">
-                            {t('rent.label')}
+                {/* Rent actions */}
+                {isOccupied && activeLease && (
+                    <div className="flex items-center gap-3">
+                        <div className={`text-xs font-medium ${isRentPaid ? 'text-green-600' : 'text-orange-500'}`}>
+                            {isRentPaid ? t('rent.paid') : t('rent.late')}
                         </div>
-                        {isOccupied && activeLease && (
+                        <div className="flex items-center gap-1 ml-auto">
                             <div
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -154,8 +157,6 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
                                 <TrendingUp size={14} />
                                 {t('rent.review')}
                             </div>
-                        )}
-                        {isOccupied && activeLease && (
                             <div
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -167,24 +168,9 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
                                 <Scale size={14} />
                                 {t('rent.regularize')}
                             </div>
-                        )}
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                        <div className="font-medium text-neutral-800 text-xl">
-                            {displayRent}€ <span className="text-neutral-400 text-base font-medium"> </span>
                         </div>
-                        {isOccupied ? (
-                            <div className={`font-medium text-sm ${isRentPaid ? 'text-green-600' : 'text-orange-500'}`}>
-                                {isRentPaid ? t('rent.paid') : t('rent.late')}
-                            </div>
-                        ) : (
-                            <div className="font-medium text-sm text-neutral-400">
-                                {t('rent.noTenant')}
-                            </div>
-                        )}
                     </div>
-                </div>
+                )}
             </div>
         </>
     );

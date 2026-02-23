@@ -151,96 +151,77 @@ const PropertyColocationCard: React.FC<PropertyColocationCardProps> = ({
 
                 <hr className="border-neutral-100" />
 
-                {/* Status Section */}
-                <div className="flex flex-col gap-0">
-                    <div className="text-xs font-semibold text-purple-600 uppercase tracking-wide">
-                        {t('card.status.label')}
-                    </div>
-                    <div className="font-medium text-xl text-neutral-900">
-                        {occupiedCount} / {totalRooms} <span className="text-neutral-500 text-base font-medium">{t('colocation.rooms', { count: totalRooms, context: 'rent' })}</span>
-                    </div>
-                    <div className="flex gap-1.5">
-                        {roomStates.map((state) => (
-                            <div
-                                key={state.id}
-                                className={`w-3.5 h-3.5 rounded-full ${state.isOccupied ? 'bg-green-500' : state.hasPendingSignature ? 'bg-blue-500' : 'bg-neutral-200'}`}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                <hr className="border-neutral-100" />
-
-                {/* Rent Section */}
-                <div className="flex flex-col gap-1">
-                    <div className="flex justify-between items-center">
-                        <div className="text-xs font-semibold text-purple-600 uppercase tracking-wide">
-                            {t('card.rent.label')}
+                {/* Status + Rent Section */}
+                <div className="flex justify-between items-start">
+                    {/* Left: Status */}
+                    <div>
+                        <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-0.5">
+                            {t('card.status.label')}
                         </div>
-                        {canRevise && (
-                            <div
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setRevisionModalAppId(reviseableLease?.id || null);
-                                }}
-                                className="text-xs text-neutral-500 hover:text-neutral-800 flex items-center gap-1 cursor-pointer transition p-1 hover:bg-neutral-100 rounded"
-                                role="button"
-                            >
-                                <TrendingUp size={14} />
-                                {t('card.rent.review')}
-                            </div>
-                        )}
-                        {canRevise && (
-                            <div
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsRegularizationModalOpen(true);
-                                }}
-                                className="text-xs text-neutral-500 hover:text-neutral-800 flex items-center gap-1 cursor-pointer transition p-1 hover:bg-neutral-100 rounded"
-                                role="button"
-                            >
-                                <Scale size={14} />
-                                {t('card.rent.regularize')}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="font-medium text-neutral-900 text-xl">
-                        {totalCollectedRent} <span className="text-neutral-500 font-medium">/ {totalPotentialRent}€</span> <span className="text-neutral-500 text-base font-medium"> </span>
-                    </div>
-
-                    {/* Dots + Text Summary (Row) */}
-                    <div className="flex items-center gap-2">
-                        {/* Rent DOTS */}
+                        <div className="font-semibold text-[16px] text-neutral-900 mb-1">
+                            {occupiedCount} / {totalRooms} <span className="text-neutral-400 text-sm font-medium">{t('colocation.rooms', { count: totalRooms, context: 'rent' })}</span>
+                        </div>
                         <div className="flex gap-1.5">
                             {roomStates.map((state) => (
                                 <div
                                     key={state.id}
-                                    className={`w-3.5 h-3.5 rounded-full ${!state.isOccupied ? 'bg-neutral-200' :
-                                        (state.isRentPaid ? 'bg-green-500' : 'bg-orange-500')
-                                        }`}
+                                    className={`w-2.5 h-2.5 rounded-full ${state.isOccupied ? 'bg-green-500' : state.hasPendingSignature ? 'bg-blue-500' : 'bg-neutral-200'}`}
                                 />
                             ))}
                         </div>
+                    </div>
 
-                        {/* Text Summary */}
+                    {/* Right: Rent */}
+                    <div className="text-right">
+                        <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-0.5">
+                            {t('card.rent.label')}
+                        </div>
+                        <div className="font-semibold text-[16px] text-neutral-900">
+                            {totalCollectedRent}<span className="text-neutral-400 font-medium"> / {totalPotentialRent}€</span>
+                        </div>
                         {occupiedCount === 0 ? (
-                            <div className="text-xs font-medium text-neutral-400">
+                            <div className="text-xs font-medium text-neutral-400 mt-0.5">
                                 {t('colocation.empty')}
                             </div>
+                        ) : (totalPotentialRent - totalCollectedRent) > 0 ? (
+                            <div className="text-xs font-bold text-orange-500 mt-0.5">
+                                {totalPotentialRent - totalCollectedRent}€ {t('card.rent.late')}
+                            </div>
                         ) : (
-                            (totalPotentialRent - totalCollectedRent) > 0 ? (
-                                <div className="text-xs font-bold text-orange-500">
-                                    {totalPotentialRent - totalCollectedRent}€ {t('card.rent.late')}
-                                </div>
-                            ) : (
-                                <div className="text-xs font-bold text-green-600">
-                                    {t('card.rent.paid')}
-                                </div>
-                            )
+                            <div className="text-xs font-bold text-green-600 mt-0.5">
+                                {t('card.rent.paid')}
+                            </div>
                         )}
                     </div>
                 </div>
+
+                {/* Rent actions */}
+                {canRevise && (
+                    <div className="flex items-center gap-1 justify-end">
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setRevisionModalAppId(reviseableLease?.id || null);
+                            }}
+                            className="text-xs text-neutral-500 hover:text-neutral-800 flex items-center gap-1 cursor-pointer transition p-1 hover:bg-neutral-100 rounded"
+                            role="button"
+                        >
+                            <TrendingUp size={14} />
+                            {t('card.rent.review')}
+                        </div>
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsRegularizationModalOpen(true);
+                            }}
+                            className="text-xs text-neutral-500 hover:text-neutral-800 flex items-center gap-1 cursor-pointer transition p-1 hover:bg-neutral-100 rounded"
+                            role="button"
+                        >
+                            <Scale size={14} />
+                            {t('card.rent.regularize')}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

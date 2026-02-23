@@ -18,6 +18,7 @@ interface CameraCaptureProps {
   accentColor?: string;
   allowMultiple?: boolean;
   compressionOptions?: CompressionOptions;
+  initialThumbnails?: string[];
 }
 
 async function computeSHA256(file: File): Promise<string> {
@@ -73,6 +74,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   compressionOptions,
   accentColor = t.accent,
   allowMultiple = false,
+  initialThumbnails,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isProcessingRef = useRef(false);
@@ -80,7 +82,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [isValidated, setIsValidated] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
-  const [thumbnails, setThumbnails] = useState<string[]>([]);
+  const [thumbnails, setThumbnails] = useState<string[]>(initialThumbnails || []);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,7 +204,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   // Camera mode — show viewfinder UI (stays dark — it's a viewfinder)
   return (
-    <div className={`flex-1 flex flex-col px-4 ${t.cameraBg}`}>
+    <div className={`flex-1 flex flex-col px-4 py-2 ${t.cameraBg}`}>
       <div
         className="flex-1 flex flex-col items-center justify-center relative rounded-3xl overflow-hidden"
         style={{

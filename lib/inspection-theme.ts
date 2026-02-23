@@ -25,7 +25,7 @@ export const EDL_THEME = {
   // Textes
   textPrimary: "text-gray-900",            // Titres, texte principal
   textSecondary: "text-gray-500",          // Sous-titres, descriptions
-  textMuted: "text-gray-400",              // Texte tertiaire, placeholders
+  textMuted: "text-gray-500",              // Texte tertiaire, placeholders
   textOnAccent: "text-white",              // Texte sur bouton accent
   textOnDark: "text-white",               // Texte sur fond sombre (caméra)
 
@@ -96,7 +96,7 @@ export const EDL_THEME = {
   // ──────────────────────────────────────────────
 
   chipDefault: "bg-gray-100 text-gray-600 border border-gray-200",
-  chipSelected: "text-white border-2",     // + couleur spécifique ci-dessous
+  chipSelected: "text-white border-1",     // + couleur spécifique ci-dessous
 
   // Couleurs par niveau (fond quand sélectionné)
   conditionNew:         { bg: "bg-emerald-500", text: "text-white", color: "#16a34a", label: "Neuf" },
@@ -124,9 +124,9 @@ export const EDL_THEME = {
   // CARTES PIÈCES (Hub)
   // ──────────────────────────────────────────────
 
-  roomCardDefault: "bg-white border border-gray-200",
-  roomCardCompleted: "bg-emerald-50 border border-emerald-200",
-  roomCardIcon: "text-gray-400",
+  roomCardDefault: "bg-gray-100 border border-gray-200",
+  roomCardCompleted: "bg-emerald-100 border border-emerald-200",
+  roomCardIcon: "text-gray-500",
   roomCardIconCompleted: "text-emerald-500",
 
   // ──────────────────────────────────────────────
@@ -169,6 +169,15 @@ export const EDL_THEME = {
   signatureCanvasBg: "bg-white border-2 border-gray-300 rounded-xl",
   signatureDone: "bg-emerald-50 border border-emerald-300",
   signatureDoneText: "text-emerald-700",
+
+  // ──────────────────────────────────────────────
+  // STEP PILLS — Sub-navigation intra-pièce
+  // ──────────────────────────────────────────────
+
+  stepPillContainer: "bg-white border-b border-white",
+  stepPillActive: "bg-neutral-900 text-white",
+  stepPillDone: "bg-emerald-500 text-white",
+  stepPillTodo: "bg-gray-200 text-gray-500",
 
   // ──────────────────────────────────────────────
   // STEPPER / WIZARD (compteurs, étapes)

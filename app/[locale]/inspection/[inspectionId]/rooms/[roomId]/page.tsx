@@ -6,6 +6,8 @@ import { useRouter } from '@/i18n/navigation';
 import { useInspection, getEntryElement, getEntryRoomPhoto, computeEvolution } from '@/hooks/useInspection';
 import type { InspectionRoomWithElements } from '@/hooks/useInspection';
 import RoomPills from '@/components/inspection/RoomPills';
+import StepPills from '@/components/inspection/StepPills';
+import type { StepDef } from '@/components/inspection/StepPills';
 import CameraCapture from '@/components/inspection/CameraCapture';
 import ConditionChips from '@/components/inspection/ConditionChips';
 import NatureSelector from '@/components/inspection/NatureSelector';
@@ -52,7 +54,7 @@ function PhotoPreview({ src, alt, onRetake }: { src: string; alt: string; onReta
       {loaded && (
         <button
           onClick={onRetake}
-          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[15px] font-bold bg-black/70 text-white"
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[15px] font-semibold bg-black/70 text-white"
         >
           <RotateCcw size={16} />
           Reprendre
@@ -134,12 +136,56 @@ export default function RoomInspectionPage() {
     router.prefetch(`/inspection/${inspectionId}/rooms`);
   }, [currentRoomIndex, rooms, inspectionId, router]);
 
-  // Room intro animation — reset on room change
+  // Smart phase detection — only reset on room change, skip intro if data exists
+  const lastComputedRoomRef = useRef<string | null>(null);
   useEffect(() => {
-    setShowIntro(true);
+    if (lastComputedRoomRef.current === roomId) return;
+    lastComputedRoomRef.current = roomId;
+
+    if (!currentRoom) {
+      setShowIntro(true);
+      setPhase('OVERVIEW');
+      setCurrentSurfaceIndex(0);
+      return;
+    }
+
+    const hasOverviewPhotos = currentRoom.photos.length > 0;
+    const surfEls = currentRoom.elements.filter((e) => e.category !== 'EQUIPMENT');
+    const equipEls = currentRoom.elements.filter((e) => e.category === 'EQUIPMENT');
+
+    if (!hasOverviewPhotos) {
+      // Brand new room — show intro
+      setShowIntro(true);
+      setPhase('OVERVIEW');
+      setCurrentSurfaceIndex(0);
+      return;
+    }
+
+    // Room has data — skip intro, land on first incomplete step
+    setShowIntro(false);
+
+    // Check surfaces
+    for (let i = 0; i < SURFACE_ELEMENTS.length; i++) {
+      const el = surfEls[i];
+      if (!el?.condition) {
+        setPhase(el?.photos?.length ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO');
+        setCurrentSurfaceIndex(i);
+        return;
+      }
+    }
+
+    // Check equipment
+    const allEquipDone = equipEls.every((e) => e.condition || e.isAbsent);
+    if (!allEquipDone) {
+      setPhase('EQUIP');
+      setCurrentSurfaceIndex(0);
+      return;
+    }
+
+    // Everything done — show overview with thumbnails
     setPhase('OVERVIEW');
     setCurrentSurfaceIndex(0);
-  }, [roomId]);
+  }, [roomId, currentRoom]);
 
   // Auto-dismiss intro after 1s once room data is available
   useEffect(() => {
@@ -159,10 +205,65 @@ export default function RoomInspectionPage() {
     }, 600);
   }, [updateElement]);
 
+  // Step pills — compute status of each step
+  const steps: StepDef[] = useMemo(() => {
+    if (!currentRoom) return [];
+    const surfEls = currentRoom.elements.filter((e) => e.category !== 'EQUIPMENT');
+    const equipEls = currentRoom.elements.filter((e) => e.category === 'EQUIPMENT');
+
+    const overviewDone = currentRoom.photos.length > 0;
+    const isOverview = phase === 'OVERVIEW';
+    const isSurface = phase === 'SURFACE_PHOTO' || phase === 'SURFACE_QUALIFY';
+
+    const result: StepDef[] = [
+      {
+        key: 'overview',
+        label: 'Ensemble',
+        status: isOverview ? 'active' : overviewDone ? 'done' : 'todo',
+        completed: overviewDone,
+      },
+    ];
+
+    SURFACE_ELEMENTS.forEach((s, i) => {
+      const el = surfEls[i];
+      const isDone = el?.condition != null;
+      const isActive = isSurface && currentSurfaceIndex === i;
+      result.push({
+        key: `surface-${i}`,
+        label: s.name,
+        status: isActive ? 'active' : isDone ? 'done' : 'todo',
+        completed: isDone,
+      });
+    });
+
+    const allEquipDone = equipEls.every((e) => e.condition || e.isAbsent);
+    result.push({
+      key: 'equip',
+      label: 'Équip.',
+      status: phase === 'EQUIP' ? 'active' : allEquipDone ? 'done' : 'todo',
+      completed: allEquipDone,
+    });
+
+    return result;
+  }, [currentRoom, phase, currentSurfaceIndex]);
+
+  // Step pill click handler
+  const handleStepSelect = useCallback((stepKey: string) => {
+    if (stepKey === 'overview') {
+      setPhase('OVERVIEW');
+    } else if (stepKey === 'equip') {
+      setPhase('EQUIP');
+    } else if (stepKey.startsWith('surface-')) {
+      const idx = parseInt(stepKey.split('-')[1], 10);
+      setCurrentSurfaceIndex(idx);
+      setPhase('SURFACE_PHOTO');
+    }
+  }, []);
+
   if (!currentRoom) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className={t.textSecondary}>Chargement...</div>
+        <div className={`${t.textSecondary} text-[26px] font-semibold animate-pulse`}>Chargement...</div>
       </div>
     );
   }
@@ -193,7 +294,8 @@ export default function RoomInspectionPage() {
 
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <StepPills steps={steps} onStepSelect={handleStepSelect} />
 
         {/* EXIT mode: show entry photo as reference above camera */}
         {isExit && entryOverviewPhoto && (
@@ -214,8 +316,9 @@ export default function RoomInspectionPage() {
           label={isExit ? "Prenez la même photo qu'à l'entrée" : "Veuillez cadrer la pièce dans son ensemble"}
           instruction={isExit ? "Reproduisez le même angle" : "Mode paysage recommandé"}
           allowMultiple
-          doneLabel="Noter les surfaces"
+          doneLabel="Passer aux surfaces"
           compressionOptions={EDL_OVERVIEW_OPTIONS}
+          initialThumbnails={currentRoom.photos.map((p) => p.thumbnailUrl || p.url)}
           onCapture={async (url, thumbnailUrl, sha256) => {
             await addPhoto({
               type: 'OVERVIEW',
@@ -242,26 +345,8 @@ export default function RoomInspectionPage() {
     const surface = SURFACE_ELEMENTS[currentSurfaceIndex];
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
-
-        {/* Surface tabs */}
-        <div className={`flex px-4 pt-0 pb-4 gap-2.5 ${t.bgPage}`}>
-          {SURFACE_ELEMENTS.map((s, i) => {
-            const el = surfaceElements[i];
-            const isDone = el?.condition != null;
-            const isActive = i === currentSurfaceIndex;
-            const tabClass = isActive ? t.tabActive : isDone ? t.tabCompleted : t.tabDefault;
-            return (
-              <button
-                key={s.category}
-                onClick={() => { setCurrentSurfaceIndex(i); }}
-                className={`flex-1 py-2 rounded-2xl text-[16px] font-medium text-center ${tabClass}`}
-              >
-                {s.name} {isDone && !isActive ? <Check size={14} className="inline" /> : ''}
-              </button>
-            );
-          })}
-        </div>
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <StepPills steps={steps} onStepSelect={handleStepSelect} />
 
         <CameraCapture
           label={`Photographiez les ${surface.name.toLowerCase()}`}
@@ -269,6 +354,7 @@ export default function RoomInspectionPage() {
           allowMultiple
           doneLabel="Noter l'état"
           compressionOptions={EDL_DETAIL_OPTIONS}
+          initialThumbnails={currentSurface?.photos?.map((p) => p.thumbnailUrl || p.url) || []}
           onCapture={async (url, thumbnailUrl, sha256) => {
             if (currentSurface) {
               await addPhoto({
@@ -305,7 +391,8 @@ export default function RoomInspectionPage() {
 
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <StepPills steps={steps} onStepSelect={handleStepSelect} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {/* EXIT mode: split-screen photo comparison */}
@@ -352,7 +439,7 @@ export default function RoomInspectionPage() {
           )}
 
           {/* Nature selector */}
-          <div className="mb-5">
+          <div className="mb-12 pt-4">
             <div className={`text-[22px] font-medium mb-3 ${t.textPrimary}`}>
               Revêtement <span className={`font-medium ${t.textSecondary}`}>{surface.name}</span>
             </div>
@@ -489,15 +576,17 @@ export default function RoomInspectionPage() {
 
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <StepPills steps={steps} onStepSelect={handleStepSelect} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
+          <div className={`text-[28px] font-medium mb-1 tracking-tight ${t.textPrimary}`}>
             Équipements
           </div>
-          <div className={`text-[17px] mb-4 ${t.textSecondary}`}>
-            {currentRoom.name} — Qualifiez chaque équipement
+          <div className={`text-[21px] font-medium mb-8 ${t.textSecondary}`}>
+            {currentRoom.name}
           </div>
+          
 
           <InspectionAIBubble>{aiTip}</InspectionAIBubble>
 
@@ -640,13 +729,14 @@ export default function RoomInspectionPage() {
   if (phase === 'OBS') {
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <StepPills steps={steps} onStepSelect={handleStepSelect} />
 
-        <div className="flex-1 px-5 py-6">
+        <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className={`text-[28px] font-medium mb-1 tracking-tight ${t.textPrimary}`}>
             Observation générale
           </div>
-          <div className={`text-[22px] font-medium mb-8 ${t.textSecondary}`}>
+          <div className={`text-[21px] font-medium mb-8 ${t.textSecondary}`}>
             {currentRoom.name}
           </div>
           

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { DEGRADATION_TYPES } from '@/lib/inspection';
 import { EDL_THEME as t } from '@/lib/inspection-theme';
 import CameraCapture from './CameraCapture';
@@ -44,6 +45,13 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
     return (
       <div className={`flex flex-col h-full ${t.bgPage}`}>
         <div className="flex-1 px-5 pt-6 overflow-y-auto">
+          <button
+            onClick={onCancel}
+            className={`flex items-center gap-1.5 mb-4 text-[15px] font-medium ${t.btnBack}`}
+          >
+            <ArrowLeft size={18} />
+            Retour
+          </button>
           <div className={`text-[28px] font-medium mb-1 tracking-tight ${t.textPrimary}`}>
             Type de dégradation
           </div>
