@@ -152,6 +152,10 @@ model User {
   // --- État des Lieux ---
   inspectionsAsLandlord Inspection[] @relation("InspectionLandlord")
   inspectionsAsTenant   Inspection[] @relation("InspectionTenant")
+
+  // --- Dépôt de Garantie (badge proprio) ---
+  depositsTotal          Int @default(0)
+  depositsReturnedOnTime Int @default(0)
 }
 
 model TenantProfile {
@@ -388,6 +392,7 @@ model Property {
 
   // --- État des Lieux ---
   inspections         Inspection[]
+  vetusteGrid         VetusteGrid?
 
   @@index([ownerId])
 }
@@ -835,6 +840,10 @@ model RentalApplication {
 
   // --- État des Lieux ---
   inspections        Inspection[]
+  depositResolutions DepositResolution[]
+
+  // --- Dépôt de Garantie ---
+  securityDeposit    SecurityDeposit?
 
   @@index([listingId])
   @@index([candidateScopeId])
@@ -1810,6 +1819,8 @@ model Inspection {
   photos                InspectionPhoto[]
   furniture             InspectionFurniture[]
   amendments            InspectionAmendment[]
+  deductions            DepositDeduction[]
+  depositResolution     DepositResolution?
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -1892,6 +1903,7 @@ model InspectionElement {
 
   inspectionRoom        InspectionRoom @relation(fields: [inspectionRoomId], references: [id], onDelete: Cascade)
   photos                InspectionPhoto[]
+  deductions            DepositDeduction[]
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -1961,4 +1973,201 @@ model InspectionAmendment {
   updatedAt             DateTime @updatedAt
 
   @@index([inspectionId])
+}
+
+// ─── GRILLE DE VÉTUSTÉ ───
+
+model VetusteGrid {
+  id            String             @id @default(uuid())
+  propertyId    String             @unique
+  entries       VetusteGridEntry[]
+  property      Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model VetusteGridEntry {
+  id                 String      @id @default(uuid())
+  vetusteGridId      String
+  elementType        String      // "Peinture", "Parquet", "Moquette", "Robinetterie", etc.
+  lifespan           Int         // Durée de vie en années (ex: 10 pour peinture)
+  annualDepreciation Float       // % d'abattement par an (ex: 0.10 = 10%)
+  franchiseYears     Int         @default(0) // Années sans abattement (ex: 5 pour parquet massif)
+  installationDate   DateTime?   // Date d'installation (si connue)
+  vetusteGrid        VetusteGrid @relation(fields: [vetusteGridId], references: [id], onDelete: Cascade)
+
+  @@index([vetusteGridId])
+}
+
+// ─── RETENUES SUR DÉPÔT DE GARANTIE ───
+
+model DepositDeduction {
+  id               String    @id @default(uuid())
+  inspectionId     String    // EDL de sortie
+  elementId        String?   // Lien vers InspectionElement concerné
+  description      String    // "Trou mur salon", "Parquet rayé chambre"
+  repairCostCents  Int       // Coût de remise en état (estimé)
+  vetustePct       Float     @default(0) // % de vétusté applicable (0-1)
+  tenantShareCents Int       // Montant à la charge du locataire
+  photoUrl         String?   // Photo de la dégradation (sortie)
+  entryPhotoUrl    String?   // Photo d'entrée (pour comparaison)
+
+  inspection       Inspection        @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  element          InspectionElement? @relation(fields: [elementId], references: [id])
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([inspectionId])
+}
+
+// ─── RÉSOLUTION DU DÉPÔT DE GARANTIE ───
+
+// ---- Dépôt de Garantie Lifecycle ----
+enum DepositStatus {
+  AWAITING_PAYMENT
+  PAID
+  HELD
+  EXIT_INSPECTION
+  RETENTIONS_PROPOSED
+  PARTIALLY_RELEASED
+  FULLY_RELEASED
+  DISPUTED
+  RESOLVED
+}
+
+enum DepositEventType {
+  LEASE_SIGNED
+  PAYMENT_DETECTED
+  PAYMENT_CONFIRMED
+  ENTRY_INSPECTION_DONE
+  EXIT_INSPECTION_STARTED
+  EXIT_INSPECTION_SIGNED
+  RETENTIONS_PROPOSED
+  TENANT_AGREED
+  TENANT_PARTIAL_AGREED
+  TENANT_DISPUTED
+  PARTIAL_RELEASE
+  FULL_RELEASE
+  DEADLINE_WARNING
+  DEADLINE_OVERDUE
+  PENALTY_UPDATED
+  FORMAL_NOTICE_GENERATED
+  FORMAL_NOTICE_SENT
+  CDC_DOSSIER_GENERATED
+  TIMELINE_EXPORTED
+  RESOLVED
+  SECOND_REMINDER
+  DEDUCTION_EXCEEDS_DEPOSIT
+}
+
+enum DepositResolutionStatus {
+  PENDING         // Pas encore de proposition
+  PROPOSED        // Propriétaire a proposé les retenues
+  AGREED          // Locataire accepte → restitution immédiate
+  PARTIAL_AGREED  // Accord partiel → timer 14j pour le reste
+  DISPUTED        // Locataire conteste → dossier CDC/conciliateur
+  RESOLVED        // Clos (dépôt restitué selon accord final)
+}
+
+model DepositResolution {
+  id                   String                  @id @default(uuid())
+  inspectionId         String                  @unique
+  applicationId        String
+  depositAmountCents   Int                     // Montant initial du dépôt
+  totalDeductionsCents Int                     @default(0)
+  refundAmountCents    Int                     @default(0)
+  status               DepositResolutionStatus @default(PENDING)
+
+  // Accord / Contestation
+  tenantAgreedAt       DateTime?
+  tenantDisputedAt     DateTime?
+  disputeReason        String?
+  resolvedAt           DateTime?
+
+  // Timer 14 jours (accord partiel)
+  partialAgreedAmount  Int?      // Montant accepté par le locataire
+  partialDeadline      DateTime? // Date limite pour le reste
+
+  inspection           Inspection        @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  application          RentalApplication @relation(fields: [applicationId], references: [id])
+
+  // Inverse relation from SecurityDeposit
+  securityDeposit      SecurityDeposit?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// ---- SecurityDeposit (lifecycle complet du dépôt de garantie) ----
+model SecurityDeposit {
+  id                    String        @id @default(uuid())
+  applicationId         String        @unique
+  amountCents           Int           // Montant du dépôt en centimes
+  status                DepositStatus @default(AWAITING_PAYMENT)
+
+  // Dates timeline
+  leaseSignedAt         DateTime?
+  paidAt                DateTime?
+  exitInspectionAt      DateTime?
+  retentionsProposedAt  DateTime?
+  tenantRespondedAt     DateTime?
+  releasedAt            DateTime?
+  resolvedAt            DateTime?
+
+  // Restitution
+  refundedAmountCents   Int?
+  retainedAmountCents   Int?
+
+  // Powens (détection automatique)
+  powensTransactionId   String?
+  powensRefundId        String?
+  paymentConfirmedBy    String?       // "powens" | "manual_landlord" | "manual_tenant"
+  refundConfirmedBy     String?       // "powens" | "manual_landlord" | "manual_tenant"
+
+  // Délai légal
+  legalDeadline         DateTime?
+  legalDeadlineMonths   Int?          // 1 (EDL conforme) ou 2 (sinon)
+  isOverdue             Boolean       @default(false)
+
+  // Pénalité art. 22 al. 2 loi 89-462
+  monthlyRentCents      Int?          // Copie de LeaseFinancials.baseRentCents
+  penaltyAmountCents    Int           @default(0)
+  overdueMonths         Int           @default(0)
+
+  // Mise en demeure
+  formalNoticeSentAt    DateTime?
+  formalNoticeUrl       String?
+
+  // Dossier CDC
+  cdcDossierGeneratedAt DateTime?
+  cdcDossierUrl         String?
+  timelineExportUrl     String?
+
+  // Lien direct vers la résolution EDL (convenience — évite lookup par applicationId)
+  depositResolutionId   String?           @unique
+  depositResolution     DepositResolution? @relation(fields: [depositResolutionId], references: [id])
+
+  // Relations
+  application           RentalApplication @relation(fields: [applicationId], references: [id])
+  events                DepositEvent[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model DepositEvent {
+  id          String           @id @default(uuid())
+  depositId   String
+  type        DepositEventType
+  description String
+  metadata    Json?
+  actorType   String           // "system" | "landlord" | "tenant" | "powens" | "cron"
+  actorId     String?
+
+  deposit     SecurityDeposit @relation(fields: [depositId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([depositId])
 }

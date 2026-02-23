@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useInspection } from '@/hooks/useInspection';
@@ -34,6 +34,8 @@ export default function DonePage() {
   const [amendmentText, setAmendmentText] = useState('');
   const [isSubmittingAmendment, setIsSubmittingAmendment] = useState(false);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const pdfTriggeredRef = useRef(false);
 
   const currentUserId = (session.data?.user as { id?: string })?.id;
   const isTenant = currentUserId === inspection?.tenantId;
@@ -73,10 +75,18 @@ export default function DonePage() {
     }
   }, [inspection?.status, fetchAmendments]);
 
-  // Trigger PDF generation on mount
+  // Trigger PDF generation once
   useEffect(() => {
-    if (inspection && !inspection.pdfUrl && inspection.status === 'SIGNED') {
-      generatePdf().catch(console.error);
+    if (inspection && !inspection.pdfUrl && inspection.status === 'SIGNED' && !pdfTriggeredRef.current) {
+      pdfTriggeredRef.current = true;
+      setIsGeneratingPdf(true);
+      generatePdf()
+        .catch((err) => {
+          console.error('PDF generation failed:', err);
+          toast.error('Erreur lors de la génération du PDF');
+          pdfTriggeredRef.current = false; // Allow retry
+        })
+        .finally(() => setIsGeneratingPdf(false));
     }
   }, [inspection, generatePdf]);
 
@@ -331,7 +341,7 @@ export default function DonePage() {
 
       {/* Action buttons */}
       <div className="w-full max-w-sm space-y-3">
-        {inspection?.pdfUrl && (
+        {inspection?.pdfUrl ? (
           <a
             href={inspection.pdfUrl}
             target="_blank"
@@ -341,7 +351,12 @@ export default function DonePage() {
             <FileText size={20} />
             Voir le PDF
           </a>
-        )}
+        ) : isGeneratingPdf ? (
+          <div className={`w-full py-4 rounded-2xl text-[18px] font-bold flex items-center justify-center gap-2 ${t.bgCard} border ${t.border} ${t.textSecondary}`}>
+            <Loader2 size={20} className="animate-spin" />
+            Génération du PDF...
+          </div>
+        ) : null}
 
         <button
           onClick={handleResendEmail}

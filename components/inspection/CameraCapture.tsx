@@ -237,7 +237,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           {instructionLines.map((line, i) => (
             <div
               key={i}
-              className={`text-[15px] leading-relaxed ${i === 0 ? 'text-white/45' : 'text-white/30'}`}
+              className={`text-[15px] leading-relaxed inline-block px-3 py-1 rounded-full ${i === 0 ? 'text-white/50 bg-white/10' : 'text-white/30 bg-white/5'}`}
             >
               {line}
             </div>

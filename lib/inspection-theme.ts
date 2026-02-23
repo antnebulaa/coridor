@@ -24,14 +24,14 @@ export const EDL_THEME = {
 
   // Textes
   textPrimary: "text-gray-900",            // Titres, texte principal
-  textSecondary: "text-gray-600",          // Sous-titres, descriptions
+  textSecondary: "text-gray-500",          // Sous-titres, descriptions
   textMuted: "text-gray-400",              // Texte tertiaire, placeholders
   textOnAccent: "text-white",              // Texte sur bouton accent
   textOnDark: "text-white",               // Texte sur fond sombre (caméra)
 
   // Accent (la couleur Coridor)
   accent: "#FE3C10",
-  accentBg: "bg-amber-500",
+  accentBg: "bg-amber-600",
   accentText: "text-amber-600",
   accentBorder: "border-amber-500",
   accentBgLight: "bg-amber-50",            // Fond léger accent (bulles IA)
@@ -49,7 +49,7 @@ export const EDL_THEME = {
 
   pillContainer: "bg-white border-b border-gray-100",
   pillDefault: "bg-gray-100 text-gray-600",              // Pièce non faite
-  pillActive: "bg-amber-500 text-white",                 // Pièce en cours
+  pillActive: "bg-gray-900 text-white",                 // Pièce en cours
   pillCompleted: "bg-emerald-100 text-emerald-700",      // Pièce complétée ✓
   pillCompletedDot: "bg-emerald-500",                    // Dot vert ✓
 
@@ -66,7 +66,7 @@ export const EDL_THEME = {
   // ──────────────────────────────────────────────
 
   // Bouton principal (CTA : "Suivant", "Valider", "Commencer")
-  btnPrimary: "bg-amber-500 text-white",
+  btnPrimary: "bg-neutral-900 text-white",
   btnPrimaryDisabled: "bg-gray-200 text-gray-400 cursor-not-allowed",
 
   // Bouton secondaire ("Reprendre photo", "Modifier")
@@ -111,14 +111,14 @@ export const EDL_THEME = {
   // ──────────────────────────────────────────────
 
   natureChipDefault: "bg-gray-100 text-gray-900 border border-gray-200",
-  natureChipSelected: "bg-amber-100 text-amber-800 border border-amber-400",
+  natureChipSelected: "bg-amber-100 text-amber-800 border border-amber-200",
 
   // ──────────────────────────────────────────────
   // CHIPS — Dégradation types (multi-select)
   // ──────────────────────────────────────────────
 
   degradChipDefault: "bg-gray-100 text-gray-900 border border-gray-200",
-  degradChipSelected: "bg-orange-100 text-orange-800 border border-orange-400",
+  degradChipSelected: "bg-orange-100 text-orange-800 border border-orange-200",
 
   // ──────────────────────────────────────────────
   // CARTES PIÈCES (Hub)
@@ -174,7 +174,7 @@ export const EDL_THEME = {
   // STEPPER / WIZARD (compteurs, étapes)
   // ──────────────────────────────────────────────
 
-  stepperActive: "bg-amber-500 text-white",
+  stepperActive: "bg-neutral-900 text-white",
   stepperDone: "bg-emerald-500 text-white",
   stepperTodo: "bg-gray-200 text-gray-500",
   stepperLine: "bg-gray-200",
@@ -211,6 +211,33 @@ export const EDL_THEME = {
   legalBannerBg: "bg-blue-50 border border-blue-200",
   legalBannerText: "text-blue-800",
   legalBannerIcon: "text-blue-500",
+
+  // ──────────────────────────────────────────────
+  // COMPARAISON ENTRÉE / SORTIE (split-screen)
+  // ──────────────────────────────────────────────
+
+  exitEntryLabel: "text-gray-400 text-[13px] font-medium uppercase tracking-wide",
+  exitExitLabel: "text-gray-900 text-[13px] font-medium uppercase tracking-wide",
+  exitEntryBg: "bg-gray-50 rounded-xl border border-gray-200",
+  exitExitBg: "bg-white rounded-xl border border-gray-200",
+  exitNoPhoto: "bg-gray-100 text-gray-400",
+
+  // ──────────────────────────────────────────────
+  // BADGES ÉVOLUTION
+  // ──────────────────────────────────────────────
+
+  evolutionUnchanged: "bg-emerald-100 text-emerald-700",
+  evolutionNormalWear: "bg-amber-100 text-amber-700",
+  evolutionDeterioration: "bg-red-100 text-red-700",
+  evolutionImprovement: "bg-blue-100 text-blue-700",
+
+  // ──────────────────────────────────────────────
+  // RETENUES SUR DÉPÔT
+  // ──────────────────────────────────────────────
+
+  deductionCard: "bg-white rounded-xl border border-gray-200",
+  deductionTotal: "bg-gray-900 text-white rounded-xl",
+  deductionRefund: "bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200",
 
 } as const;
 

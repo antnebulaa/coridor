@@ -61,6 +61,20 @@ export async function POST(request: Request, props: Params) {
           orderBy: { order: 'asc' },
         },
         photos: true,
+        // EXIT: include entry inspection + deductions + deposit resolution
+        entryInspection: {
+          include: {
+            rooms: {
+              include: {
+                elements: { include: { photos: true } },
+                photos: true,
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
+        deductions: true,
+        depositResolution: true,
       },
     });
 
@@ -125,6 +139,7 @@ export async function POST(request: Request, props: Params) {
           isAbsent: el.isAbsent,
           observations: el.observations,
           degradationTypes: el.degradationTypes,
+          evolution: el.evolution,
           photos: el.photos.map((p) => ({
             url: p.url,
             thumbnailUrl: p.thumbnailUrl ?? undefined,
@@ -137,6 +152,45 @@ export async function POST(request: Request, props: Params) {
           type: p.type,
         })),
       })),
+      // EXIT-specific data
+      ...(inspection.type === 'EXIT' && inspection.entryInspection ? {
+        entryRooms: inspection.entryInspection.rooms.map((room) => ({
+          name: room.name,
+          roomType: room.roomType,
+          observations: room.observations,
+          elements: room.elements.map((el) => ({
+            name: el.name,
+            category: el.category,
+            nature: el.nature,
+            condition: el.condition,
+            isAbsent: el.isAbsent,
+            observations: el.observations,
+            degradationTypes: el.degradationTypes,
+            evolution: null,
+            photos: el.photos.map((p) => ({
+              url: p.url,
+              thumbnailUrl: p.thumbnailUrl ?? undefined,
+              type: p.type,
+            })),
+          })),
+          photos: room.photos.map((p) => ({
+            url: p.url,
+            thumbnailUrl: p.thumbnailUrl ?? undefined,
+            type: p.type,
+          })),
+        })),
+      } : {}),
+      ...(inspection.type === 'EXIT' && inspection.deductions.length > 0 ? {
+        deductions: inspection.deductions.map((d) => ({
+          description: d.description,
+          repairCostCents: d.repairCostCents,
+          vetustePct: d.vetustePct,
+          tenantShareCents: d.tenantShareCents,
+        })),
+        depositAmountCents: inspection.depositResolution?.depositAmountCents ?? 0,
+        totalDeductionsCents: inspection.depositResolution?.totalDeductionsCents ?? 0,
+        refundAmountCents: inspection.depositResolution?.refundAmountCents ?? 0,
+      } : {}),
     };
 
     // Render PDF

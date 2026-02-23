@@ -17,6 +17,7 @@ interface InspectionPdfElement {
   isAbsent: boolean;
   observations?: string | null;
   degradationTypes: string[];
+  evolution?: string | null;
   photos: InspectionPdfPhoto[];
 }
 
@@ -41,6 +42,13 @@ interface InspectionPdfKey {
   quantity: number;
 }
 
+interface InspectionPdfDeduction {
+  description: string;
+  repairCostCents: number;
+  vetustePct: number;
+  tenantShareCents: number;
+}
+
 export interface InspectionPdfData {
   type: 'ENTRY' | 'EXIT';
   date: string;
@@ -57,6 +65,12 @@ export interface InspectionPdfData {
   meters: InspectionPdfMeter[];
   keys: InspectionPdfKey[];
   rooms: InspectionPdfRoom[];
+  // EXIT-specific data
+  entryRooms?: InspectionPdfRoom[];
+  deductions?: InspectionPdfDeduction[];
+  depositAmountCents?: number;
+  totalDeductionsCents?: number;
+  refundAmountCents?: number;
 }
 
 // ─── Styles ───
@@ -75,6 +89,13 @@ const CONDITION_LABELS: Record<string, string> = {
   NORMAL_WEAR: 'Usure norm.',
   DEGRADED: 'Dégradé',
   OUT_OF_SERVICE: 'H.S.',
+};
+
+const EVOLUTION_LABELS: Record<string, { label: string; color: string }> = {
+  UNCHANGED: { label: 'Identique', color: '#34D399' },
+  NORMAL_WEAR: { label: 'Usure norm.', color: '#FBBF24' },
+  DETERIORATION: { label: 'Dégradation', color: '#EF4444' },
+  IMPROVEMENT: { label: 'Amélioré', color: '#60A5FA' },
 };
 
 const METER_LABELS: Record<string, { label: string; unit: string }> = {
@@ -373,88 +394,234 @@ const InspectionDocument: React.FC<Props> = ({ data }) => {
       </Page>
 
       {/* ─── PAGES 2+ : Pièces ─── */}
-      {data.rooms.map((room, roomIdx) => (
-        <Page key={roomIdx} size="A4" style={s.page}>
-          <Text style={s.roomTitle}>
-            {room.name}
-          </Text>
+      {data.rooms.map((room, roomIdx) => {
+        // For EXIT mode, find matching entry room by index
+        const entryRoom = data.type === 'EXIT' && data.entryRooms ? data.entryRooms[roomIdx] : null;
+        const isExit = data.type === 'EXIT';
 
-          {/* Overview photo */}
-          {room.photos.filter((p) => p.type === 'OVERVIEW').map((photo, i) => (
-            <View key={i} style={{ marginBottom: 6 }}>
-              {photo.thumbnailUrl && (
-                <Image src={photo.thumbnailUrl} style={{ width: 200, height: 150, objectFit: 'cover', borderRadius: 2 }} />
+        return (
+          <Page key={roomIdx} size="A4" style={s.page}>
+            <Text style={s.roomTitle}>
+              {room.name}
+            </Text>
+
+            {/* Overview photo — EXIT mode shows side-by-side */}
+            {isExit && entryRoom ? (
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
+                {(() => {
+                  const entryOv = entryRoom.photos.find((p) => p.type === 'OVERVIEW');
+                  const exitOv = room.photos.find((p) => p.type === 'OVERVIEW');
+                  return (
+                    <>
+                      <View style={{ width: '48%' }}>
+                        <Text style={{ fontSize: 7, color: '#888', marginBottom: 2 }}>ENTRÉE</Text>
+                        {entryOv?.thumbnailUrl ? (
+                          <Image src={entryOv.thumbnailUrl} style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 2 }} />
+                        ) : (
+                          <View style={{ width: '100%', height: 100, backgroundColor: '#F3F4F6', borderRadius: 2, justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 7, color: '#999' }}>Pas de photo</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={{ width: '48%' }}>
+                        <Text style={{ fontSize: 7, color: '#333', marginBottom: 2 }}>SORTIE</Text>
+                        {exitOv?.thumbnailUrl ? (
+                          <Image src={exitOv.thumbnailUrl} style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 2 }} />
+                        ) : (
+                          <View style={{ width: '100%', height: 100, backgroundColor: '#F3F4F6', borderRadius: 2, justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 7, color: '#999' }}>Pas de photo</Text>
+                          </View>
+                        )}
+                      </View>
+                    </>
+                  );
+                })()}
+              </View>
+            ) : (
+              room.photos.filter((p) => p.type === 'OVERVIEW').map((photo, i) => (
+                <View key={i} style={{ marginBottom: 6 }}>
+                  {photo.thumbnailUrl && (
+                    <Image src={photo.thumbnailUrl} style={{ width: 200, height: 150, objectFit: 'cover', borderRadius: 2 }} />
+                  )}
+                </View>
+              ))
+            )}
+
+            {/* Elements table — EXIT mode has comparison columns */}
+            <View style={s.table}>
+              {isExit && entryRoom ? (
+                <>
+                  <View style={s.tableHeader}>
+                    <Text style={[s.thText, { width: '22%' }]}>Élément</Text>
+                    <Text style={[s.thText, { width: '13%' }]}>Entrée</Text>
+                    <Text style={[s.thText, { width: '13%' }]}>Sortie</Text>
+                    <Text style={[s.thText, { width: '15%' }]}>Évolution</Text>
+                    <Text style={[s.thText, { width: '37%' }]}>Observations</Text>
+                  </View>
+                  {room.elements
+                    .filter((el) => !el.isAbsent)
+                    .map((el, i) => {
+                      const entryEl = entryRoom.elements.find((e) => e.name === el.name && e.category === el.category);
+                      const entryCondColor = entryEl?.condition ? CONDITION_COLORS[entryEl.condition] || '#888' : '#888';
+                      const entryCondLabel = entryEl?.condition ? CONDITION_LABELS[entryEl.condition] || '—' : '—';
+                      const exitCondColor = el.condition ? CONDITION_COLORS[el.condition] || '#888' : '#888';
+                      const exitCondLabel = el.condition ? CONDITION_LABELS[el.condition] || '—' : '—';
+                      const evoInfo = el.evolution ? EVOLUTION_LABELS[el.evolution] : null;
+
+                      return (
+                        <View key={i} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
+                          <Text style={[s.tdText, { width: '22%' }]}>{el.name}</Text>
+                          <View style={{ width: '13%' }}>
+                            <Text style={[s.badge, { backgroundColor: entryCondColor, alignSelf: 'flex-start' }]}>
+                              {entryCondLabel}
+                            </Text>
+                          </View>
+                          <View style={{ width: '13%' }}>
+                            <Text style={[s.badge, { backgroundColor: exitCondColor, alignSelf: 'flex-start' }]}>
+                              {exitCondLabel}
+                            </Text>
+                          </View>
+                          <View style={{ width: '15%' }}>
+                            {evoInfo ? (
+                              <Text style={[s.badge, { backgroundColor: evoInfo.color, alignSelf: 'flex-start' }]}>
+                                {evoInfo.label}
+                              </Text>
+                            ) : (
+                              <Text style={[s.tdText]}>—</Text>
+                            )}
+                          </View>
+                          <Text style={[s.tdText, { width: '37%' }]}>
+                            {[
+                              el.degradationTypes?.length ? el.degradationTypes.join(', ') : null,
+                              el.observations,
+                            ]
+                              .filter(Boolean)
+                              .join(' — ') || '—'}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                </>
+              ) : (
+                <>
+                  <View style={s.tableHeader}>
+                    <Text style={[s.thText, { width: '25%' }]}>Élément</Text>
+                    <Text style={[s.thText, { width: '20%' }]}>Nature</Text>
+                    <Text style={[s.thText, { width: '15%' }]}>État</Text>
+                    <Text style={[s.thText, { width: '40%' }]}>Observations</Text>
+                  </View>
+                  {room.elements
+                    .filter((el) => !el.isAbsent)
+                    .map((el, i) => {
+                      const condColor = el.condition ? CONDITION_COLORS[el.condition] || '#888' : '#888';
+                      const condLabel = el.condition ? CONDITION_LABELS[el.condition] || el.condition : '—';
+                      return (
+                        <View key={i} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
+                          <Text style={[s.tdText, { width: '25%' }]}>{el.name}</Text>
+                          <Text style={[s.tdText, { width: '20%' }]}>{el.nature.length ? el.nature.join(', ') : '—'}</Text>
+                          <View style={{ width: '15%' }}>
+                            <Text style={[s.badge, { backgroundColor: condColor, alignSelf: 'flex-start' }]}>
+                              {condLabel}
+                            </Text>
+                          </View>
+                          <Text style={[s.tdText, { width: '40%' }]}>
+                            {[
+                              el.degradationTypes?.length ? el.degradationTypes.join(', ') : null,
+                              el.observations,
+                            ]
+                              .filter(Boolean)
+                              .join(' — ') || '—'}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                </>
               )}
             </View>
-          ))}
 
-          {/* Elements table */}
+            {/* Detail photos (degradations) */}
+            {(() => {
+              const detailPhotos = room.elements
+                .flatMap((el) => el.photos.filter((p) => p.type === 'DETAIL' || p.type === 'SURFACE'))
+                .filter((p) => p.thumbnailUrl);
+              if (detailPhotos.length === 0) return null;
+              return (
+                <View style={s.photosRow}>
+                  {detailPhotos.slice(0, 6).map((photo, i) => (
+                    <Image key={i} src={photo.thumbnailUrl!} style={s.thumbnail} />
+                  ))}
+                </View>
+              );
+            })()}
+
+            {/* Room observations */}
+            {room.observations && (
+              <View style={{ marginTop: 4 }}>
+                <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 2 }}>
+                  Observation générale :
+                </Text>
+                <Text style={{ fontSize: 8, color: '#444', fontStyle: 'italic' }}>
+                  {room.observations}
+                </Text>
+              </View>
+            )}
+
+            <View style={s.footer}>
+              <Text>Document établi via Coridor.fr — {room.name}</Text>
+            </View>
+          </Page>
+        );
+      })}
+
+      {/* ─── PAGE RETENUES (EXIT only) ─── */}
+      {data.type === 'EXIT' && data.deductions && data.deductions.length > 0 && (
+        <Page size="A4" style={s.page}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Retenues sur dépôt de garantie</Text>
+          </View>
+
           <View style={s.table}>
             <View style={s.tableHeader}>
-              <Text style={[s.thText, { width: '25%' }]}>Élément</Text>
-              <Text style={[s.thText, { width: '20%' }]}>Nature</Text>
-              <Text style={[s.thText, { width: '15%' }]}>État</Text>
-              <Text style={[s.thText, { width: '40%' }]}>Observations</Text>
+              <Text style={[s.thText, { width: '35%' }]}>Description</Text>
+              <Text style={[s.thText, { width: '20%' }]}>Coût réparation</Text>
+              <Text style={[s.thText, { width: '15%' }]}>Vétusté</Text>
+              <Text style={[s.thText, { width: '30%' }]}>Part locataire</Text>
             </View>
-            {room.elements
-              .filter((el) => !el.isAbsent)
-              .map((el, i) => {
-                const condColor = el.condition ? CONDITION_COLORS[el.condition] || '#888' : '#888';
-                const condLabel = el.condition ? CONDITION_LABELS[el.condition] || el.condition : '—';
-                return (
-                  <View key={i} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
-                    <Text style={[s.tdText, { width: '25%' }]}>{el.name}</Text>
-                    <Text style={[s.tdText, { width: '20%' }]}>{el.nature.length ? el.nature.join(', ') : '—'}</Text>
-                    <View style={{ width: '15%' }}>
-                      <Text style={[s.badge, { backgroundColor: condColor, alignSelf: 'flex-start' }]}>
-                        {condLabel}
-                      </Text>
-                    </View>
-                    <Text style={[s.tdText, { width: '40%' }]}>
-                      {[
-                        el.degradationTypes?.length ? el.degradationTypes.join(', ') : null,
-                        el.observations,
-                      ]
-                        .filter(Boolean)
-                        .join(' — ') || '—'}
-                    </Text>
-                  </View>
-                );
-              })}
+            {data.deductions.map((d, i) => (
+              <View key={i} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
+                <Text style={[s.tdText, { width: '35%' }]}>{d.description}</Text>
+                <Text style={[s.tdText, { width: '20%' }]}>{(d.repairCostCents / 100).toFixed(2)} €</Text>
+                <Text style={[s.tdText, { width: '15%' }]}>{Math.round(d.vetustePct * 100)}%</Text>
+                <Text style={[s.tdText, { width: '30%', fontFamily: 'Helvetica-Bold' }]}>{(d.tenantShareCents / 100).toFixed(2)} €</Text>
+              </View>
+            ))}
           </View>
 
-          {/* Detail photos (degradations) */}
-          {(() => {
-            const detailPhotos = room.elements
-              .flatMap((el) => el.photos.filter((p) => p.type === 'DETAIL' || p.type === 'SURFACE'))
-              .filter((p) => p.thumbnailUrl);
-            if (detailPhotos.length === 0) return null;
-            return (
-              <View style={s.photosRow}>
-                {detailPhotos.slice(0, 6).map((photo, i) => (
-                  <Image key={i} src={photo.thumbnailUrl!} style={s.thumbnail} />
-                ))}
-              </View>
-            );
-          })()}
-
-          {/* Room observations */}
-          {room.observations && (
-            <View style={{ marginTop: 4 }}>
-              <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 2 }}>
-                Observation générale :
-              </Text>
-              <Text style={{ fontSize: 8, color: '#444', fontStyle: 'italic' }}>
-                {room.observations}
-              </Text>
+          {/* Summary */}
+          <View style={{ marginTop: 12, padding: 8, backgroundColor: '#F3F4F6', borderRadius: 4 }}>
+            <View style={[s.row, { marginBottom: 4 }]}>
+              <Text style={[s.label, { width: 180 }]}>Dépôt de garantie</Text>
+              <Text style={s.value}>{data.depositAmountCents ? (data.depositAmountCents / 100).toFixed(2) + ' €' : '—'}</Text>
             </View>
-          )}
+            <View style={[s.row, { marginBottom: 4 }]}>
+              <Text style={[s.label, { width: 180 }]}>Total retenues</Text>
+              <Text style={[s.value, { color: '#EF4444' }]}>- {data.totalDeductionsCents ? (data.totalDeductionsCents / 100).toFixed(2) + ' €' : '—'}</Text>
+            </View>
+            <View style={[s.row, { borderTopWidth: 1, borderTopColor: '#ddd', paddingTop: 4 }]}>
+              <Text style={[s.label, { width: 180, fontFamily: 'Helvetica-Bold', fontSize: 10 }]}>Montant à restituer</Text>
+              <Text style={[s.value, { fontSize: 11, color: '#16a34a' }]}>{data.refundAmountCents != null ? (data.refundAmountCents / 100).toFixed(2) + ' €' : '—'}</Text>
+            </View>
+          </View>
+
+          <Text style={[s.legalText, { marginTop: 12 }]}>
+            Le dépôt de garantie doit être restitué dans un délai d&apos;un mois (sans retenue) ou deux mois (avec retenues) après la remise des clés (art. 22 loi du 6 juillet 1989). La vétusté est appliquée selon la grille en vigueur pour le bien.
+          </Text>
 
           <View style={s.footer}>
-            <Text>Document établi via Coridor.fr — {room.name}</Text>
+            <Text>Document établi via Coridor.fr — Retenues sur dépôt</Text>
           </View>
         </Page>
-      ))}
+      )}
 
       {/* ─── DERNIÈRE PAGE : Signatures ─── */}
       <Page size="A4" style={s.page}>

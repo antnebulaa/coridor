@@ -10,6 +10,7 @@ import type {
   InspectionPhoto,
   InspectionFurniture,
   ElementCondition,
+  ElementEvolution,
   MeterType,
   InspectionRoomType,
   PhotoType,
@@ -32,7 +33,77 @@ export type FullInspection = Inspection & {
   rooms: InspectionRoomWithElements[];
   photos: InspectionPhoto[];
   furniture: InspectionFurniture[];
+  entryInspection?: FullInspection; // Données d'entrée pour comparaison (mode EXIT)
 };
+
+// ─── EXIT comparison helpers ───
+
+/**
+ * Compute the evolution between entry and exit conditions.
+ */
+export function computeEvolution(
+  entryCondition: ElementCondition | null | undefined,
+  exitCondition: ElementCondition | null | undefined
+): ElementEvolution | null {
+  if (!entryCondition || !exitCondition) return null;
+
+  const ORDER: Record<ElementCondition, number> = {
+    NEW: 5,
+    GOOD: 4,
+    NORMAL_WEAR: 3,
+    DEGRADED: 2,
+    OUT_OF_SERVICE: 1,
+  };
+
+  const entryScore = ORDER[entryCondition];
+  const exitScore = ORDER[exitCondition];
+
+  if (exitScore > entryScore) return 'IMPROVEMENT';
+  if (exitScore === entryScore) return 'UNCHANGED';
+  if (exitScore === entryScore - 1) return 'NORMAL_WEAR';
+  return 'DETERIORATION';
+}
+
+/**
+ * Find the corresponding entry element for a given exit element.
+ * Matches by room order + element name + category.
+ */
+export function getEntryElement(
+  exitElement: InspectionElement,
+  exitRoom: InspectionRoomWithElements,
+  entryInspection: FullInspection | undefined
+): InspectionElementWithPhotos | null {
+  if (!entryInspection) return null;
+
+  // Find matching entry room by order (same position in the list)
+  const entryRoom = entryInspection.rooms.find(
+    (r) => r.order === exitRoom.order && r.roomType === exitRoom.roomType
+  );
+  if (!entryRoom) return null;
+
+  // Find matching element by name + category
+  return entryRoom.elements.find(
+    (e) => e.name === exitElement.name && e.category === exitElement.category
+  ) || null;
+}
+
+/**
+ * Find the entry overview photo for a given exit room.
+ */
+export function getEntryRoomPhoto(
+  exitRoom: InspectionRoomWithElements,
+  photoType: PhotoType,
+  entryInspection: FullInspection | undefined
+): InspectionPhoto | null {
+  if (!entryInspection) return null;
+
+  const entryRoom = entryInspection.rooms.find(
+    (r) => r.order === exitRoom.order && r.roomType === exitRoom.roomType
+  );
+  if (!entryRoom) return null;
+
+  return entryRoom.photos.find((p) => p.type === photoType) || null;
+}
 
 // ─── Session Storage helpers ───
 
@@ -383,6 +454,7 @@ export function useInspection(inspectionId: string | undefined) {
       observations?: string;
       degradationTypes?: string[];
       isAbsent?: boolean;
+      evolution?: ElementEvolution;
     }
   ) => {
     if (!inspectionId) return;

@@ -114,6 +114,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
         data.body === 'LEASE_SENT_FOR_SIGNATURE' ? "p-0" :
         data.body === 'INVITATION_VISITE' ? "p-0" :
         data.body?.startsWith('INSPECTION_') ? "p-0" :
+        data.body?.startsWith('DEPOSIT_EVENT|') ? "p-0" :
             (data.image || data.listing) ? "rounded-md p-0 overflow-hidden" :
                 clsx(
                     "overflow-hidden py-2 px-3",
@@ -882,6 +883,64 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             >
                                                 Voir les rectifications
                                             </button>
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('DEPOSIT_EVENT|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const eventType = parts[1];
+                                    const amountCents = parseInt(parts[2] || '0', 10);
+                                    const appId = parts[3];
+                                    const amount = (amountCents / 100).toFixed(2);
+
+                                    const DEPOSIT_EVENT_CONFIG: Record<string, { emoji: string; label: string; desc: string; color: string; border: string; bg: string; cta?: string }> = {
+                                        LEASE_SIGNED: { emoji: '📝', label: 'Bail signé', desc: `Dépôt de ${amount}€ dû.`, color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', cta: 'Voir le suivi' },
+                                        PAYMENT_CONFIRMED: { emoji: '💳', label: 'Versement confirmé', desc: `Dépôt de ${amount}€ enregistré.`, color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                        RETENTIONS_PROPOSED: { emoji: '📋', label: 'Retenues proposées', desc: `Le propriétaire propose des retenues.`, color: 'text-orange-700', border: 'border-orange-200', bg: 'bg-orange-50', cta: 'Consulter et répondre' },
+                                        TENANT_AGREED: { emoji: '🤝', label: 'Accord trouvé', desc: 'Le locataire accepte les retenues.', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                        TENANT_PARTIAL_AGREED: { emoji: '⚖️', label: 'Accord partiel', desc: 'Le locataire accepte partiellement. Délai de 14 jours.', color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+                                        TENANT_DISPUTED: { emoji: '⚠️', label: 'Contestation', desc: '14 jours pour trouver un accord.', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+                                        DEADLINE_OVERDUE: { emoji: '🚨', label: 'Délai dépassé', desc: 'Le délai légal de restitution est dépassé.', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50', cta: 'Voir les options' },
+                                        FULL_RELEASE: { emoji: '✅', label: 'Dépôt restitué', desc: `Dépôt de ${amount}€ restitué intégralement.`, color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                        RESOLVED: { emoji: '✅', label: 'Dossier clos', desc: 'Le dépôt de garantie est résolu.', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                    };
+
+                                    const config = DEPOSIT_EVENT_CONFIG[eventType] || {
+                                        emoji: '🏦', label: 'Dépôt de garantie', desc: eventType.replace(/_/g, ' ').toLowerCase(),
+                                        color: 'text-gray-700', border: 'border-gray-200', bg: 'bg-gray-50'
+                                    };
+
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 p-4 rounded-2xl max-w-xs",
+                                            config.bg, `border ${config.border}`,
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className={clsx("flex items-center gap-2 font-medium text-sm", config.color)}>
+                                                <span className="text-base">{config.emoji}</span>
+                                                {config.label}
+                                            </div>
+                                            <div className={clsx("text-sm", config.color.replace('700', '600'))}>
+                                                {config.desc}
+                                            </div>
+                                            {config.cta && appId && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.push(`/deposit/${appId}`);
+                                                    }}
+                                                    className={clsx(
+                                                        "mt-1 px-4 py-2 text-white rounded-lg text-sm font-medium transition w-fit",
+                                                        eventType === 'DEADLINE_OVERDUE' ? "bg-red-600 hover:bg-red-700" :
+                                                        eventType === 'RETENTIONS_PROPOSED' ? "bg-orange-600 hover:bg-orange-700" :
+                                                        "bg-blue-600 hover:bg-blue-700"
+                                                    )}
+                                                >
+                                                    {config.cta}
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })()

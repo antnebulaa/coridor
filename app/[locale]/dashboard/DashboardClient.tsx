@@ -11,6 +11,7 @@ import { SafeUser } from "@/types";
 import LegalRemindersWidget from "@/components/dashboard/LegalRemindersWidget";
 import RentCollectionWidget from "@/components/dashboard/RentCollectionWidget";
 import FiscalWidget from "@/components/dashboard/FiscalWidget";
+import DepositAlertWidget from "@/components/deposit/DepositAlertWidget";
 import { useState } from "react";
 
 interface SelectionStat {
@@ -283,6 +284,9 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                         </div>
                     </section>
                 )}
+
+                {/* Deposit Alerts Widget */}
+                <DepositAlertWidget />
 
                 {/* Legal Reminders Widget */}
                 <LegalRemindersWidget />

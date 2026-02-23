@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 21 février 2026
+> Dernière mise à jour : 23 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -102,6 +102,25 @@
 - [✅] Section EDL dans l'édition de propriété — `EdlSection.tsx` dans `EditPropertyClient`, lien vers inspection en cours ou création
 - [✅] Broadcast temps réel — `broadcastNewMessage` via Supabase sur `send-sign-link`, refresh automatique côté locataire
 - [❌] EDL de sortie — diff avec EDL d'entrée (`entryInspectionId`), comparaison pièce par pièce
+
+### Dépôt de Garantie
+- [✅] SecurityDeposit + DepositEvent — modèles Prisma lifecycle complet (status machine AWAITING_PAYMENT → PAID → HELD → EXIT_INSPECTION → RETENTIONS_PROPOSED → FULLY_RELEASED/PARTIALLY_RELEASED/DISPUTED → RESOLVED), DepositEventType enum (22 types), relations RentalApplication + DepositResolution (FK direct `depositResolutionId`), champs User (`depositsTotal`, `depositsReturnedOnTime`)
+- [✅] DepositService — `services/DepositService.ts`, state machine avec transitions validées, chaînage PAID→HELD automatique (pas d'état zombie), deadline légal (1 mois conforme / 2 mois sinon), pénalité art. 22 al. 2 (10% loyer/mois), rappels J-7 + Jour J + J+15, détection Powens, badge proprio, injection messages conversation (pipe-delimited `DEPOSIT_EVENT|{eventType}|{amountCents}|{applicationId}`), validation montants (warning si retenues > dépôt, pas de blocage)
+- [✅] Logique métier pure — `lib/depositRules.ts` (zéro dépendances), types + state machine + calcul pénalité + validation retenues + deadline légal + calcul montant dépôt, testable sans Prisma
+- [✅] Tests unitaires — 68 tests vitest (`__tests__/services/DepositService.test.ts`), couverture : transitions valides/invalides, états transient/terminal, calcul pénalité, validation retenues, deadline légal, calcul montant, complétude state machine
+- [✅] Emails transactionnels — emails Resend via `EmailTemplate` pour : J-7 rappel deadline (proprio + locataire), deadline dépassée (proprio + locataire), J+15 second rappel + suggestion mise en demeure, retenues proposées (locataire)
+- [✅] Intégration écosystème — hooks Yousign (initializeDeposit à la signature bail), hooks deposit-resolution (lien depositResolutionId + transitions), cron enrichi (J-7, overdue, J+15)
+- [✅] API deposit — `app/api/deposit/[applicationId]/` GET/PATCH, timeline, formal-notice, export-timeline, cdc-dossier
+- [✅] Hook useSecurityDeposit — SWR hook avec computed (isOverdue, daysUntilDeadline, penaltyAmount, progress)
+- [✅] Page dépôt — `app/[locale]/deposit/[applicationId]/page.tsx`, header + DepositTimeline + bloc action conditionnel + section retenues (warning si > dépôt) + boutons actions
+- [✅] DepositTimeline — timeline verticale avec cercles passé/actuel/futur, couleurs par statut (vert/rouge/orange)
+- [✅] Mise en demeure PDF — `FormalNoticeDocument.tsx` (@react-pdf/renderer), lettre recommandée AR, rappel art. 22 loi 89-462, pénalité chiffrée, API POST/PATCH (générer + marquer envoyée)
+- [✅] Export Timeline PDF — `DepositTimelineDocument.tsx`, tableau chronologique Date|Événement|Acteur|Détails
+- [✅] Dossier CDC — `CDCDossierService.ts`, PDF multi-sections (page de garde, chronologie, EDL entrée/sortie + diff, retenues, échanges, arguments, **lettre de saisine type** — pas de Cerfa officiel pour la CDC), auth locataire uniquement
+- [✅] Dashboard widgets — `DepositAlertWidget.tsx` (proprio : jours restants/pénalité, locataire : proposition reçue/retard), intégré DashboardClient
+- [✅] Widget page bien — `DepositSection.tsx` dans `EditPropertyClient` (onglet Location), mini-timeline dépôt + badge statut + lien suivi complet, visible si SecurityDeposit existe
+- [✅] Messages système conversation — DEPOSIT_EVENT rendering dans MessageBox (7 eventTypes avec cards colorées + CTA), previews dans ConversationBox
+- [✅] Badge propriétaire — "Dépôts restitués dans les délais : X/Y" (préparatoire Passeport Proprio)
 
 ### Gestion financière
 - [✅] Gestionnaire dépenses/charges (`Expense`, `app/api/expenses/`) — CRUD complet (GET/POST/PATCH/DELETE)
@@ -297,6 +316,9 @@
 - [x] ~~Relance impayés automatique~~ (fait)
 - [x] ~~Badge Payeur Exemplaire (logique + UI)~~ (fait)
 - [x] ~~Intégration Stripe (paiement abonnements, renouvellement auto, moyen de paiement)~~ (fait — SubscriptionService, FeatureGate, Plans dynamiques)
+
+### Priorité haute (terminé)
+- [x] ~~Dépôt de garantie Phase 1~~ (fait — SecurityDeposit state machine, DepositService, timeline, rappels J-7/J/J+15, pénalité art. 22, mise en demeure PDF, dossier CDC, emails transactionnels, 68 tests unitaires, intégration conversation/dashboard/page bien)
 
 ### Priorité moyenne
 - [x] ~~Alertes dashboard avancées (IRL, échéances, impayés)~~ (fait — LegalRemindersWidget + RentCollectionWidget)

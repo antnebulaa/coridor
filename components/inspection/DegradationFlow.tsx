@@ -44,11 +44,14 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
     return (
       <div className={`flex flex-col h-full ${t.bgPage}`}>
         <div className="flex-1 px-5 pt-6 overflow-y-auto">
-          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
+          <div className={`text-[28px] font-medium mb-1 tracking-tight ${t.textPrimary}`}>
             Type de dégradation
           </div>
-          <div className={`text-[17px] mb-5 ${t.textSecondary}`}>
-            {elementName} — Sélectionnez un ou plusieurs types
+          <div className={`text-[22px] font-medium mb-2 ${t.textSecondary}`}>
+            {elementName}
+          </div>
+          <div className={`text-[17px] mb-8 ${t.textSecondary}`}>
+            Sélectionnez un ou plusieurs types
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -58,7 +61,7 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
                 <button
                   key={type}
                   onClick={() => toggleType(type)}
-                  className={`px-5 py-3 rounded-2xl text-[17px] font-bold active:scale-95 ${
+                  className={`px-5 py-3 rounded-2xl text-[17px] font-medium active:scale-95 ${
                     isSelected ? t.degradChipSelected : t.degradChipDefault
                   }`}
                 >
@@ -104,11 +107,14 @@ const DegradationFlow: React.FC<DegradationFlowProps> = ({
     return (
       <div className={`flex flex-col h-full ${t.bgPage}`}>
         <div className="flex-1 px-5 pt-6 overflow-y-auto">
-          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
+          <div className={`text-[28px] font-medium mb-1 tracking-tight ${t.textPrimary}`}>
             Observation
           </div>
-          <div className={`text-[17px] mb-5 ${t.textSecondary}`}>
-            {elementName} — {selectedTypes.join(', ')}
+          <div className={`text-[22px] font-medium mb-2 ${t.textSecondary}`}>
+            {elementName} 
+          </div>
+          <div className={`text-[17px] mb-8 ${t.textSecondary}`}>
+            {selectedTypes.join(', ')}
           </div>
 
           <AudioRecorder

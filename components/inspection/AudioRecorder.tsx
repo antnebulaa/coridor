@@ -118,7 +118,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
   return (
     <div className="flex flex-col gap-4">
       {label && (
-        <div className={`text-[20px] font-bold ${t.textPrimary}`}>
+        <div className={`text-[22px] font-medium ${t.textPrimary}`}>
           {label}
         </div>
       )}
@@ -130,15 +130,15 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({
           setTranscript(e.target.value);
           onChange(e.target.value);
         }}
-        placeholder="Saisissez ou dictez..."
-        className={`w-full p-4 rounded-2xl text-[18px] font-medium leading-relaxed min-h-28 resize-none outline-none ${t.transcriptionBg} ${t.textPrimary}`}
+        placeholder="Saisissez ou dictez vos commentaires..."
+        className={`w-full p-4 rounded-2xl text-[18px] font-base leading-relaxed min-h-28 resize-none outline-none ${t.transcriptionBg} ${t.textPrimary}`}
       />
 
       {/* Mic button */}
       <button
         onClick={isTranscribing ? undefined : toggleRecording}
         disabled={isTranscribing}
-        className={`flex items-center justify-center gap-3 py-4 rounded-2xl text-[18px] font-bold border-2 ${
+        className={`flex items-center justify-center gap-3 py-4 rounded-2xl text-[18px] font-medium border-2 ${
           isRecording
             ? 'bg-red-500 text-white border-red-500'
             : isTranscribing

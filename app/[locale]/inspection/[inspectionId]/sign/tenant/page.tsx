@@ -22,6 +22,7 @@ import {
   Warehouse,
   Home,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const ROOM_ICONS: Record<string, React.ComponentType<{ size?: number; color?: string; className?: string }>> = {
   LIVING_ROOM: Sofa,
@@ -88,6 +89,7 @@ export default function TenantSignPage() {
       setSigned(true);
     } catch (err) {
       console.error('Sign failed:', err);
+      toast.error('Erreur lors de la signature. Veuillez réessayer.');
     }
   };
 

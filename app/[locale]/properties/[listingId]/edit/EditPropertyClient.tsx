@@ -25,6 +25,7 @@ import LegalInfoSection from "./components/LegalInfoSection";
 import LeaseConditionsSection from "./components/LeaseConditionsSection";
 import DiagnosticsSection from "@/components/properties/DiagnosticsSection";
 import EdlSection from "./components/EdlSection";
+import DepositSection from "./components/DepositSection";
 import { sidebarLinks } from "./constants";
 
 
@@ -57,7 +58,8 @@ export type SectionType =
     | 'legalInfo'
     | 'leaseConditions'
     | 'diagnostics'
-    | 'edl';
+    | 'edl'
+    | 'deposit';
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -141,6 +143,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         leaseConditions: 'Conditions du Bail',
         diagnostics: 'Diagnostics Immobiliers',
         edl: 'États des lieux',
+        deposit: 'Dépôt de garantie',
     };
 
     const renderContent = () => {
@@ -209,6 +212,8 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                 );
             case 'edl':
                 return <EdlSection listing={listing} />;
+            case 'deposit':
+                return <DepositSection listing={listing} />;
             case 'delete':
                 return <div>Delete Form Placeholder</div>;
             default:

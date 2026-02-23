@@ -33,6 +33,21 @@ async function getInspectionWithAuth(inspectionId: string, userId: string) {
       photos: true,
       furniture: true,
       amendments: true,
+      // If EXIT inspection, include the entry inspection data for comparison
+      entryInspection: {
+        include: {
+          rooms: {
+            include: {
+              elements: { include: { photos: true } },
+              photos: true,
+            },
+            orderBy: { order: 'asc' },
+          },
+          meters: true,
+          keys: true,
+          photos: true,
+        },
+      },
     },
   });
 

@@ -78,6 +78,21 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 const status = lastMessage.body.split('|')[3];
                 return status === 'ACCEPTED' ? '✅ Rectification acceptée' : '❌ Rectification refusée';
             }
+            if (lastMessage.body.startsWith('DEPOSIT_EVENT|')) {
+                const eventType = lastMessage.body.split('|')[1];
+                const DEPOSIT_LABELS: Record<string, string> = {
+                    LEASE_SIGNED: '🏦 Dépôt de garantie dû',
+                    PAYMENT_CONFIRMED: '💳 Versement confirmé',
+                    RETENTIONS_PROPOSED: '📋 Retenues proposées',
+                    TENANT_AGREED: '🤝 Accord trouvé',
+                    TENANT_PARTIAL_AGREED: '⚖️ Accord partiel',
+                    TENANT_DISPUTED: '⚠️ Dépôt contesté',
+                    DEADLINE_OVERDUE: '🚨 Délai dépassé',
+                    FULL_RELEASE: '✅ Dépôt restitué',
+                    RESOLVED: '✅ Dépôt — dossier clos',
+                };
+                return DEPOSIT_LABELS[eventType] || '🏦 Dépôt de garantie';
+            }
             return lastMessage.body;
         }
 
@@ -127,7 +142,18 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         const hasEdlStarted = messages.some(m => m.body?.startsWith('INSPECTION_STARTED|'));
         const hasEdlScheduled = messages.some(m => m.body?.startsWith('INSPECTION_SCHEDULED|'));
 
-        if (hasEdlSigned) {
+        // Check deposit status (highest priority if disputed/overdue)
+        const hasDepositDisputed = messages.some(m => m.body?.startsWith('DEPOSIT_EVENT|TENANT_DISPUTED'));
+        const hasDepositOverdue = messages.some(m => m.body?.startsWith('DEPOSIT_EVENT|DEADLINE_OVERDUE'));
+        const hasDepositResolved = messages.some(m => m.body?.startsWith('DEPOSIT_EVENT|RESOLVED') || m.body?.startsWith('DEPOSIT_EVENT|FULL_RELEASE'));
+
+        if (hasDepositDisputed && !hasDepositResolved) {
+            color = 'bg-red-500';
+            label = 'Dépôt contesté';
+        } else if (hasDepositOverdue && !hasDepositResolved) {
+            color = 'bg-red-500';
+            label = 'Dépôt en retard';
+        } else if (hasEdlSigned) {
             color = 'bg-green-500';
             label = 'EDL signé';
         } else if (hasEdlStarted) {

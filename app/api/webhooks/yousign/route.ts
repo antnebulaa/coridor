@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import prisma from "@/libs/prismadb";
 import { YousignService } from "@/services/YousignService";
 import { PassportService } from "@/services/PassportService";
+import { DepositService } from "@/services/DepositService";
 import { DEFAULT_MOVE_IN_STEPS } from "@/lib/moveInGuide";
 
 const YOUSIGN_WEBHOOK_SECRET = process.env.YOUSIGN_WEBHOOK_SECRET;
@@ -182,6 +183,14 @@ export async function POST(request: Request) {
                     console.log("[Yousign Webhook] RentalHistory created for application:", application.id);
                 } catch (passportErr) {
                     console.error("[Yousign Webhook] Failed to create RentalHistory:", passportErr);
+                }
+
+                // Auto-initialize SecurityDeposit for the deposit lifecycle
+                try {
+                    await DepositService.initializeDeposit(application.id);
+                    console.log("[Yousign Webhook] SecurityDeposit created for application:", application.id);
+                } catch (depositErr) {
+                    console.error("[Yousign Webhook] Failed to create SecurityDeposit:", depositErr);
                 }
 
                 // Auto-create Move-In Guide for the tenant

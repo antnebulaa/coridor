@@ -21,7 +21,7 @@ const InspectionBtn: React.FC<InspectionBtnProps> = ({
       <button
         onClick={disabled || loading ? undefined : onClick}
         disabled={disabled || loading}
-        className={`w-full py-4 rounded-2xl text-[18px] font-medium tracking-tight active:scale-[0.98] ${
+        className={`w-full py-4 rounded-full text-[18px] font-medium active:scale-[0.98] ${
           disabled ? t.btnPrimaryDisabled : t.btnPrimary
         }`}
       >

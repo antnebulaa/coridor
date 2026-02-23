@@ -987,6 +987,25 @@ export class PassportService {
     });
   }
 
+  // ── i-bis) onCleanExit — Update RentalHistory on clean exit (section 10.5) ──
+
+  static async onCleanExit(applicationId: string) {
+    // Find the rental history for this application
+    const rentalHistory = await prisma.rentalHistory.findUnique({
+      where: { rentalApplicationId: applicationId },
+    });
+
+    if (!rentalHistory) return;
+
+    // Set endDate to today — the tenancy is over
+    await prisma.rentalHistory.update({
+      where: { id: rentalHistory.id },
+      data: {
+        endDate: new Date(),
+      },
+    });
+  }
+
   // ── j) consentToReview — Tenant consents to share an evaluation ──
 
   static async consentToReview(userId: string, reviewId: string) {

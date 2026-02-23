@@ -110,6 +110,150 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `An ${type} inspection already exists for this lease` }, { status: 409 });
     }
 
+    // ─── EXIT: copy structure from entry inspection ───
+    if (type === 'EXIT') {
+      // Find the signed entry inspection for this application
+      const entryInspection = await prisma.inspection.findFirst({
+        where: {
+          applicationId,
+          type: 'ENTRY',
+          status: 'SIGNED',
+        },
+        include: {
+          rooms: {
+            include: {
+              elements: { include: { photos: true } },
+              photos: true,
+            },
+            orderBy: { order: 'asc' },
+          },
+          meters: true,
+          keys: true,
+        },
+      });
+
+      if (!entryInspection) {
+        return NextResponse.json(
+          { error: "Aucun état des lieux d'entrée signé trouvé pour ce bail" },
+          { status: 400 }
+        );
+      }
+
+      // Create EXIT inspection copying the structure from ENTRY
+      const inspection = await prisma.inspection.create({
+        data: {
+          type: 'EXIT',
+          applicationId,
+          propertyId: property.id,
+          landlordId: currentUser.id,
+          tenantId: application.candidateScope?.creatorUserId || null,
+          entryInspectionId: entryInspection.id,
+          ...(scheduledAt && { scheduledAt: new Date(scheduledAt) }),
+          rooms: {
+            create: entryInspection.rooms.map((room) => ({
+              roomType: room.roomType,
+              name: room.name,
+              order: room.order,
+              physicalRoomId: room.physicalRoomId,
+              elements: {
+                create: room.elements.map((el) => ({
+                  category: el.category,
+                  name: el.name,
+                  // Pre-fill natures from entry (coatings rarely change)
+                  nature: el.nature,
+                })),
+              },
+            })),
+          },
+        },
+        include: {
+          meters: true,
+          keys: true,
+          rooms: {
+            include: {
+              elements: { include: { photos: true } },
+              photos: true,
+            },
+            orderBy: { order: 'asc' },
+          },
+          photos: true,
+          furniture: true,
+        },
+      });
+
+      // Inject system message + notifications (below)
+      const tenantId = application.candidateScope?.creatorUserId;
+      if (tenantId) {
+        const conversation = await prisma.conversation.findFirst({
+          where: {
+            listingId: application.listingId,
+            users: { every: { id: { in: [currentUser.id, tenantId] } } },
+          },
+        });
+
+        if (conversation) {
+          const messageType = scheduledAt
+            ? `INSPECTION_SCHEDULED|${inspection.id}|EXIT|${new Date(scheduledAt).toISOString()}`
+            : `INSPECTION_STARTED|${inspection.id}|EXIT`;
+
+          await prisma.message.create({
+            data: {
+              body: messageType,
+              conversation: { connect: { id: conversation.id } },
+              sender: { connect: { id: currentUser.id } },
+              seen: { connect: { id: currentUser.id } },
+            },
+          });
+
+          await prisma.conversation.update({
+            where: { id: conversation.id },
+            data: { lastMessageAt: new Date() },
+          });
+        }
+
+        const propertyCity = property.city || '';
+        if (scheduledAt) {
+          const schedDate = new Date(scheduledAt);
+          const dateStr = schedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+          const timeStr = schedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+          await createNotification({
+            userId: tenantId,
+            type: 'inspection',
+            title: "État des lieux de sortie planifié",
+            message: `Un état des lieux de sortie${propertyCity ? ` à ${propertyCity}` : ''} est planifié le ${dateStr} à ${timeStr}.`,
+            link: `/inspection/${inspection.id}`,
+          });
+
+          sendPushNotification({
+            userId: tenantId,
+            title: "État des lieux de sortie planifié",
+            body: `État des lieux de sortie planifié le ${dateStr} à ${timeStr}.`,
+            url: `/inspection/${inspection.id}`,
+          });
+        } else {
+          await createNotification({
+            userId: tenantId,
+            type: 'inspection',
+            title: "État des lieux de sortie démarré",
+            message: `L'état des lieux de sortie${propertyCity ? ` à ${propertyCity}` : ''} a été démarré par le propriétaire.`,
+            link: `/inspection/${inspection.id}`,
+          });
+
+          sendPushNotification({
+            userId: tenantId,
+            title: "État des lieux de sortie démarré",
+            body: `L'état des lieux de sortie a été démarré. Vous serez invité à le signer.`,
+            url: `/inspection/${inspection.id}`,
+          });
+        }
+      }
+
+      return NextResponse.json(inspection, { status: 201 });
+    }
+
+    // ─── ENTRY: generate rooms from template ───
+
     // Determine room template from listing data
     const listing = application.listing;
     const rentalUnit = listing.rentalUnit;

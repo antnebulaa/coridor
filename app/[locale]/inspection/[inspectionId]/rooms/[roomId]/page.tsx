@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
-import { useInspection } from '@/hooks/useInspection';
+import { useInspection, getEntryElement, getEntryRoomPhoto, computeEvolution } from '@/hooks/useInspection';
 import type { InspectionRoomWithElements } from '@/hooks/useInspection';
 import RoomPills from '@/components/inspection/RoomPills';
 import CameraCapture from '@/components/inspection/CameraCapture';
@@ -14,11 +14,13 @@ import AudioRecorder from '@/components/inspection/AudioRecorder';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
+import EntryExitComparison from '@/components/inspection/EntryExitComparison';
 import {
   DEGRADATION_CONDITIONS,
   SURFACE_ELEMENTS,
   AI_TIPS,
   ROOM_TYPE_CONFIG,
+  EVOLUTION_CONFIG,
 } from '@/lib/inspection';
 import { EDL_THEME as t } from '@/lib/inspection-theme';
 import { EDL_OVERVIEW_OPTIONS, EDL_DETAIL_OPTIONS } from '@/lib/imageCompression';
@@ -79,6 +81,10 @@ export default function RoomInspectionPage() {
   const rooms = inspection?.rooms || [];
   const currentRoom = rooms.find((r) => r.id === roomId);
   const currentRoomIndex = rooms.findIndex((r) => r.id === roomId);
+
+  // EXIT mode detection
+  const isExit = inspection?.type === 'EXIT';
+  const entryInspection = inspection?.entryInspection;
 
   // Separate surface elements and equipment elements
   const surfaceElements = useMemo(
@@ -180,13 +186,33 @@ export default function RoomInspectionPage() {
 
   // ─── PHASE: OVERVIEW (plan large) ───
   if (phase === 'OVERVIEW') {
+    // EXIT mode: get entry overview photo
+    const entryOverviewPhoto = isExit && currentRoom
+      ? getEntryRoomPhoto(currentRoom, 'OVERVIEW', entryInspection)
+      : null;
+
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
+
+        {/* EXIT mode: show entry photo as reference above camera */}
+        {isExit && entryOverviewPhoto && (
+          <div className={`px-4 py-3 ${t.bgPage}`}>
+            <div className={`${t.exitEntryLabel} mb-1.5`}>Photo d&apos;entrée — {currentRoom.name}</div>
+            <div className={`rounded-xl overflow-hidden h-32 ${t.exitEntryBg}`}>
+              <img
+                src={entryOverviewPhoto.thumbnailUrl || entryOverviewPhoto.url}
+                alt="Photo entrée"
+                className="w-full h-full object-cover opacity-80"
+              />
+            </div>
+          </div>
+        )}
+
         <CameraCapture
           title={currentRoom.name}
-          label="Veuillez cadrer la pièce dans son ensemble"
-          instruction="Mode paysage recommandé"
+          label={isExit ? "Prenez la même photo qu'à l'entrée" : "Veuillez cadrer la pièce dans son ensemble"}
+          instruction={isExit ? "Reproduisez le même angle" : "Mode paysage recommandé"}
           allowMultiple
           doneLabel="Noter les surfaces"
           compressionOptions={EDL_OVERVIEW_OPTIONS}
@@ -216,7 +242,7 @@ export default function RoomInspectionPage() {
     const surface = SURFACE_ELEMENTS[currentSurfaceIndex];
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         {/* Surface tabs */}
         <div className={`flex px-4 pt-0 pb-4 gap-2.5 ${t.bgPage}`}>
@@ -267,24 +293,68 @@ export default function RoomInspectionPage() {
     const surface = SURFACE_ELEMENTS[currentSurfaceIndex];
     const surfacePhoto = currentSurface?.photos?.[currentSurface.photos.length - 1];
 
+    // EXIT mode: get entry data for comparison
+    const entryElement = isExit && currentSurface && currentRoom
+      ? getEntryElement(currentSurface, currentRoom, entryInspection)
+      : null;
+    const entryPhoto = entryElement?.photos?.[entryElement.photos.length - 1];
+    const evolution = isExit
+      ? computeEvolution(entryElement?.condition, currentSurface?.condition)
+      : null;
+    const evolutionConfig = evolution ? EVOLUTION_CONFIG[evolution] : null;
+
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {/* Photo preview */}
-          {surfacePhoto && (
-            <PhotoPreview
-              src={surfacePhoto.thumbnailUrl || surfacePhoto.url}
-              alt={surface.name}
-              onRetake={() => setPhase('SURFACE_PHOTO')}
+          {/* EXIT mode: split-screen photo comparison */}
+          {isExit && currentSurface ? (
+            <EntryExitComparison
+              label={`${surface.name} — ${currentRoom.name}`}
+              entryPhoto={entryPhoto}
+              exitPhoto={surfacePhoto}
+              entryCondition={entryElement?.condition}
+              exitCondition={currentSurface?.condition}
+              entryNatures={entryElement?.nature as string[] | undefined}
+              exitNatures={currentSurface?.nature as string[] | undefined}
+              degradationTypes={currentSurface?.degradationTypes as string[] | undefined}
             />
+          ) : (
+            /* ENTRY mode: regular photo preview */
+            surfacePhoto && (
+              <PhotoPreview
+                src={surfacePhoto.thumbnailUrl || surfacePhoto.url}
+                alt={surface.name}
+                onRetake={() => setPhase('SURFACE_PHOTO')}
+              />
+            )
+          )}
+
+          {/* EXIT mode: entry condition read-only */}
+          {isExit && entryElement?.condition && (
+            <div className={`mb-4 px-4 py-3 rounded-xl ${t.exitEntryBg}`}>
+              <div className={`text-[13px] mb-1 ${t.textMuted}`}>État à l&apos;entrée</div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ background: entryElement.condition ? EVOLUTION_CONFIG[computeEvolution(entryElement.condition, entryElement.condition) || 'UNCHANGED']?.color || '#9CA3AF' : '#9CA3AF' }}
+                />
+                <span className={`text-[15px] font-medium ${t.textSecondary}`}>
+                  {entryElement.condition === 'NEW' ? 'Neuf' :
+                   entryElement.condition === 'GOOD' ? 'Bon' :
+                   entryElement.condition === 'NORMAL_WEAR' ? 'Usure normale' :
+                   entryElement.condition === 'DEGRADED' ? 'Dégradé' :
+                   entryElement.condition === 'OUT_OF_SERVICE' ? 'H.S.' : ''}
+                </span>
+              </div>
+            </div>
           )}
 
           {/* Nature selector */}
           <div className="mb-5">
-            <div className={`text-[20px] font-bold mb-3 ${t.textPrimary}`}>
-              Revêtement — {surface.name}
+            <div className={`text-[22px] font-medium mb-3 ${t.textPrimary}`}>
+              Revêtement <span className={`font-medium ${t.textSecondary}`}>{surface.name}</span>
             </div>
             <NatureSelector
               category={surface.category as 'FLOOR' | 'WALL' | 'CEILING'}
@@ -299,14 +369,20 @@ export default function RoomInspectionPage() {
 
           {/* Condition chips */}
           <div className="mb-5">
-            <div className={`text-[20px] font-bold mb-3 ${t.textPrimary}`}>
-              État
+            <div className={`text-[22px] font-medium mb-3 ${t.textPrimary}`}>
+              {isExit ? 'État actuel' : 'État'}
             </div>
             <ConditionChips
               value={currentSurface?.condition}
               onChange={async (condition: ElementCondition) => {
                 if (currentSurface) {
-                  await updateElement(currentSurface.id, { condition });
+                  // In EXIT mode, auto-compute evolution
+                  if (isExit && entryElement?.condition) {
+                    const evo = computeEvolution(entryElement.condition, condition);
+                    await updateElement(currentSurface.id, { condition, evolution: evo || undefined });
+                  } else {
+                    await updateElement(currentSurface.id, { condition });
+                  }
 
                   // If degraded/H.S., enter degradation sub-flow
                   if (DEGRADATION_CONDITIONS.includes(condition)) {
@@ -317,6 +393,20 @@ export default function RoomInspectionPage() {
               }}
             />
           </div>
+
+          {/* Evolution badge (EXIT mode only) */}
+          {isExit && evolution && evolutionConfig && (
+            <div className="mb-5">
+              <span className={`inline-flex px-4 py-2 rounded-full text-[15px] font-medium ${
+                evolution === 'UNCHANGED' ? t.evolutionUnchanged :
+                evolution === 'NORMAL_WEAR' ? t.evolutionNormalWear :
+                evolution === 'DETERIORATION' ? t.evolutionDeterioration :
+                t.evolutionImprovement
+              }`}>
+                {evolutionConfig.label}
+              </span>
+            </div>
+          )}
         </div>
 
         <InspectionBtn
@@ -399,7 +489,7 @@ export default function RoomInspectionPage() {
 
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
@@ -412,35 +502,73 @@ export default function RoomInspectionPage() {
           <InspectionAIBubble>{aiTip}</InspectionAIBubble>
 
           <div className="space-y-3.5">
-            {equipmentElements.map((equip) => (
-              <div
-                key={equip.id}
-                className={`rounded-2xl p-4 ${t.equipRow}`}
-              >
-                <div className={`text-[18px] font-bold mb-2.5 ${t.textPrimary}`}>
-                  {equip.name}
+            {equipmentElements.map((equip) => {
+              const entryEquip = isExit && currentRoom
+                ? getEntryElement(equip, currentRoom, entryInspection)
+                : null;
+              const equipEvolution = isExit
+                ? computeEvolution(entryEquip?.condition, equip.condition)
+                : null;
+
+              return (
+                <div
+                  key={equip.id}
+                  className={`rounded-2xl p-4 ${t.equipRow}`}
+                >
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className={`text-[18px] font-bold ${t.textPrimary}`}>
+                      {equip.name}
+                    </div>
+                    {/* EXIT: show entry condition as badge */}
+                    {isExit && entryEquip?.condition && (
+                      <span className={`text-[12px] px-2 py-0.5 rounded-full ${t.exitEntryBg} ${t.textMuted}`}>
+                        Entrée : {entryEquip.condition === 'NEW' ? 'Neuf' :
+                          entryEquip.condition === 'GOOD' ? 'Bon' :
+                          entryEquip.condition === 'NORMAL_WEAR' ? 'Usure' :
+                          entryEquip.condition === 'DEGRADED' ? 'Dégradé' : 'H.S.'}
+                      </span>
+                    )}
+                  </div>
+                  <ConditionChips
+                    value={equip.condition}
+                    onChange={async (condition: ElementCondition) => {
+                      if (isExit && entryEquip?.condition) {
+                        const evo = computeEvolution(entryEquip.condition, condition);
+                        await updateElement(equip.id, { condition, evolution: evo || undefined });
+                      } else {
+                        await updateElement(equip.id, { condition });
+                      }
+                      if (DEGRADATION_CONDITIONS.includes(condition)) {
+                        setCurrentDegradElementId(equip.id);
+                        setPhase('DEGRAD_TYPE');
+                      }
+                    }}
+                    showAbsent
+                    isAbsent={equip.isAbsent}
+                    onAbsentToggle={async () => {
+                      await updateElement(equip.id, {
+                        isAbsent: !equip.isAbsent,
+                        condition: undefined,
+                      });
+                    }}
+                    compact
+                  />
+                  {/* Evolution badge */}
+                  {isExit && equipEvolution && (
+                    <div className="mt-2">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[12px] font-medium ${
+                        equipEvolution === 'UNCHANGED' ? t.evolutionUnchanged :
+                        equipEvolution === 'NORMAL_WEAR' ? t.evolutionNormalWear :
+                        equipEvolution === 'DETERIORATION' ? t.evolutionDeterioration :
+                        t.evolutionImprovement
+                      }`}>
+                        {EVOLUTION_CONFIG[equipEvolution].label}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <ConditionChips
-                  value={equip.condition}
-                  onChange={async (condition: ElementCondition) => {
-                    await updateElement(equip.id, { condition });
-                    if (DEGRADATION_CONDITIONS.includes(condition)) {
-                      setCurrentDegradElementId(equip.id);
-                      setPhase('DEGRAD_TYPE');
-                    }
-                  }}
-                  showAbsent
-                  isAbsent={equip.isAbsent}
-                  onAbsentToggle={async () => {
-                    await updateElement(equip.id, {
-                      isAbsent: !equip.isAbsent,
-                      condition: undefined,
-                    });
-                  }}
-                  compact
-                />
-              </div>
-            ))}
+              );
+            })}
 
             {/* + Ajouter un équipement */}
             {showAddEquip ? (
@@ -512,15 +640,16 @@ export default function RoomInspectionPage() {
   if (phase === 'OBS') {
     return (
       <div className="h-full flex flex-col">
-        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} onClose={() => router.push(`/inspection/${inspectionId}/rooms`)} />
+        <RoomPills rooms={rooms} activeRoomId={roomId} onRoomSelect={handleRoomSwitch} />
 
         <div className="flex-1 px-5 py-6">
-          <div className={`text-[26px] font-bold mb-1 tracking-tight ${t.textPrimary}`}>
+          <div className={`text-[28px] font-medium mb-1 tracking-tight ${t.textPrimary}`}>
             Observation générale
           </div>
-          <div className={`text-[17px] mb-5 ${t.textSecondary}`}>
-            {currentRoom.name} — Commentaire libre
+          <div className={`text-[22px] font-medium mb-8 ${t.textSecondary}`}>
+            {currentRoom.name}
           </div>
+          
 
           <AudioRecorder
             value={currentRoom.observations || ''}
