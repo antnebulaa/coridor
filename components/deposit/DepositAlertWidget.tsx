@@ -20,7 +20,7 @@ export default function DepositAlertWidget() {
     refreshInterval: 60_000,
   });
 
-  if (!alerts || alerts.length === 0) return null;
+  if (!alerts || !Array.isArray(alerts) || alerts.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
