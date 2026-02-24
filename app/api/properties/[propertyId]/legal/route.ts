@@ -46,8 +46,10 @@ export async function PATCH(
         referenceRent,
         referenceRentIncreased,
         rentSupplement,
+        rentSupplementJustification,
         previousRent,
         previousRentDate,
+        rentControlZone,
         leadDiagnosticDate,
         leadDiagnosticResult,
         asbestosDiagnosticDate,
@@ -78,8 +80,10 @@ export async function PATCH(
                 referenceRent: referenceRent !== undefined && referenceRent !== null ? parseFloat(String(referenceRent)) : null,
                 referenceRentIncreased: referenceRentIncreased !== undefined && referenceRentIncreased !== null ? parseFloat(String(referenceRentIncreased)) : null,
                 rentSupplement: rentSupplement !== undefined && rentSupplement !== null ? parseFloat(String(rentSupplement)) : null,
+                rentSupplementJustification: rentSupplementJustification ?? undefined,
                 previousRent: previousRent !== undefined && previousRent !== null ? parseFloat(String(previousRent)) : null,
                 previousRentDate: previousRentDate ? new Date(previousRentDate) : null,
+                rentControlZone: rentControlZone ?? undefined,
 
                 // Diagnostics complementaires
                 leadDiagnosticDate: leadDiagnosticDate ? new Date(leadDiagnosticDate) : null,

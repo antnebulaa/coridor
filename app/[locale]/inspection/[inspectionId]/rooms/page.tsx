@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useInspection } from '@/hooks/useInspection';
@@ -8,11 +8,12 @@ import type { InspectionRoomWithElements } from '@/hooks/useInspection';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import InspectionAIBubble from '@/components/inspection/InspectionAIBubble';
+import BottomSheet from '@/components/ui/BottomSheet';
 import { ROOM_TYPE_CONFIG, AI_TIPS } from '@/lib/inspection';
 import { EDL_THEME as t } from '@/lib/inspection-theme';
 import type { InspectionRoomType } from '@prisma/client';
 import {
-  Plus, CheckCircle2, ChevronRight, LogOut,
+  Plus, Check, ChevronRight, LogOut, Trash2, X,
   DoorOpen, ArrowLeftRight, Sofa, BedDouble, CookingPot, ShowerHead,
   Droplets, WashingMachine, Monitor, Shirt, Flower2, Sun,
   Warehouse, CircleParking, Car, Package,
@@ -60,9 +61,14 @@ export default function RoomsHubPage() {
   const params = useParams();
   const inspectionId = params.inspectionId as string;
   const router = useRouter();
-  const { inspection, addRoom } = useInspection(inspectionId);
+  const { inspection, addRoom, deleteRoom } = useInspection(inspectionId);
   const [showAddRoom, setShowAddRoom] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
+  const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
+  const [collapsingRoomId, setCollapsingRoomId] = useState<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const rooms: InspectionRoomWithElements[] = inspection?.rooms || [];
   const completedCount = rooms.filter((r) => r.isCompleted).length;
@@ -114,47 +120,67 @@ export default function RoomsHubPage() {
       <InspectionTopBar
         title="Pièces"
         subtitle={`${completedCount}/${rooms.length} complétées`}
-        onBack={() => router.back()}
+        onBack={() => { if (editMode) setEditMode(false); else router.back(); }}
         onClose={() => router.push('/dashboard')}
+        right={
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-colors ${editMode ? 'bg-red-100' : 'bg-gray-100'}`}
+          >
+            <Trash2 size={16} className={editMode ? 'text-red-500' : t.textMuted} />
+          </button>
+        }
       />
 
       <div className="flex-1 overflow-y-auto px-5 py-5">
         <InspectionAIBubble>{AI_TIPS.ROOMS_HUB}</InspectionAIBubble>
 
         {/* Room cards */}
-        <div className="space-y-3">
+        <div>
           {rooms.map((room) => {
             const photoCount = room.photos?.length || 0;
             const elementCount = room.elements?.length || 0;
             const qualifiedCount = room.elements?.filter((e) => e.condition || e.isAbsent).length || 0;
 
+            const isDeleting = deletingRoomId === room.id;
+            const isCollapsing = collapsingRoomId === room.id;
+
             return (
-              <button
+              <div
                 key={room.id}
-                onClick={() => handleRoomClick(room.id)}
-                className={`w-full rounded-2xl p-4 flex items-center gap-4 transition-all active:scale-[0.98] ${room.isCompleted ? t.roomCardCompleted : t.roomCardDefault}`}
+                ref={(el) => { cardRefs.current[room.id] = el; }}
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={isCollapsing ? { maxHeight: 0, marginBottom: 0, opacity: 0 } : { maxHeight: cardRefs.current[room.id]?.scrollHeight ?? 200, marginBottom: 12 }}
               >
-                <div className={room.isCompleted ? t.roomCardIconCompleted : t.roomCardIcon}>
-                  {React.createElement(ROOM_ICONS[room.roomType] || Package, { size: 26 })}
-                </div>
-                <div className="flex-1 text-left">
-                  <div className={`text-[18px] font-medium ${t.textPrimary}`}>
-                    {room.name}
+                <button
+                  onClick={() => editMode ? setRoomToDelete(room.id) : handleRoomClick(room.id)}
+                  className={`w-full rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 active:scale-[0.98] ${room.isCompleted ? t.roomCardCompleted : t.roomCardDefault} ${isDeleting ? 'scale-90 opacity-0 -translate-x-8' : 'scale-100 opacity-100 translate-x-0'}`}
+                >
+                  <div className="flex-1 text-left">
+                    <div className={`text-[18px] font-medium ${t.textPrimary}`}>
+                      {room.name}
+                    </div>
+                    <div className={`text-[14px] mt-0 ${t.textMuted}`}>
+                      {room.isCompleted
+                        ? `${photoCount} photos · ${qualifiedCount} éléments`
+                        : elementCount > 0
+                        ? `${qualifiedCount}/${elementCount} éléments qualifiés`
+                        : 'Non commencée'}
+                    </div>
                   </div>
-                  <div className={`text-[14px] mt-0 ${t.textMuted}`}>
-                    {room.isCompleted
-                      ? `${photoCount} photos · ${qualifiedCount} éléments`
-                      : elementCount > 0
-                      ? `${qualifiedCount}/${elementCount} éléments qualifiés`
-                      : 'Non commencée'}
-                  </div>
-                </div>
-                {room.isCompleted ? (
-                  <CheckCircle2 size={22} color={t.green} />
-                ) : (
-                  <ChevronRight size={20} className={t.textMuted} />
-                )}
-              </button>
+                  {editMode ? (
+                    <span className="shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                      <X size={16} className="text-red-500" />
+                    </span>
+                  ) : room.isCompleted ? (
+                    <span className="shrink-0 w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <Check size={14} strokeWidth={3} className="text-white" />
+                    </span>
+                  ) : (
+                    <ChevronRight size={20} className={t.textMuted} />
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
@@ -208,6 +234,42 @@ export default function RoomsHubPage() {
       <InspectionBtn onClick={() => router.push(`/inspection/${inspectionId}/recap`)} disabled={!allCompleted}>
         {allCompleted ? 'Récapitulatif →' : `${rooms.length - completedCount} pièce(s) restante(s)`}
       </InspectionBtn>
+
+      {/* Delete bottom sheet */}
+      <BottomSheet
+        isOpen={!!roomToDelete}
+        onClose={() => setRoomToDelete(null)}
+        title="Supprimer la pièce"
+      >
+        <div className="px-6 pb-6 space-y-3">
+          <button
+            onClick={() => {
+              const id = roomToDelete!;
+              setRoomToDelete(null);
+              // Phase 1: slide + fade (300ms)
+              setDeletingRoomId(id);
+              setTimeout(() => {
+                // Phase 2: collapse height (300ms)
+                setCollapsingRoomId(id);
+                setTimeout(async () => {
+                  await deleteRoom(id);
+                  setDeletingRoomId(null);
+                  setCollapsingRoomId(null);
+                }, 300);
+              }, 300);
+            }}
+            className="w-full py-3.5 rounded-xl text-[16px] font-semibold text-red-600 bg-red-50 active:scale-[0.98] transition"
+          >
+            Supprimer la pièce
+          </button>
+          <button
+            onClick={() => setRoomToDelete(null)}
+            className={`w-full py-3.5 rounded-xl text-[16px] font-medium ${t.btnSecondary} active:scale-[0.98] transition`}
+          >
+            Annuler
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

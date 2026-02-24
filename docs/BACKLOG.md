@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 23 février 2026
+> Dernière mise à jour : 24 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -18,6 +18,18 @@
 - [✅] Google Maps / Mapbox : autocomplete adresse, coordonnées, quartier, transports
 - [✅] Vérification conformité meublé : check-list (model `Furniture` — 13 éléments obligatoires + optionnels)
 - [✅] Adjectif marketing pour l'annonce (`propertyAdjective`) — utilisé dans ListingCard + RentModal
+
+### Zone Tendue & Encadrement des Loyers
+- [✅] Détection zone tendue officielle — 3 689 communes (décret 22/12/2025), lookup JSON preprocessé depuis CSV data.gouv.fr (`lib/zoneTendue.ts`, `lib/data/zones-tendues.json`), désambiguïsation par nom de ville pour codes postaux mixtes (`lib/data/postal-insee-mapping.json`)
+- [✅] Script de prétraitement `scripts/preprocess-zones-tendues.ts` — télécharge CSV officiels (data.gouv.fr + La Poste), croise codes INSEE ↔ codes postaux, gère arrondissements Paris/Lyon/Marseille
+- [✅] Module unifié encadrement des loyers `lib/rentControl.ts` — lookup multi-territoires, architecture hybride local + API
+- [✅] Données encadrement des loyers — 8 territoires : Paris (API opendata.paris.fr), Lyon (données officielles Grand Lyon WFS, 5 zones, 5 époques, 233 IRIS), Lille (MEL, 4 zones, 49 communes), Montpellier (4 zones, 68 quartiers/communes), Bordeaux (données officielles data.gouv.fr, 4 zones, 88 IRIS), Pays Basque (3 zones, 24 communes), Grenoble (4 zones), Est Ensemble (2 zones, 9 communes 93)
+- [✅] API `/api/rent-control` — lookup local pour villes avec zones par commune + API Paris géospatiale, plus aucune donnée fictive
+- [✅] LegalInfoSection — sélecteur de zone d'encadrement (Lyon, Montpellier, Grenoble, Bordeaux), affichage données officielles, champ `rentSupplementJustification` (obligatoire art. 140 VI loi ELAN), détection zone tendue avec ville
+- [✅] RentModal — hybride local/API (`lookupRentControl` puis fallback API si `needsApi`)
+- [✅] Champ Prisma `rentControlZone String?` sur Property + API legal PATCH
+- [✅] Suppression complète des données fictives (`CITY_RATES` dans `utils/rentUtils.ts`)
+- [🔧] Données Lille et Montpellier — valeurs estimées (API/CSV officiels indisponibles au moment du téléchargement). Structure et zones correctes, valeurs à vérifier quand les sources redeviennent accessibles : Lille (`opendata.lillemetropole.fr/api/.../encadrement-des-loyers-donnees-mel`), Montpellier (`data.montpellier3m.fr`)
 
 ### Candidatures & Pipeline
 - [✅] Pipeline candidat : `RentalApplication` avec statuts complets (PENDING → SENT → VISIT_PROPOSED → VISIT_CONFIRMED → SHORTLISTED → FINALIST → SELECTED → ACCEPTED / REJECTED)
@@ -345,6 +357,7 @@
 ## ⚠️ Notes déploiement
 
 - **Cron jobs activés** : 7 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h), `inspection-reminders` (7h).
+- **Données encadrement des loyers** : fichiers JSON statiques dans `lib/data/rent-control/`. Mise à jour annuelle recommandée (arrêtés préfectoraux publiés entre juin et août). Relancer `npx ts-node scripts/preprocess-zones-tendues.ts` si le décret zone tendue est modifié. Données Lille et Montpellier à vérifier quand les API officielles redeviennent disponibles.
 
 ---
 
@@ -362,3 +375,8 @@
 - [x] ~~iOS Safari : `-webkit-fill-available` casse le positionnement fixed~~ (corrigé — remplacement par `min-height: 100dvh` dans globals.css)
 - [x] ~~Tailwind v4 : utilitaires custom silencieusement ignorés en production~~ (corrigé — migration de `@layer utilities` vers `@utility` pour `pt-safe`, `pb-safe`, etc.)
 - [x] ~~22 erreurs TypeScript à travers 8 fichiers~~ (corrigé — types Prisma, params async, imports manquants)
+- [x] ~~Zone tendue : 627 codes postaux hardcodés incomplets et sur-inclusifs~~ (corrigé — remplacé par 3 689 communes officielles via CSV data.gouv.fr, avec désambiguïsation par ville)
+- [x] ~~Encadrement des loyers : 34 villes avec taux fictifs (CITY_RATES)~~ (corrigé — remplacé par données officielles pour 8 territoires, suppression complète de CITY_RATES)
+- [x] ~~RentModal utilise des données fictives au lieu de l'API~~ (corrigé — hybride lookupRentControl local + API pour Paris)
+- [x] ~~LegalInfoSection : pas de champ rentSupplementJustification~~ (corrigé — textarea conditionnel + mention légale art. 140 VI loi ELAN)
+- [x] ~~LegalInfoSection : checkZoneTendue ne passe pas le nom de ville~~ (corrigé — `checkZoneTendue(zipCode, city)` pour désambiguïsation)

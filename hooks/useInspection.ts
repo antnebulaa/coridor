@@ -385,6 +385,29 @@ export function useInspection(inspectionId: string | undefined) {
     return result;
   }, [inspectionId, apiCall]);
 
+  const deleteRoom = useCallback(async (roomId: string) => {
+    if (!inspectionId) return;
+
+    // Optimistic update — remove room immediately
+    setInspection(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        rooms: prev.rooms.filter(r => r.id !== roomId),
+      };
+    });
+
+    // Fire API in background
+    try {
+      await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
+        method: 'DELETE',
+      });
+      scheduleAutoSave();
+    } catch {
+      fetchInspection(); // rollback on error
+    }
+  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
   const updateRoom = useCallback(async (roomId: string, data: { isCompleted?: boolean; observations?: string }) => {
     if (!inspectionId) return;
 
@@ -664,6 +687,7 @@ export function useInspection(inspectionId: string | undefined) {
     updateMeter,
     updateKey,
     addRoom,
+    deleteRoom,
     updateRoom,
     addElement,
     updateElement,

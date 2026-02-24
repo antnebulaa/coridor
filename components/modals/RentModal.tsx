@@ -23,7 +23,7 @@ import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
 import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair } from "lucide-react";
-import { calculateRentControl as calcRent } from "@/utils/rentUtils";
+import { lookupRentControl } from "@/lib/rentControl";
 import { useTranslations } from 'next-intl';
 import VisitsSection from "@/app/[locale]/properties/[listingId]/edit/components/VisitsSection";
 import PriceAssistantModal from "@/app/[locale]/properties/[listingId]/edit/components/PriceAssistantModal";
@@ -247,15 +247,33 @@ const RentModal = () => {
 
     useEffect(() => {
         if (location && (surfaceValue || 50)) {
-            const mockListing = {
-                surface: surfaceValue || 50,
-                roomCount: roomCount,
+            const city = location?.label?.split(',')[0] || '';
+            const zipCode = location?.zipCode || '';
+            const result = lookupRentControl({
+                city,
+                zipCode,
+                roomCount: roomCount || 1,
                 buildYear: 2000,
                 isFurnished: true,
-            };
-            const city = location?.label?.split(',')[0] || '';
-            const result = calcRent(mockListing as any, city);
-            setRentControlData(result);
+                surface: surfaceValue || 50,
+            });
+
+            if (result.needsApi && location?.lat && location?.lng) {
+                // Paris and other API-dependent cities
+                axios.post('/api/rent-control', {
+                    lat: location.lat,
+                    lon: location.lng,
+                    roomCount: roomCount || 1,
+                    buildYear: 2000,
+                    isFurnished: true,
+                    surface: surfaceValue || 50,
+                    city,
+                    listing: { zipCode },
+                }).then(res => setRentControlData(res.data))
+                  .catch(() => setRentControlData(null));
+            } else {
+                setRentControlData(result);
+            }
         }
     }, [location, surfaceValue, roomCount]);
 
@@ -1305,14 +1323,14 @@ const RentModal = () => {
                     title={t('steps.rentalType.title')}
                     subtitle={t('steps.rentalType.subtitle')}
                 />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-3">
                     <div
                         onClick={() => {
                             setCustomValue('leaseType', LeaseType.LONG_TERM);
                             setCustomValue('isFurnished', false);
                         }}
                         className={`
-                            p-4 border-2 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-black active:scale-[0.98]
+                            p-4 border-1 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-gray-600 active:scale-[0.98]
                             ${watch('leaseType') === LeaseType.LONG_TERM && !watch('isFurnished') ? 'border-black bg-neutral-50' : 'border-neutral-200'}
                         `}
                     >
@@ -1339,7 +1357,7 @@ const RentModal = () => {
                             setCustomValue('isFurnished', true);
                         }}
                         className={`
-                            p-4 border-2 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-black active:scale-[0.98]
+                            p-4 border-1 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-gray-600 active:scale-[0.98]
                             ${watch('leaseType') === LeaseType.LONG_TERM && watch('isFurnished') ? 'border-black bg-neutral-50' : 'border-neutral-200'}
                         `}
                     >
@@ -1366,7 +1384,7 @@ const RentModal = () => {
                             setCustomValue('isFurnished', true);
                         }}
                         className={`
-                            p-4 border-2 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-black active:scale-[0.98]
+                            p-4 border-1 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-gray-600 active:scale-[0.98]
                             ${watch('leaseType') === LeaseType.COLOCATION ? 'border-black bg-neutral-50' : 'border-neutral-200'}
                         `}
                     >

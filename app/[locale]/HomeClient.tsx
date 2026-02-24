@@ -191,7 +191,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 relative
             ">
                 {/* Left Column: List + Footer */}
-                <div className={listColumnClasses}>
+                <div id="home-scroll-container" className={listColumnClasses}>
                     <div className="pt-safe-navbar md:pt-4 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
 
                         {!isSearchActive && (
@@ -310,12 +310,12 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             shadow-xl
                                             items-center
                                             gap-3
-                                            font-semibold
+                                            font-medium
                                             transition-transform
                                             hover:scale-105
                                         "
                                     >
-                                        <div className="font-bold">{selectedListing.price + ((selectedListing.charges as any)?.amount || 0)} €</div>
+                                        <div className="font-medium">{selectedListing.price + ((selectedListing.charges as any)?.amount || 0)} €</div>
                                         <div className="h-4 w-px bg-neutral-300 mx-1"></div>
                                         <div>{t('viewListing')}</div>
                                     </button>

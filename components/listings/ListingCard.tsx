@@ -176,7 +176,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-xl md:p-2 hover:bg-secondary transition">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-3xl md:p-2 hover:bg-secondary transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Tablet, Stacked on Desktop */}
                     <div className="
                         w-full h-[200px]
@@ -233,7 +233,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0 mt-1 md:-mt-1">
-                                    <div className="font-medium text-base  text-neutral-900  line-clamp-1">
+                                    <div className="font-medium text-sm text-neutral-900  line-clamp-1">
                                         {data.rentalUnit?.type === 'PRIVATE_ROOM'
                                             ? t('privateRoom')
                                             : data.category}
@@ -334,6 +334,9 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         <span className="font-medium">{data.transitData.mainConnection.walkTime} min</span>
                                     </div>
                                 )}
+                            </div>
+                            <div className="font-semibold text-[17px] md:text-[17px] text-blue-600 leading-tight pt-2">
+                                Annonce vérifiée
                             </div>
                         </div>
                     </div>

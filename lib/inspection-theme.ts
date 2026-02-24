@@ -31,7 +31,7 @@ export const EDL_THEME = {
 
   // Accent (la couleur Coridor)
   accent: "#FE3C10",
-  accentBg: "bg-amber-600",
+  accentBg: "bg-red-600",
   accentText: "text-amber-600",
   accentBorder: "border-amber-500",
   accentBgLight: "bg-amber-50",            // Fond léger accent (bulles IA)
@@ -50,16 +50,12 @@ export const EDL_THEME = {
   pillContainer: "bg-white border-b border-gray-100",
   pillDefault: "bg-gray-100 text-gray-600",              // Pièce non faite
   pillActive: "bg-gray-900 text-white",                 // Pièce en cours
-  pillCompleted: "bg-emerald-100 text-emerald-700",      // Pièce complétée ✓
+  pillCompleted: "bg-emerald-500 text-white",      // Pièce complétée ✓
   pillCompletedDot: "bg-emerald-500",                    // Dot vert ✓
+  pillCheckBg: "bg-white/30",                            // Fond rond du check dans les room pills
+  pillCheckText: "text-white",                           // Couleur de l'icône check
 
-  // ──────────────────────────────────────────────
-  // TABS — Surface tabs (Sols / Murs / Plafond)
-  // ──────────────────────────────────────────────
-
-  tabDefault: "bg-gray-100 text-gray-600",               // Tab non fait
-  tabActive: "bg-amber-500 text-white",                  // Tab actif
-  tabCompleted: "bg-emerald-500 text-white",             // Tab complété ✓
+  // (tokens tab* supprimés — utiliser stepPill* ci-dessous)
 
   // ──────────────────────────────────────────────
   // BOUTONS
@@ -84,7 +80,7 @@ export const EDL_THEME = {
   // Bouton fermer (X en haut à droite)
   btnClose: "text-gray-400",
 
-  // Bouton ajout ("+ Ajouter un équipement", "+ Ajouter une pièce")
+  // Bouton ajout ("+ Ajouter un équipement")
   btnAdd: "border-2 border-dashed border-gray-300 text-gray-500 bg-transparent",
 
   // Bouton photo / shutter (écran caméra)
@@ -124,10 +120,10 @@ export const EDL_THEME = {
   // CARTES PIÈCES (Hub)
   // ──────────────────────────────────────────────
 
-  roomCardDefault: "bg-gray-100 border border-gray-200",
-  roomCardCompleted: "bg-emerald-100 border border-emerald-200",
+  roomCardDefault: "bg-gray-100 border border-white",
+  roomCardCompleted: "bg-gray-100 border-2 border-gray-100",
   roomCardIcon: "text-gray-500",
-  roomCardIconCompleted: "text-emerald-500",
+  roomCardIconCompleted: "text-white",
 
   // ──────────────────────────────────────────────
   // ÉQUIPEMENTS (liste dans inspection pièce)
@@ -158,8 +154,8 @@ export const EDL_THEME = {
   // BULLE IA
   // ──────────────────────────────────────────────
 
-  aiBubbleBg: "bg-amber-50 border border-amber-200",
-  aiBubbleText: "text-amber-800",
+  aiBubbleBg: "bg-white border border-gray-900 border-2",
+  aiBubbleText: "text-gray-800",
   aiBubbleIcon: "text-amber-500",
 
   // ──────────────────────────────────────────────
@@ -175,9 +171,11 @@ export const EDL_THEME = {
   // ──────────────────────────────────────────────
 
   stepPillContainer: "bg-white border-b border-white",
-  stepPillActive: "bg-neutral-900 text-white",
+  stepPillActive: "bg-gray-900 text-white",
   stepPillDone: "bg-emerald-500 text-white",
-  stepPillTodo: "bg-gray-200 text-gray-500",
+  stepPillTodo: "bg-gray-100 text-gray-600",
+  stepPillCheckBg: "bg-white/30",                        // Fond rond du check dans les step pills
+  stepPillCheckText: "text-white",                       // Couleur de l'icône check
 
   // ──────────────────────────────────────────────
   // STEPPER / WIZARD (compteurs, étapes)

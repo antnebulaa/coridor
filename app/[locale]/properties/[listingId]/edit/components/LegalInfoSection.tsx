@@ -16,6 +16,7 @@ import { SafeListing } from '@/types';
 import EditSectionFooter from './EditSectionFooter';
 import CustomToast from '@/components/ui/CustomToast';
 import { checkZoneTendue } from '@/lib/zoneTendue';
+import { lookupRentControl } from '@/lib/rentControl';
 
 interface LegalInfoSectionProps {
     listing: SafeListing;
@@ -46,14 +47,31 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
     const [hasGarage, setHasGarage] = useState(property?.hasGarage ?? false);
     const [garageReference, setGarageReference] = useState(property?.garageReference || '');
 
-    // --- Zone tendue (auto-detected) ---
-    const detectedZoneTendue = checkZoneTendue(property?.zipCode);
+    // --- Zone tendue (auto-detected with city for disambiguation) ---
+    const detectedZoneTendue = checkZoneTendue(property?.zipCode, property?.city);
     const isZoneTendue = detectedZoneTendue || (property?.isZoneTendue ?? false);
     const [referenceRent, setReferenceRent] = useState<number | ''>(property?.referenceRent ?? '');
     const [referenceRentIncreased, setReferenceRentIncreased] = useState<number | ''>(property?.referenceRentIncreased ?? '');
     const [rentSupplement, setRentSupplement] = useState<number | ''>(property?.rentSupplement ?? '');
+    const [rentSupplementJustification, setRentSupplementJustification] = useState(
+        (property as any)?.rentSupplementJustification || ''
+    );
     const [previousRent, setPreviousRent] = useState<number | ''>(property?.previousRent ?? '');
     const [previousRentDate, setPreviousRentDate] = useState(toInputDate((property as any)?.previousRentDate));
+
+    // --- Rent control zone selection (Lyon, Montpellier, Grenoble, Bordeaux) ---
+    const [rentControlZone, setRentControlZone] = useState((property as any)?.rentControlZone || '');
+    const rentControlInfo = isZoneTendue && property?.city && property?.zipCode
+        ? lookupRentControl({
+            city: property.city,
+            zipCode: property.zipCode,
+            roomCount: 1,
+            buildYear: 2000,
+            isFurnished: false,
+            surface: 1,
+            rentControlZone: rentControlZone || undefined,
+        })
+        : null;
 
     // --- Qualite du bailleur ---
     const [ownerLegalStatus, setOwnerLegalStatus] = useState(property?.ownerLegalStatus || '');
@@ -76,8 +94,10 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                 referenceRent: referenceRent || null,
                 referenceRentIncreased: referenceRentIncreased || null,
                 rentSupplement: rentSupplement || null,
+                rentSupplementJustification: rentSupplementJustification || null,
                 previousRent: previousRent || null,
                 previousRentDate: previousRentDate || null,
+                rentControlZone: rentControlZone || null,
                 ownerLegalStatus: ownerLegalStatus || null,
                 ownerSiren: ownerSiren || null,
                 ownerSiege: ownerSiege || null,
@@ -106,7 +126,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
         propertyId, router,
         legalRegime,
         hasCave, caveReference, hasParking, parkingReference, hasGarage, garageReference,
-        isZoneTendue, referenceRent, referenceRentIncreased, rentSupplement, previousRent, previousRentDate,
+        isZoneTendue, referenceRent, referenceRentIncreased, rentSupplement, rentSupplementJustification, previousRent, previousRentDate, rentControlZone,
         ownerLegalStatus, ownerSiren, ownerSiege,
     ]);
 
@@ -278,6 +298,48 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                             </p>
                         </div>
 
+                        {/* Zone selector for cities that require it */}
+                        {rentControlInfo?.zoneRequired && (
+                            <div>
+                                <label className={labelClass}>
+                                    Zone d&apos;encadrement ({rentControlInfo.territory})
+                                </label>
+                                <select
+                                    value={rentControlZone}
+                                    onChange={(e) => setRentControlZone(e.target.value)}
+                                    disabled={isLoading}
+                                    className={selectClass}
+                                >
+                                    <option value="">-- Selectionnez votre zone --</option>
+                                    {rentControlInfo.availableZones?.map((z) => (
+                                        <option key={z} value={z}>
+                                            Zone {z}
+                                            {rentControlInfo.zoneDescriptions?.[z]
+                                                ? ` — ${rentControlInfo.zoneDescriptions[z]}`
+                                                : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                {!rentControlZone && (
+                                    <p className="text-xs text-amber-600 mt-1">
+                                        Selectionnez votre zone pour obtenir les loyers de reference.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Auto-filled rent info from official data */}
+                        {rentControlInfo?.referenceRent && (
+                            <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <CheckCircle2 size={16} className="text-green-600 shrink-0 mt-0.5" />
+                                <p className="text-sm text-green-700">
+                                    Donnees officielles ({rentControlInfo.territory}) : ref. {rentControlInfo.referenceRent} EUR/m2,
+                                    majore {rentControlInfo.referenceRentMax} EUR/m2,
+                                    minore {rentControlInfo.referenceRentMin} EUR/m2.
+                                </p>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClass}>Loyer de reference (EUR/m2/mois)</label>
@@ -328,6 +390,26 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 />
                             </div>
                         </div>
+
+                        {/* Justification required by law when rent supplement > 0 */}
+                        {rentSupplement !== '' && Number(rentSupplement) > 0 && (
+                            <div>
+                                <label className={labelClass}>
+                                    Justification du complement de loyer
+                                </label>
+                                <textarea
+                                    value={rentSupplementJustification}
+                                    onChange={(e) => setRentSupplementJustification(e.target.value)}
+                                    disabled={isLoading}
+                                    placeholder="Decrivez les caracteristiques exceptionnelles justifiant le complement de loyer (ex: terrasse, vue, equipements haut de gamme...)"
+                                    rows={3}
+                                    className={inputClass}
+                                />
+                                <p className="text-xs text-neutral-500 mt-1">
+                                    Obligatoire legalement (art. 140 VI loi ELAN). Le complement doit etre justifie par des caracteristiques exceptionnelles du logement.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="max-w-xs">
                             <label className={labelClass}>Date du dernier loyer</label>

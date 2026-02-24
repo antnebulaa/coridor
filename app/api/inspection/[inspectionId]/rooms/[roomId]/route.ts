@@ -63,3 +63,54 @@ export async function PATCH(request: Request, props: Params) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+// DELETE /api/inspection/[inspectionId]/rooms/[roomId] — Delete a room
+export async function DELETE(_request: Request, props: Params) {
+  try {
+    const { inspectionId, roomId } = await props.params;
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const room = await prisma.inspectionRoom.findFirst({
+      where: { id: roomId, inspectionId },
+      include: {
+        inspection: {
+          include: {
+            application: {
+              include: {
+                listing: {
+                  include: { rentalUnit: { include: { property: { select: { ownerId: true } } } } },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    if (room.inspection.application.listing.rentalUnit.property.ownerId !== currentUser.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (room.inspection.status !== 'DRAFT') {
+      return NextResponse.json({ error: 'Cannot modify a non-draft inspection' }, { status: 403 });
+    }
+
+    // Cascade deletes elements and photos via Prisma onDelete: Cascade
+    await prisma.inspectionRoom.delete({
+      where: { id: roomId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    console.error('[Inspection Room DELETE] Error:', error);
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

@@ -83,10 +83,15 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
             key={room.id}
             ref={isActive ? activeRef : undefined}
             onClick={() => onRoomSelect(room.id)}
-            className={`shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-2xl text-[13px] font-medium whitespace-nowrap ${pillClass}`}
+            className={`relative shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-2xl text-[13px] font-medium whitespace-nowrap ${pillClass}`}
           >
+            {isDone && !isActive && (
+              <span className={`absolute top-1 right-1 z-10 inline-flex items-center justify-center w-4 h-4 rounded-full ${t.pillCheckBg}`}>
+                <Check size={8} strokeWidth={3} className={t.pillCheckText} />
+              </span>
+            )}
             {React.createElement(ROOM_ICONS[room.roomType] || Package, { size: 22 })}
-            <span className="flex items-center gap-1">{room.name}{isDone && !isActive && <Check size={12} />}</span>
+            <span>{room.name}</span>
           </button>
         );
       })}

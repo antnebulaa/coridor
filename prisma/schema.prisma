@@ -345,6 +345,7 @@ model Property {
   rentSupplementJustification String?
   previousRent              Float?    // Dernier loyer appliqué (EUR)
   previousRentDate          DateTime? @db.Date
+  rentControlZone           String?   // Zone d'encadrement des loyers (Lyon, Montpellier, Grenoble, Bordeaux)
 
   // ---- ANNEXES / LOCAUX ACCESSOIRES ----
   hasCave           Boolean   @default(false)

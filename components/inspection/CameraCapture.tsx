@@ -221,13 +221,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         />
 
         {/* Label & instruction — stacked lines */}
-        <div className="text-center mb-10 px-8 pointer-events-none">
+        <div className="text-center mb-16 px-8 pointer-events-none">
           {title ? (
             <>
-              <div className="text-[36px] font-semibold tracking-tight mb-1 text-white">
-                {title}
-              </div>
-              <div className="text-[18px] font-medium mb-4 text-white/50">
+              
+              <div className="text-[24px] font-base mb-4 text-white">
                 {label}
               </div>
             </>

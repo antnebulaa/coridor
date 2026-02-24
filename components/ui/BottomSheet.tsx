@@ -27,14 +27,14 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             )}
             <Drawer.Portal>
                 <Drawer.Overlay
-                    className="fixed inset-0 bg-black/40 z-[9999]"
+                    className="fixed inset-0 bg-black/40 z-10001"
                     onClick={(e) => {
                         e.stopPropagation();
                         onClose();
                     }}
                 />
                 <Drawer.Content
-                    className="bg-white dark:bg-neutral-900 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-[9999] outline-none pb-16 max-h-[90vh]"
+                    className="bg-white dark:bg-neutral-900 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-10001 outline-none pb-16 max-h-[90vh]"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-neutral-300 mb-2 mt-3" />

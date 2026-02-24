@@ -9,7 +9,6 @@ import { Euro, Info, AlertTriangle, CheckCircle } from "lucide-react";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 
-import { calculateRentControl } from "@/utils/rentUtils";
 import PriceAssistantModal from "./PriceAssistantModal";
 import EditSectionFooter from "./EditSectionFooter";
 import { Wand2, TrendingUp, Scale } from "lucide-react";
@@ -121,9 +120,6 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 } finally {
                     setIsLoading(false);
                 }
-            } else if (city && listing.surface) {
-                const result = calculateRentControl(listing, city);
-                setRentControlData(result);
             }
         };
 
