@@ -480,27 +480,25 @@ const SearchModal = () => {
             { key: STEPS.FILTERS, label: 'Filtres', stepVal: STEPS.FILTERS },
         ];
 
-        // Animation Variants
+        // Animation Variants (Removed delays to fix staggered loading flash)
         const containerVariants = {
-            hidden: { opacity: 0 },
+            hidden: { opacity: 1 },
             show: {
                 opacity: 1,
                 transition: {
-                    staggerChildren: 0.1,
-                    delayChildren: 0.1
+                    staggerChildren: 0,
+                    delayChildren: 0
                 }
             }
         };
 
         const itemVariants = {
-            hidden: { opacity: 0, y: 20 },
+            hidden: { opacity: 1, y: 0 },
             show: {
                 opacity: 1,
                 y: 0,
                 transition: {
-                    type: "spring" as const,
-                    stiffness: 260,
-                    damping: 20
+                    duration: 0
                 }
             }
         };

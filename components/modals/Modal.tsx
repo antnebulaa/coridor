@@ -70,14 +70,19 @@ const Modal: React.FC<ModalProps> = ({
     const scrollRef = useRef<HTMLDivElement>(null); // To check scrollTop
 
     useEffect(() => {
-        // eslint-disable-next-line
-        setShowModal(!!isOpen);
         if (isOpen) {
             document.body.style.overflow = 'hidden';
             // Reset drag state on open
             setTranslateY(0);
             setIsDragging(false);
+            // Wait for iOS viewport to stabilize after overflow:hidden before starting animation
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setShowModal(true);
+                });
+            });
         } else {
+            setShowModal(false);
             document.body.style.overflow = 'unset';
             // Reset drag state on close
             setTranslateY(0);
@@ -217,9 +222,10 @@ const Modal: React.FC<ModalProps> = ({
                     className={`
                         relative
                         mx-auto
-                        h-dvh
+                        h-full
                         md:h-auto
-                        max-h-dvh
+                        max-h-full
+                        md:max-h-dvh
                         ${widthClass ? widthClass : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
                     `}
                 >
@@ -238,7 +244,7 @@ const Modal: React.FC<ModalProps> = ({
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-dvh md:h-auto max-h-dvh border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden pt-safe md:pt-0">
+                        <div className="h-full md:h-auto max-h-full md:max-h-dvh border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden pt-safe md:pt-0">
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div

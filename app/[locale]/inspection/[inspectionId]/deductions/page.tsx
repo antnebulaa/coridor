@@ -85,8 +85,8 @@ export default function DeductionsPage() {
     if (deposit) return deposit * 100;
     // Fallback: 1x rent (unfurnished), 2x (furnished)
     const price = listingData.price as number || 0;
-    const leaseType = listingData.leaseType as string || '';
-    const isFurnished = leaseType === 'SHORT_TERM' || leaseType === 'STUDENT';
+    const rentalUnit = listingData.rentalUnit as Record<string, unknown> | undefined;
+    const isFurnished = !!(rentalUnit?.isFurnished);
     return price * (isFurnished ? 2 : 1) * 100;
   }, [inspection]);
 

@@ -44,3 +44,10 @@ next-env.d.ts
 prisma/seeds/bpe_data.csv
 
 certificates
+
+# ANIL rent data CSVs (large, imported into DB)
+data/anil/
+
+# Local design assets & issue screenshots
+DESIGN/
+issues/

@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 24 février 2026
+> Dernière mise à jour : 26 février 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -11,7 +11,8 @@
 - [✅] Architecture 3-tiers Property → RentalUnit → Listing (schema + CRUD)
 - [✅] Création/édition d'annonces (`app/[locale]/listings/`, `app/api/listings/`)
 - [✅] Workflow de modération (DRAFT → PENDING_REVIEW → PUBLISHED → REJECTED → ARCHIVED) — enum + admin approve/reject/archive routes + UI
-- [✅] Types de bail (LONG_TERM, SHORT_TERM, STUDENT, COLOCATION)
+- [✅] Types de bail (LONG_TERM, STUDENT, COLOCATION)
+- [✅] Baux spéciaux — opt-in par annonce : bail étudiant 9 mois (`acceptsStudentLease`, meublé uniquement) + bail mobilité 1-10 mois (`acceptsMobilityLease`, meublé uniquement, motif obligatoire), validation candidature côté API, refonte `LeaseTypeSection` (3 cards : nue/meublée/coloc + toggles spéciaux), `ApplicationModal` enrichi (choix type bail + motif mobilité), validation pré-génération bail dans `LeaseService`
 - [✅] Gestion des photos par pièces (`Room` + `PropertyImage` avec liens Property/RentalUnit/Room)
 - [✅] Colocation : chaque chambre = RentalUnit louable individuellement
 - [✅] Caractéristiques du bien (DPE, GES, équipements, étage, orientation...)
@@ -30,6 +31,19 @@
 - [✅] Champ Prisma `rentControlZone String?` sur Property + API legal PATCH
 - [✅] Suppression complète des données fictives (`CITY_RATES` dans `utils/rentUtils.ts`)
 - [🔧] Données Lille et Montpellier — valeurs estimées (API/CSV officiels indisponibles au moment du téléchargement). Structure et zones correctes, valeurs à vérifier quand les sources redeviennent accessibles : Lille (`opendata.lillemetropole.fr/api/.../encadrement-des-loyers-donnees-mel`), Montpellier (`data.montpellier3m.fr`)
+
+### Estimateur de Loyer
+- [✅] Modèle `RentMarketData` — 139 600 lignes (34 900 communes × 4 types), données ANIL 2025 (SeLoger + LeBonCoin), champs : medianRentPerSqm, q1/q3, observations, rSquared, lowerBound/upperBound
+- [✅] Champ `communeCode` sur Property — enrichi via api-adresse.data.gouv.fr à la sélection d'adresse (MapboxAddressSelect), stocké à la création du listing
+- [✅] Script d'import ANIL — `scripts/import-rent-data.ts`, 4 CSV (appart all/T1-T2/T3+, maison all), encodage Latin-1, batch upsert 500, flexible column matching
+- [✅] Service d'estimation — `services/RentEstimatorService.ts`, fallback 3 niveaux (commune exacte → commune "all" → département SQL AVG), conversion CC→HC (charges 2,5€/m² appart, 1€/m² maison), 7 ajustements multiplicatifs (meublé +11%, DPE A→G, étage, parking +80€, balcon +4%, construction), confiance HIGH/MEDIUM/LOW
+- [✅] Constantes d'ajustement — `lib/rentEstimatorConstants.ts`, tous les facteurs centralisés et documentés
+- [✅] API POST `/api/rent-estimate` — communeCode ou zipCode + surface + caractéristiques → fourchette HC/CC + ajustements + confiance + attribution ANIL
+- [✅] Hook `useRentEstimate` — SWR + debounce 500ms, clé de cache JSON, `dedupingInterval: 5000`
+- [✅] Widget `RentEstimator` — barre de fourchette Q1-Q3, badge confiance, comparaison prix (vert/orange/rouge/bleu), bouton "Appliquer", détails dépliables, attribution ANIL
+- [✅] Intégration RentModal (step PRICE) — estimation temps réel, auto-fill prix si vide, couplé avec encadrement des loyers
+- [✅] Intégration PriceSection (page édition) — respecte `isLocked` (bail actif), skip colocation, conversion buildYear→constructionPeriod
+- [✅] Rappels admin annuels — `AdminReminders.ts` (1er oct ANIL + 1er juil encadrement), intégrés dans `ReminderEngine`, email à `ADMIN_EMAIL`
 
 ### Candidatures & Pipeline
 - [✅] Pipeline candidat : `RentalApplication` avec statuts complets (PENDING → SENT → VISIT_PROPOSED → VISIT_CONFIRMED → SHORTLISTED → FINALIST → SELECTED → ACCEPTED / REJECTED)
@@ -336,7 +350,7 @@
 - [x] ~~Alertes dashboard avancées (IRL, échéances, impayés)~~ (fait — LegalRemindersWidget + RentCollectionWidget)
 - [x] ~~Matching automatique paiement ↔ bail (logique)~~ (fait — RentCollectionService.checkPayments)
 - [x] ~~Dashboard suivi des paiements complet~~ (fait — RentTrackingSection + RentCollectionWidget)
-- [ ] Suggestions de prix
+- [x] ~~Suggestions de prix~~ (fait — Estimateur de loyer ANIL 2025, 139 600 lignes, fallback commune→département, 7 ajustements, intégré RentModal + PriceSection)
 - [ ] Anonymisation renforcée dans les candidatures côté UI
 - [x] ~~Logique fiscale pour montants déductibles~~ (fait)
 - [x] ~~Sondages V2 (globaux, 3 options, géolocalisation auto)~~ (fait)
@@ -346,11 +360,13 @@
 - [x] ~~Module fiscal (aide déclaration revenus fonciers)~~ (fait — Simulateur fiscal V1, comparaison micro/réel, déficit foncier, LMNP)
 - [ ] Intégration GLI (Garantie Loyers Impayés)
 - [ ] Vérification de pièces d'identité
-- [ ] Mix bail 9 mois étudiant + été saisonnier
+- [x] ~~Mix bail 9 mois étudiant + été saisonnier~~ (fait — bail étudiant + bail mobilité opt-in par annonce, validation API + UI)
 - [x] ~~Scoring fiabilité avancé~~ (fait — Passeport Locatif V1)
 - [ ] B2B2C : partenariats (assurance, déménagement)
 - [x] ~~Recommandation d'ancien propriétaire~~ (fait — Passeport Locatif V1, LandlordReview structuré)
 - [ ] Lissage salaire freelance (calcul avancé)
+- [ ] Backfill communeCode propriétés existantes — script géocodage via api-adresse.data.gouv.fr pour enrichir les Property existantes (communeCode=null) et passer du fallback département à la donnée commune exacte
+- [ ] Estimateur charges affiné — remplacer le taux fixe (2,5€/m² appart, 1€/m² maison) par des données réelles issues des régularisations de charges des utilisateurs Coridor
 
 ---
 

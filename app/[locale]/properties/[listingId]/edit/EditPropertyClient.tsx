@@ -246,6 +246,9 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                             }
                             return undefined;
                         })()}
+                        badges={{
+                            visits: (listing as any).upcomingVisitsCount || 0,
+                        }}
                         subtitles={{
                             rooms: (() => {
                                 const rentalUnits = listing.rentalUnit?.property?.rentalUnits || [];
@@ -294,14 +297,17 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                     <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
                         {/* Mobile Header: Back Button (Sticky) */}
                         <div className="
-                            md:hidden 
-                            sticky 
+                            md:hidden
+                            sticky
                             top-0
-                            h-16
-                            z-50 
+                            z-50
                             bg-white dark:bg-neutral-900
                             px-6
+                            pt-safe
                             border-b border-neutral-200 dark:border-neutral-800
+                        ">
+                        <div className="
+                            h-16
                             flex
                             items-center
                             justify-between
@@ -340,9 +346,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                                 </div>
                             )}
                         </div>
+                        </div>
 
                         {/* Content Wrapper with Padding - Standardized via PageBody */}
-                        <PageBody padVertical={false} className={`px-6 md:px-8 md:py-8 ${activeSection === 'visits' ? 'pt-0 pb-6' : 'py-6'}`}>
+                        <PageBody padVertical={false} className={`px-4 md:px-8 md:py-8 ${activeSection === 'visits' ? 'pt-0 pb-6' : 'py-6'}`}>
                             {/* Mobile Header: Title (Not Sticky) */}
                             {activeSection !== 'photos' && activeSection !== 'visits' && (
                                 <div className="md:hidden mb-6">

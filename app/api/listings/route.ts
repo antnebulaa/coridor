@@ -59,6 +59,8 @@ export async function POST(
         bedType, // New field
         hasPrivateBathroom, // New field
         isPublished, // New field to allow immediate publish
+        acceptsStudentLease,
+        acceptsMobilityLease,
         // Legacy
         imageSrc
     } = body;
@@ -97,6 +99,7 @@ export async function POST(
                         neighborhood: location?.neighborhood,
                         country: location?.country,
                         zipCode: location?.zipCode,
+                        communeCode: location?.communeCode || null,
                         latitude: location?.latlng ? location.latlng[0] : null,
                         longitude: location?.latlng ? location.latlng[1] : null,
                         constructionYear: buildYear ? parseInt(buildYear, 10) : null,
@@ -188,6 +191,8 @@ export async function POST(
 
                     // leaseType, // Check if LeaseType enum match? 
                     leaseType: leaseType, // Assuming matched
+                    acceptsStudentLease: isFurnished ? (!!acceptsStudentLease) : false,
+                    acceptsMobilityLease: isFurnished ? (!!acceptsMobilityLease) : false,
 
                     // dpe, // MOVED TO PROPERTY
                     // ges, // MOVED TO PROPERTY

@@ -10,6 +10,7 @@ interface EditPropertySidebarProps {
     onChangeTab: (tab: TabType) => void;
     onChangeSection: (section: SectionType) => void;
     subtitles?: Record<string, string>;
+    badges?: Record<string, number>;
     customLinks?: Record<TabType, { id: string; label: string; icon?: any }[]>;
 }
 
@@ -19,6 +20,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
     onChangeTab,
     onChangeSection,
     subtitles,
+    badges,
     customLinks
 }) => {
     const currentLinks = (customLinks || sidebarLinks)[activeTab];
@@ -76,7 +78,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                                 {link.icon && <link.icon size={20} className="text-neutral-600 dark:text-neutral-300" />}
                             </div>
 
-                            <div className="flex flex-col min-w-0">
+                            <div className="flex flex-col min-w-0 flex-1">
                                 {!isTitle && (
                                     <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
                                         {link.label}
@@ -93,6 +95,16 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                                     </span>
                                 )}
                             </div>
+
+                            {badges?.[link.id] !== undefined && (
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${
+                                    badges[link.id] > 0
+                                        ? 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
+                                        : 'text-neutral-400 dark:text-neutral-500'
+                                }`}>
+                                    {badges[link.id] > 0 ? badges[link.id] : 'Aucune'}
+                                </span>
+                            )}
                         </div>
                     );
                 })}

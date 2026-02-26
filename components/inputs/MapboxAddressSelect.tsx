@@ -18,6 +18,7 @@ export type AddressSelectValue = {
     street?: string;
     apartment?: string;
     building?: string;
+    communeCode?: string;
 }
 
 interface MapboxAddressSelectProps {
@@ -209,6 +210,19 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                 }
             }
 
+            // Enrich with code INSEE via api-adresse.data.gouv.fr
+            let communeCode: string | undefined;
+            try {
+                const geoRes = await axios.get(
+                    `https://api-adresse.data.gouv.fr/reverse/?lon=${lng}&lat=${lat}&type=municipality`
+                );
+                if (geoRes.data?.features?.[0]?.properties?.citycode) {
+                    communeCode = geoRes.data.features[0].properties.citycode;
+                }
+            } catch {
+                // Silently fail — communeCode is optional enrichment
+            }
+
             const selectedValue: AddressSelectValue = {
                 label: finalLabel,
                 value: suggestion.mapbox_id,
@@ -219,7 +233,8 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                 neighborhood: neighborhood,
                 country: country,
                 zipCode: postcode,
-                street: suggestion.name
+                street: suggestion.name,
+                communeCode,
             };
 
             setInputValue(clearOnSelect ? '' : selectedValue.label);

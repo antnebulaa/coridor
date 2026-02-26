@@ -22,8 +22,10 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair } from "lucide-react";
+import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair, Briefcase } from "lucide-react";
 import { lookupRentControl } from "@/lib/rentControl";
+import { useRentEstimate } from "@/hooks/useRentEstimate";
+import RentEstimator from "../rent/RentEstimator";
 import { useTranslations } from 'next-intl';
 import VisitsSection from "@/app/[locale]/properties/[listingId]/edit/components/VisitsSection";
 import PriceAssistantModal from "@/app/[locale]/properties/[listingId]/edit/components/PriceAssistantModal";
@@ -113,6 +115,8 @@ const RentModal = () => {
             description: '',
             leaseType: LeaseType.LONG_TERM,
             isFurnished: false,
+            acceptsStudentLease: false,
+            acceptsMobilityLease: false,
             dpe: 'C',
             ges: 'A',
             charges: '' as any,
@@ -276,6 +280,36 @@ const RentModal = () => {
             }
         }
     }, [location, surfaceValue, roomCount]);
+
+    // Rent Estimator
+    const isFurnishedVal = watch('isFurnished');
+    const dpeVal = watch('dpe');
+    const floorVal = watch('floor');
+    const constructionPeriodVal = watch('constructionPeriod');
+    const amenitiesVal = watch('amenities');
+
+    const { estimate: rentEstimate, isLoading: isEstimateLoading } = useRentEstimate({
+        communeCode: location?.communeCode || null,
+        zipCode: location?.zipCode || undefined,
+        surface: surfaceValue || undefined,
+        roomCount: roomCount || 1,
+        category: category || 'Appartement',
+        isFurnished: !!isFurnishedVal,
+        dpe: dpeVal || null,
+        floor: floorVal ? parseInt(floorVal, 10) : null,
+        hasElevator: amenitiesVal?.includes('hasElevator') || false,
+        hasParking: amenitiesVal?.includes('hasParking') || false,
+        hasBalcony: amenitiesVal?.includes('hasBalcony') || false,
+        constructionPeriod: constructionPeriodVal || null,
+    });
+
+    // Auto-fill price with estimate if empty
+    useEffect(() => {
+        if (rentEstimate && !price && step === STEPS.PRICE) {
+            setCustomValue('price', rentEstimate.estimatedRentHC);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rentEstimate, step]);
 
     const imageSrcs = watch('imageSrcs');
 
@@ -1328,6 +1362,8 @@ const RentModal = () => {
                         onClick={() => {
                             setCustomValue('leaseType', LeaseType.LONG_TERM);
                             setCustomValue('isFurnished', false);
+                            setCustomValue('acceptsStudentLease', false);
+                            setCustomValue('acceptsMobilityLease', false);
                         }}
                         className={`
                             p-4 border-1 rounded-xl flex flex-col gap-4 cursor-pointer transition hover:border-gray-600 active:scale-[0.98]
@@ -1405,6 +1441,65 @@ const RentModal = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Special lease toggles — only for furnished/colocation */}
+                {(watch('isFurnished') || watch('leaseType') === LeaseType.COLOCATION) && (
+                    <div className="flex flex-col gap-3 mt-2">
+                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                            Baux spéciaux acceptés
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setCustomValue('acceptsStudentLease', !watch('acceptsStudentLease'))}
+                            className={`
+                                p-3 rounded-xl border flex items-center gap-3 text-left transition
+                                ${watch('acceptsStudentLease')
+                                    ? 'border-black bg-neutral-50'
+                                    : 'border-neutral-200'
+                                }
+                            `}
+                        >
+                            <GraduationCap size={18} className="text-neutral-500 shrink-0" />
+                            <div className="flex-1">
+                                <span className="font-medium text-sm">Bail étudiant (9 mois)</span>
+                            </div>
+                            <div className={`
+                                w-9 h-5 rounded-full transition-colors relative shrink-0
+                                ${watch('acceptsStudentLease') ? 'bg-black' : 'bg-neutral-200'}
+                            `}>
+                                <div className={`
+                                    w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform
+                                    ${watch('acceptsStudentLease') ? 'translate-x-4' : 'translate-x-0.5'}
+                                `} />
+                            </div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCustomValue('acceptsMobilityLease', !watch('acceptsMobilityLease'))}
+                            className={`
+                                p-3 rounded-xl border flex items-center gap-3 text-left transition
+                                ${watch('acceptsMobilityLease')
+                                    ? 'border-black bg-neutral-50'
+                                    : 'border-neutral-200'
+                                }
+                            `}
+                        >
+                            <Briefcase size={18} className="text-neutral-500 shrink-0" />
+                            <div className="flex-1">
+                                <span className="font-medium text-sm">Bail mobilité (1-10 mois)</span>
+                            </div>
+                            <div className={`
+                                w-9 h-5 rounded-full transition-colors relative shrink-0
+                                ${watch('acceptsMobilityLease') ? 'bg-black' : 'bg-neutral-200'}
+                            `}>
+                                <div className={`
+                                    w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform
+                                    ${watch('acceptsMobilityLease') ? 'translate-x-4' : 'translate-x-0.5'}
+                                `} />
+                            </div>
+                        </button>
+                    </div>
+                )}
             </div>
         )
     }
@@ -1438,6 +1533,15 @@ const RentModal = () => {
                     disabled={isLoading}
                     register={register}
                     errors={errors}
+                />
+                <RentEstimator
+                    estimate={rentEstimate}
+                    isLoading={isEstimateLoading}
+                    currentPrice={price}
+                    onApplyEstimate={(estimatedPrice) => {
+                        setCustomValue('price', estimatedPrice);
+                    }}
+                    rentControlMaxRent={rentControlData?.maxRent || null}
                 />
                 {rentControlData && (
                     <div className="p-4 bg-neutral-100 rounded-xl flex flex-col gap-2">

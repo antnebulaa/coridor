@@ -139,8 +139,7 @@ export async function GET() {
 
         // Déterminer le type de bail :
         // isFurnished sur le RentalUnit OU leaseType sur le Listing
-        const isMeublee =
-          unit.isFurnished || listing.leaseType === "SHORT_TERM";
+        const isMeublee = unit.isFurnished;
         const typeBail: 'NUE' | 'MEUBLEE' = isMeublee ? 'MEUBLEE' : 'NUE';
 
         // Loyer annuel : prix mensuel * 12

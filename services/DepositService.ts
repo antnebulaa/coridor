@@ -62,9 +62,7 @@ export class DepositService {
     if (!amountCents) {
       // Fallback: 1× rent (unfurnished), 2× rent (furnished)
       const rent = application.listing.price;
-      const isFurnished =
-        application.listing.leaseType === 'SHORT_TERM' ||
-        application.listing.leaseType === 'STUDENT';
+      const isFurnished = !!(application.listing.rentalUnit as any)?.isFurnished;
       amountCents = rent * (isFurnished ? 2 : 1) * 100;
     }
 

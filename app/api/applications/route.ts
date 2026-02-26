@@ -10,9 +10,11 @@ export async function POST(
         const body = await request.json();
         const {
             listingId,
-            message
+            message,
+            specificLeaseRequest = 'DEFAULT',
+            mobilityReason,
         } = body;
-        console.log('API_APP_START', { listingId, message, userId: currentUser?.id });
+        console.log('API_APP_START', { listingId, message, specificLeaseRequest, userId: currentUser?.id });
 
         if (!currentUser?.id || !currentUser?.email) {
             return new NextResponse('Unauthorized', { status: 401 });
@@ -41,6 +43,27 @@ export async function POST(
         }
 
         const ownerId = listing.rentalUnit.property.ownerId;
+
+        // Validate specificLeaseRequest against listing capabilities
+        if (specificLeaseRequest === 'STUDENT') {
+            if (!listing.acceptsStudentLease) {
+                return new NextResponse("Cette annonce n'accepte pas les demandes de bail étudiant.", { status: 400 });
+            }
+            if (!listing.rentalUnit.isFurnished) {
+                return new NextResponse("Le bail étudiant n'est disponible que pour les logements meublés.", { status: 400 });
+            }
+        }
+        if (specificLeaseRequest === 'MOBILITY') {
+            if (!listing.acceptsMobilityLease) {
+                return new NextResponse("Cette annonce n'accepte pas les demandes de bail mobilité.", { status: 400 });
+            }
+            if (!listing.rentalUnit.isFurnished) {
+                return new NextResponse("Le bail mobilité n'est disponible que pour les logements meublés.", { status: 400 });
+            }
+            if (!mobilityReason?.trim()) {
+                return new NextResponse("Veuillez indiquer le motif de votre bail mobilité.", { status: 400 });
+            }
+        }
 
         // Prevent applying to own listing
         // if (ownerId === currentUser.id) {
@@ -140,7 +163,9 @@ export async function POST(
                     data: {
                         listingId: listingId,
                         candidateScopeId: candidateScope.id,
-                        status: 'SENT'
+                        status: 'SENT',
+                        specificLeaseRequest: specificLeaseRequest || 'DEFAULT',
+                        ...(specificLeaseRequest === 'MOBILITY' && mobilityReason ? { mobilityReason } : {}),
                     }
                 });
 

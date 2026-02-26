@@ -5,7 +5,8 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { Euro, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { Euro, Info, AlertTriangle, CheckCircle, Calculator, ArrowRight } from "lucide-react";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 
@@ -15,6 +16,28 @@ import { Wand2, TrendingUp, Scale } from "lucide-react";
 import CustomToast from "@/components/ui/CustomToast";
 import RentRevisionModal from "../../../components/RentRevisionModal";
 import RegularizationModal from "../../../components/RegularizationModal";
+import { useRentEstimate } from "@/hooks/useRentEstimate";
+import RentEstimator from "@/components/rent/RentEstimator";
+
+function computeMonthlyRecoverable(expenses: any[]): number {
+    let totalCentsMonthly = 0;
+    for (const exp of expenses) {
+        if (!exp.isRecoverable) continue;
+        const recoverableCents = exp.amountTotalCents * (exp.recoverableRatio ?? 1);
+        switch (exp.frequency) {
+            case 'MONTHLY':
+                totalCentsMonthly += recoverableCents;
+                break;
+            case 'QUARTERLY':
+                totalCentsMonthly += recoverableCents / 3;
+                break;
+            case 'YEARLY':
+                totalCentsMonthly += recoverableCents / 12;
+                break;
+        }
+    }
+    return Math.round(totalCentsMonthly / 100);
+}
 
 interface PriceSectionProps {
     listing: SafeListing;
@@ -28,6 +51,25 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
     const [isRegularizationModalOpen, setIsRegularizationModalOpen] = useState(false);
 
+    // --- Charges suggestion from expenses ---
+    const [suggestedCharges, setSuggestedCharges] = useState<number | null>(null);
+    const [hasExpenses, setHasExpenses] = useState<boolean | null>(null);
+    const propertyId = listing.rentalUnit?.property?.id;
+
+    useEffect(() => {
+        if (!propertyId) return;
+        axios.get(`/api/properties/${propertyId}/expenses`)
+            .then((res) => {
+                const expenses = res.data || [];
+                setHasExpenses(expenses.length > 0);
+                if (expenses.length > 0) {
+                    const monthly = computeMonthlyRecoverable(expenses);
+                    setSuggestedCharges(monthly > 0 ? monthly : null);
+                }
+            })
+            .catch(() => setHasExpenses(false));
+    }, [propertyId]);
+
     // Active Lease Logic (V2 - fetched via getListingById)
     const activeLease = listing.activeApplications?.[0];
     const hasActiveLease = !!activeLease;
@@ -39,6 +81,30 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
 
     const rooms = property?.rentalUnits?.filter((unit: any) => unit.type === 'PRIVATE_ROOM') || [];
     const isColocation = rooms.length > 0;
+
+    // Rent Estimator (skip for colocation)
+    const { estimate: rentEstimate, isLoading: isEstimateLoading } = useRentEstimate(
+        isColocation ? {} : {
+            communeCode: property?.communeCode || null,
+            zipCode: listing.zipCode || undefined,
+            surface: listing.surface || undefined,
+            roomCount: listing.roomCount || 1,
+            category: listing.category || 'Appartement',
+            isFurnished: listing.isFurnished || false,
+            dpe: listing.dpe || null,
+            floor: listing.floor ?? null,
+            hasElevator: listing.hasElevator || false,
+            hasParking: (property as any)?.hasParking || false,
+            hasBalcony: (property as any)?.hasBalcony || false,
+            constructionPeriod: listing.buildYear
+                ? listing.buildYear >= 2005 ? '2005+'
+                : listing.buildYear >= 1990 ? '1990 - 2005'
+                : listing.buildYear >= 1975 ? '1975 - 1989'
+                : listing.buildYear >= 1949 ? '1949 - 1974'
+                : 'Avant 1949'
+                : null,
+        }
+    );
 
     // Locked Rent Logic
     const currentRent = hasActiveLease && activeLease.financials?.[0]?.baseRentCents
@@ -394,79 +460,127 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 </>
             )}
 
-            <div className="
-                relative 
-                flex 
-                items-center 
-                justify-center 
-                py-10
-                border-2
-                border-dashed
-                border-neutral-200
-                rounded-xl
-                hover:border-neutral-400
-                transition
-                group
-            ">
-                <div className="relative flex items-center justify-center">
+            {/* Price input — clean & bold */}
+            <div className="flex flex-col items-center py-8">
+                <div className="flex items-baseline gap-1">
                     <input
                         id="price"
                         disabled={isLoading || isLocked}
                         {...register('price', { required: true, min: 1 })}
                         type="number"
-                        className={`
-                            peer
-                            w-full
+                        className="
+                            w-[180px]
                             text-center
-                            text-5xl
-                            font-bold
+                            text-6xl
+                            font-extralight
+                            tracking-tight
                             bg-transparent
                             outline-none
                             transition
                             disabled:opacity-70
                             disabled:cursor-not-allowed
                             placeholder-neutral-200
+                            dark:placeholder-neutral-700
                             [appearance:textfield]
                             [&::-webkit-outer-spin-button]:appearance-none
                             [&::-webkit-inner-spin-button]:appearance-none
-                            max-w-[300px]
-                        `}
+                        "
                         placeholder="0"
                     />
-                    <Euro
-                        size={34}
-                        className="
-                            text-neutral-400 
-                            absolute 
-                            -right-10
-                            top-1/2 
-                            -translate-y-1/2
-                            peer-focus:text-black
-                            transition
-                        "
-                    />
+                    <span className="text-3xl font-extralight text-neutral-300 dark:text-neutral-600">€</span>
                 </div>
+                <span className="text-xs text-neutral-400 dark:text-neutral-500 mt-2 tracking-wide uppercase">
+                    hors charges / mois
+                </span>
             </div>
+
+            {/* Rent Estimator — right after price */}
+            {!isColocation && (
+                <RentEstimator
+                    estimate={rentEstimate}
+                    isLoading={isEstimateLoading}
+                    currentPrice={price}
+                    onApplyEstimate={(estimatedPrice) => {
+                        if (!isLocked) {
+                            setValue('price', estimatedPrice);
+                        }
+                    }}
+                    rentControlMaxRent={rentControlData?.maxRent || null}
+                />
+            )}
 
             {/* Charges Section */}
             <div className="flex flex-col gap-2">
                 <h3 className="text-lg font-semibold">Charges mensuelles</h3>
-                <p className="text-neutral-500 font-light">
+                <p className="text-neutral-500 dark:text-neutral-400 font-light">
                     Estimation des charges locatives mensuelles (provision).
                 </p>
-                <div className="relative flex items-center justify-center py-6 border-2 border-dashed border-neutral-200 rounded-xl hover:border-neutral-400 transition group max-w-[400px]">
-                    <div className="relative flex items-center justify-center">
-                        <input
-                            id="charges"
-                            disabled={isLoading || isLocked}
-                            {...register('charges', { min: 0 })}
-                            type="number"
-                            className="peer w-full text-center text-3xl font-bold bg-transparent outline-none transition disabled:opacity-70 disabled:cursor-not-allowed placeholder-neutral-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none max-w-[200px]"
-                            placeholder="0"
-                        />
-                        <Euro size={24} className="text-neutral-400 absolute -right-8 top-1/2 -translate-y-1/2 peer-focus:text-black transition" />
-                    </div>
+                <div className="flex items-baseline gap-1 py-4">
+                    <input
+                        id="charges"
+                        disabled={isLoading || isLocked}
+                        {...register('charges', { min: 0 })}
+                        type="number"
+                        className="
+                            w-[120px]
+                            text-center
+                            text-4xl
+                            font-extralight
+                            tracking-tight
+                            bg-transparent
+                            outline-none
+                            transition
+                            disabled:opacity-70
+                            disabled:cursor-not-allowed
+                            placeholder-neutral-200
+                            dark:placeholder-neutral-700
+                            [appearance:textfield]
+                            [&::-webkit-outer-spin-button]:appearance-none
+                            [&::-webkit-inner-spin-button]:appearance-none
+                        "
+                        placeholder="0"
+                    />
+                    <span className="text-2xl font-extralight text-neutral-300 dark:text-neutral-600">€</span>
                 </div>
+
+                {/* Suggestion based on actual expenses */}
+                {suggestedCharges !== null && suggestedCharges > 0 && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                        <Calculator size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div className="flex-1 text-sm">
+                            <span className="text-emerald-800 dark:text-emerald-300">
+                                D&apos;après vos dépenses : <strong>{suggestedCharges} €/mois</strong> récupérables
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!isLocked) setValue('charges', suggestedCharges);
+                            }}
+                            disabled={isLocked}
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition shrink-0"
+                        >
+                            Appliquer
+                        </button>
+                    </div>
+                )}
+
+                {hasExpenses === true && suggestedCharges === null && (
+                    <p className="text-xs text-neutral-400">
+                        Aucune dépense récupérable trouvée. Vérifiez vos dépenses dans la section Charges.
+                    </p>
+                )}
+
+                {hasExpenses === false && (
+                    <Link
+                        href={`/properties/${listing.id}/expenses`}
+                        className="flex items-center gap-2 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 transition text-sm text-neutral-600 dark:text-neutral-400"
+                    >
+                        <Calculator size={16} className="shrink-0" />
+                        <span className="flex-1">Saisissez vos dépenses pour calculer automatiquement les charges</span>
+                        <ArrowRight size={14} className="shrink-0" />
+                    </Link>
+                )}
             </div>
 
             {/* Security Deposit Section */}

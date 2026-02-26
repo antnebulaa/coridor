@@ -134,7 +134,6 @@ export async function POST(request: Request) {
                 if (!durationMonths) {
                     if (leaseType === 'LONG_TERM') durationMonths = 36;
                     else if (leaseType === 'STUDENT') durationMonths = 9;
-                    else if (leaseType === 'SHORT_TERM') durationMonths = 10;
                     else durationMonths = 12; // meublé default
                 }
 

@@ -15,7 +15,6 @@ enum UserMode {
 
 enum LeaseType {
   LONG_TERM
-  SHORT_TERM
   STUDENT
   COLOCATION
 }
@@ -278,6 +277,7 @@ model Property {
   longitude       Float?
   district        String?
   neighborhood    String?
+  communeCode     String?  // Code INSEE — enrichi via api-adresse.data.gouv.fr
   
   // Global Amenities (Building/Property context)
   isNearTransport   Boolean @default(false)
@@ -467,7 +467,9 @@ model Listing {
   isStudentFriendly Boolean @default(false)
   petsAllowed       Boolean @default(false)
   
-  leaseType     LeaseType?
+  leaseType             LeaseType?
+  acceptsStudentLease   Boolean @default(false)
+  acceptsMobilityLease  Boolean @default(false)
 
   // ---- CONDITIONS DU BAIL ----
   chargesAmount             Int?        // Montant charges en euros (typed alternative to Json charges)
@@ -1374,6 +1376,8 @@ enum LegalReminderType {
   DEPOSIT_RETURN_DEADLINE
   TENANT_INSURANCE_CHECK
   TAX_DECLARATION_DEADLINE
+  ANIL_DATA_UPDATE
+  RENT_CONTROL_DATA_UPDATE
   CUSTOM
 }
 
@@ -1396,7 +1400,7 @@ enum LegalReminderPriority {
 model LegalReminder {
   id                    String                @id @default(uuid())
 
-  userId                String
+  userId                String?
   propertyId            String?
   rentalApplicationId   String?
 
@@ -1428,7 +1432,7 @@ model LegalReminder {
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
 
-  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   property              Property?             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   rentalApplication     RentalApplication?    @relation(fields: [rentalApplicationId], references: [id], onDelete: Cascade)
 
@@ -2171,4 +2175,32 @@ model DepositEvent {
   createdAt   DateTime @default(now())
 
   @@index([depositId])
+}
+
+// ── Rent Market Data (ANIL Carte des Loyers) ────────────────────────
+
+model RentMarketData {
+  id               String   @id @default(uuid())
+
+  communeCode      String   // Code INSEE (CODGEO)
+  communeName      String   // LIBGEO
+  departmentCode   String   // Denormalise pour requetes fallback
+
+  propertyType     String   // "apartment" | "house"
+  typology         String   // "t1_t2" | "t3_plus" | "all"
+
+  medianRentPerSqm Float    // loypredm2 (CC, non meuble, EUR/m2)
+  q1RentPerSqm     Float    // Q1predm2
+  q3RentPerSqm     Float    // Q3predm2
+  observations     Int      // nbobs
+  rSquared         Float    // R2 (fiabilite 0-1)
+  lowerBound       Float?   // lwr_IPpredm2
+  upperBound       Float?   // upr_IPpredm2
+
+  dataYear         Int      @default(2025)
+  createdAt        DateTime @default(now())
+
+  @@unique([communeCode, propertyType, typology, dataYear])
+  @@index([communeCode])
+  @@index([departmentCode, propertyType, typology])
 }

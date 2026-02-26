@@ -1,6 +1,7 @@
 import { DiagnosticReminders } from './reminders/DiagnosticReminders';
 import { LeaseReminders } from './reminders/LeaseReminders';
 import { TaxReminders } from './reminders/TaxReminders';
+import { AdminReminders } from './reminders/AdminReminders';
 import prisma from '@/libs/prismadb';
 import { createNotification } from '@/libs/notifications';
 import { sendEmail } from '@/lib/email';
@@ -80,38 +81,63 @@ export class ReminderEngine {
 
     for (const reminder of toNotify) {
       try {
-        // Notification in-app
-        await createNotification({
-          userId: reminder.userId,
-          type: 'LEGAL_REMINDER',
-          title: reminder.title,
-          message: reminder.description || `Echeance le ${reminder.dueDate.toLocaleDateString('fr-FR')}`,
-          link: reminder.actionUrl || '/account/reminders'
-        });
+        if (!reminder.userId) {
+          // Admin reminder — send email to ADMIN_EMAIL instead of in-app notification
+          const adminEmail = process.env.ADMIN_EMAIL;
+          if (adminEmail) {
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr';
+            await sendEmail(
+              adminEmail,
+              `[Admin] ${reminder.title}`,
+              createElement(
+                EmailTemplate,
+                {
+                  heading: 'Rappel admin Coridor',
+                  actionLabel: 'Accéder',
+                  actionUrl: reminder.actionUrl || `${appUrl}/admin`,
+                  children: null,
+                },
+                createElement('p', { style: { margin: '0 0 16px' } }, reminder.title),
+                createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
+                  reminder.description || ''),
+                createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
+                  `Date limite : ${reminder.dueDate.toLocaleDateString('fr-FR')}`)
+              )
+            );
+          }
+        } else {
+          // User reminder — in-app notification + email
+          await createNotification({
+            userId: reminder.userId,
+            type: 'LEGAL_REMINDER',
+            title: reminder.title,
+            message: reminder.description || `Echeance le ${reminder.dueDate.toLocaleDateString('fr-FR')}`,
+            link: reminder.actionUrl || '/account/reminders'
+          });
 
-        // Email
-        if (reminder.user.email) {
-          const userName = reminder.user.firstName || reminder.user.name || 'Cher proprietaire';
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr';
+          if (reminder.user?.email) {
+            const userName = reminder.user.firstName || reminder.user.name || 'Cher proprietaire';
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr';
 
-          await sendEmail(
-            reminder.user.email,
-            `Rappel legal : ${reminder.title}`,
-            createElement(
-              EmailTemplate,
-              {
-                heading: `${userName}, rappel important`,
-                actionLabel: 'Voir mes rappels',
-                actionUrl: `${appUrl}/account/reminders`,
-                children: null,
-              },
-              createElement('p', { style: { margin: '0 0 16px' } }, reminder.title),
-              createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
-                reminder.description || ''),
-              createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
-                `Date limite : ${reminder.dueDate.toLocaleDateString('fr-FR')}`)
-            )
-          );
+            await sendEmail(
+              reminder.user.email,
+              `Rappel legal : ${reminder.title}`,
+              createElement(
+                EmailTemplate,
+                {
+                  heading: `${userName}, rappel important`,
+                  actionLabel: 'Voir mes rappels',
+                  actionUrl: `${appUrl}/account/reminders`,
+                  children: null,
+                },
+                createElement('p', { style: { margin: '0 0 16px' } }, reminder.title),
+                createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
+                  reminder.description || ''),
+                createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
+                  `Date limite : ${reminder.dueDate.toLocaleDateString('fr-FR')}`)
+              )
+            );
+          }
         }
 
         await prisma.legalReminder.update({
@@ -138,13 +164,37 @@ export class ReminderEngine {
 
     for (const reminder of toSecondNotify) {
       try {
-        await createNotification({
-          userId: reminder.userId,
-          type: 'LEGAL_REMINDER',
-          title: `${reminder.title} — Rappel urgent`,
-          message: `Echeance dans moins d'un mois ! ${reminder.description || ''}`,
-          link: reminder.actionUrl || '/account/reminders'
-        });
+        if (!reminder.userId) {
+          // Admin reminder — email only
+          const adminEmail = process.env.ADMIN_EMAIL;
+          if (adminEmail) {
+            await sendEmail(
+              adminEmail,
+              `[Admin URGENT] ${reminder.title}`,
+              createElement(
+                EmailTemplate,
+                {
+                  heading: 'Rappel admin urgent — Coridor',
+                  actionLabel: 'Accéder',
+                  actionUrl: reminder.actionUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr'}/admin`,
+                  children: null,
+                },
+                createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
+                  `${reminder.title} — Échéance imminente !`),
+                createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
+                  reminder.description || '')
+              )
+            );
+          }
+        } else {
+          await createNotification({
+            userId: reminder.userId,
+            type: 'LEGAL_REMINDER',
+            title: `${reminder.title} — Rappel urgent`,
+            message: `Echeance dans moins d'un mois ! ${reminder.description || ''}`,
+            link: reminder.actionUrl || '/account/reminders'
+          });
+        }
 
         await prisma.legalReminder.update({
           where: { id: reminder.id },
@@ -157,6 +207,9 @@ export class ReminderEngine {
 
     // 5. Sync les rappels fiscaux pour tous les proprietaires
     await TaxReminders.syncAll();
+
+    // 6. Sync les rappels admin (ANIL, encadrement loyers)
+    await AdminReminders.syncAll();
 
     return { updated, notified, overdue };
   }

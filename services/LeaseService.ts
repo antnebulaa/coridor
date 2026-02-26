@@ -248,16 +248,28 @@ export class LeaseService {
             }
         }
 
-        // 2. Determine Lease Type (Rule 1)
+        // 2. Validate specificLeaseRequest against listing capabilities (defense in depth)
+        const listing = application.listing;
+        if (application.specificLeaseRequest === 'STUDENT' && !listing.acceptsStudentLease) {
+            throw new Error("Cette annonce n'accepte pas les demandes de bail étudiant.");
+        }
+        if (application.specificLeaseRequest === 'MOBILITY' && !listing.acceptsMobilityLease) {
+            throw new Error("Cette annonce n'accepte pas les demandes de bail mobilité.");
+        }
+        if ((application.specificLeaseRequest === 'STUDENT' || application.specificLeaseRequest === 'MOBILITY') && !rentalUnit.isFurnished) {
+            throw new Error("Les baux étudiant et mobilité ne sont disponibles que pour les logements meublés.");
+        }
+
+        // 3. Determine Lease Type (Rule 1)
         const leaseTemplateId = this.determineLeaseTemplate(rentalUnit as any, application, scope, members as any);
 
-        // 3. Determine Solidarity (Rule 2)
+        // 4. Determine Solidarity (Rule 2)
         const isSolidarityActive = this.determineSolidarity(scope);
 
-        // 4. Calculate Contract Data (Duration, Deposit)
+        // 5. Calculate Contract Data (Duration, Deposit)
         const contractData = this.calculateContractData(leaseTemplateId, application.listing, application, scope.targetMoveInDate);
 
-        // 5. Select Legal Texts
+        // 6. Select Legal Texts
         const legalTexts = this.getLegalClauses(leaseTemplateId, isSolidarityActive, scope.compositionType);
 
         const formatDate = (d: Date | null) => d ? d.toISOString().split('T')[0] : undefined;

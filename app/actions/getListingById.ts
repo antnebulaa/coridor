@@ -89,6 +89,15 @@ export default async function getListingById(
             }
         });
 
+        // Count upcoming visits for this listing
+        const upcomingVisitsCount = await prisma.visit.count({
+            where: {
+                listingId: listing.id,
+                date: { gte: new Date() },
+                status: { in: ['PENDING', 'CONFIRMED'] }
+            }
+        });
+
         // Helper for distance (Simple Haversine)
         const getDistanceInMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
             if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
@@ -287,7 +296,8 @@ export default async function getListingById(
             userGlobalSlots: userSlots.map((slot: any) => ({
                 ...slot,
                 date: slot.date.toISOString()
-            }))
+            })),
+            upcomingVisitsCount,
         };
     } catch (error: any) {
         throw new Error(error);

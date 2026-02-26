@@ -255,32 +255,28 @@ describe('calculateLegalDeadlineDate', () => {
 
 describe('calculateDepositAmount', () => {
   it('uses explicit amount when provided (in cents)', () => {
-    expect(calculateDepositAmount(800, 900, 'LONG_TERM')).toBe(80000);
+    expect(calculateDepositAmount(800, 900, false)).toBe(80000);
   });
 
-  it('1× rent for unfurnished (LONG_TERM)', () => {
-    expect(calculateDepositAmount(null, 800, 'LONG_TERM')).toBe(80000);
+  it('1× rent for unfurnished', () => {
+    expect(calculateDepositAmount(null, 800, false)).toBe(80000);
   });
 
-  it('2× rent for furnished (SHORT_TERM)', () => {
-    expect(calculateDepositAmount(null, 800, 'SHORT_TERM')).toBe(160000);
+  it('2× rent for furnished', () => {
+    expect(calculateDepositAmount(null, 800, true)).toBe(160000);
   });
 
-  it('2× rent for student (STUDENT)', () => {
-    expect(calculateDepositAmount(null, 500, 'STUDENT')).toBe(100000);
-  });
-
-  it('1× rent for colocation (COLOCATION)', () => {
-    expect(calculateDepositAmount(null, 600, 'COLOCATION')).toBe(60000);
+  it('1× rent for unfurnished', () => {
+    expect(calculateDepositAmount(null, 600, false)).toBe(60000);
   });
 
   it('prefers explicit over calculated', () => {
     // Explicit 500€, even though rent is 800€
-    expect(calculateDepositAmount(500, 800, 'LONG_TERM')).toBe(50000);
+    expect(calculateDepositAmount(500, 800, false)).toBe(50000);
   });
 
   it('falls back to calculation when explicit is 0', () => {
-    expect(calculateDepositAmount(0, 800, 'LONG_TERM')).toBe(80000);
+    expect(calculateDepositAmount(0, 800, false)).toBe(80000);
   });
 });
 

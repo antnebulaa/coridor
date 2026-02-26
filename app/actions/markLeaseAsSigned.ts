@@ -29,7 +29,6 @@ export async function markLeaseAsSigned(applicationId: string, signedUrl?: strin
         if (!durationMonths) {
             if (leaseType === 'LONG_TERM') durationMonths = 36;
             else if (leaseType === 'STUDENT') durationMonths = 9;
-            else if (leaseType === 'SHORT_TERM') durationMonths = 10;
             else durationMonths = 12;
         }
 

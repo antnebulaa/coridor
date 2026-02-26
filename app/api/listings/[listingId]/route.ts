@@ -153,6 +153,8 @@ export async function PUT(
         chargesType,
         recentWorksAmountCents,
         recentWorksDescription,
+        acceptsStudentLease,
+        acceptsMobilityLease,
     } = body;
 
     try {
@@ -221,6 +223,9 @@ export async function PUT(
                 chargesType: chargesType || undefined,
                 recentWorksAmountCents: recentWorksAmountCents !== undefined ? parseInt(String(recentWorksAmountCents), 10) : undefined,
                 recentWorksDescription: recentWorksDescription || undefined,
+                // Lease type options
+                acceptsStudentLease: acceptsStudentLease !== undefined ? !!acceptsStudentLease : undefined,
+                acceptsMobilityLease: acceptsMobilityLease !== undefined ? !!acceptsMobilityLease : undefined,
             };
 
             // 4. Distribute Amenities (Boolean Flags)

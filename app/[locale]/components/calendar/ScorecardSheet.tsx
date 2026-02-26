@@ -37,6 +37,8 @@ interface ScorecardSheetProps {
         price: number;
         leaseType?: string | null;
         availableFrom?: string | null;
+        isFurnished?: boolean;
+        acceptsMobilityLease?: boolean;
     };
     tenantProfile?: {
         netSalary?: number | null;
@@ -195,13 +197,19 @@ function computeGuarantor(guarantors: any[] | undefined): { badge: 'green' | 're
     return { badge: 'green', label: typeLabels[guarantors[0]?.type] || 'Oui' };
 }
 
-function computeLeaseCompat(targetLeaseType: string | null | undefined, listingLeaseType: string | null | undefined): { badge: 'green' | 'yellow' | 'red'; label: string } {
-    if (!targetLeaseType || !listingLeaseType) return { badge: 'yellow', label: 'Non renseigné' };
+function computeLeaseCompat(
+    targetLeaseType: string | null | undefined,
+    isFurnished: boolean,
+    acceptsMobilityLease: boolean,
+): { badge: 'green' | 'yellow' | 'red'; label: string } {
+    if (!targetLeaseType) return { badge: 'yellow', label: 'Non renseigné' };
     if (targetLeaseType === 'ANY') return { badge: 'green', label: 'Compatible' };
-    const mapping: Record<string, string[]> = { FURNISHED: ['SHORT_TERM', 'COLOCATION'], EMPTY: ['LONG_TERM'], MOBILITY: ['SHORT_TERM'] };
-    const compatible = mapping[targetLeaseType];
-    if (compatible && compatible.includes(listingLeaseType)) return { badge: 'green', label: 'Compatible' };
-    if (targetLeaseType === 'FURNISHED' && listingLeaseType === 'LONG_TERM') return { badge: 'yellow', label: 'Partiel' };
+    if (targetLeaseType === 'FURNISHED' && isFurnished) return { badge: 'green', label: 'Compatible' };
+    if (targetLeaseType === 'FURNISHED' && !isFurnished) return { badge: 'yellow', label: 'Partiel' };
+    if (targetLeaseType === 'EMPTY' && !isFurnished) return { badge: 'green', label: 'Compatible' };
+    if (targetLeaseType === 'EMPTY' && isFurnished) return { badge: 'red', label: 'Incompatible' };
+    if (targetLeaseType === 'MOBILITY' && acceptsMobilityLease) return { badge: 'green', label: 'Compatible' };
+    if (targetLeaseType === 'MOBILITY' && isFurnished) return { badge: 'yellow', label: 'Partiel' };
     return { badge: 'red', label: 'Incompatible' };
 }
 
@@ -294,7 +302,7 @@ const ScorecardSheet: React.FC<ScorecardSheetProps> = ({
     const incomeData = useMemo(() => computeIncomeRatio(tenantProfile?.netSalary, listing.price), [tenantProfile?.netSalary, listing.price]);
     const completenessData = useMemo(() => computeProfileCompleteness(tenantProfile), [tenantProfile]);
     const guarantorData = useMemo(() => computeGuarantor(tenantProfile?.guarantors), [tenantProfile?.guarantors]);
-    const leaseData = useMemo(() => computeLeaseCompat(candidateScope?.targetLeaseType, listing.leaseType), [candidateScope?.targetLeaseType, listing.leaseType]);
+    const leaseData = useMemo(() => computeLeaseCompat(candidateScope?.targetLeaseType, !!listing.isFurnished, !!listing.acceptsMobilityLease), [candidateScope?.targetLeaseType, listing.isFurnished, listing.acceptsMobilityLease]);
     const moveInData = useMemo(() => computeMoveInCompat(candidateScope?.targetMoveInDate, listing.availableFrom), [candidateScope?.targetMoveInDate, listing.availableFrom]);
 
     // Mount & animate

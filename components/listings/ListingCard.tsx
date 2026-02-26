@@ -335,8 +335,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                 )}
                             </div>
-                            <div className="font-semibold text-[17px] md:text-[17px] text-blue-600 leading-tight pt-2">
-                                Annonce vérifiée
+                            <div className="font-semibold text-[13px] md:text-[13px] text-blue-600 leading-tight pt-2">
+                                ✓ Annonce vérifiée
                             </div>
                         </div>
                     </div>

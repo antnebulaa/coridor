@@ -144,11 +144,10 @@ export function calculateLegalDeadlineDate(referenceDate: Date, months: number):
 export function calculateDepositAmount(
   explicitAmount: number | null,
   rentPrice: number,
-  leaseType: string
+  isFurnished: boolean
 ): number {
   if (explicitAmount && explicitAmount > 0) {
     return explicitAmount * 100;
   }
-  const isFurnished = leaseType === 'SHORT_TERM' || leaseType === 'STUDENT';
   return rentPrice * (isFurnished ? 2 : 1) * 100;
 }

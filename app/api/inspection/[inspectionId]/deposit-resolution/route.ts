@@ -127,8 +127,7 @@ export async function POST(request: Request, props: Params) {
     if (!depositAmountCents) {
       // Fallback: 1× rent (unfurnished), 2× rent (furnished)
       const rent = inspection.application.listing.price;
-      const leaseType = inspection.application.listing.leaseType;
-      const isFurnished = leaseType === 'SHORT_TERM' || leaseType === 'STUDENT';
+      const isFurnished = !!(inspection.application.listing.rentalUnit as any)?.isFurnished;
       depositAmountCents = rent * (isFurnished ? 2 : 1) * 100;
     }
 
