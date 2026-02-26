@@ -155,6 +155,7 @@ export async function PUT(
         recentWorksDescription,
         acceptsStudentLease,
         acceptsMobilityLease,
+        propertySubType,
     } = body;
 
     try {
@@ -185,6 +186,7 @@ export async function PUT(
                 dpe_year: dpe_year ? parseInt(String(dpe_year), 10) : undefined,
                 energy_cost_min: energy_cost_min ? parseInt(String(energy_cost_min), 10) : undefined,
                 energy_cost_max: energy_cost_max ? parseInt(String(energy_cost_max), 10) : undefined,
+                ...(propertySubType !== undefined && { propertySubType: propertySubType || null }),
             };
 
             if (location?.latlng) {
@@ -257,6 +259,30 @@ export async function PUT(
                 propertyUpdate.isQuiet = amenities.includes('isQuiet');
                 propertyUpdate.hasBathtub = amenities.includes('hasBathtub');
                 propertyUpdate.hasAirConditioning = amenities.includes('hasAirConditioning');
+
+                // Champs existants dans le schema, manquants ici
+                propertyUpdate.hasBalcony = amenities.includes('hasBalcony');
+                propertyUpdate.hasSeparateKitchen = amenities.includes('hasSeparateKitchen');
+                propertyUpdate.hasSofteners = amenities.includes('hasSofteners');
+
+                // Champs AmenitiesSection (avant: silencieusement perdus)
+                propertyUpdate.hasAutomaticDoors = amenities.includes('hasAutomaticDoors');
+                propertyUpdate.hasArmoredDoor = amenities.includes('hasArmoredDoor');
+                propertyUpdate.hasConcierge = amenities.includes('hasConcierge');
+                propertyUpdate.isKitchenEquipped = amenities.includes('isKitchenEquipped');
+                propertyUpdate.hasStorage = amenities.includes('hasStorage');
+                propertyUpdate.hasLaundry = amenities.includes('hasLaundry');
+
+                // Annexes
+                propertyUpdate.hasCave = amenities.includes('hasCave');
+                propertyUpdate.hasParking = amenities.includes('hasParking');
+                propertyUpdate.hasGarage = amenities.includes('hasGarage');
+
+                // Nouveaux atouts
+                propertyUpdate.hasTerrace = amenities.includes('hasTerrace');
+                propertyUpdate.hasLoggia = amenities.includes('hasLoggia');
+                propertyUpdate.hasCourtyard = amenities.includes('hasCourtyard');
+                propertyUpdate.hasShutters = amenities.includes('hasShutters');
 
                 // Listing Amenities
                 listingUpdate.petsAllowed = amenities.includes('petsAllowed');

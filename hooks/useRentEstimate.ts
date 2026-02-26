@@ -27,6 +27,15 @@ export interface UseRentEstimateParams {
   hasParking?: boolean;
   hasBalcony?: boolean;
   constructionPeriod?: string | null;
+  hasTerrace?: boolean;
+  hasLoggia?: boolean;
+  hasAirConditioning?: boolean;
+  isKitchenEquipped?: boolean;
+  hasCellar?: boolean;
+  hasGarage?: boolean;
+  hasGarden?: boolean;
+  hasCourtyard?: boolean;
+  propertySubType?: string | null;
 }
 
 export function useRentEstimate(params: UseRentEstimateParams) {
@@ -57,6 +66,15 @@ export function useRentEstimate(params: UseRentEstimateParams) {
     params.hasParking,
     params.hasBalcony,
     params.constructionPeriod,
+    params.hasTerrace,
+    params.hasLoggia,
+    params.hasAirConditioning,
+    params.isKitchenEquipped,
+    params.hasCellar,
+    params.hasGarage,
+    params.hasGarden,
+    params.hasCourtyard,
+    params.propertySubType,
   ]);
 
   // Build stable cache key
@@ -79,6 +97,15 @@ export function useRentEstimate(params: UseRentEstimateParams) {
           hasParking: debouncedParams.hasParking || false,
           hasBalcony: debouncedParams.hasBalcony || false,
           constructionPeriod: debouncedParams.constructionPeriod || undefined,
+          hasTerrace: debouncedParams.hasTerrace || false,
+          hasLoggia: debouncedParams.hasLoggia || false,
+          hasAirConditioning: debouncedParams.hasAirConditioning || false,
+          isKitchenEquipped: debouncedParams.isKitchenEquipped || false,
+          hasCellar: debouncedParams.hasCellar || false,
+          hasGarage: debouncedParams.hasGarage || false,
+          hasGarden: debouncedParams.hasGarden || false,
+          hasCourtyard: debouncedParams.hasCourtyard || false,
+          propertySubType: debouncedParams.propertySubType || undefined,
         })
       : null;
 

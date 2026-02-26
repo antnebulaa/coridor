@@ -337,6 +337,21 @@ model Property {
   isQuiet           Boolean @default(false)
   hasNoOpposite     Boolean @default(false)
 
+  // ---- ATOUTS COMPLÉMENTAIRES ----
+  hasAutomaticDoors   Boolean @default(false)
+  hasArmoredDoor      Boolean @default(false)
+  hasConcierge        Boolean @default(false)
+  isKitchenEquipped   Boolean @default(false)
+  hasStorage          Boolean @default(false)
+  hasLaundry          Boolean @default(false)
+  hasTerrace          Boolean @default(false)
+  hasLoggia           Boolean @default(false)
+  hasCourtyard        Boolean @default(false)  // Cour privative
+  hasShutters         Boolean @default(false)  // Volets
+
+  // ---- SOUS-TYPE DE PROPRIÉTÉ ----
+  propertySubType     String?  // "duplex", "triplex", "loft", "penthouse", "mansarde"
+
   // ---- ZONE TENDUE / ENCADREMENT DES LOYERS ----
   isZoneTendue              Boolean   @default(false)
   referenceRent             Float?    // Loyer de référence EUR/m²/mois

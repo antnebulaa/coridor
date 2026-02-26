@@ -299,11 +299,10 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                         <div className="
                             md:hidden
                             sticky
-                            top-0
+                            top-safe
                             z-50
                             bg-white dark:bg-neutral-900
                             px-6
-                            pt-safe
                             border-b border-neutral-200 dark:border-neutral-800
                         ">
                         <div className="

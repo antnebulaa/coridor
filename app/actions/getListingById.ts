@@ -199,15 +199,24 @@ export default async function getListingById(
             hasBathtub: property.hasBathtub,
             hasAirConditioning: property.hasAirConditioning,
 
-            hasStorage: false,
-            hasLaundry: false,
-            hasArmoredDoor: false,
-            hasConcierge: false,
-            hasAutomaticDoors: false,
+            hasStorage: property.hasStorage,
+            hasLaundry: property.hasLaundry,
+            hasArmoredDoor: property.hasArmoredDoor,
+            hasConcierge: property.hasConcierge,
+            hasAutomaticDoors: property.hasAutomaticDoors,
+            isKitchenEquipped: property.isKitchenEquipped,
+
+            // Nouveaux atouts
+            hasTerrace: property.hasTerrace,
+            hasLoggia: property.hasLoggia,
+            hasCourtyard: property.hasCourtyard,
+            hasShutters: property.hasShutters,
+            hasCave: property.hasCave,
+            hasGarage: property.hasGarage,
+            propertySubType: property.propertySubType,
 
             transitData: property.transitData,
             surfaceUnit: unit.surface ? unit.surface.toString() : null,
-            isKitchenEquipped: false, // Default or map if available
             isLastFloor: property.floor === property.totalFloors,
 
             activeApplications: (listing.applications || []).map((app: any) => ({

@@ -42,6 +42,7 @@ export async function POST(
         ges,
         amenities,
         charges,
+        securityDeposit,
         rooms,
         // New fields
         isFurnished,
@@ -61,6 +62,7 @@ export async function POST(
         isPublished, // New field to allow immediate publish
         acceptsStudentLease,
         acceptsMobilityLease,
+        propertySubType,
         // Legacy
         imageSrc
     } = body;
@@ -140,6 +142,25 @@ export async function POST(
                         isQuiet: amenities?.includes('isQuiet') || false,
                         hasNoOpposite: amenities?.includes('hasNoOpposite') || false,
 
+                        // Champs AmenitiesSection (avant: silencieusement perdus)
+                        hasSeparateKitchen: amenities?.includes('hasSeparateKitchen') || false,
+                        hasSofteners: amenities?.includes('hasSofteners') || false,
+                        hasAutomaticDoors: amenities?.includes('hasAutomaticDoors') || false,
+                        hasArmoredDoor: amenities?.includes('hasArmoredDoor') || false,
+                        hasConcierge: amenities?.includes('hasConcierge') || false,
+                        isKitchenEquipped: amenities?.includes('isKitchenEquipped') || false,
+                        hasStorage: amenities?.includes('hasStorage') || false,
+                        hasLaundry: amenities?.includes('hasLaundry') || false,
+
+                        // Nouveaux atouts
+                        hasTerrace: amenities?.includes('hasTerrace') || false,
+                        hasLoggia: amenities?.includes('hasLoggia') || false,
+                        hasCourtyard: amenities?.includes('hasCourtyard') || false,
+                        hasShutters: amenities?.includes('hasShutters') || false,
+
+                        // Sous-type de propriété
+                        propertySubType: propertySubType || null,
+
                         // Transit data if any passed
                         transitData: undefined
                     }
@@ -197,7 +218,7 @@ export async function POST(
                     // dpe, // MOVED TO PROPERTY
                     // ges, // MOVED TO PROPERTY
                     charges: { amount: typeof charges === 'string' ? parseInt(charges, 10) : (typeof charges === 'number' ? charges : 0) },
-                    securityDeposit: 0,
+                    securityDeposit: securityDeposit ? parseInt(securityDeposit, 10) : 0,
                     propertyAdjective,
 
                     // Constraints

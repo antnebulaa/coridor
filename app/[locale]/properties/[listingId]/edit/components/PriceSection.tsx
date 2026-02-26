@@ -103,6 +103,15 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 : listing.buildYear >= 1949 ? '1949 - 1974'
                 : 'Avant 1949'
                 : null,
+            hasTerrace: (listing as any)?.hasTerrace || false,
+            hasLoggia: (listing as any)?.hasLoggia || false,
+            hasAirConditioning: listing.hasAirConditioning || false,
+            isKitchenEquipped: (listing as any)?.isKitchenEquipped || false,
+            hasCellar: (listing as any)?.hasCave || false,
+            hasGarage: (property as any)?.hasGarage || false,
+            hasGarden: listing.hasGarden || false,
+            hasCourtyard: (listing as any)?.hasCourtyard || false,
+            propertySubType: (listing as any)?.propertySubType || null,
         }
     );
 
@@ -248,14 +257,15 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
     }
 
     // Gauge Logic (Only for Single Listing)
+    const hasMaxRent = rentControlData?.isEligible && typeof rentControlData?.maxRent === 'number' && rentControlData.maxRent > 0;
     const getGaugeStatus = () => {
-        if (!rentControlData?.isEligible || !price) return 'neutral';
+        if (!hasMaxRent || !price) return 'neutral';
         if (price > rentControlData.maxRent) return 'red';
         if (price >= rentControlData.maxRent * 0.95) return 'orange';
         return 'green';
     };
     const gaugeStatus = getGaugeStatus();
-    const percentage = rentControlData?.maxRent ? Math.min((price / (rentControlData.maxRent * 1.2)) * 100, 100) : 0;
+    const percentage = hasMaxRent ? Math.min((price / (rentControlData.maxRent * 1.2)) * 100, 100) : 0;
 
     const handleApplyPrices = (newPrices: { index: number; price: number }[]) => {
         newPrices.forEach(({ index, price }) => {
@@ -494,19 +504,124 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 </span>
             </div>
 
-            {/* Rent Estimator — right after price */}
+            {/* Estimation + Encadrement — side by side on wide screens */}
             {!isColocation && (
-                <RentEstimator
-                    estimate={rentEstimate}
-                    isLoading={isEstimateLoading}
-                    currentPrice={price}
-                    onApplyEstimate={(estimatedPrice) => {
-                        if (!isLocked) {
-                            setValue('price', estimatedPrice);
-                        }
-                    }}
-                    rentControlMaxRent={rentControlData?.maxRent || null}
-                />
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+                    {/* Rent Estimator */}
+                    <RentEstimator
+                        estimate={rentEstimate}
+                        isLoading={isEstimateLoading}
+                        currentPrice={price}
+                        onApplyEstimate={(estimatedPrice) => {
+                            if (!isLocked) {
+                                setValue('price', estimatedPrice);
+                            }
+                        }}
+                        rentControlMaxRent={hasMaxRent ? rentControlData.maxRent : null}
+                    />
+
+                    {/* Rent Control — full data with gauge */}
+                    {hasMaxRent && (
+                        <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl flex flex-col gap-4 h-full">
+                            <div className="flex items-center justify-between gap-2">
+                                <h4 className="font-semibold text-sm flex items-center gap-2 text-neutral-800 dark:text-neutral-200">
+                                    <Info size={16} />
+                                    Encadrement des loyers
+                                </h4>
+                                <div className="flex gap-1.5 shrink-0">
+                                    {rentControlData.source === 'official_api' && (
+                                        <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                            <CheckCircle size={10} /> Officiel
+                                        </span>
+                                    )}
+                                    {rentControlData.zone && (
+                                        <span className="text-[10px] font-medium bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 px-1.5 py-0.5 rounded">
+                                            {rentControlData.zone}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Plafond */}
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-medium text-neutral-900 dark:text-neutral-100">
+                                    {rentControlData.maxRent} €
+                                </span>
+                                <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    plafond majoré
+                                </span>
+                            </div>
+
+                            {/* Gauge bar */}
+                            <div className="flex flex-col gap-2">
+                                <div className="h-14 w-full bg-gray-200 dark:bg-neutral-700 rounded-2xl overflow-hidden relative">
+                                    <div
+                                        className={`h-full transition-all duration-500 rounded-l-2xl  ${gaugeStatus === 'red' ? 'bg-rose-500' :
+                                            gaugeStatus === 'orange' ? 'bg-orange-500' : 'bg-emerald-500'
+                                            }`}
+                                        style={{ width: `${percentage}%` }}
+                                    />
+                                    <div
+                                        className="absolute top-0 bottom-0 w-0.5 bg-black/30"
+                                        style={{ left: `${(1 / 1.2) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs text-neutral-400">
+                                    <span>0 €</span>
+                                    <span>{rentControlData.maxRent} €</span>
+                                </div>
+                            </div>
+
+                            {/* Status message */}
+                            <div className={`text-sm p-3 rounded-lg flex items-start gap-2 ${gaugeStatus === 'red' ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-800 dark:text-rose-300' :
+                                gaugeStatus === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300'
+                                }`}>
+                                
+
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="font-semibold text-[15px]">
+                                        {gaugeStatus === 'red' ? 'Loyer supérieur au plafond légal' :
+                                            gaugeStatus === 'orange' ? 'Loyer proche du plafond' : 'Loyer conforme'}
+                                    </span>
+                                    <span className="text-sm opacity-80">
+                                        {gaugeStatus === 'red'
+                                            ? `Vous dépassez de ${Math.round(price - rentControlData.maxRent)} €/mois. Pour appliquer ce tarif, votre bien doit justifier de caractéristiques exceptionnelles via un Complément de loyer.`
+                                            : `${Math.round(((rentControlData.maxRent - price) / rentControlData.maxRent) * 100)}% sous le plafond légal.`}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Ref data */}
+                            {rentControlData.referenceRentMax && (
+                                <div className="text-[11px] text-neutral-400 dark:text-neutral-500 flex flex-col gap-0.5">
+                                    <span>Réf. majoré : {rentControlData.referenceRentMax} €/m² × {listing.surface} m²</span>
+                                    {rentControlData.referenceRent && (
+                                        <span>Réf. base : {rentControlData.referenceRent} €/m²</span>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                                {rentControlData.message}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Zone found but no reference data for this config */}
+                    {rentControlData?.isEligible && rentControlData?.dataUnavailable && (
+                        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 flex items-start gap-3">
+                            <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                            <div className="flex flex-col gap-1">
+                                <span className="font-medium text-sm text-amber-800">
+                                    {rentControlData.zone || rentControlData.territory} — Encadrement applicable
+                                </span>
+                                <span className="text-xs text-amber-700">
+                                    {rentControlData.message}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Charges Section */}
@@ -628,73 +743,6 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 </div>
                 {/* Hidden input to register the value if not already managed by setValue */}
             </div>
-
-            {/* Rent Control Section */}
-            {rentControlData?.isEligible && (
-                <div className="bg-neutral-50 p-6 rounded-xl border border-neutral-200 flex flex-col gap-4">
-                    <div className="flex flex-row items-center justify-between">
-                        <h4 className="font-semibold flex items-center gap-2">
-                            <Info size={18} />
-                            Zone Tendue / Encadrement
-                        </h4>
-                        <div className="flex gap-2">
-                            {rentControlData.source === 'official_api' && (
-                                <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded flex items-center gap-1">
-                                    <CheckCircle size={12} /> Officiel
-                                </span>
-                            )}
-                            <span className="text-xs font-medium bg-neutral-200 px-2 py-1 rounded">
-                                {rentControlData.zone}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <div className="flex justify-between text-sm text-neutral-600">
-                            <span>0 €</span>
-                            <span>Plafond: {rentControlData.maxRent} €</span>
-                            <span>+</span>
-                        </div>
-                        <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden relative">
-                            <div
-                                className={`h-full transition-all duration-500 rounded-full ${gaugeStatus === 'red' ? 'bg-primary' :
-                                    gaugeStatus === 'orange' ? 'bg-orange-500' : 'bg-emerald-500'
-                                    }`}
-                                style={{ width: `${percentage}%` }}
-                            />
-                            {/* Marker for Max Rent */}
-                            <div
-                                className="absolute top-0 bottom-0 w-1 bg-black opacity-30"
-                                style={{ left: `${(rentControlData.maxRent / (rentControlData.maxRent * 1.2)) * 100}%` }}
-                            />
-                        </div>
-                    </div>
-
-                    <div className={`text-sm p-3 rounded-lg flex items-start gap-3 ${gaugeStatus === 'red' ? 'bg-rose-100 text-rose-800' :
-                        gaugeStatus === 'orange' ? 'bg-orange-100 text-orange-800' : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                        {gaugeStatus === 'red' && <AlertTriangle className="shrink-0 mt-0.5" size={18} />}
-                        {gaugeStatus === 'orange' && <Info className="shrink-0 mt-0.5" size={18} />}
-                        {gaugeStatus === 'green' && <CheckCircle className="shrink-0 mt-0.5" size={18} />}
-
-                        <div className="flex flex-col gap-1">
-                            <span className="font-medium">
-                                {gaugeStatus === 'red' ? 'Loyer supérieur au plafond légal' :
-                                    gaugeStatus === 'orange' ? 'Loyer proche du plafond' : 'Loyer conforme'}
-                            </span>
-                            <span className="opacity-90">
-                                {gaugeStatus === 'red'
-                                    ? `Le loyer dépasse le plafond ${rentControlData.source === 'official_api' ? 'officiel' : 'estimé'} de ${rentControlData.maxRent} €. Cela peut être illégal sauf complément de loyer justifié.`
-                                    : `Ce loyer est ${Math.round(((rentControlData.maxRent - price) / rentControlData.maxRent) * 100)}% en dessous du plafond légal.`}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="text-xs text-neutral-400 mt-2">
-                        {rentControlData.message}. Calcul basé sur une surface de {listing.surface} m².
-                    </div>
-                </div>
-            )}
 
             <EditSectionFooter
                 disabled={isLoading}

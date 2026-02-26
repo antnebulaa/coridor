@@ -31,7 +31,11 @@ import {
     ThermometerSnowflake,
     GraduationCap,
     ConciergeBell,
-    Check
+    Check,
+    Fence,
+    Car,
+    Warehouse,
+    Archive,
 } from 'lucide-react';
 import { IconType } from 'react-icons';
 import { SafeListing } from '@/types';
@@ -79,6 +83,14 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
         { label: t('airConditioning'), icon: ThermometerSnowflake, value: listing.hasAirConditioning },
         { label: t('student'), icon: GraduationCap, value: listing.isStudentFriendly },
         { label: t('concierge'), icon: ConciergeBell, value: listing.hasConcierge },
+        { label: 'Balcon', icon: Fence, value: listing.hasBalcony },
+        { label: 'Terrasse', icon: Fence, value: (listing as any).hasTerrace },
+        { label: 'Loggia', icon: DoorOpen, value: (listing as any).hasLoggia },
+        { label: 'Cour privative', icon: Flower2, value: (listing as any).hasCourtyard },
+        { label: 'Volets', icon: DoorOpen, value: (listing as any).hasShutters },
+        { label: 'Cave', icon: Archive, value: (listing as any).hasCave },
+        { label: 'Parking', icon: Car, value: (listing as any).hasParking },
+        { label: 'Garage', icon: Warehouse, value: (listing as any).hasGarage },
     ].filter((item) => item.value);
 
     if (amenities.length === 0) {

@@ -22,7 +22,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair, Briefcase } from "lucide-react";
+import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair, Briefcase, Fence, Snowflake, Car, Warehouse, Archive } from "lucide-react";
 import { lookupRentControl } from "@/lib/rentControl";
 import { useRentEstimate } from "@/hooks/useRentEstimate";
 import RentEstimator from "../rent/RentEstimator";
@@ -120,13 +120,15 @@ const RentModal = () => {
             dpe: 'C',
             ges: 'A',
             charges: '' as any,
+            securityDeposit: 0,
             amenities: [],
             rooms: [],
             isPublished: false,
             hasSeparateKitchen: false,
             totalFloors: '',
             floor: '',
-            constructionPeriod: ''
+            constructionPeriod: '',
+            propertySubType: null as string | null,
         }
     });
 
@@ -163,12 +165,14 @@ const RentModal = () => {
                 dpe: listing.dpe,
                 ges: listing.ges || 'A',
                 charges: typeof listing.charges === 'object' ? (listing.charges as any)?.amount : 0,
+                securityDeposit: listing.securityDeposit || 0,
                 amenities: Object.keys(listing).filter((key) => (listing as any)[key] === true),
                 rooms: property?.rooms?.map((room: any) => ({
                     name: room.name,
                     images: room.images?.map((img: any) => img.url) || []
                 })) || [],
-                isPublished: listing.isPublished || false
+                isPublished: listing.isPublished || false,
+                propertySubType: (listing as any).propertySubType || null,
             });
 
             if (rentModal.mode === 'ROOM_CONFIG' || listing.rentalUnit?.type !== 'ENTIRE_PLACE') {
@@ -203,8 +207,10 @@ const RentModal = () => {
                 dpe: property.dpe || 'C',
                 ges: property.ges || 'A',
                 charges: '',
+                securityDeposit: 0,
                 amenities: amenities,
-                rooms: []
+                rooms: [],
+                propertySubType: (property as any).propertySubType || null,
             });
             setStep(STEPS.INFO); // Skip Category and Location
             setCreatedListing(null);
@@ -225,8 +231,10 @@ const RentModal = () => {
                 dpe: 'C',
                 ges: 'A',
                 charges: '',
+                securityDeposit: 0,
                 amenities: [],
-                rooms: []
+                rooms: [],
+                propertySubType: null,
             });
             setStep(STEPS.INTRO_CHARACTERISTICS);
             setCreatedListing(null);
@@ -249,6 +257,20 @@ const RentModal = () => {
     const surfaceValue = watch('surface');
     const isPublished = watch('isPublished');
 
+    // Derive buildYear from constructionPeriod for rent control
+    const constructionPeriodForRC = watch('constructionPeriod');
+    const isFurnishedForRC = watch('isFurnished');
+    const derivedBuildYear = (() => {
+        switch (constructionPeriodForRC) {
+            case 'Avant 1949': return 1940;
+            case '1949 - 1974': return 1960;
+            case '1975 - 1989': return 1980;
+            case '1990 - 2005': return 1995;
+            case '2005+': return 2010;
+            default: return 2000;
+        }
+    })();
+
     useEffect(() => {
         if (location && (surfaceValue || 50)) {
             const city = location?.label?.split(',')[0] || '';
@@ -257,19 +279,18 @@ const RentModal = () => {
                 city,
                 zipCode,
                 roomCount: roomCount || 1,
-                buildYear: 2000,
-                isFurnished: true,
+                buildYear: derivedBuildYear,
+                isFurnished: !!isFurnishedForRC,
                 surface: surfaceValue || 50,
             });
 
             if (result.needsApi && location?.lat && location?.lng) {
-                // Paris and other API-dependent cities
                 axios.post('/api/rent-control', {
                     lat: location.lat,
                     lon: location.lng,
                     roomCount: roomCount || 1,
-                    buildYear: 2000,
-                    isFurnished: true,
+                    buildYear: derivedBuildYear,
+                    isFurnished: !!isFurnishedForRC,
                     surface: surfaceValue || 50,
                     city,
                     listing: { zipCode },
@@ -279,7 +300,7 @@ const RentModal = () => {
                 setRentControlData(result);
             }
         }
-    }, [location, surfaceValue, roomCount]);
+    }, [location, surfaceValue, roomCount, derivedBuildYear, isFurnishedForRC]);
 
     // Rent Estimator
     const isFurnishedVal = watch('isFurnished');
@@ -301,6 +322,15 @@ const RentModal = () => {
         hasParking: amenitiesVal?.includes('hasParking') || false,
         hasBalcony: amenitiesVal?.includes('hasBalcony') || false,
         constructionPeriod: constructionPeriodVal || null,
+        hasTerrace: amenitiesVal?.includes('hasTerrace') || false,
+        hasLoggia: amenitiesVal?.includes('hasLoggia') || false,
+        hasAirConditioning: amenitiesVal?.includes('hasAirConditioning') || false,
+        isKitchenEquipped: amenitiesVal?.includes('isKitchenEquipped') || false,
+        hasCellar: amenitiesVal?.includes('hasCave') || false,
+        hasGarage: amenitiesVal?.includes('hasGarage') || false,
+        hasGarden: amenitiesVal?.includes('hasGarden') || false,
+        hasCourtyard: amenitiesVal?.includes('hasCourtyard') || false,
+        propertySubType: watch('propertySubType') || null,
     });
 
     // Auto-fill price with estimate if empty
@@ -557,6 +587,36 @@ const RentModal = () => {
                         </div>
                     ))}
                 </div>
+
+                {/* Property subtype selector — only for Appartement */}
+                {category === 'Appartement' && (
+                    <div className="flex flex-col gap-3">
+                        <h3 className="font-semibold text-sm text-neutral-700">Type d&apos;appartement</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { value: '', label: 'Standard' },
+                                { value: 'duplex', label: 'Duplex' },
+                                { value: 'triplex', label: 'Triplex' },
+                                { value: 'loft', label: 'Loft' },
+                                { value: 'penthouse', label: 'Penthouse' },
+                                { value: 'mansarde', label: 'Mansardé' },
+                            ].map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setCustomValue('propertySubType', opt.value || null)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium border transition
+                                        ${(watch('propertySubType') || '') === opt.value
+                                            ? 'bg-neutral-900 text-white border-neutral-900'
+                                            : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400'
+                                        }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         )
     }
@@ -1242,6 +1302,7 @@ const RentModal = () => {
                 items: [
                     { key: 'hasFiber', label: t('steps.amenities.items.fiber'), icon: Zap },
                     { key: 'isKitchenEquipped', label: t('steps.amenities.items.kitchen'), icon: Utensils },
+                    { key: 'hasAirConditioning', label: 'Climatisation', icon: Snowflake },
                     { key: 'hasLaundry', label: t('steps.amenities.items.laundry'), icon: Shirt },
                     { key: 'hasStorage', label: t('steps.amenities.items.storage'), icon: Package },
                 ]
@@ -1249,11 +1310,24 @@ const RentModal = () => {
             {
                 title: t('steps.amenities.groups.features'),
                 items: [
+                    { key: 'hasBalcony', label: 'Balcon', icon: Fence },
+                    { key: 'hasTerrace', label: 'Terrasse', icon: Fence },
+                    { key: 'hasLoggia', label: 'Loggia', icon: DoorOpen },
+                    { key: 'hasCourtyard', label: 'Cour privative', icon: Home },
+                    { key: 'hasShutters', label: 'Volets', icon: DoorOpen },
                     { key: 'hasGarden', label: t('steps.amenities.items.garden'), icon: Leaf },
                     { key: 'isTraversant', label: t('steps.amenities.items.cross'), icon: ArrowRightLeft },
                     { key: 'isSouthFacing', label: t('steps.amenities.items.south'), icon: Sun },
                     { key: 'isRefurbished', label: t('steps.amenities.items.refurbished'), icon: Paintbrush },
                     { key: 'petsAllowed', label: t('steps.amenities.items.pets'), icon: PawPrint },
+                ]
+            },
+            {
+                title: 'Annexes',
+                items: [
+                    { key: 'hasCave', label: 'Cave', icon: Archive },
+                    { key: 'hasParking', label: 'Parking', icon: Car },
+                    { key: 'hasGarage', label: 'Garage', icon: Warehouse },
                 ]
             },
             {
@@ -1505,35 +1579,54 @@ const RentModal = () => {
     }
 
     if (step === STEPS.PRICE) {
+        const priceVal = parseFloat(price) || 0;
+        const isFurnishedRC = !!watch('isFurnished');
+        const maxDepositMonths = isFurnishedRC ? 2 : 1;
+        const depositOptions = Array.from({ length: maxDepositMonths + 1 }, (_, i) => i);
+        const currentDeposit = watch('securityDeposit');
+        const hasRCMaxRent = rentControlData?.isEligible && typeof rentControlData?.maxRent === 'number' && rentControlData.maxRent > 0;
+
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
                     title={t('steps.price.title')}
                     subtitle={t('steps.price.subtitle')}
                 />
-                <SoftInput
-                    id="price"
-                    label={t('steps.price.label')}
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    formatPrice
-                    disabled={isLoading}
-                    register={register}
-                    errors={errors}
-                    required
-                />
-                <SoftInput
-                    id="charges"
-                    label={t('steps.price.chargesLabel')}
-                    type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    formatPrice
-                    disabled={isLoading}
-                    register={register}
-                    errors={errors}
-                />
+
+                {/* Price input — clean centered style */}
+                <div className="flex flex-col items-center py-4">
+                    <label className="text-xs text-neutral-400 uppercase tracking-wide mb-3">
+                        {t('steps.price.label')}
+                    </label>
+                    <div className="flex items-baseline gap-1">
+                        <input
+                            id="price"
+                            disabled={isLoading}
+                            {...register('price', { required: true, min: 1 })}
+                            type="number"
+                            inputMode="numeric"
+                            className="
+                                w-[160px]
+                                text-center
+                                text-5xl
+                                font-extralight
+                                tracking-tight
+                                bg-transparent
+                                outline-none
+                                transition
+                                placeholder-neutral-200
+                                [appearance:textfield]
+                                [&::-webkit-outer-spin-button]:appearance-none
+                                [&::-webkit-inner-spin-button]:appearance-none
+                            "
+                            placeholder="0"
+                        />
+                        <span className="text-2xl font-extralight text-neutral-300">€</span>
+                    </div>
+                    <span className="text-xs text-neutral-400 mt-1">hors charges / mois</span>
+                </div>
+
+                {/* Rent Estimator */}
                 <RentEstimator
                     estimate={rentEstimate}
                     isLoading={isEstimateLoading}
@@ -1541,17 +1634,99 @@ const RentModal = () => {
                     onApplyEstimate={(estimatedPrice) => {
                         setCustomValue('price', estimatedPrice);
                     }}
-                    rentControlMaxRent={rentControlData?.maxRent || null}
+                    rentControlMaxRent={hasRCMaxRent ? rentControlData.maxRent : null}
                 />
-                {rentControlData && (
+
+                {/* Charges */}
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-neutral-700">
+                        {t('steps.price.chargesLabel')}
+                    </label>
+                    <div className="flex items-baseline gap-1">
+                        <input
+                            id="charges"
+                            disabled={isLoading}
+                            {...register('charges', { min: 0 })}
+                            type="number"
+                            inputMode="numeric"
+                            className="
+                                w-[100px]
+                                text-center
+                                text-3xl
+                                font-extralight
+                                tracking-tight
+                                bg-transparent
+                                outline-none
+                                transition
+                                placeholder-neutral-200
+                                [appearance:textfield]
+                                [&::-webkit-outer-spin-button]:appearance-none
+                                [&::-webkit-inner-spin-button]:appearance-none
+                            "
+                            placeholder="0"
+                        />
+                        <span className="text-lg font-extralight text-neutral-300">€</span>
+                    </div>
+                </div>
+
+                {/* Security Deposit */}
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-neutral-700">
+                            Dépôt de garantie
+                        </label>
+                        <p className="text-xs text-neutral-400">
+                            {isFurnishedRC
+                                ? 'Meublé : max. 2 mois de loyer HC.'
+                                : 'Location nue : max. 1 mois de loyer HC.'}
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        {depositOptions.map((months) => {
+                            const amount = months * priceVal;
+                            const isSelected = currentDeposit == amount;
+                            return (
+                                <div
+                                    key={months}
+                                    onClick={() => setCustomValue('securityDeposit', amount)}
+                                    className={`
+                                        cursor-pointer
+                                        rounded-xl
+                                        border-2
+                                        p-3
+                                        flex-1
+                                        flex
+                                        flex-col
+                                        items-center
+                                        gap-1
+                                        transition
+                                        ${isSelected
+                                            ? 'border-neutral-900 bg-neutral-50'
+                                            : 'border-neutral-200 hover:border-neutral-400'}
+                                    `}
+                                >
+                                    <span className="font-semibold text-lg">{amount} €</span>
+                                    <span className="text-xs text-neutral-500">
+                                        {months === 0 ? 'Aucun' : `${months} mois`}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Rent Control — full data with gauge */}
+                {hasRCMaxRent && (
                     <div className="p-4 bg-neutral-100 rounded-xl flex flex-col gap-2">
                         <div className="flex justify-between items-center">
                             <div className="font-semibold text-neutral-800">
                                 {t('rentControl.title')}
                             </div>
-                            <div className="text-xs font-medium px-2 py-1 bg-white rounded-md border border-neutral-200 text-neutral-600">
-                                {t('rentControl.zone', { zone: rentControlData.zone })}
-                            </div>
+                            {rentControlData.zone && (
+                                <div className="text-xs font-medium px-2 py-1 bg-white rounded-md border border-neutral-200 text-neutral-600">
+                                    {t('rentControl.zone', { zone: rentControlData.zone })}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex justify-between items-end mt-1">
@@ -1560,12 +1735,11 @@ const RentModal = () => {
                             </div>
                         </div>
 
-                        {/* Analysis based on current input */}
                         {price && (
-                            <div className={`mt-3 pt-3 border-t border-neutral-200 flex items-start gap-2 text-sm ${parseFloat(price) > rentControlData.maxRent ? 'text-rose-600' :
-                                parseFloat(price) > rentControlData.maxRent * 0.9 ? 'text-amber-600' : 'text-emerald-600'
+                            <div className={`mt-3 pt-3 border-t border-neutral-200 flex items-start gap-2 text-sm ${priceVal > rentControlData.maxRent ? 'text-rose-600' :
+                                priceVal > rentControlData.maxRent * 0.9 ? 'text-amber-600' : 'text-emerald-600'
                                 }`}>
-                                {parseFloat(price) > rentControlData.maxRent ? (
+                                {priceVal > rentControlData.maxRent ? (
                                     <>
                                         <AlertCircle size={16} className="mt-0.5 shrink-0" />
                                         <div>
@@ -1575,7 +1749,7 @@ const RentModal = () => {
                                             </div>
                                         </div>
                                     </>
-                                ) : parseFloat(price) > rentControlData.maxRent * 0.9 ? (
+                                ) : priceVal > rentControlData.maxRent * 0.9 ? (
                                     <>
                                         <AlertCircle size={16} className="mt-0.5 shrink-0" />
                                         <div>
@@ -1598,6 +1772,21 @@ const RentModal = () => {
                                 )}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* Zone found but no reference data for this configuration */}
+                {rentControlData?.isEligible && rentControlData?.dataUnavailable && (
+                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-3">
+                        <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-1">
+                            <div className="font-medium text-sm text-amber-800">
+                                {rentControlData.zone || rentControlData.territory} — Encadrement applicable
+                            </div>
+                            <div className="text-xs text-amber-700">
+                                {rentControlData.message}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

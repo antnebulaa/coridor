@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
-  Info,
   ChevronDown,
   ChevronUp,
-  Sparkles,
   AlertTriangle,
+  Scale,
   CheckCircle,
   BarChart3,
 } from 'lucide-react';
@@ -33,6 +33,14 @@ interface RentEstimatorProps {
       parking: number;
       balcony: number;
       construction: number;
+      terrace: number;
+      airConditioning: number;
+      kitchen: number;
+      cellar: number;
+      garage: number;
+      garden: number;
+      courtyard: number;
+      propertyType: number;
     };
     adjustmentLabels?: {
       furnished?: string;
@@ -41,6 +49,14 @@ interface RentEstimatorProps {
       parking?: string;
       balcony?: string;
       construction?: string;
+      terrace?: string;
+      airConditioning?: string;
+      kitchen?: string;
+      cellar?: string;
+      garage?: string;
+      garden?: string;
+      courtyard?: string;
+      propertyType?: string;
     };
     attribution: string;
   } | null;
@@ -48,6 +64,25 @@ interface RentEstimatorProps {
   currentPrice?: number | string;
   onApplyEstimate?: (price: number) => void;
   rentControlMaxRent?: number | null;
+}
+
+// Generate smooth distribution bars from Q1/median/Q3
+function generateDistributionBars(low: number, median: number, high: number, numBars: number = 24) {
+  const iqr = high - low || 1;
+  const sigma = iqr / 1.35;
+  const margin = iqr * 0.25;
+  const rangeStart = low - margin;
+  const rangeEnd = high + margin;
+  const step = (rangeEnd - rangeStart) / numBars;
+
+  const bars: { x: number; height: number }[] = [];
+  for (let i = 0; i < numBars; i++) {
+    const x = rangeStart + step * (i + 0.5);
+    const z = (x - median) / sigma;
+    const height = Math.exp(-0.5 * z * z);
+    bars.push({ x, height });
+  }
+  return { bars, rangeStart, rangeEnd };
 }
 
 const RentEstimator: React.FC<RentEstimatorProps> = ({
@@ -62,6 +97,14 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
     typeof currentPrice === 'string'
       ? parseFloat(currentPrice)
       : currentPrice;
+
+  // Distribution chart data — must be before all early returns (Rules of Hooks)
+  const { bars, rangeStart, rangeEnd } = useMemo(
+    () => estimate
+      ? generateDistributionBars(estimate.rangeLowHC, estimate.estimatedRentHC, estimate.rangeHighHC)
+      : { bars: [], rangeStart: 0, rangeEnd: 0 },
+    [estimate?.rangeLowHC, estimate?.estimatedRentHC, estimate?.rangeHighHC]
+  );
 
   if (isLoading) {
     return (
@@ -79,24 +122,20 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
     estimatedRentHC,
     rangeLowHC,
     rangeHighHC,
-    estimatedRentCC,
-    estimatedChargesTotal,
     confidence,
     observations,
-    rSquared,
     source,
     adjustments,
     adjustmentLabels,
     attribution,
   } = estimate;
   const labels = adjustmentLabels || {};
+  const chartTotal = rangeEnd - rangeStart || 1;
 
-  // Range bar: spans exactly from Q1 (rangeLowHC) to Q3 (rangeHighHC)
-  const barTotal = rangeHighHC - rangeLowHC || 1;
-  const estimatePct = ((estimatedRentHC - rangeLowHC) / barTotal) * 100;
+  // Price position on chart (as percentage)
   const pricePct =
     price && !isNaN(price)
-      ? Math.min(Math.max(((price - rangeLowHC) / barTotal) * 100, 0), 100)
+      ? Math.min(Math.max(((price - rangeStart) / chartTotal) * 100, 0), 100)
       : null;
 
   // Confidence config
@@ -105,21 +144,29 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
       bg: 'bg-emerald-100 dark:bg-emerald-900/30',
       text: 'text-emerald-700 dark:text-emerald-400',
       label: 'Fiable',
+      humanLabel: 'Élevé',
     },
     MEDIUM: {
       bg: 'bg-amber-100 dark:bg-amber-900/30',
       text: 'text-amber-700 dark:text-amber-400',
       label: 'Indicatif',
+      humanLabel: 'Modéré',
     },
     LOW: {
       bg: 'bg-red-100 dark:bg-red-900/30',
       text: 'text-red-700 dark:text-red-400',
       label: 'Estimatif',
+      humanLabel: 'Faible',
     },
   };
   const conf = confConfig[confidence];
 
-  // Price positioning — 6 levels like La Centrale
+  // Human-readable observation count
+  const obsLabel = observations >= 1000
+    ? `${Math.round(observations / 1000)} 000+`
+    : observations.toLocaleString('fr-FR');
+
+  // Price positioning
   const median = estimatedRentHC;
   const getPriceStatus = () => {
     if (!price || isNaN(price)) return 'none' as const;
@@ -134,13 +181,18 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
   };
   const priceStatus = getPriceStatus();
 
+  // Dynamic overage for over_legal
+  const overageAmount = (rentControlMaxRent && price && !isNaN(price))
+    ? Math.round(price - rentControlMaxRent)
+    : 0;
+
   const statusConfig = {
     over_legal: {
-      bg: 'bg-rose-50 dark:bg-rose-900/20',
-      text: 'text-rose-800 dark:text-rose-300',
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      text: 'text-orange-800 dark:text-orange-300',
       icon: AlertTriangle,
-      label: 'Au-dessus du plafond légal',
-      msg: 'Votre loyer dépasse le plafond d\'encadrement. Autorisé uniquement avec un complément de loyer justifié.',
+      label: 'Positionnement haut de marché',
+      msg: `Ce montant vous situe dans la fourchette haute du quartier, mais attention aux contraintes légales en vigueur.`,
     },
     well_above: {
       bg: 'bg-red-50 dark:bg-red-900/20',
@@ -161,7 +213,7 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
       text: 'text-amber-800 dark:text-amber-300',
       icon: TrendingUp,
       label: 'Légèrement au-dessus',
-      msg: 'Prix acceptable si le bien est en très bon état ou bien situé. Vous sélectionnerez parmi moins de candidats.',
+      msg: 'Prix acceptable si le bien est en très bon état ou bien situé. Vous attirez moins de candidats.',
     },
     fair: {
       bg: 'bg-emerald-50 dark:bg-emerald-900/20',
@@ -175,7 +227,7 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
       text: 'text-sky-800 dark:text-sky-300',
       icon: TrendingDown,
       label: 'Bonne affaire pour le locataire',
-      msg: 'En dessous du médian. Vous attirerez plus de candidats et louerez plus vite.',
+      msg: 'En dessous du médian. Vous attirerez beaucoup de candidats et louerez plus vite.',
     },
     great_deal: {
       bg: 'bg-blue-50 dark:bg-blue-900/20',
@@ -196,14 +248,19 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
 
   const status = statusConfig[priceStatus];
 
+  // Max button logic — shared between chart and buttons
+  const hasLegalMax = !!(rentControlMaxRent && rentControlMaxRent < rangeHighHC);
+  const maxValue = hasLegalMax ? Math.round(rentControlMaxRent!) : rangeHighHC;
+  const medianExceedsLegal = hasLegalMax && estimatedRentHC > rentControlMaxRent!;
+
   return (
     <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl flex flex-col gap-4">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2 bg-white">
+        <div className="flex items-center gap-2">
           <BarChart3 size={18} className="text-neutral-600 dark:text-neutral-400" />
           <span className="font-semibold text-neutral-800 dark:text-neutral-200 text-sm">
-            Loyer estimé ({confidence === 'HIGH' ? 'données solides' : confidence === 'MEDIUM' ? 'données limitées' : 'peu fiable'})
+            Estimation du loyer HC
           </span>
         </div>
         <span
@@ -221,34 +278,37 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
         <span className="text-sm text-neutral-500 dark:text-neutral-400">
           HC/mois
         </span>
-        
       </div>
 
-      {/* Range bar — green to red gradient, spans Q1 to Q3 */}
-      <div className="relative h-3 rounded-full overflow-visible mt-1"
-        style={{ background: 'linear-gradient(to right, #22c55e, #eab308, #ef4444)' }}
-      >
-        {/* Estimate marker — thin white line */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-white/80"
-          style={{ left: `${Math.min(Math.max(estimatePct, 0), 100)}%` }}
-        />
-        {/* Current price marker — clamped to bar edges */}
+      {/* Distribution chart — Airbnb-style histogram */}
+      <div className="relative mt-1">
+        {/* Bars */}
+        <div className="flex items-end gap-px h-12">
+          {bars.map((bar, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t-sm bg-neutral-200 dark:bg-neutral-700 transition-colors"
+              style={{ height: `${Math.max(bar.height * 100, 4)}%` }}
+            />
+          ))}
+        </div>
+
+        {/* Current price marker — animated vertical line */}
         {pricePct !== null && (
-          <div
-            className="absolute w-4 h-4 rounded-full border-2 border-white dark:border-neutral-800 shadow-md bg-neutral-900 dark:bg-white"
-            style={{
-              left: `${pricePct}%`,
-              transform: 'translateX(-50%)',
-              top: '50%',
-              marginTop: '-8px',
-            }}
-          />
+          <motion.div
+            className="absolute top-0 bottom-0 flex flex-col items-center"
+            animate={{ left: `${pricePct}%` }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            style={{ transform: 'translateX(-50%)' }}
+          >
+            <div className="w-0.5 h-full bg-neutral-900 dark:bg-white" />
+            <div className="absolute -bottom-1 w-3 h-3 rounded-full bg-neutral-900 dark:bg-white border-2 border-white dark:border-neutral-800 shadow-sm" />
+          </motion.div>
         )}
       </div>
 
       {/* Range labels */}
-      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 -mt-0.5">
+      <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 -mt-1">
         <span>{rangeLowHC} €</span>
         <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
           Médian · {estimatedRentHC} €
@@ -256,38 +316,67 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
         <span>{rangeHighHC} €</span>
       </div>
 
-      {/* Charges info */}
-      <div className="text-[11px] text-neutral-400 dark:text-neutral-500 flex items-center gap-1">
-        Charges estimées : ~{estimatedChargesTotal} €/mois déduites <br/> (données
-        ANIL CC)
-        
-      </div>
-
       {/* Price positioning verdict */}
       {status && (
         <div
           className={`text-sm p-3 rounded-lg flex items-start gap-2 ${status.bg} ${status.text}`}
         >
-          <status.icon size={16} className="mt-0.5 shrink-0" />
+          
           <div className="flex flex-col">
-            <span className="font-semibold text-[13px]">{status.label}</span>
-            <span className="text-xs opacity-80 mt-0.5">{status.msg}</span>
+            <span className="font-semibold text-[15px]">{status.label}</span>
+            <span className="text-sm opacity-80 mt-0.5">{status.msg}</span>
           </div>
         </div>
       )}
 
-      {/* Apply button */}
-      {onApplyEstimate && (
-        <button
-          onClick={() => onApplyEstimate(estimatedRentHC)}
-          className="w-full py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg font-medium text-sm hover:bg-neutral-800 dark:hover:bg-neutral-100 transition flex items-center justify-center gap-2"
-        >
-          <Sparkles size={16} />
-          {!price || isNaN(price)
-            ? 'Utiliser cette estimation'
-            : 'Appliquer comme loyer'}
-        </button>
-      )}
+      {/* Apply buttons — trading-style: Minimum / Médian / Maximum */}
+      {onApplyEstimate && (() => {
+        const buttons = [
+          { label: 'Minimum', value: rangeLowHC, isLegal: false, warn: false },
+          {
+            label: 'Médian',
+            value: estimatedRentHC,
+            isLegal: false,
+            warn: medianExceedsLegal,
+          },
+          {
+            label: hasLegalMax ? 'Max légal' : 'Maximum',
+            value: maxValue,
+            isLegal: hasLegalMax,
+            warn: false,
+          },
+        ];
+        return (
+          <div className="grid grid-cols-3 gap-2">
+            {buttons.map((btn) => {
+              const isActive = price && !isNaN(price) && Math.abs(price - btn.value) < 2;
+              return (
+                <button
+                  key={btn.label}
+                  onClick={() => onApplyEstimate(Math.round(btn.value))}
+                  className={`py-2.5 px-2 rounded-2xl text-center border transition-all flex flex-col items-center gap-0.5 relative
+                    ${isActive
+                      ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border-2 border-neutral-900 dark:border-white'
+                      : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500'
+                    }`}
+                >
+                  <span className="text-[13px] font-medium flex items-center gap-1">
+                    {btn.isLegal && <Scale size={12} />}
+                    {btn.label}
+                  </span>
+                  <span className="text-xl font-medium">{Math.round(btn.value)} €</span>
+                  {btn.warn && (
+                    <span className="text-[9px] text-rose-500 dark:text-rose-400 font-medium flex items-center gap-0.5 mt-0.5">
+                      <AlertTriangle size={9} />
+                      &gt; plafond
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Details toggle */}
       <button
@@ -349,7 +438,69 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
               </span>
             </div>
           )}
+          {adjustments.terrace !== 1.0 && (
+            <div className="flex justify-between">
+              <span>{labels.terrace || 'Terrasse / Loggia'}</span>
+              <span className="font-medium">
+                +{Math.round((adjustments.terrace - 1) * 100)}%
+              </span>
+            </div>
+          )}
+          {adjustments.airConditioning !== 1.0 && (
+            <div className="flex justify-between">
+              <span>{labels.airConditioning || 'Climatisation'}</span>
+              <span className="font-medium">
+                +{Math.round((adjustments.airConditioning - 1) * 100)}%
+              </span>
+            </div>
+          )}
+          {adjustments.kitchen !== 1.0 && (
+            <div className="flex justify-between">
+              <span>{labels.kitchen || 'Cuisine équipée'}</span>
+              <span className="font-medium">
+                +{Math.round((adjustments.kitchen - 1) * 100)}%
+              </span>
+            </div>
+          )}
+          {adjustments.cellar > 0 && (
+            <div className="flex justify-between">
+              <span>{labels.cellar || 'Cave'}</span>
+              <span className="font-medium">+{adjustments.cellar} €</span>
+            </div>
+          )}
+          {adjustments.garden !== 1.0 && (
+            <div className="flex justify-between">
+              <span>{labels.garden || 'Jardin'}</span>
+              <span className="font-medium">
+                +{Math.round((adjustments.garden - 1) * 100)}%
+              </span>
+            </div>
+          )}
+          {adjustments.courtyard !== 1.0 && (
+            <div className="flex justify-between">
+              <span>{labels.courtyard || 'Cour privative'}</span>
+              <span className="font-medium">
+                +{Math.round((adjustments.courtyard - 1) * 100)}%
+              </span>
+            </div>
+          )}
+          {adjustments.propertyType !== 1.0 && (
+            <div className="flex justify-between">
+              <span>{labels.propertyType || 'Type de bien'}</span>
+              <span className="font-medium">
+                {adjustments.propertyType > 1 ? '+' : ''}
+                {Math.round((adjustments.propertyType - 1) * 100)}%
+              </span>
+            </div>
+          )}
+          {/* Confidence indicator — human-readable */}
           <div className="flex justify-between pt-1 border-t border-neutral-100 dark:border-neutral-700">
+            <span>Indice de confiance</span>
+            <span className="font-medium">
+              {conf.humanLabel} ({obsLabel} annonces)
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span>Source</span>
             <span className="font-medium">
               {source === 'commune'
@@ -359,18 +510,6 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
                   : source === 'department'
                     ? 'Département'
                     : '—'}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Observations</span>
-            <span className="font-medium">
-              {observations.toLocaleString('fr-FR')}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>R² (qualité)</span>
-            <span className="font-medium">
-              {(rSquared * 100).toFixed(0)}%
             </span>
           </div>
         </div>

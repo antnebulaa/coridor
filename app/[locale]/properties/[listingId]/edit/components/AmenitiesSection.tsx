@@ -37,7 +37,12 @@ import {
     TbBus,
     TbTrees,
     TbShoppingBag,
-    TbFirstAidKit
+    TbFirstAidKit,
+    TbFence,
+    TbWindow,
+    TbBuildingWarehouse,
+    TbCar,
+    TbBox,
 } from "react-icons/tb";
 
 import { SafeListing } from "@/types";
@@ -78,9 +83,14 @@ const AMENITIES_GROUPS = [
     {
         title: "Extérieur",
         items: [
+            { id: 'hasBalcony', label: 'Balcon', icon: TbFence },
+            { id: 'hasTerrace', label: 'Terrasse', icon: TbFence },
+            { id: 'hasLoggia', label: 'Loggia', icon: TbWindow },
+            { id: 'hasCourtyard', label: 'Cour privative', icon: TbHomeHeart },
             { id: 'isLastFloor', label: 'Dernier étage', icon: TbArrowBarToUp },
             { id: 'hasGarden', label: 'Jardin privatif', icon: TbTree },
             { id: 'isSouthFacing', label: 'Exposition sud', icon: TbCompass },
+            { id: 'hasShutters', label: 'Volets', icon: TbWindow },
             { id: 'hasPool', label: 'Piscine', icon: TbPool },
             { id: 'hasBikeRoom', label: 'Local à vélos sécurisé', icon: TbBike },
         ]
@@ -94,6 +104,14 @@ const AMENITIES_GROUPS = [
             { id: 'hasArmoredDoor', label: 'Porte blindée', icon: TbShieldLock },
             { id: 'isQuietArea', label: 'Quartier tranquille', icon: TbHomeHeart },
             { id: 'hasConcierge', label: 'Concierge', icon: TbUserStar },
+        ]
+    },
+    {
+        title: "Annexes",
+        items: [
+            { id: 'hasCave', label: 'Cave', icon: TbBox },
+            { id: 'hasParking', label: 'Parking', icon: TbCar },
+            { id: 'hasGarage', label: 'Garage', icon: TbBuildingWarehouse },
         ]
     },
     {
@@ -125,8 +143,10 @@ const AmenitiesSection: React.FC<AmenitiesSectionProps> = ({ listing }) => {
         // Map all possible boolean fields
         const booleanFields = [
             'hasElevator', 'isAccessible', 'hasAutomaticDoors',
-            'isTraversant', 'isRefurbished', 'isKitchenEquipped', 'isBright', 'hasNoOpposite', 'hasView', 'isQuiet', 'hasBathtub', 'hasStorage', 'hasFiber', 'hasLaundry',
+            'isTraversant', 'isRefurbished', 'isKitchenEquipped', 'isBright', 'hasNoOpposite', 'hasView', 'isQuiet', 'hasBathtub', 'hasStorage', 'hasFiber', 'hasLaundry', 'hasAirConditioning',
+            'hasBalcony', 'hasTerrace', 'hasLoggia', 'hasCourtyard', 'hasShutters',
             'isLastFloor', 'hasGarden', 'isSouthFacing', 'hasPool', 'hasBikeRoom',
+            'hasCave', 'hasParking', 'hasGarage',
             'hasDigicode', 'hasIntercom', 'hasCaretaker', 'hasArmoredDoor', 'isQuietArea', 'hasConcierge',
             'petsAllowed', 'isStudentFriendly',
             'isNearTransport', 'isNearGreenSpace', 'isNearSchools', 'isNearShops', 'isNearHospital'

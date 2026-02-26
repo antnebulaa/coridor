@@ -47,7 +47,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             totalFloors: listing.totalFloors,
             floor: listing.floor,
             buildYear: listing.buildYear,
-            propertyAdjective: listing.propertyAdjective
+            propertyAdjective: listing.propertyAdjective,
+            propertySubType: (listing as any).propertySubType || '',
         }
     });
 
@@ -123,6 +124,38 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                             { value: "Bateau", label: "Un bateau" }
                         ]}
                     />
+                </div>
+            )}
+
+            {/* Sous-type de propriété */}
+            {!isRoom && category === 'Appartement' && (
+                <div className="flex flex-col gap-2">
+                    <div className="text-sm font-medium text-neutral-800">
+                        Type d&apos;appartement
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {[
+                            { value: '', label: 'Standard' },
+                            { value: 'duplex', label: 'Duplex' },
+                            { value: 'triplex', label: 'Triplex' },
+                            { value: 'loft', label: 'Loft' },
+                            { value: 'penthouse', label: 'Penthouse' },
+                            { value: 'mansarde', label: 'Mansardé' },
+                        ].map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setCustomValue('propertySubType', opt.value || null)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium border transition
+                                    ${(watch('propertySubType') || '') === opt.value
+                                        ? 'bg-neutral-900 text-white border-neutral-900'
+                                        : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400'
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 

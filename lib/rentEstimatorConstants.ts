@@ -59,6 +59,49 @@ export const CONSTRUCTION_PERIOD_ADJUSTMENT: Record<string, number> = {
   '2005+': 0.03,
 };
 
+// ── Terrace / Loggia Adjustment ──────────────────────────────────
+// Terrace: outdoor space, usually > 5m². Higher premium than balcony.
+// Loggia: covered outdoor space, between balcony and terrace in value.
+
+export const TERRACE_PREMIUM = 0.06; // +6%
+export const LOGGIA_PREMIUM = 0.05; // +5%
+
+// ── Air Conditioning Adjustment ─────────────────────────────────
+
+export const AIR_CONDITIONING_PREMIUM = 0.03; // +3%
+
+// ── Equipped Kitchen Adjustment ─────────────────────────────────
+
+export const EQUIPPED_KITCHEN_PREMIUM = 0.02; // +2%
+
+// ── Cellar (Cave) Adjustment ────────────────────────────────────
+// Storage space, especially valued in cities. Additive like parking.
+
+export const CELLAR_PREMIUM_EUR = 20; // €/mois
+
+// ── Garage Adjustment ───────────────────────────────────────────
+// More valuable than open parking. Replaces parking premium if both.
+
+export const GARAGE_PREMIUM_EUR = 120; // €/mois
+
+// ── Garden Adjustment ───────────────────────────────────────────
+
+export const GARDEN_PREMIUM = 0.05; // +5%
+
+// ── Courtyard (Cour privative) Adjustment ───────────────────────
+
+export const COURTYARD_PREMIUM = 0.03; // +3%
+
+// ── Property SubType Adjustment ─────────────────────────────────
+
+export const PROPERTY_SUBTYPE_ADJUSTMENT: Record<string, number> = {
+  duplex: 0.05, // +5%
+  triplex: 0.06, // +6%
+  loft: 0.08, // +8%
+  penthouse: 0.10, // +10%
+  mansarde: -0.02, // -2%
+};
+
 // ── Confidence Thresholds ─────────────────────────────────────────
 
 export const CONFIDENCE = {

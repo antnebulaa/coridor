@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { AddressSelectValue } from "./MapboxAddressSelect";
-import Heading from "../Heading";
 
 interface LocationEditorProps {
     value?: AddressSelectValue;
@@ -16,7 +15,10 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
     onChange
 }) => {
     // Derived values directly from props - No internal state
-    const street = value?.street || (value?.label?.includes(',') ? value.label.split(',')[0] : value?.label) || '';
+    // Use nullish check (not ||) so empty string '' doesn't fallback to label
+    const street = value?.street !== undefined && value?.street !== null
+        ? value.street
+        : (value?.label?.includes(',') ? value.label.split(',')[0] : value?.label) || '';
     const apartment = value?.apartment || '';
     const building = value?.building || '';
     const city = value?.city || '';
@@ -40,11 +42,6 @@ const LocationEditor: React.FC<LocationEditorProps> = ({
 
     return (
         <div className="flex flex-col gap-6">
-            <Heading
-                title="Emplacement"
-                subtitle="Modifiez l'adresse de votre logement"
-            />
-
             <div className="grid grid-cols-1 gap-4">
                 {/* Country - Read Only */}
                 <div className="relative p-3 border border-neutral-300 rounded-xl bg-neutral-50">

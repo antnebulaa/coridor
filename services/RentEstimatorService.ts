@@ -7,6 +7,15 @@ import {
   PARKING_PREMIUM_EUR,
   BALCONY_PREMIUM,
   CONSTRUCTION_PERIOD_ADJUSTMENT,
+  TERRACE_PREMIUM,
+  LOGGIA_PREMIUM,
+  AIR_CONDITIONING_PREMIUM,
+  EQUIPPED_KITCHEN_PREMIUM,
+  CELLAR_PREMIUM_EUR,
+  GARAGE_PREMIUM_EUR,
+  GARDEN_PREMIUM,
+  COURTYARD_PREMIUM,
+  PROPERTY_SUBTYPE_ADJUSTMENT,
   CONFIDENCE,
   type ConfidenceLevel,
   ANIL_ATTRIBUTION,
@@ -27,6 +36,15 @@ export interface RentEstimateParams {
   hasParking?: boolean;
   hasBalcony?: boolean;
   constructionPeriod?: string | null;
+  hasTerrace?: boolean;
+  hasLoggia?: boolean;
+  hasAirConditioning?: boolean;
+  isKitchenEquipped?: boolean;
+  hasCellar?: boolean;
+  hasGarage?: boolean;
+  hasGarden?: boolean;
+  hasCourtyard?: boolean;
+  propertySubType?: string | null;
 }
 
 export interface RentAdjustments {
@@ -36,6 +54,14 @@ export interface RentAdjustments {
   parking: number;
   balcony: number;
   construction: number;
+  terrace: number;
+  airConditioning: number;
+  kitchen: number;
+  cellar: number;
+  garage: number;
+  garden: number;
+  courtyard: number;
+  propertyType: number;
 }
 
 export interface AdjustmentLabels {
@@ -45,6 +71,14 @@ export interface AdjustmentLabels {
   parking?: string;
   balcony?: string;
   construction?: string;
+  terrace?: string;
+  airConditioning?: string;
+  kitchen?: string;
+  cellar?: string;
+  garage?: string;
+  garden?: string;
+  courtyard?: string;
+  propertyType?: string;
 }
 
 export interface RentEstimateResult {
@@ -91,6 +125,15 @@ export class RentEstimatorService {
       hasParking,
       hasBalcony,
       constructionPeriod,
+      hasTerrace,
+      hasLoggia,
+      hasAirConditioning,
+      isKitchenEquipped,
+      hasCellar,
+      hasGarage,
+      hasGarden,
+      hasCourtyard,
+      propertySubType,
     } = params;
 
     if (!surface || surface <= 0) return null;
@@ -211,19 +254,32 @@ export class RentEstimatorService {
     const constructionMult =
       1 + (CONSTRUCTION_PERIOD_ADJUSTMENT[constructionPeriod || ''] ?? 0);
 
+    // New adjustments
+    const terraceMult = hasTerrace ? 1 + TERRACE_PREMIUM : (hasLoggia ? 1 + LOGGIA_PREMIUM : 1.0);
+    const acMult = hasAirConditioning ? 1 + AIR_CONDITIONING_PREMIUM : 1.0;
+    const kitchenMult = isKitchenEquipped ? 1 + EQUIPPED_KITCHEN_PREMIUM : 1.0;
+    const gardenMult = hasGarden ? 1 + GARDEN_PREMIUM : 1.0;
+    const courtyardMult = hasCourtyard ? 1 + COURTYARD_PREMIUM : 1.0;
+    const subtypeMult = 1 + (PROPERTY_SUBTYPE_ADJUSTMENT[propertySubType || ''] ?? 0);
+
     const totalMult =
-      furnishedMult * dpeMult * floorMult * balconyMult * constructionMult;
+      furnishedMult * dpeMult * floorMult * balconyMult * constructionMult
+      * terraceMult * acMult * kitchenMult * gardenMult * courtyardMult * subtypeMult;
 
     // Apply multipliers to HC per-sqm
     const adjustedMedianHC = medianHC * totalMult;
     const adjustedQ1HC = q1HC * totalMult;
     const adjustedQ3HC = q3HC * totalMult;
 
+    // Additive adjustments — garage replaces parking if both
+    const parkingOrGarageAdd = hasGarage ? GARAGE_PREMIUM_EUR : (hasParking ? PARKING_PREMIUM_EUR : 0);
+    const cellarAdd = hasCellar ? CELLAR_PREMIUM_EUR : 0;
+    const totalAdditive = parkingOrGarageAdd + cellarAdd;
+
     // Calculate totals
-    const parkingAdd = hasParking ? PARKING_PREMIUM_EUR : 0;
-    const estimatedRentHC = Math.round(adjustedMedianHC * surface) + parkingAdd;
-    const rangeLowHC = Math.round(adjustedQ1HC * surface) + parkingAdd;
-    const rangeHighHC = Math.round(adjustedQ3HC * surface) + parkingAdd;
+    const estimatedRentHC = Math.round(adjustedMedianHC * surface) + totalAdditive;
+    const rangeLowHC = Math.round(adjustedQ1HC * surface) + totalAdditive;
+    const rangeHighHC = Math.round(adjustedQ3HC * surface) + totalAdditive;
 
     // CC equivalents
     const estimatedChargesTotal = Math.round(chargesPerSqm * surface);
@@ -263,9 +319,17 @@ export class RentEstimatorService {
         furnished: furnishedMult,
         dpe: dpeMult,
         floor: floorMult,
-        parking: parkingAdd,
+        parking: parkingOrGarageAdd,
         balcony: balconyMult,
         construction: constructionMult,
+        terrace: terraceMult,
+        airConditioning: acMult,
+        kitchen: kitchenMult,
+        cellar: cellarAdd,
+        garage: parkingOrGarageAdd,
+        garden: gardenMult,
+        courtyard: courtyardMult,
+        propertyType: subtypeMult,
       },
       adjustmentLabels: {
         ...(isFurnished && { furnished: 'Meublé' }),
@@ -275,9 +339,19 @@ export class RentEstimatorService {
             ? 'Rez-de-chaussée'
             : `${floor}e étage${hasElevator ? ' avec ascenseur' : ' sans ascenseur'}`,
         }),
-        ...(hasParking && { parking: 'Place de parking' }),
-        ...(hasBalcony && { balcony: 'Balcon / terrasse' }),
+        ...(hasGarage ? { garage: 'Garage' } : hasParking ? { parking: 'Place de parking' } : {}),
+        ...(hasBalcony && { balcony: 'Balcon' }),
         ...(constructionPeriod && constructionMult !== 1.0 && { construction: `Construction ${constructionPeriod}` }),
+        ...(hasTerrace && { terrace: 'Terrasse' }),
+        ...(hasLoggia && !hasTerrace && { terrace: 'Loggia' }),
+        ...(hasAirConditioning && { airConditioning: 'Climatisation' }),
+        ...(isKitchenEquipped && { kitchen: 'Cuisine équipée' }),
+        ...(hasCellar && { cellar: 'Cave' }),
+        ...(hasGarden && { garden: 'Jardin' }),
+        ...(hasCourtyard && { courtyard: 'Cour privative' }),
+        ...(propertySubType && subtypeMult !== 1.0 && {
+          propertyType: propertySubType.charAt(0).toUpperCase() + propertySubType.slice(1),
+        }),
       },
       confidence,
       observations: obs,

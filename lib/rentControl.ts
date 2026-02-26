@@ -31,6 +31,7 @@ export interface RentControlResult {
   availableZones?: string[];
   zoneDescriptions?: Record<string, string>;
   needsApi?: boolean;             // true if only the API can resolve (Paris geospatial)
+  dataUnavailable?: boolean;      // true if in zone but no data for this config
   message?: string;
 }
 
@@ -282,8 +283,9 @@ export function lookupRentControl(params: LookupParams): RentControlResult {
       isEligible: true,
       source: 'official_data',
       territory: dataset.territory,
-      zone: `Zone ${zone}`,
-      message: `Données non trouvées pour ce type de bien (${roomCount} pièces, ${era}, ${isFurnished ? 'meublé' : 'non meublé'}).`,
+      zone: `Zone ${zone} (${dataset.territory})`,
+      message: `Zone soumise à l'encadrement des loyers, mais données non disponibles pour cette configuration (${roomCount} pièce${roomCount > 1 ? 's' : ''}, ${era}, ${isFurnished ? 'meublé' : 'non meublé'}). Consultez l'arrêté préfectoral.`,
+      dataUnavailable: true,
     };
   }
 
