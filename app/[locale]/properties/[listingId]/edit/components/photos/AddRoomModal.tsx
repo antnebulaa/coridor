@@ -46,7 +46,7 @@ interface AddRoomModalProps {
     unassignedImages?: PropertyImage[];
 }
 
-const ROOMS_CONFIG = [
+export const ROOMS_CONFIG = [
     { label: "Salon", icon: Sofa },
     { label: "Cuisine", icon: Utensils },
     { label: "Chambre", icon: BedDouble },

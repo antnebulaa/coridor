@@ -155,6 +155,9 @@ model User {
   // --- Dépôt de Garantie (badge proprio) ---
   depositsTotal          Int @default(0)
   depositsReturnedOnTime Int @default(0)
+
+  // --- Simulateur d'investissement ---
+  investmentSimulations  InvestmentSimulation[]
 }
 
 model TenantProfile {
@@ -2218,4 +2221,28 @@ model RentMarketData {
   @@unique([communeCode, propertyType, typology, dataYear])
   @@index([communeCode])
   @@index([departmentCode, propertyType, typology])
+}
+
+// ---------------------------------------------------------------------------
+// Simulateur d'investissement locatif
+// ---------------------------------------------------------------------------
+
+model InvestmentSimulation {
+  id                String    @id @default(uuid())
+  userId            String?
+
+  name              String    @default("Ma simulation")
+
+  inputs            Json      // InvestmentInput complet
+  results           Json?     // InvestmentResult complet (cache)
+
+  isPublic          Boolean   @default(false)
+  shareToken        String?   @unique
+
+  user              User?     @relation(fields: [userId], references: [id])
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId])
 }

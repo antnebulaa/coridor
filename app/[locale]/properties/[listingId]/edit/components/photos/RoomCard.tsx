@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { Room, PropertyImage } from "@prisma/client";
-import { MoreHorizontal, Trash } from "lucide-react";
-import { useState } from "react";
+import { Trash, ImageOff } from "lucide-react";
+import { ROOMS_CONFIG } from "./AddRoomModal";
 
 interface RoomCardProps {
     room: Room & { images: PropertyImage[] };
@@ -16,15 +16,18 @@ const RoomCard: React.FC<RoomCardProps> = ({
     onClick,
     onDelete
 }) => {
-    const coverImage = room.images.length > 0 ? room.images[0].url : '/images/placeholder.svg'; // Need a placeholder or handle empty
+    const coverImage = room.images.length > 0 ? room.images[0].url : null;
+    const nameLower = room.name.toLowerCase();
+    const roomConfig = ROOMS_CONFIG.find(r => nameLower.startsWith(r.label.toLowerCase()));
+    const RoomIcon = roomConfig?.icon || ImageOff;
 
     return (
         <div
             className="flex flex-col gap-3 cursor-pointer group"
             onClick={onClick}
         >
-            <div className="aspect-square relative rounded-2xl overflow-hidden bg-neutral-100">
-                {room.images.length > 0 ? (
+            <div className="aspect-square relative rounded-3xl overflow-hidden bg-neutral-100">
+                {coverImage ? (
                     <Image
                         fill
                         src={coverImage}
@@ -32,8 +35,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
                         className="object-cover group-hover:scale-110 transition"
                     />
                 ) : (
-                    <div className="h-full w-full flex items-center justify-center text-neutral-400">
-                        No photos
+                    <div className="h-full w-full flex items-center justify-center">
+                        <RoomIcon size={36} strokeWidth={1.5} className="text-neutral-400" />
                     </div>
                 )}
             </div>

@@ -151,7 +151,7 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
             {rooms.length === 0 ? (
                 <EmptyStateRooms onCreateClick={() => setIsAddRoomModalOpen(true)} />
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {/* Unassigned Card if any */}
                     {unassignedImages.length > 0 && (
                         <div
@@ -162,7 +162,7 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                                 setIsAllPhotosOpen(true);
                             }}
                         >
-                            <div className="aspect-square relative rounded-2xl overflow-hidden bg-neutral-100 border-[1px] border-neutral-200">
+                            <div className="aspect-square relative rounded-3xl overflow-hidden bg-neutral-100 border-[1px] border-neutral-200">
                                 {/* Collage of up to 4 images */}
                                 <div className="grid grid-cols-2 gap-[1px] w-full h-full">
                                     {unassignedImages.slice(0, 4).map((img, index) => (

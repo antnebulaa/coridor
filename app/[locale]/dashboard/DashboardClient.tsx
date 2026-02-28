@@ -5,7 +5,7 @@ import Container from "@/components/Container";
 import KPICards from "@/app/[locale]/properties/components/analytics/KPICards";
 import CashflowChart from "@/app/[locale]/properties/components/analytics/CashflowChart";
 import { HiOutlineHome, HiOutlineUserGroup, HiOutlineClipboard, HiOutlineKey } from "react-icons/hi2";
-import { Plus, Trophy, Users, ArrowRight, ClipboardCheck, FileText, Clock, Send, Loader2 } from "lucide-react";
+import { Plus, Trophy, Users, ArrowRight, ClipboardCheck, FileText, Clock, Send, Loader2, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { SafeUser } from "@/types";
 import LegalRemindersWidget from "@/components/dashboard/LegalRemindersWidget";
@@ -296,6 +296,25 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
 
                 {/* Fiscal Widget (April-June only) */}
                 <FiscalWidget />
+
+                {/* Investment Simulator CTA */}
+                <Link
+                    href="/simulateur"
+                    className="block bg-linear-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5 hover:shadow-md transition group"
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-amber-100 rounded-xl">
+                                <TrendingUp className="w-5 h-5 text-amber-700" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-neutral-900">Simulateur d&apos;investissement</h3>
+                                <p className="text-sm text-neutral-500">Calculez rendement, cash-flow et TRI de votre prochain investissement</p>
+                            </div>
+                        </div>
+                        <ArrowRight size={18} className="text-neutral-400 group-hover:text-neutral-900 transition" />
+                    </div>
+                </Link>
 
                 {/* Bottom Row: Activity */}
                 {/* Bottom Row: Quick Actions only or Empty if nothing else */}

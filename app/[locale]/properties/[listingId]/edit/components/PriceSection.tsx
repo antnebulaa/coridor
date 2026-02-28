@@ -138,7 +138,6 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
         defaultValues: {
             price: currentRent,
             charges: currentCharges,
-            securityDeposit: listing.securityDeposit,
             // Map rooms to a form array structure
             roomPrices: rooms.map((room: any) => {
                 const roomListing = room.listings?.[0]; // Assume 1st listing is the active one for now
@@ -232,7 +231,6 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                 await axios.put(`/api/listings/${listing.id}`, {
                     price: parseInt(data.price, 10),
                     charges: parseInt(data.charges, 10),
-                    securityDeposit: parseInt(data.securityDeposit, 10)
                 });
                 toast.custom((t) => (
                     <CustomToast
@@ -472,31 +470,43 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
 
             {/* Price input — clean & bold */}
             <div className="flex flex-col items-center py-8">
-                <div className="flex items-baseline gap-1">
-                    <input
-                        id="price"
-                        disabled={isLoading || isLocked}
-                        {...register('price', { required: true, min: 1 })}
-                        type="number"
-                        className="
-                            w-[180px]
-                            text-center
-                            text-6xl
-                            font-extralight
-                            tracking-tight
-                            bg-transparent
-                            outline-none
-                            transition
-                            disabled:opacity-70
-                            disabled:cursor-not-allowed
-                            placeholder-neutral-200
-                            dark:placeholder-neutral-700
-                            [appearance:textfield]
-                            [&::-webkit-outer-spin-button]:appearance-none
-                            [&::-webkit-inner-spin-button]:appearance-none
-                        "
-                        placeholder="0"
-                    />
+                <div
+                    className="flex items-baseline gap-1 cursor-text"
+                    onClick={() => document.getElementById('price')?.focus()}
+                >
+                    <div className="relative">
+                        <input
+                            id="price"
+                            disabled={isLoading || isLocked}
+                            {...register('price', { required: true, min: 1 })}
+                            type="number"
+                            className="
+                                peer
+                                w-[180px]
+                                text-center
+                                text-6xl
+                                font-extralight
+                                tracking-tight
+                                bg-transparent
+                                outline-none
+                                transition
+                                disabled:opacity-70
+                                disabled:cursor-not-allowed
+                                placeholder-neutral-200
+                                dark:placeholder-neutral-700
+                                [appearance:textfield]
+                                [&::-webkit-outer-spin-button]:appearance-none
+                                [&::-webkit-inner-spin-button]:appearance-none
+                                caret-transparent
+                            "
+                            placeholder="0"
+                        />
+                        {/* Blinking caret — visible when not focused to invite click */}
+                        <div
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-px h-10 bg-neutral-900 dark:bg-white peer-focus:opacity-0 transition-opacity pointer-events-none"
+                          style={{ animation: 'blink 1s step-end infinite' }}
+                        />
+                    </div>
                     <span className="text-3xl font-extralight text-neutral-300 dark:text-neutral-600">€</span>
                 </div>
                 <span className="text-xs text-neutral-400 dark:text-neutral-500 mt-2 tracking-wide uppercase">
@@ -696,52 +706,6 @@ const PriceSection: React.FC<PriceSectionProps> = ({ listing }) => {
                         <ArrowRight size={14} className="shrink-0" />
                     </Link>
                 )}
-            </div>
-
-            {/* Security Deposit Section */}
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                    <h3 className="text-lg font-semibold">Dépôt de garantie</h3>
-                    <p className="text-neutral-500 font-light text-sm">
-                        {listing.isFurnished
-                            ? "Pour un meublé : max. 2 mois de loyer hors charges."
-                            : "Pour une location nue : max. 1 mois de loyer hors charges."}
-                    </p>
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                    {[0, 1, ...(listing.isFurnished ? [2] : [])].map((months) => {
-                        const amount = months * (parseInt(price, 10) || 0);
-                        const currentDeposit = watch('securityDeposit');
-                        const isSelected = currentDeposit == amount;
-
-                        return (
-                            <div
-                                key={months}
-                                onClick={() => !isLocked && setValue('securityDeposit', amount)}
-                                className={`
-                                   ${isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
-                                   rounded-xl
-                                   border-2
-                                   p-4
-                                   flex
-                                   flex-col
-                                   gap-2
-                                   hover:border-black
-                                   transition
-                                   w-[160px]
-                                   ${isSelected ? 'border-black bg-neutral-50' : 'border-neutral-200'}
-                               `}
-                            >
-                                <span className="font-semibold text-lg">{amount} €</span>
-                                <span className="text-sm text-neutral-500">
-                                    {months === 0 ? "Aucun" : `${months} mois`}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-                {/* Hidden input to register the value if not already managed by setValue */}
             </div>
 
             <EditSectionFooter

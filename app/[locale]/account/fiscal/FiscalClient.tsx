@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { SafeUser } from "@/types";
 import Container from "@/components/Container";
-import { Calculator, AlertTriangle, Building, Loader2 } from "lucide-react";
+import { Calculator, AlertTriangle, Building, Loader2, FileDown, FileSpreadsheet } from "lucide-react";
+import { toast } from "react-hot-toast";
+import CustomToast from "@/components/ui/CustomToast";
 
 interface FiscalSummary {
     year: number;
@@ -37,6 +39,37 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
     const [data, setData] = useState<FiscalSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
+
+    const handleExport = async (format: 'pdf' | 'csv') => {
+        setIsExporting(true);
+        try {
+            const params = new URLSearchParams({ format, year: year.toString() });
+            if (selectedProperty !== 'all') {
+                params.set('propertyId', selectedProperty);
+            }
+            const res = await fetch(`/api/accounting/export?${params}`);
+            if (!res.ok) throw new Error('Export failed');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = format === 'pdf'
+                ? `recap-fiscal-coridor-${year}.pdf`
+                : `comptabilite-coridor-${year}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.custom((t) => (
+                <CustomToast t={t} message="Export téléchargé" type="success" />
+            ));
+        } catch {
+            toast.custom((t) => (
+                <CustomToast t={t} message="Erreur lors de l'export" type="error" />
+            ));
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     useEffect(() => {
         setIsLoading(true);
@@ -66,18 +99,40 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
         <Container>
             <div className="pb-20 space-y-6">
                 {/* Header */}
-                <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-purple-100 rounded-xl">
-                        <Calculator className="w-6 h-6 text-purple-700" />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-purple-100 rounded-xl">
+                            <Calculator className="w-6 h-6 text-purple-700" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-neutral-900">
+                                Recap fiscal {year}
+                            </h1>
+                            <p className="text-sm text-neutral-500">
+                                Synthese de vos revenus fonciers pour la declaration
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-neutral-900">
-                            Recap fiscal {year}
-                        </h1>
-                        <p className="text-sm text-neutral-500">
-                            Synthese de vos revenus fonciers pour la declaration
-                        </p>
-                    </div>
+                    {data && !isLoading && !error && (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleExport('csv')}
+                                disabled={isExporting}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50"
+                            >
+                                <FileSpreadsheet size={14} />
+                                CSV
+                            </button>
+                            <button
+                                onClick={() => handleExport('pdf')}
+                                disabled={isExporting}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-neutral-900 text-white hover:opacity-90 transition disabled:opacity-50"
+                            >
+                                <FileDown size={14} />
+                                PDF
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Year Selector */}

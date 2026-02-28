@@ -254,7 +254,7 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
   const medianExceedsLegal = hasLegalMax && estimatedRentHC > rentControlMaxRent!;
 
   return (
-    <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl flex flex-col gap-4">
+    <div className="p-4 bg-white dark:bg-neutral-800/50 rounded-2xl flex flex-col gap-4">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -284,13 +284,22 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
       <div className="relative mt-1">
         {/* Bars */}
         <div className="flex items-end gap-px h-12">
-          {bars.map((bar, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-t-sm bg-neutral-200 dark:bg-neutral-700 transition-colors"
-              style={{ height: `${Math.max(bar.height * 100, 4)}%` }}
-            />
-          ))}
+          {bars.map((bar, i) => {
+            // Highlight only the bar the cursor sits on
+            const barStart = (i / bars.length) * 100;
+            const barEnd = ((i + 1) / bars.length) * 100;
+            const isActive = pricePct !== null && pricePct >= barStart && pricePct < barEnd;
+            return (
+              <div
+                key={i}
+                className={`flex-1 rounded-t-sm transition-colors ${isActive
+                  ? 'bg-neutral-500 dark:bg-white'
+                  : 'bg-neutral-200 dark:bg-neutral-700'
+                }`}
+                style={{ height: `${Math.max(bar.height * 100, 4)}%` }}
+              />
+            );
+          })}
         </div>
 
         {/* Current price marker — animated vertical line */}
@@ -301,8 +310,8 @@ const RentEstimator: React.FC<RentEstimatorProps> = ({
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             style={{ transform: 'translateX(-50%)' }}
           >
-            <div className="w-0.5 h-full bg-neutral-900 dark:bg-white" />
-            <div className="absolute -bottom-1 w-3 h-3 rounded-full bg-neutral-900 dark:bg-white border-2 border-white dark:border-neutral-800 shadow-sm" />
+            <div className="w-0 h-full bg-neutral-900 dark:bg-white" />
+            <div className="absolute -bottom-1 w-2 h-14 rounded-full bg-neutral-900 dark:bg-white border-2 border-white dark:border-neutral-800 shadow-sm" />
           </motion.div>
         )}
       </div>

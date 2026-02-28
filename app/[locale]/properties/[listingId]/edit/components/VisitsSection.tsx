@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
-import { Trash2, Plus, Minus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { Trash2, Plus, Minus, Calendar as CalendarIcon } from "lucide-react";
 import FloatingValuesButton from "@/components/ui/FloatingValuesButton";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -14,7 +14,6 @@ import LargeActionButton from "@/components/ui/LargeActionButton";
 import {
     format,
     addMonths,
-    subMonths,
     startOfMonth,
     endOfMonth,
     eachDayOfInterval,
@@ -23,7 +22,6 @@ import {
     isToday,
     startOfWeek,
     endOfWeek,
-    addDays,
     parseISO,
     startOfToday,
     isBefore,
@@ -109,7 +107,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
         return 40;
     }, [listing.surface]);
 
-    // Calendar Logic: Generate next 12 months
+    // Calendar Logic: Generate next 12 months, scrollable
     const today = startOfToday();
     const months = useMemo(() => {
         return eachMonthOfInterval({
@@ -283,9 +281,9 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
     };
 
     return (
-        <div className={`flex flex-col md:flex-row rounded-xl overflow-hidden relative ${className || 'h-[calc(100vh-140px)] md:h-[600px]'}`}>
-            {/* Calendar Section (Scrollable) */}
-            <div className="flex-1 overflow-y-auto pb-[300px] md:pb-6 px-0 md:px-4 scroll-smooth">
+        <div className={`flex flex-col rounded-xl overflow-hidden relative ${className || 'h-[calc(100vh-140px)] md:h-auto'}`}>
+            {/* Calendar Section — scrollable, ~1 month visible */}
+            <div className="overflow-y-auto pb-[300px] md:pb-6 px-0 md:px-4 scroll-smooth md:max-h-[420px]">
                 {months.map((monthDate, monthIdx) => {
                     const monthStart = startOfMonth(monthDate);
                     const monthEnd = endOfMonth(monthStart);
@@ -295,7 +293,7 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
 
                     return (
                         <div key={monthIdx} className="mb-8">
-                            <h2 className="text-lg md:text-xl font-medium capitalize mb-4 sticky top-safe md:top-0 bg-white py-2 z-10 text-neutral-900">
+                            <h2 className="text-lg md:text-xl font-medium capitalize mb-4 sticky top-0 bg-neutral-50 dark:bg-neutral-900 py-2 z-10 text-neutral-900">
                                 {format(monthDate, 'MMMM yyyy', { locale: fr })}
                             </h2>
 
@@ -311,7 +309,6 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
                                     const daySlots = getSlotsForDate(day);
                                     const hasSlots = daySlots.length > 0;
 
-                                    // Check for conflicts (Slots elsewhere)
                                     const globalSlots = listing.userGlobalSlots || [];
                                     const conflictSlots = globalSlots.filter((gs: any) =>
                                         isSameDay(parseISO(gs.date), day) &&
@@ -370,11 +367,11 @@ const VisitsSection: React.FC<VisitsSectionProps> = ({ listing, className }) => 
             {/* Sidebar / Bottom Panel */}
             <div className={`
                 fixed bottom-0 left-0 right-0 z-30 flex flex-col w-full
-                md:relative md:inset-auto md:w-[380px]
+                md:relative md:inset-auto md:w-full
                 pointer-events-none md:pointer-events-auto
-                bg-transparent md:bg-white 
-                border-t-0 md:border-t md:border-l border-neutral-200 
-                shadow-none md:shadow-none md:h-full
+                bg-transparent md:bg-white
+                border-t-0 md:border-t border-neutral-200
+                shadow-none md:shadow-none
             `}>
                 {selectedDates.length === 0 ? (
                     <div className="pointer-events-auto bg-white p-6 flex flex-col items-center justify-center text-center h-full text-neutral-500 pb-10 md:pb-6 md:h-auto rounded-t-2xl md:rounded-none shadow-[0_-4px_20px_rgba(0,0,0,0.05)] md:shadow-none">

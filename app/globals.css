@@ -355,6 +355,66 @@ hr {
   animation: roomNameSlide 0.35s ease-out 0.15s forwards;
 }
 
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ──── Simulator V2.2 — Scoped Design Tokens ──── */
+.simulator-page {
+  --sim-bg: #FAF9F6;
+  --sim-bg-card: #FFFFFF;
+  --sim-bg-section: #F5F3EE;
+  --sim-amber-50: #FFF8E7;
+  --sim-amber-100: #FFF0C7;
+  --sim-amber-400: #E8A838;
+  --sim-amber-500: #D4922A;
+  --sim-amber-600: #B87A1E;
+  --sim-shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --sim-shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+  --sim-effort: #78716C;
+  --sim-effort-bg: #F5F5F4;
+}
+.dark .simulator-page {
+  --sim-bg: #0F0F0F;
+  --sim-bg-card: #1A1A1A;
+  --sim-bg-section: #151515;
+  --sim-amber-50: #1A1506;
+  --sim-amber-100: #231C0A;
+  --sim-shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15);
+  --sim-shadow-hover: 0 4px 16px rgba(0,0,0,0.3);
+  --sim-effort: #A8A29E;
+  --sim-effort-bg: #1C1B1A;
+}
+
+/* Noise texture overlay */
+.simulator-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Simulator keyframe animations */
+@keyframes sim-draw-check {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes sim-pulse-shadow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 146, 42, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(212, 146, 42, 0); }
+}
+
+@keyframes sim-slide-up-fade {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Leaflet Dark Mode Overrides */
 .dark .leaflet-control-zoom a {
   background-color: #262626 !important;

@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings } from "lucide-react";
+import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings, TrendingUp, FolderOpen } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -118,6 +118,18 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             icon: Calculator,
             href: '/account/tax-simulator',
             active: pathname === '/account/tax-simulator'
+        },
+        {
+            label: t('investmentSimulator'),
+            icon: TrendingUp,
+            href: '/simulateur',
+            active: pathname === '/simulateur'
+        },
+        {
+            label: t('mySimulations'),
+            icon: FolderOpen,
+            href: '/account/simulations',
+            active: pathname === '/account/simulations'
         },
     ] : [];
 

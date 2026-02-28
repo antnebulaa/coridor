@@ -8,6 +8,7 @@ import {
     CreditCard,
     Wrench,
     Euro,
+    Shield,
 } from 'lucide-react';
 import { SafeListing } from '@/types';
 import EditSectionFooter from './EditSectionFooter';
@@ -31,6 +32,10 @@ const LeaseConditionsSection: React.FC<LeaseConditionsSectionProps> = ({ listing
     const [chargesAmount, setChargesAmount] = useState<number | ''>((listing as any).chargesAmount ?? '');
     const [chargesType, setChargesType] = useState<string>((listing as any).chargesType ?? '');
 
+    // --- Dépôt de garantie ---
+    const [securityDeposit, setSecurityDeposit] = useState<number>(listing.securityDeposit ?? 0);
+    const rentPrice = listing.price || 0;
+
     // --- Travaux recents ---
     const recentWorksCents = (listing as any).recentWorksAmountCents ?? 0;
     const [recentWorksAmount, setRecentWorksAmount] = useState<number | ''>(
@@ -48,6 +53,7 @@ const LeaseConditionsSection: React.FC<LeaseConditionsSectionProps> = ({ listing
                 paymentMethod: paymentMethod,
                 chargesAmount: chargesAmount || null,
                 chargesType: chargesType || null,
+                securityDeposit: securityDeposit,
                 recentWorksAmountCents: recentWorksAmount ? Math.round(Number(recentWorksAmount) * 100) : 0,
                 recentWorksDescription: recentWorksDescription || 'Neant',
             });
@@ -75,6 +81,7 @@ const LeaseConditionsSection: React.FC<LeaseConditionsSectionProps> = ({ listing
         listing.id, router,
         paymentDay, paymentMethod,
         chargesAmount, chargesType,
+        securityDeposit,
         recentWorksAmount, recentWorksDescription,
     ]);
 
@@ -166,6 +173,47 @@ const LeaseConditionsSection: React.FC<LeaseConditionsSectionProps> = ({ listing
                             <option value="FORFAIT">Forfait (charges fixes)</option>
                         </select>
                     </div>
+                </div>
+            </div>
+
+            {/* --- Dépôt de garantie --- */}
+            <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                    <Shield size={18} className="text-neutral-600" />
+                    <h3 className="font-medium text-neutral-800">Dépôt de garantie</h3>
+                </div>
+                <p className="text-sm text-neutral-500">
+                    {listing.isFurnished
+                        ? "Pour un meublé : max. 2 mois de loyer hors charges."
+                        : "Pour une location nue : max. 1 mois de loyer hors charges."}
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+                    {[0, 1, ...(listing.isFurnished ? [2] : [])].map((months) => {
+                        const amount = months * rentPrice;
+                        const isSelected = securityDeposit === amount;
+
+                        return (
+                            <button
+                                key={months}
+                                type="button"
+                                onClick={() => setSecurityDeposit(amount)}
+                                disabled={isLoading}
+                                className={`
+                                    rounded-xl border-2 p-4 flex flex-col gap-1 transition w-[140px]
+                                    ${isSelected
+                                        ? 'border-black dark:border-white bg-neutral-50 dark:bg-neutral-800'
+                                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-400'}
+                                    disabled:opacity-60 disabled:cursor-not-allowed
+                                `}
+                            >
+                                <span className="font-semibold text-lg">{amount} €</span>
+                                <span className="text-sm text-neutral-500">
+                                    {months === 0 ? "Aucun" : `${months} mois`}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

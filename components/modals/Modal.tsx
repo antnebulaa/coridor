@@ -225,7 +225,8 @@ const Modal: React.FC<ModalProps> = ({
                         h-full
                         md:h-auto
                         max-h-full
-                        md:max-h-dvh
+                        md:max-h-[calc(100dvh-48px)]
+                        md:my-6
                         ${widthClass ? widthClass : 'w-full md:w-4/6 lg:w-3/6 xl:w-2/5'}
                     `}
                 >
@@ -244,7 +245,7 @@ const Modal: React.FC<ModalProps> = ({
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-full md:h-auto max-h-full md:max-h-dvh border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden pt-safe md:pt-0">
+                        <div className="h-full md:h-auto max-h-full md:max-h-[calc(100dvh-48px)] border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden pt-safe md:pt-0">
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div

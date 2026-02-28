@@ -91,6 +91,28 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
         }
     }, [searchParams]);
 
+    // Lock body scroll on desktop — app-like layout with independent column scroll
+    useEffect(() => {
+        const mq = window.matchMedia('(min-width: 768px)');
+        const apply = () => {
+            if (mq.matches) {
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+            }
+        };
+        apply();
+        const handler = () => apply();
+        mq.addEventListener('change', handler);
+        return () => {
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+            mq.removeEventListener('change', handler);
+        };
+    }, []);
+
     // Photo Tour State (Lifted)
     const [isAllPhotosOpen, setIsAllPhotosOpen] = useState(false);
     const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
@@ -207,16 +229,17 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     };
 
     return (
-        <Container>
-            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] gap-10 pt-0 md:pt-4">
+        <div className="md:fixed md:top-[73px] md:bottom-0 md:left-0 md:right-0">
+            <div className="max-w-[2520px] mx-auto px-4 sm:px-2 md:pl-10 md:pr-0 xl:pl-20 xl:pr-0 md:h-full">
+            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] md:h-full">
                 {/* Sidebar - Hidden on mobile if content is shown */}
-                <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} md:pt-0`}>
+                <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} md:overflow-y-auto md:pr-10 md:pt-10`}>
                     <div className="flex items-center gap-4 mb-6">
                         <button
                             onClick={() => router.push('/properties')}
                             className="
                                 p-2 
-                                rounded-full 
+                                rounded-xl
                                 hover:bg-neutral-100 
                                 transition 
                                 cursor-pointer
@@ -287,35 +310,23 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                     />
                 </div>
 
-                <div className={` ${!showContent ? 'hidden md:block' : 'block'}`}>
-                    <div className="hidden md:flex h-10 items-center mb-6">
-                        <h2 className="text-2xl font-medium">
-                            {sectionTitles[activeSection]}
-                        </h2>
-                    </div>
-
-                    <div className="md:border md:border-neutral-200 md:rounded-xl md:shadow-sm relative bg-white dark:bg-neutral-900 dark:border-neutral-800 min-h-[50vh] -mx-4 md:mx-0">
-                        {/* Mobile Header: Back Button (Sticky) */}
-                        <div className="
-                            md:hidden
-                            sticky
-                            top-safe
-                            z-50
-                            bg-white dark:bg-neutral-900
-                            px-6
-                            border-b border-neutral-200 dark:border-neutral-800
-                        ">
-                        <div className="
-                            h-16
-                            flex
-                            items-center
-                            justify-between
-                        ">
+                <div className={`
+                    ${!showContent ? 'hidden' : 'fixed inset-0 pt-safe z-40 flex flex-col bg-white dark:bg-neutral-900'}
+                    md:relative md:inset-auto md:pt-0 md:z-auto md:bg-transparent md:flex-none md:block
+                    md:overflow-y-auto md:border-l md:border-neutral-200 dark:md:border-neutral-800
+                `}>
+                    {/* Mobile Header: Back Button (fixed at top of screen) */}
+                    <div className="
+                        md:hidden
+                        shrink-0
+                        px-6
+                        bg-white dark:bg-neutral-900
+                        border-b border-neutral-200 dark:border-neutral-800
+                    ">
+                        <div className="h-16 flex items-center justify-between">
                             <button
                                 onClick={handleBack}
-                                className="
-                                    w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center justify-center transition
-                                "
+                                className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center justify-center transition"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -345,25 +356,28 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Scrollable content area */}
+                    <div className="flex-1 overflow-y-auto md:flex-none md:overflow-visible">
+                        <div className="relative bg-white dark:bg-neutral-900 min-h-[50vh] md:pt-11">
+                            <PageBody padVertical={false} className={`px-4 md:px-8 md:pt-0 md:pb-8 md:max-w-[660px] md:mx-auto ${activeSection === 'visits' ? 'pt-0 pb-6' : 'py-6'}`}>
+                                {activeSection !== 'photos' && activeSection !== 'visits' && (
+                                    <div className="mb-6">
+                                        <h2 className="text-2xl font-medium">
+                                            {sectionTitles[activeSection]}
+                                        </h2>
+                                    </div>
+                                )}
+
+                                {renderContent()}
+                            </PageBody>
                         </div>
-
-                        {/* Content Wrapper with Padding - Standardized via PageBody */}
-                        <PageBody padVertical={false} className={`px-4 md:px-8 md:py-8 ${activeSection === 'visits' ? 'pt-0 pb-6' : 'py-6'}`}>
-                            {/* Mobile Header: Title (Not Sticky) */}
-                            {activeSection !== 'photos' && activeSection !== 'visits' && (
-                                <div className="md:hidden mb-6">
-                                    <h2 className="text-2xl font-medium">
-                                        {sectionTitles[activeSection]}
-                                    </h2>
-                                </div>
-                            )}
-
-                            {renderContent()}
-                        </PageBody>
                     </div>
                 </div>
             </div>
-        </Container>
+            </div>
+        </div>
     );
 }
 

@@ -55,7 +55,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
             </div>
 
             {/* Links */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
                 {currentLinks.map((link) => {
                     const isTitle = link.id === 'title';
                     return (
@@ -64,14 +64,14 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                             onClick={() => !isTitle && onChangeSection(link.id as SectionType)}
                             className={`
                                 p-1.5 
-                                rounded-xl 
+                                rounded-2xl 
                                 transition
                                 flex flex-row items-center gap-3
                                 ${activeSection === link.id ? 'bg-neutral-100 dark:bg-neutral-800' : isTitle ? '' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer'}
                             `}
                         >
                             <div className={`
-                                w-10 h-10 rounded-lg 
+                                w-10 h-10 rounded-xl
                                 bg-[#FBFBFB] dark:bg-neutral-700 
                                 flex items-center justify-center shrink-0
                             `}>
@@ -80,7 +80,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
 
                             <div className="flex flex-col min-w-0 flex-1">
                                 {!isTitle && (
-                                    <span className={`font-medium ${activeSection === link.id ? 'text-black dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                                    <span className={`font-medium ${activeSection === link.id ? 'text-neutral-800 dark:text-white text-base' : 'text-neutral-800 dark:text-neutral-400 text-base'}`}>
                                         {link.label}
                                     </span>
                                 )}
@@ -89,7 +89,7 @@ const EditPropertySidebar: React.FC<EditPropertySidebarProps> = ({
                                         truncate mt-0.5
                                         ${isTitle
                                             ? 'text-[20px] font-medium text-black dark:text-white leading-tight'
-                                            : 'text-xs text-neutral-500 dark:text-neutral-400 font-normal'}
+                                            : 'text-sm text-black dark:text-neutral-400 font-normal'}
                                     `}>
                                         {subtitles[link.id]}
                                     </span>

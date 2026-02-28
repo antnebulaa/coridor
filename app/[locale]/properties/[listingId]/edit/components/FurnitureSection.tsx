@@ -101,12 +101,7 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-2">
-                <h2 className="text-xl font-semibold">Équipements du logement</h2>
-                <div className="text-gray-500 text-sm">
-                    Sélectionnez les équipements présents dans votre logement.
-                </div>
-            </div>
+            
 
             <div className={`
                 border rounded-lg p-4 text-sm flex gap-3 items-start
@@ -148,10 +143,11 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
                             key={item.id}
                             onClick={() => toggle(item.id)}
                             className={`
-                                flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition group
+                                flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition group
                                 ${state[item.id] ? 'border-black bg-neutral-50' : 'border-neutral-200 hover:border-black'}
                             `}
                         >
+                            <span className="font-normal text-base">{item.label}</span>
                             <div className={`
                                 w-6 h-6 rounded-full border transition flex items-center justify-center
                                 ${state[item.id]
@@ -163,7 +159,7 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
                                     <Check size={14} className="text-white" strokeWidth={1.5} />
                                 )}
                             </div>
-                            <span className="font-medium text-sm">{item.label}</span>
+                            
                         </div>
                     ))}
                 </div>
