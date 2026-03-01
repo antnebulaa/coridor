@@ -88,6 +88,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
   if (!yp) return null;
 
   const holdingYears = yearIndex + 1;
+  const isDonation = purchasePrice === 0;
   const notaryFees = purchasePrice * notaryFeesRate;
   const acquisitionPrice = purchasePrice + notaryFees + renovationCost;
   const grossGain = yp.propertyValue - acquisitionPrice;
@@ -129,7 +130,18 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
         <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-1 mb-1">
           Basé sur une revalorisation annuelle du bien (hypothèse de projection).
         </p>
-        <Row label="Prix d'acquisition majoré" value={`-${fmt(Math.round(acquisitionPrice))}€`} />
+        {isDonation ? (
+          <>
+            {renovationCost > 0 && (
+              <Row label="Travaux réalisés" value={`-${fmt(renovationCost)}€`} />
+            )}
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">
+              Bien reçu en donation ou héritage — prix d&apos;acquisition : 0€
+            </p>
+          </>
+        ) : (
+          <Row label="Prix d'acquisition majoré" value={`-${fmt(Math.round(acquisitionPrice))}€`} />
+        )}
         <Row label="Plus-value brute" value={`${grossGain >= 0 ? '+' : ''}${fmt(Math.round(grossGain))}€`} bold />
 
         {grossGain > 0 && (
@@ -169,10 +181,12 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
             <span className="text-base opacity-70">Cash-flow cumulé ({holdingYears} ans)</span>
             <span className="text-base font-medium">{cumulCashflow >= 0 ? '+' : ''}{fmt(cumulCashflow)}€</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-base opacity-70">Capital remboursé</span>
-            <span className="text-base font-medium">+{fmt(Math.round(capitalRepaid))}€</span>
-          </div>
+          {capitalRepaid > 0 && (
+            <div className="flex justify-between">
+              <span className="text-base opacity-70">Capital remboursé</span>
+              <span className="text-base font-medium">+{fmt(Math.round(capitalRepaid))}€</span>
+            </div>
+          )}
           {/* Stacked bar — composition du gain */}
           {(() => {
             const parts = [
@@ -217,15 +231,21 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
         </div>
         {/* Rendement pill */}
         <div className="mt-4 flex justify-center">
-          <span
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold ${
-              rendementTotal >= 0
-                ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
-                : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
-            }`}
-          >
-            Rendement total : {rendementTotal >= 0 ? '+' : ''}{rendementTotal}% sur {fmt(apportInitial)}€
-          </span>
+          {apportInitial > 0 ? (
+            <span
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold ${
+                rendementTotal >= 0
+                  ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                  : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+              }`}
+            >
+              Rendement total : {rendementTotal >= 0 ? '+' : ''}{rendementTotal}% sur {fmt(apportInitial)}€
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+              Bien reçu gratuitement — gain net : {totalGainNet >= 0 ? '+' : ''}{fmt(Math.round(totalGainNet))}€
+            </span>
+          )}
         </div>
       </div>
     </div>
