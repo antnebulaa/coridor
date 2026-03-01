@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Save, FileDown } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, FileDown, Settings2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { InvestmentResult, InvestmentInput } from '@/services/InvestmentSimulatorService';
 import type { User } from '@prisma/client';
@@ -52,7 +52,12 @@ export function ExpertSection({ result, input, onSave, user }: ExpertSectionProp
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
       >
-        <span>Indicateurs avancés (investisseurs expérimentés)</span>
+        <span className="flex items-center gap-2.5">
+          <span className="w-7 h-7 rounded-full bg-(--sim-amber-50) flex items-center justify-center">
+            <Settings2 size={14} className="text-(--sim-amber-500)" />
+          </span>
+          Indicateurs avancés (investisseurs expérimentés)
+        </span>
         {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
 

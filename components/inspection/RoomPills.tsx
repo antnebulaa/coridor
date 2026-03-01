@@ -86,7 +86,7 @@ const RoomPills: React.FC<RoomPillsProps> = ({ rooms, activeRoomId, onRoomSelect
             className={`relative shrink-0 flex flex-col items-center gap-1 px-4 py-3 rounded-2xl text-[13px] font-medium whitespace-nowrap ${pillClass}`}
           >
             {isDone && !isActive && (
-              <span className={`absolute top-1 right-1 z-10 inline-flex items-center justify-center w-4 h-4 rounded-full ${t.pillCheckBg}`}>
+              <span className={`absolute top-2 right-2 z-10 inline-flex items-center justify-center w-4 h-4 rounded-lg ${t.pillCheckBg}`}>
                 <Check size={8} strokeWidth={3} className={t.pillCheckText} />
               </span>
             )}

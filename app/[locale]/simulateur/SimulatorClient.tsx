@@ -172,9 +172,9 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
   ]);
 
   return (
-    <div className="simulator-page max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12 relative z-10">
+    <div className="simulator-page relative z-10">
       {/* Header with gradient */}
-      <div className="text-center mb-10">
+      <div className="text-center pt-8 md:pt-12 pb-6 md:pb-8 px-4 sm:px-6">
         <div className="absolute inset-x-0 top-0 h-64 bg-linear-to-b from-(--sim-amber-50) to-transparent -z-10 pointer-events-none" />
         <h1
           className="text-3xl md:text-4xl text-neutral-900 dark:text-white"
@@ -188,15 +188,17 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
         </p>
       </div>
 
-      {/* Form */}
+      {/* Form — centered */}
       {!showLoader && (
-        <SimulatorForm
-          input={input}
-          onChange={setInput}
-          onSimulate={handleSimulate}
-          isLoading={isLoading}
-          loanSummary={loanSummary}
-        />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-8 md:pb-12">
+          <SimulatorForm
+            input={input}
+            onChange={setInput}
+            onSimulate={handleSimulate}
+            isLoading={isLoading}
+            loanSummary={loanSummary}
+          />
+        </div>
       )}
 
       {/* Calculation loader */}
@@ -209,14 +211,16 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
 
       {/* Error */}
       {error && !showLoader && (
-        <div className="mt-6 p-4 bg-red-50 dark:bg-red-950 rounded-xl text-red-600 dark:text-red-400 text-sm">
-          {error}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="mt-6 p-4 bg-red-50 dark:bg-red-950 rounded-xl text-red-600 dark:text-red-400 text-sm">
+            {error}
+          </div>
         </div>
       )}
 
-      {/* Results */}
+      {/* Results — full-width bands */}
       {showResults && hasSimulated && result && (
-        <div id="simulator-results" className="mt-12">
+        <div id="simulator-results">
           <SimulatorResults result={result} input={input} onSave={handleSave} user={user} />
         </div>
       )}

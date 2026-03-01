@@ -66,23 +66,21 @@ export function TeasingPreview({ input, currentStep }: TeasingPreviewProps) {
 
   if (input.purchasePrice <= 0) return null;
 
-  // Blur decreases as user progresses through steps
-  const blur = Math.max(6 - currentStep * 1.5, 0);
-
   const fmt = (n: number) => n.toLocaleString('fr-FR');
 
+  // Opacity increases as user progresses (glassmorphism reveal)
+  const opacity = Math.min(0.4 + currentStep * 0.2, 1);
+
   return (
-    <div className="mt-8 rounded-2xl bg-(--sim-bg-section) p-5 text-center">
+    <div
+      className="mt-8 p-5 text-center backdrop-blur-xl rounded-[20px] bg-white/40 dark:bg-white/8 border border-white/60 dark:border-white/10"
+    >
       <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
         Patrimoine estimé en {input.projectionYears} ans
       </div>
       <div
         className="text-3xl font-bold text-neutral-900 dark:text-white tabular-nums"
-        style={{
-          filter: `blur(${blur}px)`,
-          transition: 'filter 400ms ease',
-          fontFamily: 'var(--font-serif-sim), serif',
-        }}
+        style={{ fontFamily: 'var(--font-serif-sim), serif' }}
       >
         {estimate >= 0 ? '+' : '-'}{fmt(animatedValue)}€
       </div>

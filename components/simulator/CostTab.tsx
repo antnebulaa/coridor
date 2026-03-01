@@ -13,11 +13,11 @@ const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div className={`flex justify-between py-1.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-1' : ''}`}>
-      <span className={`text-sm ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
+    <div className={`flex justify-between py-2.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-1' : ''}`}>
+      <span className={`text-base ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
         {label}
       </span>
-      <span className={`text-sm tabular-nums ${bold ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'text-neutral-800 dark:text-neutral-200'}`}>
+      <span className={`text-base tabular-nums ${bold ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'font-medium text-neutral-800 dark:text-neutral-200'}`}>
         {value}
       </span>
     </div>
@@ -36,6 +36,10 @@ export function CostTab({ result, startYear }: CostTabProps) {
   const exp = yp.monthlyExpenseBreakdown;
   const effort = yp.savingsEffort;
 
+  const totalRevenue = rev.netRent;
+  const totalExpenses = Object.values(exp).reduce((a, b) => a + b, 0);
+  const maxBar = Math.max(totalRevenue, totalExpenses, 1);
+
   // Find breakeven year
   const breakEvenIdx = result.yearlyProjection.findIndex((y) => y.savingsEffort >= 0);
   const breakEvenYear = breakEvenIdx >= 0 ? startYear + breakEvenIdx : null;
@@ -51,7 +55,6 @@ export function CostTab({ result, startYear }: CostTabProps) {
     message = "Cet investissement nécessite un effort d'épargne constant sur la durée du prêt.";
   }
 
-  // Dynamic tip: if extending loan would lead to breakeven
   let tip: string | null = null;
   if (effort < 0 && breakEvenYear) {
     const yearsToBreakeven = breakEvenYear - startYear;
@@ -60,13 +63,7 @@ export function CostTab({ result, startYear }: CostTabProps) {
     }
   }
 
-  // Effort color: green if positive, grey warm if moderate, red only if alarming (>500€/mois)
   const isAlarming = effort < -500;
-  const effortBg = effort >= 0
-    ? 'bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800'
-    : isAlarming
-      ? 'bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800'
-      : 'bg-(--sim-effort-bg) border border-neutral-200 dark:border-neutral-700';
   const effortText = effort >= 0
     ? 'text-emerald-600 dark:text-emerald-400'
     : isAlarming
@@ -76,7 +73,7 @@ export function CostTab({ result, startYear }: CostTabProps) {
   return (
     <div className="space-y-6">
       <h3
-        className="text-2xl md:text-3xl text-neutral-900 dark:text-neutral-100"
+        className="text-3xl md:text-4xl text-neutral-900 dark:text-neutral-100"
         style={{ fontFamily: 'var(--font-serif-sim), serif' }}
       >
         Combien ça me coûte par mois ?
@@ -89,22 +86,89 @@ export function CostTab({ result, startYear }: CostTabProps) {
         onYearChange={setSelectedYear}
       />
 
+      {/* EFFORT HERO — first visible element */}
+      <div
+        className="rounded-2xl p-6 text-center"
+        style={{
+          background: effort >= 0
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))'
+            : isAlarming
+              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02))'
+              : 'linear-gradient(135deg, var(--sim-effort-bg), transparent)',
+        }}
+      >
+        <div className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+          Effort d&apos;épargne mensuel
+        </div>
+        <div
+          className={`text-3xl md:text-5xl font-bold tabular-nums ${effortText}`}
+          style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+        >
+          {effort >= 0 ? '+' : ''}{fmt(effort)}€<span className="text-lg md:text-2xl font-normal">/mois</span>
+        </div>
+        <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 tabular-nums">
+          Soit {effort >= 0 ? '+' : ''}{fmt(effort * 12)}€ par an
+        </div>
+      </div>
+
+      {/* Donut chart — revenus vs dépenses */}
+      {(() => {
+        const total = totalRevenue + totalExpenses;
+        if (total <= 0) return null;
+        const revPct = totalRevenue / total;
+        const revAngle = revPct * 360;
+        const r = 50;
+        const cx = 60;
+        const cy = 60;
+        const circumference = 2 * Math.PI * r;
+        const revArc = circumference * revPct;
+        const expArc = circumference * (1 - revPct);
+        return (
+          <div className="flex items-center justify-center gap-6">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ef4444" strokeWidth="14" strokeDasharray={`${expArc} ${circumference}`} strokeDashoffset={-revArc} transform={`rotate(-90 ${cx} ${cy})`} strokeLinecap="round" />
+              <circle cx={cx} cy={cy} r={r} fill="none" stroke="#22c55e" strokeWidth="14" strokeDasharray={`${revArc} ${circumference}`} strokeDashoffset="0" transform={`rotate(-90 ${cx} ${cy})`} strokeLinecap="round" />
+              <text x={cx} y={cy - 6} textAnchor="middle" className="text-xs fill-neutral-500 dark:fill-neutral-400" fontSize="11">Effort</text>
+              <text x={cx} y={cy + 10} textAnchor="middle" className="fill-neutral-900 dark:fill-neutral-100" fontSize="14" fontWeight="bold">{effort >= 0 ? '+' : ''}{fmt(effort)}€</text>
+            </svg>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">Revenus : {fmt(totalRevenue)}€</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">Dépenses : {fmt(totalExpenses)}€</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Revenue vs Expense columns with visual bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Revenus */}
         <div className="bg-emerald-50/50 dark:bg-emerald-950/30 rounded-xl p-4">
-          <h4 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-3">
+          <h4 className="text-base font-semibold text-emerald-700 dark:text-emerald-400 mb-3">
             Revenus mensuels
           </h4>
           <Row label="Loyer HC" value={`${fmt(rev.rentHC)}€`} />
           {rev.vacancyDeduction > 0 && (
             <Row label="Vacance locative" value={`-${fmt(rev.vacancyDeduction)}€`} />
           )}
-          <Row label="Total revenus" value={`${fmt(rev.netRent)}€`} bold />
+          <Row label="Total revenus" value={`${fmt(totalRevenue)}€`} bold />
+          {/* Visual bar */}
+          <div className="mt-3 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${(totalRevenue / maxBar) * 100}%` }}
+            />
+          </div>
         </div>
 
         {/* Dépenses */}
         <div className="bg-red-50/50 dark:bg-red-950/30 rounded-xl p-4">
-          <h4 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-3">
+          <h4 className="text-base font-semibold text-red-700 dark:text-red-400 mb-3">
             Dépenses mensuelles
           </h4>
           {exp.loanPayment > 0 && <Row label="Mensualité crédit" value={`${fmt(exp.loanPayment)}€`} />}
@@ -117,34 +181,24 @@ export function CostTab({ result, startYear }: CostTabProps) {
           {exp.maintenance > 0 && <Row label="Entretien" value={`${fmt(exp.maintenance)}€`} />}
           {exp.otherCharges > 0 && <Row label="Autres charges" value={`${fmt(exp.otherCharges)}€`} />}
           {exp.monthlyTax > 0 && <Row label="Impôts fonciers" value={`${fmt(exp.monthlyTax)}€`} />}
-          <Row
-            label="Total dépenses"
-            value={`${fmt(Object.values(exp).reduce((a, b) => a + b, 0))}€`}
-            bold
-          />
+          <Row label="Total dépenses" value={`${fmt(totalExpenses)}€`} bold />
+          {/* Visual bar */}
+          <div className="mt-3 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-red-500 rounded-full transition-all duration-500"
+              style={{ width: `${(totalExpenses / maxBar) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Effort d'épargne */}
-      <div className={`rounded-xl p-4 text-center ${effortBg}`}>
-        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-          Effort d&apos;épargne mensuel
-        </div>
-        <div className={`text-2xl font-bold tabular-nums ${effortText}`}>
-          {effort >= 0 ? '+' : ''}{fmt(effort)}€/mois
-        </div>
-        <div className="text-xs text-neutral-500 mt-1 tabular-nums">
-          Soit {effort >= 0 ? '+' : ''}{fmt(effort * 12)}€/an
-        </div>
-      </div>
-
-      <p className="text-xs text-neutral-500 dark:text-neutral-400 italic">
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 italic">
         {message}
       </p>
 
       {tip && (
-        <p className="text-xs text-(--sim-amber-500) font-medium">
-          💡 {tip}
+        <p className="text-sm text-(--sim-amber-500) font-medium">
+          {tip}
         </p>
       )}
     </div>

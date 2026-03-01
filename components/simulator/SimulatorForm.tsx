@@ -116,6 +116,8 @@ export default function SimulatorForm({
 
   const notaryFees = Math.round(input.purchasePrice * input.notaryFeesRate);
   const apport = input.downPayment ?? input.personalContribution;
+  const totalCost = input.purchasePrice + notaryFees + (input.renovationCost ?? 0) + (input.furnitureCost ?? 0);
+  const isCashPurchase = apport >= totalCost && totalCost > 0;
   const vacWeeks = input.vacancyWeeksPerYear ?? Math.round(input.vacancyRate * 52);
   const mgmtRate = input.managementFeeRate ?? input.managementFeesRate;
 
@@ -180,7 +182,13 @@ export default function SimulatorForm({
       />
 
       {/* Form card */}
-      <div className="bg-(--sim-bg-card) dark:border dark:border-neutral-800 rounded-2xl p-6 md:p-8 shadow-(--sim-shadow-card)">
+      <div
+        className="bg-(--sim-bg-card) dark:border dark:border-neutral-800 p-6 md:p-8"
+        style={{
+          borderRadius: 'var(--sim-form-card-radius)',
+          boxShadow: 'var(--sim-form-card-shadow)',
+        }}
+      >
         {/* ============================================================== */}
         {/* Step 0: Le bien                                                 */}
         {/* ============================================================== */}
@@ -393,6 +401,7 @@ export default function SimulatorForm({
                 />
                 <ToggleButton
                   active={
+                    !isCashPurchase &&
                     Math.abs(
                       apport - Math.round(input.purchasePrice * 0.2),
                     ) < 100
@@ -402,6 +411,13 @@ export default function SimulatorForm({
                     update({ downPayment: v, personalContribution: v });
                   }}
                   label="20 %"
+                />
+                <ToggleButton
+                  active={isCashPurchase}
+                  onClick={() => {
+                    update({ downPayment: totalCost, personalContribution: totalCost });
+                  }}
+                  label="100 %"
                 />
               </div>
               <InputField
@@ -414,121 +430,134 @@ export default function SimulatorForm({
               />
             </div>
 
-            {/* 2-col: Durée + Taux */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Durée du prêt
-                </label>
-                <select
-                  value={input.loanDurationYears}
-                  onChange={(e) =>
-                    update({ loanDurationYears: parseInt(e.target.value) })
-                  }
-                  className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition"
-                >
-                  {[10, 15, 20, 25, 30].map((y) => (
-                    <option key={y} value={y}>
-                      {y} ans
-                    </option>
-                  ))}
-                </select>
+            {isCashPurchase ? (
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-xl p-4 text-center">
+                <p className="text-base font-medium text-emerald-700 dark:text-emerald-400">
+                  Achat comptant — aucun emprunt nécessaire
+                </p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                  Investissement total : {fmt(totalCost)} €
+                </p>
               </div>
+            ) : (
+              <>
+                {/* 2-col: Durée + Taux */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                      Durée du prêt
+                    </label>
+                    <select
+                      value={input.loanDurationYears}
+                      onChange={(e) =>
+                        update({ loanDurationYears: parseInt(e.target.value) })
+                      }
+                      className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition"
+                    >
+                      {[10, 15, 20, 25, 30].map((y) => (
+                        <option key={y} value={y}>
+                          {y} ans
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <InputField
-                label="Taux d'intérêt"
-                value={parseFloat((input.loanRate * 100).toFixed(2))}
-                onChange={(v) => update({ loanRate: v / 100 })}
-                suffix="%"
-                step={0.05}
-              />
-            </div>
-
-            <InputField
-              label="Assurance emprunteur"
-              value={parseFloat((input.loanInsuranceRate * 100).toFixed(2))}
-              onChange={(v) => update({ loanInsuranceRate: v / 100 })}
-              suffix="%"
-              step={0.01}
-            />
-
-            <CollapsibleSection label="Options avancées">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Garantie bancaire
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {(
-                    [
-                      ['NONE', 'Aucune'],
-                      ['CREDIT_LOGEMENT', 'Crédit Logement'],
-                      ['HYPOTHEQUE', 'Hypothèque'],
-                      ['PPD', 'PPD'],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <ToggleButton
-                      key={key}
-                      active={(input.guaranteeType ?? 'NONE') === key}
-                      onClick={() => {
-                        const cost =
-                          key === 'NONE'
-                            ? 0
-                            : Math.round(
-                                loanSummary.loanAmount *
-                                  (GUARANTEE_RATES[key] ?? 0),
-                              );
-                        update({
-                          guaranteeType: key,
-                          guaranteeCost: cost,
-                        });
-                      }}
-                      label={label}
-                    />
-                  ))}
+                  <InputField
+                    label="Taux d'intérêt"
+                    value={parseFloat((input.loanRate * 100).toFixed(2))}
+                    onChange={(v) => update({ loanRate: v / 100 })}
+                    suffix="%"
+                    step={0.05}
+                  />
                 </div>
-              </div>
 
-              {(input.guaranteeType ?? 'NONE') !== 'NONE' && (
                 <InputField
-                  label="Coût de la garantie"
-                  value={input.guaranteeCost ?? estimatedGuaranteeCost}
-                  onChange={(v) => update({ guaranteeCost: v })}
-                  suffix="€"
+                  label="Assurance emprunteur"
+                  value={parseFloat((input.loanInsuranceRate * 100).toFixed(2))}
+                  onChange={(v) => update({ loanInsuranceRate: v / 100 })}
+                  suffix="%"
+                  step={0.01}
                 />
-              )}
 
-              <InputField
-                label="Frais de dossier"
-                value={input.bankFees}
-                onChange={(v) => update({ bankFees: v })}
-                suffix="€"
-              />
-            </CollapsibleSection>
+                <CollapsibleSection label="Options avancées">
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                      Garantie bancaire
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {(
+                        [
+                          ['NONE', 'Aucune'],
+                          ['CREDIT_LOGEMENT', 'Crédit Logement'],
+                          ['HYPOTHEQUE', 'Hypothèque'],
+                          ['PPD', 'PPD'],
+                        ] as const
+                      ).map(([key, label]) => (
+                        <ToggleButton
+                          key={key}
+                          active={(input.guaranteeType ?? 'NONE') === key}
+                          onClick={() => {
+                            const cost =
+                              key === 'NONE'
+                                ? 0
+                                : Math.round(
+                                    loanSummary.loanAmount *
+                                      (GUARANTEE_RATES[key] ?? 0),
+                                  );
+                            update({
+                              guaranteeType: key,
+                              guaranteeCost: cost,
+                            });
+                          }}
+                          label={label}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-            {/* Loan summary */}
-            <div className="bg-(--sim-bg-section) rounded-xl p-4 space-y-2">
-              <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                Résumé du crédit
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Montant emprunté</span>
-                <span className="font-semibold tabular-nums">
-                  {fmt(loanSummary.loanAmount)} €
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Mensualité estimée</span>
-                <span className="font-semibold tabular-nums">
-                  {fmt(loanSummary.monthlyPayment)} €
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Coût total du crédit</span>
-                <span className="font-semibold tabular-nums">
-                  {fmt(loanSummary.totalCreditCost)} €
-                </span>
-              </div>
-            </div>
+                  {(input.guaranteeType ?? 'NONE') !== 'NONE' && (
+                    <InputField
+                      label="Coût de la garantie"
+                      value={input.guaranteeCost ?? estimatedGuaranteeCost}
+                      onChange={(v) => update({ guaranteeCost: v })}
+                      suffix="€"
+                    />
+                  )}
+
+                  <InputField
+                    label="Frais de dossier"
+                    value={input.bankFees}
+                    onChange={(v) => update({ bankFees: v })}
+                    suffix="€"
+                  />
+                </CollapsibleSection>
+
+                {/* Loan summary */}
+                <div className="bg-(--sim-bg-section) rounded-xl p-4 space-y-2">
+                  <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                    Résumé du crédit
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Montant emprunté</span>
+                    <span className="font-semibold tabular-nums">
+                      {fmt(loanSummary.loanAmount)} €
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Mensualité estimée</span>
+                    <span className="font-semibold tabular-nums">
+                      {fmt(loanSummary.monthlyPayment)} €
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Coût total du crédit</span>
+                    <span className="font-semibold tabular-nums">
+                      {fmt(loanSummary.totalCreditCost)} €
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 

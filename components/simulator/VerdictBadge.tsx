@@ -44,12 +44,15 @@ const VERDICT_PILL: Record<
   },
 };
 
+function fmt(n: number): string {
+  return n.toLocaleString('fr-FR');
+}
+
 export function VerdictBadge({ result, input }: VerdictBadgeProps) {
   const pill = VERDICT_PILL[result.verdict];
   const lastYear = result.yearlyProjection[result.yearlyProjection.length - 1];
   const targetYear = new Date().getFullYear() + input.projectionYears;
 
-  // Determine headline
   const isTaxOptimized = result.verdict === 'TAX_OPTIMIZED';
   const isPositive = lastYear && lastYear.netWealth > 0;
   const headlineAmount = isTaxOptimized
@@ -57,71 +60,84 @@ export function VerdictBadge({ result, input }: VerdictBadgeProps) {
     : lastYear?.totalGain ?? lastYear?.netWealth ?? 0;
 
   const animatedAmount = useCountUp(Math.abs(Math.round(headlineAmount)), 900);
-  const fmt = (n: number) => n.toLocaleString('fr-FR');
+
+  const effort1 = result.yearlyProjection[0]?.savingsEffort ?? 0;
+  const patrimoine = lastYear?.netWealth ?? 0;
+  const regime = input.isFurnished ? 'LMNP' : 'Nu';
+  const regimeType = input.taxRegime === 'micro' ? 'micro' : 'réel';
 
   return (
-    <div className="text-center space-y-4">
-      {/* Master headline */}
-      <h2
-        className="text-2xl sm:text-3xl md:text-4xl text-neutral-900 dark:text-white leading-tight"
-        style={{ fontFamily: 'var(--font-serif-sim), serif' }}
-      >
-        {isPositive || isTaxOptimized ? (
-          <>
-            En {targetYear}, cet investissement vous aura{' '}
-            {isTaxOptimized ? 'économisé' : 'enrichi'} de{' '}
-            <span className="text-(--sim-amber-500) tabular-nums">
-              {fmt(animatedAmount)}&nbsp;€
-            </span>
-          </>
-        ) : (
-          <>
-            Attention : cet investissement nécessite une analyse approfondie.
-          </>
-        )}
-      </h2>
-
-      {/* Badge pill + animated check */}
-      <div className="flex items-center justify-center gap-3">
-        {/* Animated SVG check */}
-        <svg width="24" height="24" viewBox="0 0 24 24" className={pill.text}>
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeDasharray="63"
-            strokeDashoffset="63"
-            style={{ animation: 'sim-draw-check 0.6s ease-out 0.2s forwards' }}
-          />
-          <path
-            d="M8 12l2.5 2.5L16 9"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray="20"
-            strokeDashoffset="20"
-            style={{ animation: 'sim-draw-check 0.4s ease-out 0.6s forwards' }}
-          />
+    <div className="text-center relative overflow-hidden">
+      {/* SVG circle backdrop */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden>
+        <svg width="400" height="400" viewBox="0 0 400 400" className="opacity-[0.06]">
+          <circle cx="200" cy="200" r="180" fill="none" stroke="var(--sim-amber-400)" strokeWidth="2" />
+          <circle cx="200" cy="200" r="140" fill="none" stroke="var(--sim-amber-400)" strokeWidth="1" />
+          <circle cx="200" cy="200" r="100" fill="none" stroke="var(--sim-amber-400)" strokeWidth="0.5" />
         </svg>
-
-        {/* Pill */}
-        <span
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${pill.bg} ${pill.text}`}
-        >
-          {pill.icon}
-          {pill.label}
-        </span>
       </div>
 
-      {/* Sub-detail */}
-      <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-lg mx-auto">
-        {result.verdictMessage}
-      </p>
+      <div className="relative space-y-5">
+        {/* Intro text */}
+        <p
+          className="text-xl sm:text-2xl text-neutral-600 dark:text-neutral-400"
+          style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+        >
+          {isPositive || isTaxOptimized
+            ? `En ${targetYear}, cet investissement vous aura ${isTaxOptimized ? 'économisé' : 'enrichi'} de`
+            : 'Attention : cet investissement nécessite une analyse approfondie.'}
+        </p>
+
+        {/* Hero number */}
+        {(isPositive || isTaxOptimized) && (
+          <div
+            className="text-4xl sm:text-5xl md:text-7xl font-bold text-(--sim-amber-500) tabular-nums"
+            style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+          >
+            {fmt(animatedAmount)}&nbsp;€
+          </div>
+        )}
+
+        {/* Badge pill + animated check */}
+        <div className="flex items-center justify-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" className={pill.text}>
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="63"
+              strokeDashoffset="63"
+              style={{ animation: 'sim-draw-check 0.6s ease-out 0.2s forwards' }}
+            />
+            <path
+              d="M8 12l2.5 2.5L16 9"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="20"
+              strokeDashoffset="20"
+              style={{ animation: 'sim-draw-check 0.4s ease-out 0.6s forwards' }}
+            />
+          </svg>
+
+          <span
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${pill.bg} ${pill.text}`}
+          >
+            {pill.icon}
+            {pill.label}
+          </span>
+        </div>
+
+        {/* Condensed summary line */}
+        <p className="text-base text-neutral-500 dark:text-neutral-400">
+          Effort {effort1 >= 0 ? '+' : ''}{fmt(effort1)}€/mois · Patrimoine {fmt(Math.round(patrimoine / 1000))}k€ · {regime} {regimeType}
+        </p>
+      </div>
     </div>
   );
 }

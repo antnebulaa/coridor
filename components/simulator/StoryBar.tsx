@@ -12,15 +12,16 @@ interface StoryBarProps {
 export function StoryBar({ currentStep, steps, completedSummaries, onStepClick }: StoryBarProps) {
   return (
     <>
-      {/* Desktop: full stepper */}
-      <div className="hidden sm:flex items-start justify-between mb-10 relative">
+      {/* Desktop: compact stepper */}
+      <div className="hidden sm:flex items-start justify-between mb-8 relative">
         {/* Background line */}
-        <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-neutral-200 dark:bg-neutral-700" />
-        {/* Progress line */}
+        <div className="absolute top-4 left-[10%] right-[10%] h-[3px] bg-neutral-200 dark:bg-neutral-700 rounded-full" />
+        {/* Progress line — gradient */}
         <div
-          className="absolute top-5 left-[10%] h-0.5 bg-(--sim-amber-400) transition-all duration-500 ease-out"
+          className="absolute top-4 left-[10%] h-[3px] rounded-full transition-all duration-500 ease-out"
           style={{
             width: `${currentStep === 0 ? 0 : (currentStep / (steps.length - 1)) * 80}%`,
+            background: 'linear-gradient(to right, var(--sim-amber-400), var(--sim-amber-600))',
           }}
         />
 
@@ -33,11 +34,11 @@ export function StoryBar({ currentStep, steps, completedSummaries, onStepClick }
             <button
               key={s.key}
               onClick={() => onStepClick(i)}
-              className="relative z-10 flex flex-col items-center gap-2 w-1/4"
+              className="relative z-10 flex flex-col items-center gap-1.5 w-1/4"
             >
               {/* Circle */}
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
                   isDone
                     ? 'bg-(--sim-amber-400) text-white'
                     : isCurrent
@@ -45,12 +46,12 @@ export function StoryBar({ currentStep, steps, completedSummaries, onStepClick }
                       : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 dark:text-neutral-500'
                 }`}
               >
-                {isDone ? <Check size={18} strokeWidth={2.5} /> : i + 1}
+                {isDone ? <Check size={14} strokeWidth={2.5} /> : i + 1}
               </div>
 
               {/* Label */}
               <span
-                className={`text-xs font-medium transition-colors ${
+                className={`text-[11px] font-medium transition-colors ${
                   isFuture
                     ? 'text-neutral-400 dark:text-neutral-600'
                     : 'text-neutral-700 dark:text-neutral-300'
@@ -59,9 +60,9 @@ export function StoryBar({ currentStep, steps, completedSummaries, onStepClick }
                 {s.label}
               </span>
 
-              {/* Completed summary */}
+              {/* Completed summary — single line truncated */}
               {isDone && completedSummaries[i] && (
-                <span className="text-[11px] text-neutral-400 dark:text-neutral-500 text-center leading-tight max-w-[140px]">
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 truncate max-w-[120px]">
                   {completedSummaries[i]}
                 </span>
               )}
@@ -72,7 +73,6 @@ export function StoryBar({ currentStep, steps, completedSummaries, onStepClick }
 
       {/* Mobile: dot progress */}
       <div className="flex sm:hidden items-center justify-center gap-3 mb-8">
-        {/* Background line */}
         <div className="relative flex items-center gap-3">
           {steps.map((s, i) => {
             const isDone = i < currentStep;

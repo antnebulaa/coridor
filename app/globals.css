@@ -360,7 +360,7 @@ hr {
   50% { opacity: 0; }
 }
 
-/* ──── Simulator V2.2 — Scoped Design Tokens ──── */
+/* ──── Simulator V2.3 — Scoped Design Tokens ──── */
 .simulator-page {
   --sim-bg: #FAF9F6;
   --sim-bg-card: #FFFFFF;
@@ -374,6 +374,16 @@ hr {
   --sim-shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
   --sim-effort: #78716C;
   --sim-effort-bg: #F5F5F4;
+  /* V2.3 — Bandes alternées */
+  --sim-band-hero-from: #FFF8E7;
+  --sim-band-white: #FFFFFF;
+  --sim-band-offwhite: #F8F7F3;
+  --sim-band-dark: #1A1A1A;
+  --sim-band-cta-from: #FFF8E7;
+  --sim-band-cta-to: #FFF0C7;
+  --sim-form-card-radius: 24px;
+  --sim-form-card-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  --sim-shadow-card-v23: 0 4px 24px rgba(0,0,0,0.08);
 }
 .dark .simulator-page {
   --sim-bg: #0F0F0F;
@@ -385,6 +395,15 @@ hr {
   --sim-shadow-hover: 0 4px 16px rgba(0,0,0,0.3);
   --sim-effort: #A8A29E;
   --sim-effort-bg: #1C1B1A;
+  /* V2.3 — Bandes alternées (dark) */
+  --sim-band-hero-from: rgba(184,122,30,0.15);
+  --sim-band-white: #0A0A0A;
+  --sim-band-offwhite: #111111;
+  --sim-band-dark: #1A1A1A;
+  --sim-band-cta-from: rgba(184,122,30,0.2);
+  --sim-band-cta-to: rgba(184,122,30,0.05);
+  --sim-form-card-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --sim-shadow-card-v23: 0 4px 24px rgba(0,0,0,0.3);
 }
 
 /* Noise texture overlay */

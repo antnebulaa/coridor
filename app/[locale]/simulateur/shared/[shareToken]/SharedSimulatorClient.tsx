@@ -52,9 +52,12 @@ export default function SharedSimulatorClient() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
-      <div className="text-center mb-10">
-        <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
+    <div className="simulator-page relative z-10">
+      <div className="text-center pt-8 md:pt-12 pb-6 md:pb-8 px-4 sm:px-6">
+        <h1
+          className="text-2xl md:text-3xl text-neutral-900 dark:text-white"
+          style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+        >
           {data.name}
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
@@ -66,6 +69,7 @@ export default function SharedSimulatorClient() {
         result={data.results}
         input={data.inputs}
         onSave={() => {}}
+        user={null}
       />
     </div>
   );

@@ -50,9 +50,9 @@ export const EDL_THEME = {
   pillContainer: "bg-white border-b border-gray-100",
   pillDefault: "bg-gray-100 text-gray-600",              // Pièce non faite
   pillActive: "bg-gray-900 text-white",                 // Pièce en cours
-  pillCompleted: "bg-emerald-500 text-white",      // Pièce complétée ✓
+  pillCompleted: "bg-gray-100 text-gray-600",      // Pièce complétée ✓
   pillCompletedDot: "bg-emerald-500",                    // Dot vert ✓
-  pillCheckBg: "bg-white/30",                            // Fond rond du check dans les room pills
+  pillCheckBg: "bg-emerald-500",                            // Fond rond du check dans les room pills
   pillCheckText: "text-white",                           // Couleur de l'icône check
 
   // (tokens tab* supprimés — utiliser stepPill* ci-dessous)

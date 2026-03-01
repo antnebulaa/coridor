@@ -11,6 +11,8 @@ export function ScrollSpyNav({ sections }: ScrollSpyNavProps) {
   const [isStuck, setIsStuck] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
+  const isDarkSection = activeId === 'section-fiscal';
+
   // Track which sections are intersecting
   useEffect(() => {
     const visibleSections = new Map<string, number>();
@@ -25,7 +27,6 @@ export function ScrollSpyNav({ sections }: ScrollSpyNavProps) {
           }
         });
 
-        // Pick the section with the highest ratio
         if (visibleSections.size > 0) {
           let best = '';
           let bestRatio = 0;
@@ -54,7 +55,6 @@ export function ScrollSpyNav({ sections }: ScrollSpyNavProps) {
     const nav = navRef.current;
     if (!nav) return;
 
-    // Create a zero-height sentinel above the nav
     const sentinel = document.createElement('div');
     sentinel.style.height = '1px';
     sentinel.style.marginBottom = '-1px';
@@ -84,38 +84,50 @@ export function ScrollSpyNav({ sections }: ScrollSpyNavProps) {
   return (
     <div
       ref={navRef}
-      className={`sticky top-0 z-50 transition-shadow duration-200 ${
+      className={`sticky top-0 z-50 transition-all duration-300 ${
         isStuck
-          ? 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
+          ? isDarkSection
+            ? 'shadow-[0_2px_8px_rgba(0,0,0,0.4)]'
+            : 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
           : ''
       }`}
       style={{
-        backgroundColor: isStuck
-          ? 'color-mix(in srgb, var(--sim-bg-card) 95%, transparent)'
-          : 'var(--sim-bg-card)',
+        backgroundColor: isDarkSection
+          ? isStuck
+            ? 'rgba(26, 26, 26, 0.95)'
+            : '#1A1A1A'
+          : isStuck
+            ? 'color-mix(in srgb, var(--sim-bg-card) 95%, transparent)'
+            : 'var(--sim-bg-card)',
         backdropFilter: isStuck ? 'blur(8px)' : 'none',
       }}
     >
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide snap-x px-1 py-2">
-        {sections.map((s) => {
-          const Icon = s.icon;
-          const isActive = activeId === s.id;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => handleClick(s.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap snap-start transition-all duration-200 ${
-                isActive
-                  ? 'bg-(--sim-amber-50) text-(--sim-amber-600) border-b-2 border-(--sim-amber-400)'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
-              }`}
-            >
-              <Icon size={14} />
-              {s.label}
-            </button>
-          );
-        })}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide snap-x px-1 py-2.5">
+          {sections.map((s) => {
+            const Icon = s.icon;
+            const isActive = activeId === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleClick(s.id)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap snap-start transition-all duration-200 ${
+                  isActive
+                    ? isDarkSection
+                      ? 'bg-amber-500/20 text-amber-300'
+                      : 'bg-(--sim-amber-50) text-(--sim-amber-600) border-b-2 border-(--sim-amber-400)'
+                    : isDarkSection
+                      ? 'text-white/50 hover:text-white/80'
+                      : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+                }`}
+              >
+                <Icon size={14} />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

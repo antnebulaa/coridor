@@ -68,11 +68,11 @@ function Row({ label, value, highlight, bold }: { label: string; value: string; 
     : 'text-neutral-800 dark:text-neutral-200';
 
   return (
-    <div className={`flex justify-between py-1.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-1' : ''}`}>
-      <span className={`text-sm ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
+    <div className={`flex justify-between py-2.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-1' : ''}`}>
+      <span className={`text-base ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
         {label}
       </span>
-      <span className={`text-sm tabular-nums ${bold || highlight ? 'font-semibold' : 'font-medium'} ${textColor}`}>
+      <span className={`text-base tabular-nums ${bold || highlight ? 'font-semibold' : 'font-medium'} ${textColor}`}>
         {value}
       </span>
     </div>
@@ -106,7 +106,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
   return (
     <div className="space-y-6">
       <h3
-        className="text-2xl md:text-3xl text-neutral-900 dark:text-neutral-100"
+        className="text-3xl md:text-4xl text-neutral-900 dark:text-neutral-100"
         style={{ fontFamily: 'var(--font-serif-sim), serif' }}
       >
         Quelle plus-value à la revente ?
@@ -119,7 +119,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
         onYearChange={setSelectedYear}
       />
 
-      <div className="text-center text-xs text-neutral-500 -mt-2">
+      <div className="text-center text-sm text-neutral-500 -mt-2">
         Revente en {selectedYear} ({holdingYears}e année de détention)
       </div>
 
@@ -148,7 +148,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
         />
 
         {holdingYears >= 22 && (
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-2">
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2">
             Exonération IR atteinte ({holdingYears >= 30 ? 'IR + PS' : 'IR uniquement'})
           </p>
         )}
@@ -156,29 +156,73 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
 
       {/* Bilan total */}
       <div className="bg-neutral-900 dark:bg-neutral-50 rounded-xl p-5 text-white dark:text-neutral-900">
-        <h4 className="text-sm font-semibold mb-3 opacity-80">Bilan total de l&apos;opération</h4>
+        <h4 className="text-base font-semibold mb-3 opacity-80">Bilan total de l&apos;opération</h4>
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-sm opacity-70">Plus-value nette</span>
-            <span className="text-sm font-medium">{pvTax.netGain >= 0 ? '+' : ''}{fmt(pvTax.netGain)}€</span>
+            <span className="text-base opacity-70">Plus-value nette</span>
+            <span className="text-base font-medium">{pvTax.netGain >= 0 ? '+' : ''}{fmt(pvTax.netGain)}€</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm opacity-70">Cash-flow cumulé ({holdingYears} ans)</span>
-            <span className="text-sm font-medium">{cumulCashflow >= 0 ? '+' : ''}{fmt(cumulCashflow)}€</span>
+            <span className="text-base opacity-70">Cash-flow cumulé ({holdingYears} ans)</span>
+            <span className="text-base font-medium">{cumulCashflow >= 0 ? '+' : ''}{fmt(cumulCashflow)}€</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm opacity-70">Capital remboursé</span>
-            <span className="text-sm font-medium">+{fmt(Math.round(capitalRepaid))}€</span>
+            <span className="text-base opacity-70">Capital remboursé</span>
+            <span className="text-base font-medium">+{fmt(Math.round(capitalRepaid))}€</span>
           </div>
-          <div className="flex justify-between border-t border-white/20 dark:border-neutral-900/20 pt-2 mt-1">
-            <span className="text-base font-bold">Gain net total</span>
-            <span className={`text-base font-bold tabular-nums ${totalGainNet >= 0 ? 'text-emerald-400 dark:text-emerald-600' : 'text-red-400 dark:text-red-600'}`}>
+          {/* Stacked bar — composition du gain */}
+          {(() => {
+            const parts = [
+              { label: 'Plus-value', value: Math.max(0, pvTax.netGain), color: '#22c55e' },
+              { label: 'Cash-flow', value: Math.max(0, cumulCashflow), color: '#3b82f6' },
+              { label: 'Capital', value: Math.max(0, Math.round(capitalRepaid)), color: '#a78bfa' },
+            ];
+            const total = parts.reduce((s, p) => s + p.value, 0);
+            if (total <= 0) return null;
+            return (
+              <div className="mt-2">
+                <div className="flex h-4 rounded-full overflow-hidden">
+                  {parts.map((p) => p.value > 0 ? (
+                    <div
+                      key={p.label}
+                      className="h-full transition-all duration-500"
+                      style={{ width: `${(p.value / total) * 100}%`, backgroundColor: p.color }}
+                    />
+                  ) : null)}
+                </div>
+                <div className="flex justify-center gap-4 mt-2">
+                  {parts.map((p) => p.value > 0 ? (
+                    <span key={p.label} className="flex items-center gap-1.5 text-xs opacity-70">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                      {p.label}
+                    </span>
+                  ) : null)}
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="border-t border-white/20 dark:border-neutral-900/20 pt-3 mt-2 text-center">
+            <div className="text-sm opacity-60 mb-1">Gain net total</div>
+            <div
+              className={`text-3xl md:text-4xl font-bold tabular-nums ${totalGainNet >= 0 ? 'text-emerald-400 dark:text-emerald-600' : 'text-red-400 dark:text-red-600'}`}
+              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+            >
               {totalGainNet >= 0 ? '+' : '-'}{fmt(animatedGain)}€
-            </span>
+            </div>
           </div>
         </div>
-        <div className="mt-3 text-xs opacity-60">
-          Pour un apport initial de {fmt(apportInitial)}€ — rendement total : {rendementTotal >= 0 ? '+' : ''}{rendementTotal}%
+        {/* Rendement pill */}
+        <div className="mt-4 flex justify-center">
+          <span
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold ${
+              rendementTotal >= 0
+                ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+            }`}
+          >
+            Rendement total : {rendementTotal >= 0 ? '+' : ''}{rendementTotal}% sur {fmt(apportInitial)}€
+          </span>
         </div>
       </div>
     </div>

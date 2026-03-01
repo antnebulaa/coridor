@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -10,7 +11,9 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { Info } from 'lucide-react';
 import type { InvestmentResult } from '@/services/InvestmentSimulatorService';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface ProfitabilityTabProps {
   result: InvestmentResult;
@@ -20,18 +23,42 @@ interface ProfitabilityTabProps {
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 const fmtPct = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 
-function KPIMini({ label, value, suffix }: { label: string; value: string; suffix?: string }) {
+function KPIMini({ label, value, suffix, highlight, tooltip }: { label: string; value: string; suffix?: string; highlight?: boolean; tooltip?: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
-    <div className="bg-(--sim-bg-section) rounded-xl p-3 text-center">
-      <div className="text-xs text-neutral-500">{label}</div>
-      <div className="text-lg font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">
+    <div className={`rounded-xl p-4 text-center ${
+      highlight
+        ? 'bg-(--sim-amber-50) ring-1 ring-(--sim-amber-400)'
+        : 'bg-(--sim-bg-section)'
+    }`}>
+      <div className={`text-sm flex items-center justify-center gap-1 ${highlight ? 'text-(--sim-amber-600) font-medium' : 'text-neutral-500'}`}>
+        {label}
+        {tooltip && (
+          <button
+            type="button"
+            onClick={() => setShowTooltip(!showTooltip)}
+            className={`transition-colors ${showTooltip ? 'text-(--sim-amber-500)' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300'}`}
+          >
+            <Info size={13} />
+          </button>
+        )}
+      </div>
+      <div className={`text-xl font-bold tabular-nums ${highlight ? 'text-(--sim-amber-600)' : 'text-neutral-900 dark:text-neutral-100'}`}>
         {value}{suffix && <span className="text-sm font-normal text-neutral-400"> {suffix}</span>}
       </div>
+      {showTooltip && tooltip && (
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2 leading-relaxed text-left">
+          {tooltip}
+        </p>
+      )}
     </div>
   );
 }
 
 export function ProfitabilityTab({ result, projectionYears }: ProfitabilityTabProps) {
+  const isMobile = useMediaQuery('(max-width: 640px)');
+
   // Chart data
   const chartData = result.yearlyProjection.map((yp) => ({
     name: `A${yp.year}`,
@@ -64,34 +91,52 @@ export function ProfitabilityTab({ result, projectionYears }: ProfitabilityTabPr
   return (
     <div className="space-y-6">
       <h3
-        className="text-2xl md:text-3xl text-neutral-900 dark:text-neutral-100"
+        className="text-3xl md:text-4xl text-neutral-900 dark:text-neutral-100"
         style={{ fontFamily: 'var(--font-serif-sim), serif' }}
       >
         Combien ça rapporte ?
       </h3>
 
-      {/* KPI row */}
+      {/* KPI row — highlight best */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KPIMini label="Rendement brut" value={`${fmtPct(result.grossYield)}%`} />
-        <KPIMini label="Rendement net" value={`${fmtPct(result.netYield)}%`} />
-        <KPIMini label="Rendement net-net" value={`${fmtPct(result.netNetYield)}%`} />
-        <KPIMini label={`TRI ${projectionYears} ans`} value={`${fmtPct(result.tri)}%`} />
+        <KPIMini label="Rendement brut" value={`${fmtPct(result.grossYield)}%`} tooltip="Loyer annuel ÷ prix d'achat. Ne tient pas compte des charges ni des impôts." />
+        <KPIMini label="Rendement net" value={`${fmtPct(result.netYield)}%`} tooltip="Prend en compte les charges (copro, taxe foncière, assurance…) mais pas les impôts." />
+        <KPIMini label="Rendement net-net" value={`${fmtPct(result.netNetYield)}%`} highlight tooltip="Le rendement réel après impôts et charges. C'est le chiffre le plus fiable." />
+        <KPIMini label={`TRI ${projectionYears} ans`} value={`${fmtPct(result.tri)}%`} tooltip="Taux de Rentabilité Interne. Mesure la performance globale en incluant la plus-value à la revente et l'effet de levier du crédit." />
       </div>
 
       {/* Wealth chart */}
       <div className="bg-(--sim-bg-card) rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
         <h4
-          className="text-sm font-semibold mb-4 text-neutral-700 dark:text-neutral-300"
+          className="text-base font-semibold mb-4 text-neutral-700 dark:text-neutral-300"
           style={{ fontFamily: 'var(--font-serif-sim), serif' }}
         >
           Évolution du patrimoine
         </h4>
-        <ResponsiveContainer width="100%" height={300}>
+        {/* Inline legend for mobile (replaces heavy bottom Legend) */}
+        {isMobile && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span className="w-3 h-[3px] rounded bg-[#D4922A]" /> Patrimoine net
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span className="w-3 h-[3px] rounded bg-[#22c55e]" /> Cash-flow cumulé
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span className="w-3 h-[3px] rounded bg-[#ef4444]" /> Capital restant
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+              <span className="w-3 h-[3px] rounded bg-[#a3a3a3] opacity-60" style={{ borderBottom: '1px dashed #a3a3a3' }} /> Valeur du bien
+            </span>
+          </div>
+        )}
+        <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
           <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
-            <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+            <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 11 }} />
             <YAxis
-              tick={{ fontSize: 11 }}
+              width={isMobile ? 38 : 55}
+              tick={{ fontSize: isMobile ? 9 : 11 }}
               tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
             />
             <Tooltip
@@ -114,20 +159,28 @@ export function ProfitabilityTab({ result, projectionYears }: ProfitabilityTabPr
               itemStyle={{ color: '#d4d4d4' }}
               labelStyle={{ color: '#a3a3a3', fontWeight: 500 }}
             />
-            <Legend
-              formatter={(value: string) => {
-                const labels: Record<string, string> = {
-                  patrimoineNet: 'Patrimoine net',
-                  cashflowCumule: 'Cash-flow cumulé',
-                  valeurBien: 'Valeur du bien',
-                  capitalRestant: 'Capital restant dû',
-                };
-                return labels[value] || value;
-              }}
-              wrapperStyle={{ fontSize: '11px' }}
-            />
+            {!isMobile && (
+              <Legend
+                formatter={(value: string) => {
+                  const labels: Record<string, string> = {
+                    patrimoineNet: 'Patrimoine net',
+                    cashflowCumule: 'Cash-flow cumulé',
+                    valeurBien: 'Valeur du bien',
+                    capitalRestant: 'Capital restant dû',
+                  };
+                  return labels[value] || value;
+                }}
+                wrapperStyle={{ fontSize: '11px' }}
+              />
+            )}
+            <defs>
+              <linearGradient id="patrimoineGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#D4922A" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#D4922A" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
             <Area type="monotone" dataKey="valeurBien" stroke="#a3a3a3" fill="none" strokeDasharray="5 5" />
-            <Area type="monotone" dataKey="patrimoineNet" stroke="#D4922A" fill="#D4922A20" strokeWidth={3} />
+            <Area type="monotone" dataKey="patrimoineNet" stroke="#D4922A" fill="url(#patrimoineGradient)" strokeWidth={3} />
             <Area type="monotone" dataKey="cashflowCumule" stroke="#22c55e" fill="#22c55e15" />
             <Area type="monotone" dataKey="capitalRestant" stroke="#ef4444" fill="#ef444410" />
           </AreaChart>
@@ -137,30 +190,32 @@ export function ProfitabilityTab({ result, projectionYears }: ProfitabilityTabPr
       {/* Placement comparison */}
       <div className="bg-(--sim-bg-card) rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
         <h4
-          className="text-sm font-semibold mb-4 text-neutral-700 dark:text-neutral-300"
+          className="text-base font-semibold mb-4 text-neutral-700 dark:text-neutral-300"
           style={{ fontFamily: 'var(--font-serif-sim), serif' }}
         >
           {placementTitle}
         </h4>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {placements.map((p) => (
-            <div key={p.name} className="flex items-center gap-3">
-              <span className="text-xs text-neutral-600 dark:text-neutral-400 w-40 shrink-0 truncate">
-                {p.name}
-              </span>
-              <div className="flex-1 h-6 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div key={p.name}>
+              <div className="flex justify-between mb-1.5">
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  {p.name}
+                </span>
+                <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 tabular-nums">
+                  {p.finalValue >= 0 ? '+' : ''}{fmt(p.finalValue)}€
+                </span>
+              </div>
+              <div className="w-full h-3 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                 <div
                   className={`h-full ${p.color} rounded-full transition-all`}
                   style={{ width: `${Math.max(2, (p.finalValue / maxPlacement) * 100)}%` }}
                 />
               </div>
-              <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 w-24 text-right tabular-nums">
-                {p.finalValue >= 0 ? '+' : ''}{fmt(p.finalValue)}€
-              </span>
             </div>
           ))}
         </div>
-        <p className="text-[10px] text-neutral-400 mt-3">
+        <p className="text-sm text-neutral-400 mt-3">
           Base : même apport initial ({fmt(result.vsLivretA.totalInvested)}€) placé sur {projectionYears} ans.
           L&apos;immobilier utilise l&apos;effet de levier du crédit.
         </p>

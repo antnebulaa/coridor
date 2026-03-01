@@ -30,12 +30,6 @@ function SummaryCard({
   tabId: string;
   mainValue?: number;
 }) {
-  const borderLeft = {
-    green: 'border-l-emerald-500',
-    orange: 'border-l-amber-500',
-    red: 'border-l-red-500',
-  }[color];
-
   const iconBg = {
     green: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
     orange: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
@@ -46,14 +40,15 @@ function SummaryCard({
 
   return (
     <div
-      className={`rounded-2xl border-l-4 ${borderLeft} bg-(--sim-bg-card) dark:border dark:border-neutral-800 dark:border-l-4 p-5 flex flex-col gap-4 shadow-(--sim-shadow-card) hover:shadow-(--sim-shadow-hover) hover:-translate-y-0.5 transition-all duration-200`}
+      className={`rounded-[20px] border border-neutral-200 dark:border-neutral-800 bg-(--sim-bg-card) p-6 flex flex-col gap-4 transition-all duration-200 hover:-translate-y-1`}
+      style={{ boxShadow: 'var(--sim-shadow-card-v23)' }}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${iconBg}`}>
           {icon}
         </div>
         <h3
-          className="text-sm font-semibold text-neutral-800 dark:text-neutral-200"
+          className="text-base font-semibold text-neutral-800 dark:text-neutral-200"
           style={{ fontFamily: 'var(--font-serif-sim), serif' }}
         >
           {title}
@@ -70,11 +65,11 @@ function SummaryCard({
       <div className="space-y-2">
         {rows.map((row) => (
           <div key={row.label} className="flex justify-between items-baseline">
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="text-sm text-neutral-500 dark:text-neutral-400">
               {row.label}
             </span>
             <span
-              className={`text-sm font-medium tabular-nums ${
+              className={`text-base font-medium tabular-nums ${
                 row.highlight
                   ? 'text-emerald-600 dark:text-emerald-400'
                   : 'text-neutral-900 dark:text-neutral-100'
@@ -93,7 +88,7 @@ function SummaryCard({
             .getElementById(tabId)
             ?.scrollIntoView({ behavior: 'smooth' })
         }
-        className="text-xs text-(--sim-amber-500) hover:underline transition-colors mt-auto"
+        className="text-sm text-(--sim-amber-500) hover:underline transition-colors mt-auto"
       >
         Voir détail →
       </button>

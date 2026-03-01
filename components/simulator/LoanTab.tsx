@@ -18,11 +18,11 @@ const fmtDec = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits:
 
 function Row({ label, value, indent, bold }: { label: string; value: string; indent?: boolean; bold?: boolean }) {
   return (
-    <div className={`flex justify-between py-1.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-1' : ''}`}>
-      <span className={`text-sm ${indent ? 'pl-3 text-neutral-400' : bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
+    <div className={`flex justify-between py-2.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-1' : ''}`}>
+      <span className={`text-base ${indent ? 'pl-3 text-neutral-400' : bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
         {indent ? '├ ' : ''}{label}
       </span>
-      <span className={`text-sm tabular-nums ${bold ? 'font-bold text-neutral-900 dark:text-neutral-100' : 'text-neutral-800 dark:text-neutral-200'}`}>
+      <span className={`text-base tabular-nums ${bold ? 'font-bold text-neutral-900 dark:text-neutral-100' : 'font-medium text-neutral-800 dark:text-neutral-200'}`}>
         {value}
       </span>
     </div>
@@ -60,16 +60,16 @@ export function LoanTab({ result, input }: LoanTabProps) {
   return (
     <div className="space-y-6">
       <h3
-        className="text-2xl md:text-3xl text-neutral-900 dark:text-neutral-100"
+        className="text-3xl md:text-4xl text-neutral-900 dark:text-neutral-100"
         style={{ fontFamily: 'var(--font-serif-sim), serif' }}
       >
         Comment gérer mon emprunt ?
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-[11fr_9fr] gap-4">
         {/* Investissement global */}
         <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
-          <h4 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
+          <h4 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-3">
             Investissement global
           </h4>
           <Row label="Prix du bien" value={`${fmt(input.purchasePrice)}€`} />
@@ -84,7 +84,7 @@ export function LoanTab({ result, input }: LoanTabProps) {
 
         {/* Votre crédit */}
         <div className="bg-blue-50 dark:bg-blue-950/40 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-          <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-3">
+          <h4 className="text-base font-semibold text-blue-700 dark:text-blue-400 mb-3">
             Votre crédit
           </h4>
           <Row label="Capital emprunté" value={`${fmt(result.loanAmount)}€`} />
@@ -97,6 +97,61 @@ export function LoanTab({ result, input }: LoanTabProps) {
           <Row label="Assurance" value={`${fmt(Math.round(totalInsurance))}€`} indent />
         </div>
       </div>
+
+      {/* Donut — répartition coût du crédit */}
+      {(() => {
+        const capital = result.loanAmount;
+        const interest = Math.round(totalInterest);
+        const insurance = Math.round(totalInsurance);
+        const total = capital + interest + insurance;
+        if (total <= 0) return null;
+        const r = 50;
+        const cx = 60;
+        const cy = 60;
+        const circumference = 2 * Math.PI * r;
+        const capitalPct = capital / total;
+        const interestPct = interest / total;
+        const insurancePct = insurance / total;
+        const capitalArc = circumference * capitalPct;
+        const interestArc = circumference * interestPct;
+        const insuranceArc = circumference * insurancePct;
+        return (
+          <div className="bg-(--sim-bg-card) rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
+            <h4
+              className="text-base font-semibold mb-4 text-neutral-700 dark:text-neutral-300"
+              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+            >
+              Répartition du coût total
+            </h4>
+            <div className="flex items-center justify-center gap-6">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                {/* Insurance arc */}
+                <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f59e0b" strokeWidth="14" strokeDasharray={`${insuranceArc} ${circumference}`} strokeDashoffset={-(capitalArc + interestArc)} transform={`rotate(-90 ${cx} ${cy})`} />
+                {/* Interest arc */}
+                <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ef4444" strokeWidth="14" strokeDasharray={`${interestArc} ${circumference}`} strokeDashoffset={-capitalArc} transform={`rotate(-90 ${cx} ${cy})`} />
+                {/* Capital arc */}
+                <circle cx={cx} cy={cy} r={r} fill="none" stroke="#3b82f6" strokeWidth="14" strokeDasharray={`${capitalArc} ${circumference}`} strokeDashoffset="0" transform={`rotate(-90 ${cx} ${cy})`} />
+                <text x={cx} y={cy - 6} textAnchor="middle" className="text-xs fill-neutral-500 dark:fill-neutral-400" fontSize="11">Total</text>
+                <text x={cx} y={cy + 10} textAnchor="middle" className="fill-neutral-900 dark:fill-neutral-100" fontSize="13" fontWeight="bold">{fmt(total)}€</text>
+              </svg>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-blue-500" />
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Capital : {fmt(capital)}€ ({Math.round(capitalPct * 100)}%)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-red-500" />
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Intérêts : {fmt(interest)}€ ({Math.round(interestPct * 100)}%)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-amber-500" />
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Assurance : {fmt(insurance)}€ ({Math.round(insurancePct * 100)}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Amortization toggle */}
       <div>
