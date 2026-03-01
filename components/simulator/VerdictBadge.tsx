@@ -25,10 +25,10 @@ const VERDICT_PILL: Record<
     text: 'text-emerald-700 dark:text-emerald-300',
   },
   CORRECT: {
-    icon: <AlertTriangle size={16} />,
+    icon: <CheckCircle size={16} />,
     label: 'Investissement correct',
-    bg: 'bg-amber-100 dark:bg-amber-900/50',
-    text: 'text-amber-700 dark:text-amber-300',
+    bg: 'bg-emerald-100 dark:bg-emerald-900/50',
+    text: 'text-emerald-700 dark:text-emerald-300',
   },
   LOW_RETURN: {
     icon: <XCircle size={16} />,
@@ -63,8 +63,11 @@ export function VerdictBadge({ result, input }: VerdictBadgeProps) {
 
   const effort1 = result.yearlyProjection[0]?.savingsEffort ?? 0;
   const patrimoine = lastYear?.netWealth ?? 0;
-  const regime = input.isFurnished ? 'LMNP' : 'Nu';
-  const regimeType = input.taxRegime === 'micro' ? 'micro' : 'réel';
+
+  // Breakdown of gain for explanation
+  const cumulCashflow = lastYear?.cumulativeCashflow ?? 0;
+  const capitalRepaid = result.loanAmount - (lastYear?.remainingLoan ?? 0);
+  const propertyValueGain = (lastYear?.propertyValue ?? 0) - result.totalInvestment;
 
   return (
     <div className="text-center relative overflow-hidden">
@@ -133,9 +136,24 @@ export function VerdictBadge({ result, input }: VerdictBadgeProps) {
           </span>
         </div>
 
+        {/* Gain breakdown — explain where the money comes from */}
+        {(isPositive || isTaxOptimized) && (
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">
+            {propertyValueGain > 0 && (
+              <span>Plus-value : +{fmt(Math.round(propertyValueGain))}€</span>
+            )}
+            {cumulCashflow !== 0 && (
+              <span>Loyers nets : {cumulCashflow >= 0 ? '+' : ''}{fmt(Math.round(cumulCashflow))}€</span>
+            )}
+            {capitalRepaid > 0 && (
+              <span>Capital remboursé : +{fmt(Math.round(capitalRepaid))}€</span>
+            )}
+          </div>
+        )}
+
         {/* Condensed summary line */}
         <p className="text-base text-neutral-500 dark:text-neutral-400">
-          Effort {effort1 >= 0 ? '+' : ''}{fmt(effort1)}€/mois · Patrimoine {fmt(Math.round(patrimoine / 1000))}k€ · {regime} {regimeType}
+          Effort {effort1 >= 0 ? '+' : ''}{fmt(effort1)}€/mois · Patrimoine {fmt(Math.round(patrimoine / 1000))}k€
         </p>
       </div>
     </div>

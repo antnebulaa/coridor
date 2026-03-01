@@ -73,24 +73,33 @@ export function ExpertSection({ result, input, onSave, user }: ExpertSectionProp
             <div className="px-5 pb-5 space-y-6 border-t border-neutral-200 dark:border-neutral-800">
               <PaywallOverlay isAuthenticated={!!user}>
               {/* KPIs techniques */}
-              <div className="grid grid-cols-3 gap-3 pt-4">
-                <div className="bg-(--sim-bg-section) rounded-xl p-3 text-center">
-                  <div className="text-xs text-neutral-500">TRI</div>
-                  <div className="text-lg font-bold tabular-nums">{fmtPct(result.tri)}%</div>
-                </div>
-                <div className="bg-(--sim-bg-section) rounded-xl p-3 text-center">
-                  <div className="text-xs text-neutral-500">VAN</div>
-                  <div className="text-lg font-bold tabular-nums">{fmt(result.van)}€</div>
-                </div>
-                <div className="bg-(--sim-bg-section) rounded-xl p-3 text-center">
-                  <div className="text-xs text-neutral-500">Point mort</div>
-                  <div className="text-lg font-bold tabular-nums">
-                    {result.breakevenMonth
-                      ? result.breakevenMonth >= 12
-                        ? `${Math.floor(result.breakevenMonth / 12)}a ${result.breakevenMonth % 12}m`
-                        : `${result.breakevenMonth}m`
-                      : '—'}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4">
+                <div className="bg-(--sim-bg-section) rounded-xl p-3">
+                  <div className="flex items-center justify-between sm:flex-col sm:text-center gap-2">
+                    <div className="text-xs text-neutral-500">TRI (Taux de Rentabilité Interne)</div>
+                    <div className="text-lg font-bold tabular-nums">{fmtPct(result.tri)}%</div>
                   </div>
+                  <p className="text-xs text-neutral-400 mt-1">Performance globale incluant loyers, plus-value et effet de levier.</p>
+                </div>
+                <div className="bg-(--sim-bg-section) rounded-xl p-3">
+                  <div className="flex items-center justify-between sm:flex-col sm:text-center gap-2">
+                    <div className="text-xs text-neutral-500">VAN (Valeur Actuelle Nette)</div>
+                    <div className="text-lg font-bold tabular-nums">{fmt(result.van)}€</div>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1">Valeur créée par rapport à un placement alternatif. Positif = bon investissement.</p>
+                </div>
+                <div className="bg-(--sim-bg-section) rounded-xl p-3">
+                  <div className="flex items-center justify-between sm:flex-col sm:text-center gap-2">
+                    <div className="text-xs text-neutral-500">Point mort</div>
+                    <div className="text-lg font-bold tabular-nums">
+                      {result.breakevenMonth
+                        ? result.breakevenMonth >= 12
+                          ? `${Math.floor(result.breakevenMonth / 12)}a ${result.breakevenMonth % 12}m`
+                          : `${result.breakevenMonth}m`
+                        : '—'}
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1">Moment où les loyers cumulés couvrent votre apport initial.</p>
                 </div>
               </div>
 

@@ -175,7 +175,7 @@ export function CostTab({ result, startYear }: CostTabProps) {
           {exp.loanInsurance > 0 && <Row label="Assurance prêt" value={`${fmt(exp.loanInsurance)}€`} />}
           {exp.propertyTax > 0 && <Row label="Taxe foncière" value={`${fmt(exp.propertyTax)}€`} />}
           {exp.insurancePNO > 0 && <Row label="Assurance PNO" value={`${fmt(exp.insurancePNO)}€`} />}
-          {exp.coproCharges > 0 && <Row label="Copropriété" value={`${fmt(exp.coproCharges)}€`} />}
+          {exp.coproCharges > 0 && <Row label="Charges copropriété" value={`${fmt(exp.coproCharges)}€`} />}
           {exp.gli > 0 && <Row label="GLI" value={`${fmt(exp.gli)}€`} />}
           {exp.management > 0 && <Row label="Gestion locative" value={`${fmt(exp.management)}€`} />}
           {exp.maintenance > 0 && <Row label="Entretien" value={`${fmt(exp.maintenance)}€`} />}

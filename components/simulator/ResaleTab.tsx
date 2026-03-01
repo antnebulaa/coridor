@@ -126,14 +126,17 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
       {/* Plus-value detail */}
       <div className="bg-(--sim-bg-card) rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
         <Row label="Prix de revente estimé" value={`${fmt(yp.propertyValue)}€`} />
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-1 mb-1">
+          Basé sur une revalorisation annuelle du bien (hypothèse de projection).
+        </p>
         <Row label="Prix d'acquisition majoré" value={`-${fmt(Math.round(acquisitionPrice))}€`} />
         <Row label="Plus-value brute" value={`${grossGain >= 0 ? '+' : ''}${fmt(Math.round(grossGain))}€`} bold />
 
         {grossGain > 0 && (
           <>
             <div className="mt-3" />
-            <Row label={`IR (19%) — abattement ${Math.round(pvTax.irAbatement * 100)}%`} value={`-${fmt(pvTax.taxIR)}€`} />
-            <Row label={`PS (17,2%) — abattement ${Math.round(pvTax.psAbatement * 100)}%`} value={`-${fmt(pvTax.taxPS)}€`} />
+            <Row label={`Impôt sur le revenu (19%) — abattement ${Math.round(pvTax.irAbatement * 100)}%`} value={`-${fmt(pvTax.taxIR)}€`} />
+            <Row label={`Prélèvements sociaux (17,2%) — abattement ${Math.round(pvTax.psAbatement * 100)}%`} value={`-${fmt(pvTax.taxPS)}€`} />
             {pvTax.surtax > 0 && <Row label="Surtaxe" value={`-${fmt(pvTax.surtax)}€`} />}
             <Row label="Impôt sur la plus-value" value={`-${fmt(pvTax.total)}€`} bold />
           </>
@@ -141,7 +144,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
 
         <div className="mt-3" />
         <Row
-          label="Plus-value nette"
+          label="Plus-value nette (ce qui vous reste)"
           value={`${pvTax.netGain >= 0 ? '+' : ''}${fmt(pvTax.netGain)}€`}
           bold
           highlight={pvTax.netGain >= 0 ? 'green' : 'red'}
@@ -155,7 +158,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
       </div>
 
       {/* Bilan total */}
-      <div className="bg-neutral-900 dark:bg-neutral-50 rounded-xl p-5 text-white dark:text-neutral-900">
+      <div className="bg-neutral-900 dark:bg-neutral-50 rounded-2xl p-5 text-white dark:text-neutral-900">
         <h4 className="text-base font-semibold mb-3 opacity-80">Bilan total de l&apos;opération</h4>
         <div className="space-y-2">
           <div className="flex justify-between">

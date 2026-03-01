@@ -52,7 +52,7 @@ const defaultInput: InvestmentInput = {
   maintenanceYearly: DEFAULT_MAINTENANCE_V2,
   coprYearly: 600,
 
-  taxRegime: 'reel',
+  taxRegime: 'auto',
   marginalTaxRate: DEFAULT_MARGINAL_TAX_RATE,
   isFurnished: false,
 

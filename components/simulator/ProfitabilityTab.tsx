@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -11,7 +10,6 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { Info } from 'lucide-react';
 import type { InvestmentResult } from '@/services/InvestmentSimulatorService';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 
@@ -24,31 +22,22 @@ const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 
 const fmtPct = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 
 function KPIMini({ label, value, suffix, highlight, tooltip }: { label: string; value: string; suffix?: string; highlight?: boolean; tooltip?: string }) {
-  const [showTooltip, setShowTooltip] = useState(false);
-
   return (
-    <div className={`rounded-xl p-4 text-center ${
+    <div className={`rounded-xl p-4 ${
       highlight
         ? 'bg-(--sim-amber-50) ring-1 ring-(--sim-amber-400)'
         : 'bg-(--sim-bg-section)'
     }`}>
-      <div className={`text-sm flex items-center justify-center gap-1 ${highlight ? 'text-(--sim-amber-600) font-medium' : 'text-neutral-500'}`}>
-        {label}
-        {tooltip && (
-          <button
-            type="button"
-            onClick={() => setShowTooltip(!showTooltip)}
-            className={`transition-colors ${showTooltip ? 'text-(--sim-amber-500)' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300'}`}
-          >
-            <Info size={13} />
-          </button>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <div className={`text-sm ${highlight ? 'text-(--sim-amber-600) font-medium' : 'text-neutral-500'}`}>
+          {label}
+        </div>
+        <div className={`text-xl font-bold tabular-nums ${highlight ? 'text-(--sim-amber-600)' : 'text-neutral-900 dark:text-neutral-100'}`}>
+          {value}{suffix && <span className="text-sm font-normal text-neutral-400"> {suffix}</span>}
+        </div>
       </div>
-      <div className={`text-xl font-bold tabular-nums ${highlight ? 'text-(--sim-amber-600)' : 'text-neutral-900 dark:text-neutral-100'}`}>
-        {value}{suffix && <span className="text-sm font-normal text-neutral-400"> {suffix}</span>}
-      </div>
-      {showTooltip && tooltip && (
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2 leading-relaxed text-left">
+      {tooltip && (
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5 leading-relaxed">
           {tooltip}
         </p>
       )}
@@ -97,8 +86,8 @@ export function ProfitabilityTab({ result, projectionYears }: ProfitabilityTabPr
         Combien ça rapporte ?
       </h3>
 
-      {/* KPI row — highlight best */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* KPI cards — 1 per line on mobile, with explanations */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <KPIMini label="Rendement brut" value={`${fmtPct(result.grossYield)}%`} tooltip="Loyer annuel ÷ prix d'achat. Ne tient pas compte des charges ni des impôts." />
         <KPIMini label="Rendement net" value={`${fmtPct(result.netYield)}%`} tooltip="Prend en compte les charges (copro, taxe foncière, assurance…) mais pas les impôts." />
         <KPIMini label="Rendement net-net" value={`${fmtPct(result.netNetYield)}%`} highlight tooltip="Le rendement réel après impôts et charges. C'est le chiffre le plus fiable." />
@@ -135,8 +124,8 @@ export function ProfitabilityTab({ result, projectionYears }: ProfitabilityTabPr
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
             <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 11 }} />
             <YAxis
-              width={isMobile ? 38 : 55}
-              tick={{ fontSize: isMobile ? 9 : 11 }}
+              width={isMobile ? 30 : 50}
+              tick={{ fontSize: isMobile ? 8 : 11 }}
               tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
             />
             <Tooltip

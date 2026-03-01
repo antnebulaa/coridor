@@ -61,7 +61,7 @@ export function FiscalImpactTab({ result, startYear }: FiscalImpactTabProps) {
               <span className="text-base font-medium text-white/80 tabular-nums">{fmt(yp.taxWithout > 0 ? yp.taxWithout * 3 : 0)}€</span>
             </div>
             <div className="flex justify-between border-t border-white/10 pt-2">
-              <span className="text-base font-semibold text-white">Impôt</span>
+              <span className="text-base font-semibold text-white">Impôt sur le revenu /an</span>
               <span className="text-base font-bold text-white tabular-nums">{fmt(yp.taxWithout)}€</span>
             </div>
           </div>
@@ -87,12 +87,16 @@ export function FiscalImpactTab({ result, startYear }: FiscalImpactTabProps) {
               <span className="text-base font-medium text-white/80 tabular-nums">+{fmt(yp.tax > 0 ? yp.grossRent : 0)}€</span>
             </div>
             <div className="flex justify-between border-t border-white/10 pt-2">
-              <span className="text-base font-semibold text-white">Impôt total</span>
+              <span className="text-base font-semibold text-white">Impôt total /an</span>
               <span className="text-base font-bold text-white tabular-nums">{fmt(yp.taxWith)}€</span>
             </div>
           </div>
         </div>
       </div>
+
+      <p className="text-sm text-white/40">
+        Ces montants sont votre impôt sur le revenu total (salaire + revenus fonciers), pas seulement l&apos;impôt lié à l&apos;investissement.
+      </p>
 
       {/* Visual comparison bars */}
       <div className="space-y-3">
