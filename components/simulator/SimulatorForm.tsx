@@ -117,7 +117,7 @@ export default function SimulatorForm({
   const notaryFees = Math.round(input.purchasePrice * input.notaryFeesRate);
   const apport = input.downPayment ?? input.personalContribution;
   const totalCost = input.purchasePrice + notaryFees + (input.renovationCost ?? 0) + (input.furnitureCost ?? 0);
-  const isCashPurchase = apport >= totalCost && totalCost > 0;
+  const isCashPurchase = apport >= totalCost;
   const vacWeeks = input.vacancyWeeksPerYear ?? Math.round(input.vacancyRate * 52);
   const mgmtRate = input.managementFeeRate ?? input.managementFeesRate;
 
