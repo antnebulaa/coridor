@@ -67,7 +67,8 @@ export function VerdictBadge({ result, input }: VerdictBadgeProps) {
   // Breakdown of gain for explanation
   const cumulCashflow = lastYear?.cumulativeCashflow ?? 0;
   const capitalRepaid = result.loanAmount - (lastYear?.remainingLoan ?? 0);
-  const propertyValueGain = (lastYear?.propertyValue ?? 0) - result.totalInvestment;
+  // For donations, property value gain = appreciation only (not vs totalInvestment which is just reno costs)
+  const propertyValueGain = (lastYear?.propertyValue ?? 0) - input.purchasePrice;
 
   return (
     <div className="text-center relative overflow-hidden">

@@ -18,6 +18,7 @@ interface ResaleTabProps {
   notaryFeesRate: number;
   renovationCost: number;
   downPayment: number;
+  isDonation?: boolean;
 }
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
@@ -79,7 +80,7 @@ function Row({ label, value, highlight, bold }: { label: string; value: string; 
   );
 }
 
-export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, renovationCost, downPayment }: ResaleTabProps) {
+export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, renovationCost, downPayment, isDonation }: ResaleTabProps) {
   const endYear = startYear + result.yearlyProjection.length - 1;
   const [selectedYear, setSelectedYear] = useState(Math.min(startYear + 9, endYear));
   const yearIndex = selectedYear - startYear;
@@ -88,8 +89,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
   if (!yp) return null;
 
   const holdingYears = yearIndex + 1;
-  const isDonation = purchasePrice === 0;
-  const notaryFees = purchasePrice * notaryFeesRate;
+  const notaryFees = isDonation ? 0 : purchasePrice * notaryFeesRate;
   const acquisitionPrice = purchasePrice + notaryFees + renovationCost;
   const grossGain = yp.propertyValue - acquisitionPrice;
 
@@ -130,17 +130,14 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
         <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-1 mb-1">
           Basé sur une revalorisation annuelle du bien (hypothèse de projection).
         </p>
-        {isDonation ? (
-          <>
-            {renovationCost > 0 && (
-              <Row label="Travaux réalisés" value={`-${fmt(renovationCost)}€`} />
-            )}
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">
-              Bien reçu en donation ou héritage — prix d&apos;acquisition : 0€
-            </p>
-          </>
-        ) : (
-          <Row label="Prix d'acquisition majoré" value={`-${fmt(Math.round(acquisitionPrice))}€`} />
+        <Row
+          label={isDonation ? 'Valeur déclarée (donation/héritage)' : "Prix d'acquisition majoré"}
+          value={`-${fmt(Math.round(acquisitionPrice))}€`}
+        />
+        {isDonation && (
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-1 mb-1">
+            Valeur du bien au moment de la transmission + travaux éventuels.
+          </p>
         )}
         <Row label="Plus-value brute" value={`${grossGain >= 0 ? '+' : ''}${fmt(Math.round(grossGain))}€`} bold />
 

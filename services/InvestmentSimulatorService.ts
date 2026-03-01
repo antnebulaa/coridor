@@ -104,6 +104,9 @@ export interface InvestmentInput {
   // === V2 — Projection ===
   resaleYear?: number;
   resalePrice?: number;
+
+  // === V2 — Acquisition mode ===
+  isDonation?: boolean; // true = donation/héritage: bien reçu gratuitement, seuls travaux/mobilier sont un coût
 }
 
 // ---------------------------------------------------------------------------
@@ -329,14 +332,12 @@ export class InvestmentSimulatorService {
         : this.estimateRevenuFromTMI(input.marginalTaxRate);
 
     // Computed
-    const notaryFees = input.purchasePrice * input.notaryFeesRate;
-    const totalInvestment =
-      input.purchasePrice +
-      notaryFees +
-      input.renovationCost +
-      input.furnitureCost +
-      input.bankFees +
-      guaranteeCost;
+    const notaryFees = input.isDonation ? 0 : input.purchasePrice * input.notaryFeesRate;
+    // For donation/inheritance: the property value is NOT an out-of-pocket cost.
+    // Only renovation + furniture + bank fees are actual investment costs.
+    const totalInvestment = input.isDonation
+      ? input.renovationCost + input.furnitureCost + input.bankFees + guaranteeCost
+      : input.purchasePrice + notaryFees + input.renovationCost + input.furnitureCost + input.bankFees + guaranteeCost;
     const loanAmount = Math.max(0, totalInvestment - downPayment);
     const vacancyRate = vacancyWeeksPerYear / 52;
     const annualGrossRent = monthlyRentHC * 12;
@@ -439,14 +440,15 @@ export class InvestmentSimulatorService {
     const year1 = yearlyProjection[0];
     const netRentBeforeTax = n.effectiveAnnualRent - n.totalAnnualCharges;
 
-    // Yields
+    // Yields — for donations, use property value as denominator (not just reno costs)
+    const yieldBase = input.isDonation ? n.purchasePrice : n.totalInvestment;
     const grossYield =
-      n.totalInvestment > 0
-        ? (n.annualGrossRent / n.totalInvestment) * 100
+      yieldBase > 0
+        ? (n.annualGrossRent / yieldBase) * 100
         : 0;
     const netYield =
-      n.totalInvestment > 0
-        ? (netRentBeforeTax / n.totalInvestment) * 100
+      yieldBase > 0
+        ? (netRentBeforeTax / yieldBase) * 100
         : 0;
 
     // Tax computation (year 1)
@@ -456,8 +458,8 @@ export class InvestmentSimulatorService {
     const recommendedRegime = recommended ? recommended.label : "";
 
     const netNetYield =
-      n.totalInvestment > 0
-        ? ((netRentBeforeTax - yearlyTax) / n.totalInvestment) * 100
+      yieldBase > 0
+        ? ((netRentBeforeTax - yearlyTax) / yieldBase) * 100
         : 0;
 
     const monthlyCashflow = year1 ? year1.cashflow / 12 : 0;

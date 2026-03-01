@@ -114,9 +114,11 @@ export default function SimulatorForm({
   const prev = () => setStep((s) => Math.max(s - 1, 0));
   const fmt = (n: number) => n.toLocaleString('fr-FR');
 
-  const notaryFees = Math.round(input.purchasePrice * input.notaryFeesRate);
+  const notaryFees = input.isDonation ? 0 : Math.round(input.purchasePrice * input.notaryFeesRate);
   const apport = input.downPayment ?? input.personalContribution;
-  const totalCost = input.purchasePrice + notaryFees + (input.renovationCost ?? 0) + (input.furnitureCost ?? 0);
+  const totalCost = input.isDonation
+    ? (input.renovationCost ?? 0) + (input.furnitureCost ?? 0)
+    : input.purchasePrice + notaryFees + (input.renovationCost ?? 0) + (input.furnitureCost ?? 0);
   const isCashPurchase = apport >= totalCost;
   const vacWeeks = input.vacancyWeeksPerYear ?? Math.round(input.vacancyRate * 52);
   const mgmtRate = input.managementFeeRate ?? input.managementFeesRate;
@@ -127,12 +129,20 @@ export default function SimulatorForm({
     const typeLabel = input.propertyType === 'HOUSE' ? 'Maison' : 'Appart.';
     const surfaceLabel = (input.surface ?? 0) > 0 ? ` ${input.surface}m²` : '';
     const furnishedLabel = input.isFurnished ? 'Meublé' : 'Nu';
-    s[0] = `${typeLabel}${surfaceLabel} · ${fmt(input.purchasePrice)}€ · ${furnishedLabel}`;
+    const acqLabel = input.isDonation ? 'Donation' : `${fmt(input.purchasePrice)}€`;
+    s[0] = `${typeLabel}${surfaceLabel} · ${acqLabel} · ${furnishedLabel}`;
 
-    const dur = input.loanDurationYears;
-    const rate = (input.loanRate * 100).toFixed(1);
-    const ap = apport >= 1000 ? `${Math.round(apport / 1000)}k€` : `${apport}€`;
-    s[1] = `Prêt ${dur} ans · ${rate}% · Apport ${ap}`;
+    if (input.isDonation) {
+      const donCost = (input.renovationCost ?? 0) + (input.furnitureCost ?? 0);
+      s[1] = donCost > 0
+        ? `Travaux ${fmt(donCost)}€ · ${apport >= donCost ? 'Comptant' : 'Emprunt'}`
+        : 'Aucun financement';
+    } else {
+      const dur = input.loanDurationYears;
+      const rate = (input.loanRate * 100).toFixed(1);
+      const ap = apport >= 1000 ? `${Math.round(apport / 1000)}k€` : `${apport}€`;
+      s[1] = `Prêt ${dur} ans · ${rate}% · Apport ${ap}`;
+    }
 
     const rent = input.monthlyRentHC ?? input.monthlyRent;
     const vacLabel =
@@ -201,32 +211,61 @@ export default function SimulatorForm({
               {STEP_TITLES[0]}
             </h2>
 
+            {/* Acquisition mode */}
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                Mode d&apos;acquisition
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                <ToggleButton
+                  active={!input.isDonation}
+                  onClick={() => update({ isDonation: false })}
+                  label="Achat"
+                />
+                <ToggleButton
+                  active={!!input.isDonation}
+                  onClick={() => update({
+                    isDonation: true,
+                    notaryFeesRate: 0,
+                    downPayment: 0,
+                    personalContribution: 0,
+                    bankFees: 0,
+                    guaranteeType: 'NONE',
+                    guaranteeCost: 0,
+                  })}
+                  label="Donation / Héritage"
+                />
+              </div>
+            </div>
+
             <InputField
-              label="Prix d'achat"
+              label={input.isDonation ? 'Valeur estimée du bien' : "Prix d'achat"}
               value={input.purchasePrice}
               onChange={(v) => update({ purchasePrice: v })}
               suffix="€"
             />
 
-            {/* 2-col: Ancien/Neuf + Type */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Ancien / Neuf
-                </label>
-                <div className="flex gap-2">
-                  <ToggleButton
-                    active={input.notaryFeesRate === NOTARY_FEES_OLD}
-                    onClick={() => update({ notaryFeesRate: NOTARY_FEES_OLD })}
-                    label="Ancien (~8%)"
-                  />
-                  <ToggleButton
-                    active={input.notaryFeesRate === NOTARY_FEES_NEW}
-                    onClick={() => update({ notaryFeesRate: NOTARY_FEES_NEW })}
-                    label="Neuf (~3%)"
-                  />
+            {/* Ancien/Neuf + Type — hide Ancien/Neuf for donation */}
+            <div className={`grid grid-cols-1 ${!input.isDonation ? 'md:grid-cols-2' : ''} gap-4`}>
+              {!input.isDonation && (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Ancien / Neuf
+                  </label>
+                  <div className="flex gap-2">
+                    <ToggleButton
+                      active={input.notaryFeesRate === NOTARY_FEES_OLD}
+                      onClick={() => update({ notaryFeesRate: NOTARY_FEES_OLD })}
+                      label="Ancien (~8%)"
+                    />
+                    <ToggleButton
+                      active={input.notaryFeesRate === NOTARY_FEES_NEW}
+                      onClick={() => update({ notaryFeesRate: NOTARY_FEES_NEW })}
+                      label="Neuf (~3%)"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -359,9 +398,122 @@ export default function SimulatorForm({
               className="text-2xl md:text-3xl text-neutral-900 dark:text-white"
               style={{ fontFamily: 'var(--font-serif-sim), serif' }}
             >
-              {STEP_TITLES[1]}
+              {input.isDonation ? 'Comment financez-vous les travaux ?' : STEP_TITLES[1]}
             </h2>
 
+            {/* Donation mode: only renovation + furniture costs to finance */}
+            {input.isDonation ? (
+              (() => {
+                const donationCost = (input.renovationCost ?? 0) + (input.furnitureCost ?? 0);
+                if (donationCost === 0) {
+                  return (
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-xl p-4 text-center">
+                      <p className="text-base font-medium text-emerald-700 dark:text-emerald-400">
+                        Bien reçu en donation — aucun financement nécessaire
+                      </p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                        Valeur du bien : {fmt(input.purchasePrice)} € · Aucun frais supplémentaire
+                      </p>
+                    </div>
+                  );
+                }
+                const donationCashPurchase = apport >= donationCost;
+                return (
+                  <>
+                    <div className="bg-(--sim-bg-section) rounded-xl p-4">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Vous avez <strong>{fmt(donationCost)} €</strong> de frais à financer
+                        {input.renovationCost > 0 && ` (travaux : ${fmt(input.renovationCost)} €)`}
+                        {input.furnitureCost > 0 && ` (mobilier : ${fmt(input.furnitureCost)} €)`}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                        Financement des travaux
+                      </label>
+                      <div className="flex gap-2 flex-wrap mb-3">
+                        <ToggleButton
+                          active={donationCashPurchase}
+                          onClick={() => {
+                            update({ downPayment: donationCost, personalContribution: donationCost });
+                          }}
+                          label="Comptant"
+                        />
+                        <ToggleButton
+                          active={!donationCashPurchase}
+                          onClick={() => {
+                            update({ downPayment: 0, personalContribution: 0 });
+                          }}
+                          label="Emprunt travaux"
+                        />
+                      </div>
+                    </div>
+                    {donationCashPurchase ? (
+                      <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-xl p-4 text-center">
+                        <p className="text-base font-medium text-emerald-700 dark:text-emerald-400">
+                          Travaux financés comptant — aucun emprunt
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                              Durée du prêt travaux
+                            </label>
+                            <select
+                              value={input.loanDurationYears}
+                              onChange={(e) =>
+                                update({ loanDurationYears: parseInt(e.target.value) })
+                              }
+                              className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition"
+                            >
+                              {[5, 7, 10, 15].map((y) => (
+                                <option key={y} value={y}>
+                                  {y} ans
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <InputField
+                            label="Taux d'intérêt"
+                            value={parseFloat((input.loanRate * 100).toFixed(2))}
+                            onChange={(v) => update({ loanRate: v / 100 })}
+                            suffix="%"
+                            step={0.05}
+                          />
+                        </div>
+                        <InputField
+                          label="Assurance emprunteur"
+                          value={parseFloat((input.loanInsuranceRate * 100).toFixed(2))}
+                          onChange={(v) => update({ loanInsuranceRate: v / 100 })}
+                          suffix="%"
+                          step={0.01}
+                        />
+                        <div className="bg-(--sim-bg-section) rounded-xl p-4 space-y-2">
+                          <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                            Résumé du prêt travaux
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Montant emprunté</span>
+                            <span className="font-semibold tabular-nums">
+                              {fmt(loanSummary.loanAmount)} €
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Mensualité estimée</span>
+                            <span className="font-semibold tabular-nums">
+                              {fmt(loanSummary.monthlyPayment)} €
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                );
+              })()
+            ) : (
+            <>
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Apport personnel
@@ -557,6 +709,8 @@ export default function SimulatorForm({
                   </div>
                 </div>
               </>
+            )}
+            </>
             )}
           </div>
         )}

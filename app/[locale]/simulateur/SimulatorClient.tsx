@@ -78,6 +78,7 @@ const defaultInput: InvestmentInput = {
   hasGLI: false,
   vacancyWeeksPerYear: DEFAULT_VACANCY_WEEKS,
   familyStatus: 'SINGLE',
+  isDonation: false,
 };
 
 export default function SimulatorClient({ user }: SimulatorClientProps) {

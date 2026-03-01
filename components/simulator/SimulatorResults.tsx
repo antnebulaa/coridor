@@ -114,6 +114,7 @@ export default function SimulatorResults({
             notaryFeesRate={input.notaryFeesRate}
             renovationCost={input.renovationCost}
             downPayment={input.downPayment ?? input.personalContribution}
+            isDonation={!!input.isDonation}
           />
         </ScrollReveal>
       </Band>
