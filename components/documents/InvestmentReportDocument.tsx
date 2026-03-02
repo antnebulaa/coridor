@@ -14,7 +14,7 @@ export interface InvestmentReportData {
   simulationName?: string;
 }
 
-const ACCENT = '#E8A838';
+const ACCENT = '#B9592D';
 
 const styles = StyleSheet.create({
   page: {

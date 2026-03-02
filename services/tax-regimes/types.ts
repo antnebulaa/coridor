@@ -53,6 +53,10 @@ export interface TaxCalculationParams {
   purchasePrice: number;
   surface: number;
   zone?: string;
+
+  // Location saisonnière (courte durée)
+  loyerCourteDureeBrut?: number;
+  isSeasonalClassified?: boolean;
 }
 
 export interface ApplicabilityContext {
@@ -63,6 +67,10 @@ export interface ApplicabilityContext {
   surface: number;
   travauxDeductibles: number;
   zone?: string;
+
+  // Location saisonnière (courte durée)
+  loyerCourteDureeBrut?: number;
+  isSeasonalClassified?: boolean;
 }
 
 // ---------------------------------------------------------------------------

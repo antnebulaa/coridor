@@ -82,8 +82,8 @@ export const LIVRET_A_RATE = 0.03;
 /** Taux assurance-vie fonds euros moyen */
 export const ASSURANCE_VIE_RATE = 0.02;
 
-/** Rendement historique moyen S&P 500 (dividendes réinvestis, nominal) */
-export const BOURSE_SP500_RATE = 0.07;
+/** Rendement historique moyen S&P 500 (dividendes réinvestis, nominal, ~1926-2025) */
+export const BOURSE_SP500_RATE = 0.105;
 
 // ---------------------------------------------------------------------------
 // Plus-value immobilière — Abattements pour durée de détention
@@ -188,6 +188,39 @@ export const FAMILY_TAX_SHARES: Record<string, number> = {
   DIVORCED: 1,
   WIDOWED: 1,
 };
+
+/** Statuts professionnels disponibles */
+export const PROFESSIONAL_STATUSES = [
+  'SALARIE',
+  'FONCTIONNAIRE',
+  'MICRO_ENTREPRENEUR',
+  'INDEPENDANT',
+  'RETRAITE',
+  'SANS_ACTIVITE',
+] as const;
+
+/** Labels UI des statuts professionnels */
+export const PROFESSIONAL_STATUS_LABELS: Record<string, string> = {
+  SALARIE: 'Salarié',
+  FONCTIONNAIRE: 'Fonctionnaire',
+  MICRO_ENTREPRENEUR: 'Micro-entrepreneur',
+  INDEPENDANT: 'Indépendant / TNS',
+  RETRAITE: 'Retraité',
+  SANS_ACTIVITE: 'Sans activité',
+};
+
+/**
+ * Catégories micro-entreprise avec abattements forfaitaires et plafonds de CA.
+ *
+ * Sources :
+ * - Abattements : CGI art. 50-0 (BIC) et art. 102 ter (BNC)
+ * - Plafonds : CGI art. 50-0 et art. 102 ter, LF 2024
+ */
+export const MICRO_ENTREPRENEUR_CATEGORIES = {
+  BNC: { label: 'Libéral / BNC', abattement: 0.34, plafond: 77_700 },
+  BIC_SERVICES: { label: 'Prestations de services', abattement: 0.50, plafond: 77_700 },
+  BIC_VENTE: { label: 'Vente de marchandises', abattement: 0.71, plafond: 188_700 },
+} as const;
 
 // ---------------------------------------------------------------------------
 // V2 — Régimes de défiscalisation

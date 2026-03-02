@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { YearSlider } from './YearSlider';
+import { useState, useMemo } from 'react';
 import { useCountUp } from '@/hooks/useCountUp';
 import type { InvestmentResult } from '@/services/InvestmentSimulatorService';
 import {
@@ -59,7 +58,7 @@ function calculateCapitalGainTaxClient(grossGain: number, holdingYears: number) 
   return { taxIR, taxPS, surtax, total, netGain: grossGain - total, irAbatement, psAbatement };
 }
 
-function Row({ label, value, highlight, bold }: { label: string; value: string; highlight?: 'green' | 'red'; bold?: boolean }) {
+function Row({ label, value, highlight, bold, sub }: { label: string; value: string; highlight?: 'green' | 'red'; bold?: boolean; sub?: string }) {
   const textColor = highlight === 'green'
     ? 'text-emerald-600 dark:text-emerald-400'
     : highlight === 'red'
@@ -69,11 +68,16 @@ function Row({ label, value, highlight, bold }: { label: string; value: string; 
     : 'text-neutral-800 dark:text-neutral-200';
 
   return (
-    <div className={`flex justify-between py-2.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-1' : ''}`}>
-      <span className={`text-base ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
-        {label}
-      </span>
-      <span className={`text-base tabular-nums ${bold || highlight ? 'font-semibold' : 'font-medium'} ${textColor}`}>
+    <div className={`flex justify-between items-baseline gap-4 py-1 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-1' : ''}`}>
+      <div className="min-w-0">
+        <span className={`text-sm ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
+          {label}
+        </span>
+        {sub && (
+          <span className="block text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{sub}</span>
+        )}
+      </div>
+      <span className={`text-sm tabular-nums shrink-0 ${bold || highlight ? 'font-semibold' : 'font-medium'} ${textColor}`}>
         {value}
       </span>
     </div>
@@ -104,48 +108,120 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
 
   const animatedGain = useCountUp(Math.abs(Math.round(totalGainNet)), 800);
 
+  // Detect milestone years on the slider
+  const milestones = useMemo(() => {
+    const totalYears = result.yearlyProjection.length;
+    const marks: { year: number; label: string; color: string }[] = [];
+
+    // Find year where gross gain turns positive (PV appears)
+    let firstPositiveGainYear: number | null = null;
+    for (let i = 0; i < totalYears; i++) {
+      const projYp = result.yearlyProjection[i];
+      const gGain = projYp.propertyValue - acquisitionPrice;
+      if (gGain > 0 && firstPositiveGainYear === null) {
+        firstPositiveGainYear = startYear + i;
+        break;
+      }
+    }
+    if (firstPositiveGainYear) {
+      marks.push({ year: firstPositiveGainYear, label: 'Plus-value imposable à partir de cette année', color: '#f59e0b' });
+    }
+
+    // Year 6 of holding = start of IR abatement
+    const abatementStart = startYear + 5;
+    if (abatementStart <= endYear) {
+      marks.push({ year: abatementStart, label: 'Début abattement Impôts sur le Revenu', color: '#3b82f6' });
+    }
+
+    // Year 22 = full IR exemption
+    const irExemption = startYear + 21;
+    if (irExemption <= endYear) {
+      marks.push({ year: irExemption, label: 'Exonération IR', color: '#22c55e' });
+    }
+
+    // Year 30 = full PS exemption (total)
+    const psExemption = startYear + 29;
+    if (psExemption <= endYear) {
+      marks.push({ year: psExemption, label: 'Exonération totale', color: '#10b981' });
+    }
+
+    return marks;
+  }, [result.yearlyProjection, acquisitionPrice, startYear, endYear]);
+
+  // Active milestone = the one matching selected year
+  const activeMilestone = milestones.find((m) => m.year === selectedYear);
+
   return (
     <div className="space-y-6">
       <h3
-        className="text-3xl md:text-4xl text-neutral-900 dark:text-neutral-100"
-        style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+        className="text-3xl font-medium md:text-4xl text-neutral-900 dark:text-neutral-100"
       >
-        Quelle plus-value à la revente ?
+        Quelle plus-value à la revente me direz-vous?
       </h3>
 
-      <YearSlider
-        startYear={startYear}
-        endYear={endYear}
-        selectedYear={selectedYear}
-        onYearChange={setSelectedYear}
-      />
-
-      <div className="text-center text-sm text-neutral-500 -mt-2">
-        Revente en {selectedYear} ({holdingYears}e année de détention)
+      <div className="text-left text-2xl font-medium text-neutral-400 mt-12">
+        Revente en <span className="font-medium text-neutral-800 dark:text-neutral-100">{selectedYear}</span>
+        <br />
+        <span className="font-medium text-neutral-800 dark:text-neutral-100">{holdingYears}</span><sup>e</sup> année de détention
       </div>
 
+      {/* Slider with milestone markers on the track */}
+      <div className="pt-3">
+        <div className="relative">
+          <input
+            type="range"
+            min={startYear}
+            max={endYear}
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="sim-slider w-full relative z-10"
+          />
+          {/* Milestone dots on the track */}
+          {milestones.map((m) => {
+            const pct = (m.year - startYear) / (endYear - startYear);
+            return (
+              <button
+                key={m.year}
+                type="button"
+                onClick={() => setSelectedYear(m.year)}
+                className="absolute bottom-2 -translate-x-1/2 z-5"
+                style={{ left: `calc(12px + ${pct} * (100% - 24px))` }}
+              >
+                <div
+                  className="w-3.5 h-7 rounded-full border-2 border-white dark:border-neutral-900"
+                  style={{ backgroundColor: m.color, boxShadow: `0 0 0 0px ${m.color}33` }}
+                />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Active milestone callout */}
+      {activeMilestone && (
+        <div
+          className="rounded-xl px-4 py-2.5 text-sm font-medium"
+          style={{ backgroundColor: `${activeMilestone.color}15`, color: activeMilestone.color }}
+        >
+          {activeMilestone.label} — année {holdingYears}
+        </div>
+      )}
+
       {/* Plus-value detail */}
-      <div className="bg-(--sim-bg-card) rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
-        <Row label="Prix de revente estimé" value={`${fmt(yp.propertyValue)}€`} />
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-1 mb-1">
-          Basé sur une revalorisation annuelle du bien (hypothèse de projection).
-        </p>
+      <div className="bg-(--sim-bg-card) rounded-3xl p-4 border border-neutral-200 dark:border-neutral-800">
+        <Row label="Prix de revente estimé" value={`${fmt(yp.propertyValue)}€`} sub="Basé sur une revalorisation annuelle du bien (hypothèse de projection)." />
         <Row
           label={isDonation ? 'Valeur déclarée (donation/héritage)' : "Prix d'acquisition majoré"}
           value={`-${fmt(Math.round(acquisitionPrice))}€`}
+          sub={isDonation ? 'Valeur du bien au moment de la transmission + travaux éventuels.' : undefined}
         />
-        {isDonation && (
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-1 mb-1">
-            Valeur du bien au moment de la transmission + travaux éventuels.
-          </p>
-        )}
         <Row label="Plus-value brute" value={`${grossGain >= 0 ? '+' : ''}${fmt(Math.round(grossGain))}€`} bold />
 
         {grossGain > 0 && (
           <>
             <div className="mt-3" />
-            <Row label={`Impôt sur le revenu (19%) — abattement ${Math.round(pvTax.irAbatement * 100)}%`} value={`-${fmt(pvTax.taxIR)}€`} />
-            <Row label={`Prélèvements sociaux (17,2%) — abattement ${Math.round(pvTax.psAbatement * 100)}%`} value={`-${fmt(pvTax.taxPS)}€`} />
+            <Row label="Impôt sur le revenu (19%)" value={`-${fmt(pvTax.taxIR)}€`} sub={`Abattement ${Math.round(pvTax.irAbatement * 100)}%`} />
+            <Row label="Prélèvements sociaux (17,2%)" value={`-${fmt(pvTax.taxPS)}€`} sub={`Abattement ${Math.round(pvTax.psAbatement * 100)}%`} />
             {pvTax.surtax > 0 && <Row label="Surtaxe" value={`-${fmt(pvTax.surtax)}€`} />}
             <Row label="Impôt sur la plus-value" value={`-${fmt(pvTax.total)}€`} bold />
           </>
@@ -153,7 +229,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
 
         <div className="mt-3" />
         <Row
-          label="Plus-value nette (ce qui vous reste)"
+          label="Plus-value nette (après impôts)"
           value={`${pvTax.netGain >= 0 ? '+' : ''}${fmt(pvTax.netGain)}€`}
           bold
           highlight={pvTax.netGain >= 0 ? 'green' : 'red'}
@@ -167,34 +243,34 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
       </div>
 
       {/* Bilan total */}
-      <div className="bg-neutral-900 dark:bg-neutral-50 rounded-2xl p-5 text-white dark:text-neutral-900">
+      <div className="bg-neutral-900 dark:bg-neutral-50 rounded-3xl p-5 text-white dark:text-neutral-900">
         <h4 className="text-base font-semibold mb-3 opacity-80">Bilan total de l&apos;opération</h4>
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-base opacity-70">Plus-value nette</span>
-            <span className="text-base font-medium">{pvTax.netGain >= 0 ? '+' : ''}{fmt(pvTax.netGain)}€</span>
+            <span className="text-sm opacity-70">Plus-value nette</span>
+            <span className="text-sm font-medium">{pvTax.netGain >= 0 ? '+' : ''}{fmt(pvTax.netGain)}€</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-base opacity-70">Cash-flow cumulé ({holdingYears} ans)</span>
-            <span className="text-base font-medium">{cumulCashflow >= 0 ? '+' : ''}{fmt(cumulCashflow)}€</span>
+            <span className="text-sm opacity-70">Cash-flow cumulé ({holdingYears} ans)</span>
+            <span className="text-sm font-medium">{cumulCashflow >= 0 ? '+' : ''}{fmt(cumulCashflow)}€</span>
           </div>
           {capitalRepaid > 0 && (
             <div className="flex justify-between">
-              <span className="text-base opacity-70">Capital remboursé</span>
-              <span className="text-base font-medium">+{fmt(Math.round(capitalRepaid))}€</span>
+              <span className="text-sm opacity-70">Capital remboursé</span>
+              <span className="text-sm font-medium">+{fmt(Math.round(capitalRepaid))}€</span>
             </div>
           )}
           {/* Stacked bar — composition du gain */}
           {(() => {
             const parts = [
               { label: 'Plus-value', value: Math.max(0, pvTax.netGain), color: '#22c55e' },
-              { label: 'Cash-flow', value: Math.max(0, cumulCashflow), color: '#3b82f6' },
+              { label: 'Cash-flow', value: Math.max(0, cumulCashflow), color: '#833BFF' },
               { label: 'Capital', value: Math.max(0, Math.round(capitalRepaid)), color: '#a78bfa' },
             ];
             const total = parts.reduce((s, p) => s + p.value, 0);
             if (total <= 0) return null;
             return (
-              <div className="mt-2">
+              <div className="my-6">
                 <div className="flex h-4 rounded-full overflow-hidden">
                   {parts.map((p) => p.value > 0 ? (
                     <div
@@ -217,10 +293,10 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
           })()}
 
           <div className="border-t border-white/20 dark:border-neutral-900/20 pt-3 mt-2 text-center">
-            <div className="text-sm opacity-60 mb-1">Gain net total</div>
+            <div className="text-base opacity-80 mb-1">Gain net total</div>
             <div
-              className={`text-3xl md:text-4xl font-bold tabular-nums ${totalGainNet >= 0 ? 'text-emerald-400 dark:text-emerald-600' : 'text-red-400 dark:text-red-600'}`}
-              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+              className={`text-4xl p-4 md:text-4xl font-bold tabular-nums ${totalGainNet >= 0 ? 'text-emerald-400 dark:text-emerald-600' : 'text-red-400 dark:text-red-600'}`}
+              style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}
             >
               {totalGainNet >= 0 ? '+' : '-'}{fmt(animatedGain)}€
             </div>
@@ -230,9 +306,9 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
         <div className="mt-4 flex justify-center">
           {apportInitial > 0 ? (
             <span
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold ${
+              className={`inline-flex items-center gap-2 mb-3 px-5 py-2.5 rounded-full text-sm font-semibold ${
                 rendementTotal >= 0
-                  ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                  ? 'bg-neutral-100 dark:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300'
                   : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
               }`}
             >

@@ -20,6 +20,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     const pathname = usePathname();
     const isHomePage = pathname === '/' || pathname === '/fr' || pathname === '/en';
     const isAdmin = pathname?.includes('/admin');
+    const isSimulator = pathname?.includes('/simulateur');
     const { unreadCount } = useUserCounters(currentUser);
     const searchModal = useSearchModal();
     const isSearchModalOpen = searchModal.isOpen;
@@ -73,7 +74,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
         };
     }, [isHomePage]);
 
-    if (isAdmin) return null;
+    if (isAdmin || isSimulator) return null;
 
     return (
         <div

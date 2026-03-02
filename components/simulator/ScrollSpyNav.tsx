@@ -10,44 +10,59 @@ export function ScrollSpyNav({ sections }: ScrollSpyNavProps) {
   const [activeId, setActiveId] = useState(sections[0]?.id ?? '');
   const [isStuck, setIsStuck] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const activeIdRef = useRef(activeId);
 
   const isDarkSection = activeId === 'section-fiscal';
 
-  // Track which sections are intersecting
+  // Signal dark state to the layout header via data attribute
   useEffect(() => {
-    const visibleSections = new Map<string, number>();
+    const header = document.querySelector('[data-sim-header]');
+    if (header) {
+      header.setAttribute('data-dark', isDarkSection ? 'true' : 'false');
+    }
+  }, [isDarkSection]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            visibleSections.set(entry.target.id, entry.intersectionRatio);
-          } else {
-            visibleSections.delete(entry.target.id);
+  // Scroll-based detection — more reliable timing than IntersectionObserver
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const navBottom = navRef.current?.getBoundingClientRect().bottom ?? 0;
+        let current = sections[0]?.id ?? '';
+
+        for (const s of sections) {
+          const el = document.getElementById(s.id);
+          if (!el) continue;
+          // Last section whose top has passed above the nav bottom
+          if (el.getBoundingClientRect().top <= navBottom + 50) {
+            current = s.id;
           }
-        });
-
-        if (visibleSections.size > 0) {
-          let best = '';
-          let bestRatio = 0;
-          visibleSections.forEach((ratio, id) => {
-            if (ratio > bestRatio) {
-              best = id;
-              bestRatio = ratio;
-            }
-          });
-          if (best) setActiveId(best);
         }
-      },
-      { threshold: [0, 0.1, 0.3, 0.5] }
-    );
 
-    sections.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
+        if (current !== activeIdRef.current) {
+          activeIdRef.current = current;
+          setActiveId(current);
+        }
+        ticking = false;
+      });
+    };
 
-    return () => observer.disconnect();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Listen on the scrollable main container too
+    const scrollContainer = navRef.current?.closest('main');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
+    handleScroll();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
   }, [sections]);
 
   // Detect sticky state via sentinel
@@ -112,11 +127,11 @@ export function ScrollSpyNav({ sections }: ScrollSpyNavProps) {
                 key={s.id}
                 type="button"
                 onClick={() => handleClick(s.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap snap-start transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap snap-start transition-all duration-200 ${
                   isActive
                     ? isDarkSection
                       ? 'bg-amber-500/20 text-amber-300'
-                      : 'bg-(--sim-amber-50) text-(--sim-amber-600) border-b-2 border-(--sim-amber-400)'
+                      : 'bg-(--sim-amber-50) text-(--sim-amber-600)'
                     : isDarkSection
                       ? 'text-white/50 hover:text-white/80'
                       : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'

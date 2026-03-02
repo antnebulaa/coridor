@@ -132,7 +132,7 @@ export function LoanTab({ result, input }: LoanTabProps) {
                 {/* Capital arc */}
                 <circle cx={cx} cy={cy} r={r} fill="none" stroke="#3b82f6" strokeWidth="14" strokeDasharray={`${capitalArc} ${circumference}`} strokeDashoffset="0" transform={`rotate(-90 ${cx} ${cy})`} />
                 <text x={cx} y={cy - 6} textAnchor="middle" className="text-xs fill-neutral-500 dark:fill-neutral-400" fontSize="11">Total</text>
-                <text x={cx} y={cy + 10} textAnchor="middle" className="fill-neutral-900 dark:fill-neutral-100" fontSize="13" fontWeight="bold">{fmt(total)}€</text>
+                <text x={cx} y={cy + 10} textAnchor="middle" className="fill-neutral-900 dark:fill-neutral-100" fontSize="13" fontWeight="bold" fontFamily="var(--font-nunito-sim), sans-serif">{fmt(total)}€</text>
               </svg>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

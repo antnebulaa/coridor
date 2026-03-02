@@ -64,6 +64,7 @@ const defaultInput: InvestmentInput = {
   // V2 defaults
   propertyType: 'APARTMENT',
   surface: 0,
+  loanType: 'AMORTISSABLE',
   downPayment: 40000,
   guaranteeType: 'NONE',
   guaranteeCost: 0,
@@ -141,9 +142,13 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
     const loanAmount = Math.max(0, totalCost - downPayment);
     const monthlyRate = input.loanRate / 12;
     const totalMonths = input.loanDurationYears * 12;
+    const isInFine = input.loanType === 'IN_FINE';
 
     let monthlyPayment = 0;
-    if (monthlyRate > 0 && loanAmount > 0) {
+    if (isInFine) {
+      // In fine: only interest each month (capital repaid at maturity)
+      monthlyPayment = loanAmount * monthlyRate;
+    } else if (monthlyRate > 0 && loanAmount > 0) {
       monthlyPayment =
         (loanAmount * monthlyRate) /
         (1 - Math.pow(1 + monthlyRate, -totalMonths));
@@ -151,7 +156,9 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
       monthlyPayment = loanAmount / totalMonths;
     }
 
-    const totalCreditCost = monthlyPayment * totalMonths - loanAmount;
+    const totalCreditCost = isInFine
+      ? monthlyPayment * totalMonths // In fine: all payments are interest
+      : monthlyPayment * totalMonths - loanAmount;
 
     return {
       loanAmount: Math.round(loanAmount),
@@ -170,20 +177,21 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
     input.loanRate,
     input.loanDurationYears,
     input.loanInsuranceRate,
+    input.loanType,
   ]);
 
   return (
     <div className="simulator-page relative z-10">
       {/* Header with gradient */}
-      <div className="text-center pt-8 md:pt-12 pb-6 md:pb-8 px-4 sm:px-6">
-        <div className="absolute inset-x-0 top-0 h-64 bg-linear-to-b from-(--sim-amber-50) to-transparent -z-10 pointer-events-none" />
+      <div className="text-center pt-12 md:pt-12 pb-6 md:pb-8 px-4 sm:px-6">
+        <div className="absolute inset-x-0 top-0 h-64 -z-10 pointer-events-none" />
         <h1
-          className="text-3xl md:text-4xl text-neutral-900 dark:text-white"
-          style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+          className="text-4xl text-left max-w-2xl mx-auto font-medium tracking-tight md:text-6xl text-neutral-900 dark:text-white"
+          
         >
-          Simulateur d&apos;investissement locatif
+          Simuler votre  <br/> investissement locatif  <br/> avec coridor
         </h1>
-        <p className="mt-3 text-neutral-500 text-base md:text-lg max-w-2xl mx-auto">
+        <p className="mt-3 text-left text-neutral-500 text-base md:text-lg max-w-2xl mx-auto">
           Calculez gratuitement la rentabilité de votre investissement.
           Rendement net, cash-flow, TRI, comparaison fiscale et plus.
         </p>
@@ -191,7 +199,7 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
 
       {/* Form — centered */}
       {!showLoader && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-8 md:pb-12">
+        <div className="max-w-4xl mt-8 mx-auto px-4 sm:px-6 pb-8 md:pb-12">
           <SimulatorForm
             input={input}
             onChange={setInput}

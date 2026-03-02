@@ -23,9 +23,11 @@ import {
   DEFAULT_FURNITURE_AMORTIZATION_YEARS,
   GUARANTEE_RATES,
   FAMILY_TAX_SHARES,
+  PROFESSIONAL_STATUS_LABELS,
+  MICRO_ENTREPRENEUR_CATEGORIES,
 } from '@/lib/simulatorDefaults';
 import { StoryBar } from './StoryBar';
-import { TeasingPreview } from './TeasingPreview';
+
 
 interface SimulatorFormProps {
   input: InvestmentInput;
@@ -47,9 +49,9 @@ const STEPS = [
 ] as const;
 
 const STEP_TITLES = [
-  'Quel bien avez-vous repéré ?',
-  'Comment financez-vous ?',
-  'Combien allez-vous louer ?',
+  'informations sur le bien',
+  'Comment souhaitez-vous le financer?',
+  'Combien souhaitez-vous le louer ?',
   'Quelle fiscalité appliquer ?',
 ];
 
@@ -141,7 +143,8 @@ export default function SimulatorForm({
       const dur = input.loanDurationYears;
       const rate = (input.loanRate * 100).toFixed(1);
       const ap = apport >= 1000 ? `${Math.round(apport / 1000)}k€` : `${apport}€`;
-      s[1] = `Prêt ${dur} ans · ${rate}% · Apport ${ap}`;
+      const loanLabel = input.loanType === 'IN_FINE' ? 'In fine' : 'Prêt';
+      s[1] = `${loanLabel} ${dur} ans · ${rate}% · Apport ${ap}`;
     }
 
     const rent = input.monthlyRentHC ?? input.monthlyRent;
@@ -156,10 +159,22 @@ export default function SimulatorForm({
 
   // Computed TMI from income (V2)
   const computedTMI = useMemo(() => {
-    if (input.annualIncomeDeclarant1 == null) return null;
-    const totalIncome =
-      (input.annualIncomeDeclarant1 ?? 0) + (input.annualIncomeDeclarant2 ?? 0);
-    if (totalIncome <= 0) return null;
+    const isMicro = input.professionalStatus === 'MICRO_ENTREPRENEUR';
+    const isSansActivite = input.professionalStatus === 'SANS_ACTIVITE';
+
+    let declarant1Income: number;
+    if (isMicro && input.microEntrepreneurRevenue != null) {
+      const cat = MICRO_ENTREPRENEUR_CATEGORIES[input.microEntrepreneurCategory ?? 'BNC'];
+      declarant1Income = input.microEntrepreneurRevenue * (1 - cat.abattement);
+    } else if (isSansActivite) {
+      declarant1Income = 0;
+    } else {
+      if (input.annualIncomeDeclarant1 == null) return null;
+      declarant1Income = input.annualIncomeDeclarant1 ?? 0;
+    }
+
+    const totalIncome = declarant1Income + (input.annualIncomeDeclarant2 ?? 0);
+    if (totalIncome <= 0 && !isSansActivite) return null;
     const familyStatus = input.familyStatus ?? 'SINGLE';
     const baseParts = FAMILY_TAX_SHARES[familyStatus] ?? 1;
     const kids = input.childrenCount ?? 0;
@@ -170,6 +185,9 @@ export default function SimulatorForm({
     input.annualIncomeDeclarant2,
     input.familyStatus,
     input.childrenCount,
+    input.professionalStatus,
+    input.microEntrepreneurRevenue,
+    input.microEntrepreneurCategory,
   ]);
 
   // Guarantee cost estimate
@@ -193,7 +211,7 @@ export default function SimulatorForm({
 
       {/* Form card */}
       <div
-        className="bg-(--sim-bg-card) dark:border dark:border-neutral-800 p-6 md:p-8"
+        className="bg-neutral-100 dark:border dark:border-neutral-800 p-6 md:p-8"
         style={{
           borderRadius: 'var(--sim-form-card-radius)',
           boxShadow: 'var(--sim-form-card-shadow)',
@@ -205,8 +223,8 @@ export default function SimulatorForm({
         {step === 0 && (
           <div className="space-y-6">
             <h2
-              className="text-2xl md:text-3xl text-neutral-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+              className="text-xl font-medium tracking-tight md:text-3xl text-neutral-900 dark:text-white"
+              
             >
               {STEP_TITLES[0]}
             </h2>
@@ -312,7 +330,7 @@ export default function SimulatorForm({
                   onClick={() =>
                     update({
                       isFurnished: false,
-                      taxRegime: 'reel',
+                      taxRegime: 'auto',
                       furnitureCost: 0,
                     })
                   }
@@ -323,7 +341,7 @@ export default function SimulatorForm({
                   onClick={() =>
                     update({
                       isFurnished: true,
-                      taxRegime: 'reel_lmnp',
+                      taxRegime: 'auto',
                     })
                   }
                   label="Meublé"
@@ -395,8 +413,8 @@ export default function SimulatorForm({
         {step === 1 && (
           <div className="space-y-6">
             <h2
-              className="text-2xl md:text-3xl text-neutral-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+              className="text-xl font-medium tracking-tight md:text-3xl text-neutral-900 dark:text-white"
+              
             >
               {input.isDonation ? 'Comment financez-vous les travaux ?' : STEP_TITLES[1]}
             </h2>
@@ -466,7 +484,7 @@ export default function SimulatorForm({
                               onChange={(e) =>
                                 update({ loanDurationYears: parseInt(e.target.value) })
                               }
-                              className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition"
+                              className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#B9592D]/12 focus:outline-none transition"
                             >
                               {[5, 7, 10, 15].map((y) => (
                                 <option key={y} value={y}>
@@ -593,6 +611,30 @@ export default function SimulatorForm({
               </div>
             ) : (
               <>
+                {/* Loan type */}
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Type de prêt
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    <ToggleButton
+                      active={(input.loanType ?? 'AMORTISSABLE') === 'AMORTISSABLE'}
+                      onClick={() => update({ loanType: 'AMORTISSABLE' })}
+                      label="Amortissable"
+                    />
+                    <ToggleButton
+                      active={input.loanType === 'IN_FINE'}
+                      onClick={() => update({ loanType: 'IN_FINE' })}
+                      label="In fine"
+                    />
+                  </div>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                    {input.loanType === 'IN_FINE'
+                      ? 'Intérêts seuls chaque mois, capital remboursé à l\'échéance. Plus d\'intérêts déductibles.'
+                      : 'Mensualités fixes (capital + intérêts). Le plus courant.'}
+                  </p>
+                </div>
+
                 {/* 2-col: Durée + Taux */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -604,9 +646,9 @@ export default function SimulatorForm({
                       onChange={(e) =>
                         update({ loanDurationYears: parseInt(e.target.value) })
                       }
-                      className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition"
+                      className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#B9592D]/12 focus:outline-none transition"
                     >
-                      {[10, 15, 20, 25, 30].map((y) => (
+                      {(input.loanType === 'IN_FINE' ? [5, 7, 10, 15, 20] : [10, 15, 20, 25, 30]).map((y) => (
                         <option key={y} value={y}>
                           {y} ans
                         </option>
@@ -687,7 +729,7 @@ export default function SimulatorForm({
                 {/* Loan summary */}
                 <div className="bg-(--sim-bg-section) rounded-xl p-4 space-y-2">
                   <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                    Résumé du crédit
+                    {input.loanType === 'IN_FINE' ? 'Résumé du prêt in fine' : 'Résumé du crédit'}
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Montant emprunté</span>
@@ -696,7 +738,7 @@ export default function SimulatorForm({
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Mensualité estimée</span>
+                    <span>{input.loanType === 'IN_FINE' ? 'Mensualité (intérêts seuls)' : 'Mensualité estimée'}</span>
                     <span className="font-semibold tabular-nums">
                       {fmt(loanSummary.monthlyPayment)} €
                     </span>
@@ -707,6 +749,14 @@ export default function SimulatorForm({
                       {fmt(loanSummary.totalCreditCost)} €
                     </span>
                   </div>
+                  {input.loanType === 'IN_FINE' && (
+                    <div className="flex justify-between text-sm pt-1 border-t border-neutral-200 dark:border-neutral-700">
+                      <span>Capital à rembourser à l&apos;échéance</span>
+                      <span className="font-semibold tabular-nums">
+                        {fmt(loanSummary.loanAmount)} €
+                      </span>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -721,8 +771,8 @@ export default function SimulatorForm({
         {step === 2 && (
           <div className="space-y-6">
             <h2
-              className="text-2xl md:text-3xl text-neutral-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+              className="text-xl font-medium tracking-tight md:text-3xl text-neutral-900 dark:text-white"
+             
             >
               {STEP_TITLES[2]}
             </h2>
@@ -762,6 +812,7 @@ export default function SimulatorForm({
                   { weeks: 2, label: '2 sem.' },
                   { weeks: 4, label: '1 mois' },
                   { weeks: 8, label: '2 mois' },
+                  { weeks: 13, label: '3 mois' },
                 ].map((opt) => (
                   <ToggleButton
                     key={opt.weeks}
@@ -777,6 +828,62 @@ export default function SimulatorForm({
                 ))}
               </div>
             </div>
+
+            {/* Seasonal / short-term rental income */}
+            {input.isFurnished && vacWeeks > 0 && (
+              <div className="space-y-3">
+                <InputField
+                  label="Revenus location saisonnière"
+                  value={input.seasonalRentalIncome ?? 0}
+                  onChange={(v) => update({ seasonalRentalIncome: v })}
+                  suffix="€/an"
+                  hint="Revenus Airbnb pendant la période de vacance"
+                />
+
+                {(input.seasonalRentalIncome ?? 0) > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                      Statut meublé de tourisme
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      <ToggleButton
+                        active={!input.isSeasonalClassified}
+                        onClick={() => update({ isSeasonalClassified: false })}
+                        label="Non classé"
+                      />
+                      <ToggleButton
+                        active={input.isSeasonalClassified === true}
+                        onClick={() => update({ isSeasonalClassified: true })}
+                        label="Classé"
+                      />
+                    </div>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                      {input.isSeasonalClassified
+                        ? 'Micro-BIC : abattement 50%, seuil 77 700€'
+                        : 'Micro-BIC : abattement 30%, seuil 15 000€'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Warning: non classé > 15k */}
+                {!input.isSeasonalClassified && (input.seasonalRentalIncome ?? 0) > 15000 && (
+                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-300">
+                    Au-delà de 15 000€/an en meublé tourisme non classé, le micro-BIC n&apos;est plus applicable. Le régime réel LMNP sera utilisé.
+                  </div>
+                )}
+
+                {/* Warning: LMP risk */}
+                {(() => {
+                  const totalRecettes = (input.monthlyRentHC ?? input.monthlyRent ?? 0) * 12 + (input.seasonalRentalIncome ?? 0);
+                  const annualIncome = (input.annualIncomeDeclarant1 ?? 0) + (input.annualIncomeDeclarant2 ?? 0);
+                  return totalRecettes > 23000 && annualIncome > 0 && totalRecettes > annualIncome;
+                })() && (
+                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-300">
+                    Vos recettes meublées dépassent 23 000€ et vos revenus professionnels. Vous pourriez basculer en LMP (Loueur Meublé Professionnel).
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -881,8 +988,8 @@ export default function SimulatorForm({
         {step === 3 && (
           <div className="space-y-6">
             <h2
-              className="text-2xl md:text-3xl text-neutral-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+              className="text-xl font-medium tracking-tight md:text-3xl text-neutral-900 dark:text-white"
+              
             >
               {STEP_TITLES[3]}
             </h2>
@@ -912,8 +1019,11 @@ export default function SimulatorForm({
               <select
                 value={input.taxRegime}
                 onChange={(e) => update({ taxRegime: e.target.value })}
-                className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition"
+                className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#B9592D]/12 focus:outline-none transition"
               >
+                <option value="auto">
+                  Automatique (le plus avantageux)
+                </option>
                 {!input.isFurnished && (
                   <>
                     <option value="micro_foncier">
@@ -930,9 +1040,7 @@ export default function SimulatorForm({
                     <option value="reel_lmnp">Réel LMNP</option>
                   </>
                 )}
-                <option value="auto">
-                  Automatique (le plus avantageux)
-                </option>
+                <option value="sci_is">SCI à l&apos;IS</option>
               </select>
             </div>
 
@@ -974,35 +1082,142 @@ export default function SimulatorForm({
                 </div>
               </div>
 
-              <InputField
-                label={
-                  isCouple
-                    ? 'Revenu net imposable — Déclarant 1'
-                    : 'Revenu net imposable annuel'
-                }
-                value={input.annualIncomeDeclarant1 ?? 0}
-                onChange={(v) => {
-                  const tmi = computeTMI(
-                    v + (input.annualIncomeDeclarant2 ?? 0),
-                    (FAMILY_TAX_SHARES[input.familyStatus ?? 'SINGLE'] ?? 1) +
-                      Math.min(input.childrenCount ?? 0, 2) * 0.5 +
-                      Math.max(0, (input.childrenCount ?? 0) - 2),
-                  );
-                  update({
-                    annualIncomeDeclarant1: v,
-                    marginalTaxRate: tmi,
-                  });
-                }}
-                suffix="€/an"
-              />
+              {/* Situation professionnelle */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  Situation professionnelle
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(Object.entries(PROFESSIONAL_STATUS_LABELS) as [string, string][]).map(([key, label]) => (
+                    <ToggleButton
+                      key={key}
+                      active={(input.professionalStatus ?? 'SALARIE') === key}
+                      onClick={() => {
+                        const updates: Partial<InvestmentInput> = { professionalStatus: key as InvestmentInput['professionalStatus'] };
+                        // Reset micro fields when switching away
+                        if (key !== 'MICRO_ENTREPRENEUR') {
+                          updates.microEntrepreneurRevenue = undefined;
+                          updates.microEntrepreneurCategory = undefined;
+                        }
+                        // Reset declarant1 when switching to micro or sans activité
+                        if (key === 'MICRO_ENTREPRENEUR' || key === 'SANS_ACTIVITE') {
+                          updates.annualIncomeDeclarant1 = undefined;
+                        }
+                        update(updates);
+                      }}
+                      label={label}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Micro-entrepreneur: catégorie + CA */}
+              {input.professionalStatus === 'MICRO_ENTREPRENEUR' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                      Catégorie d&apos;activité
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {(Object.entries(MICRO_ENTREPRENEUR_CATEGORIES) as [string, { label: string; abattement: number; plafond: number }][]).map(([key, cat]) => (
+                        <ToggleButton
+                          key={key}
+                          active={(input.microEntrepreneurCategory ?? 'BNC') === key}
+                          onClick={() => {
+                            const newCat = MICRO_ENTREPRENEUR_CATEGORIES[key as keyof typeof MICRO_ENTREPRENEUR_CATEGORIES];
+                            const ca = input.microEntrepreneurRevenue ?? 0;
+                            const netIncome = ca * (1 - newCat.abattement);
+                            const taxShares = (FAMILY_TAX_SHARES[input.familyStatus ?? 'SINGLE'] ?? 1) +
+                              Math.min(input.childrenCount ?? 0, 2) * 0.5 +
+                              Math.max(0, (input.childrenCount ?? 0) - 2);
+                            update({
+                              microEntrepreneurCategory: key as InvestmentInput['microEntrepreneurCategory'],
+                              marginalTaxRate: ca > 0 ? computeTMI(netIncome + (input.annualIncomeDeclarant2 ?? 0), taxShares) : input.marginalTaxRate,
+                            });
+                          }}
+                          label={`${cat.label} (${Math.round(cat.abattement * 100)}%)`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <InputField
+                    label="Chiffre d'affaires annuel"
+                    value={input.microEntrepreneurRevenue ?? 0}
+                    onChange={(v) => {
+                      const cat = MICRO_ENTREPRENEUR_CATEGORIES[input.microEntrepreneurCategory ?? 'BNC'];
+                      const netIncome = v * (1 - cat.abattement);
+                      const taxShares = (FAMILY_TAX_SHARES[input.familyStatus ?? 'SINGLE'] ?? 1) +
+                        Math.min(input.childrenCount ?? 0, 2) * 0.5 +
+                        Math.max(0, (input.childrenCount ?? 0) - 2);
+                      const tmi = computeTMI(netIncome + (input.annualIncomeDeclarant2 ?? 0), taxShares);
+                      update({ microEntrepreneurRevenue: v, marginalTaxRate: tmi });
+                    }}
+                    suffix="€/an"
+                  />
+
+                  {/* Bénéfice imposable calculé */}
+                  {(input.microEntrepreneurRevenue ?? 0) > 0 && (() => {
+                    const cat = MICRO_ENTREPRENEUR_CATEGORIES[input.microEntrepreneurCategory ?? 'BNC'];
+                    const net = (input.microEntrepreneurRevenue ?? 0) * (1 - cat.abattement);
+                    const isOverCap = (input.microEntrepreneurRevenue ?? 0) > cat.plafond;
+                    return (
+                      <>
+                        <div className="text-sm text-neutral-500 dark:text-neutral-400 -mt-2">
+                          Bénéfice imposable : <span className="font-semibold text-neutral-700 dark:text-neutral-200">{net.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €/an</span>
+                          <span className="text-neutral-400"> (après abattement de {Math.round(cat.abattement * 100)}%)</span>
+                        </div>
+                        {isOverCap && (
+                          <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 px-4 py-3 text-sm text-amber-700 dark:text-amber-300 -mt-2">
+                            Le plafond micro-entrepreneur pour cette activité est de {cat.plafond.toLocaleString('fr-FR')} €.
+                            Au-delà, vous basculez au régime réel.
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </>
+              )}
+
+              {/* Standard income field — hidden for micro-entrepreneur and sans activité */}
+              {input.professionalStatus !== 'MICRO_ENTREPRENEUR' && input.professionalStatus !== 'SANS_ACTIVITE' && (
+                <InputField
+                  label={
+                    isCouple
+                      ? 'Revenu net imposable — Déclarant 1'
+                      : 'Revenu net imposable annuel'
+                  }
+                  value={input.annualIncomeDeclarant1 ?? 0}
+                  onChange={(v) => {
+                    const tmi = computeTMI(
+                      v + (input.annualIncomeDeclarant2 ?? 0),
+                      (FAMILY_TAX_SHARES[input.familyStatus ?? 'SINGLE'] ?? 1) +
+                        Math.min(input.childrenCount ?? 0, 2) * 0.5 +
+                        Math.max(0, (input.childrenCount ?? 0) - 2),
+                    );
+                    update({
+                      annualIncomeDeclarant1: v,
+                      marginalTaxRate: tmi,
+                    });
+                  }}
+                  suffix="€/an"
+                />
+              )}
 
               {isCouple && (
                 <InputField
                   label="Revenu net imposable — Déclarant 2"
                   value={input.annualIncomeDeclarant2 ?? 0}
                   onChange={(v) => {
+                    let d1Income: number;
+                    if (input.professionalStatus === 'MICRO_ENTREPRENEUR') {
+                      const cat = MICRO_ENTREPRENEUR_CATEGORIES[input.microEntrepreneurCategory ?? 'BNC'];
+                      d1Income = (input.microEntrepreneurRevenue ?? 0) * (1 - cat.abattement);
+                    } else {
+                      d1Income = input.annualIncomeDeclarant1 ?? 0;
+                    }
                     const tmi = computeTMI(
-                      (input.annualIncomeDeclarant1 ?? 0) + v,
+                      d1Income + v,
                       (FAMILY_TAX_SHARES[input.familyStatus ?? 'SINGLE'] ?? 1) +
                         Math.min(input.childrenCount ?? 0, 2) * 0.5 +
                         Math.max(0, (input.childrenCount ?? 0) - 2),
@@ -1020,9 +1235,16 @@ export default function SimulatorForm({
                 label="Enfants à charge"
                 value={input.childrenCount ?? 0}
                 onChange={(v) => {
-                  const totalIncome =
-                    (input.annualIncomeDeclarant1 ?? 0) +
-                    (input.annualIncomeDeclarant2 ?? 0);
+                  let d1Income: number;
+                  if (input.professionalStatus === 'MICRO_ENTREPRENEUR') {
+                    const cat = MICRO_ENTREPRENEUR_CATEGORIES[input.microEntrepreneurCategory ?? 'BNC'];
+                    d1Income = (input.microEntrepreneurRevenue ?? 0) * (1 - cat.abattement);
+                  } else if (input.professionalStatus === 'SANS_ACTIVITE') {
+                    d1Income = 0;
+                  } else {
+                    d1Income = input.annualIncomeDeclarant1 ?? 0;
+                  }
+                  const totalIncome = d1Income + (input.annualIncomeDeclarant2 ?? 0);
                   const baseParts =
                     FAMILY_TAX_SHARES[input.familyStatus ?? 'SINGLE'] ?? 1;
                   const childrenParts =
@@ -1108,7 +1330,7 @@ export default function SimulatorForm({
           {step < STEPS.length - 1 ? (
             <button
               onClick={next}
-              className="flex items-center gap-1.5 px-6 py-2.5 rounded-full text-sm font-medium bg-linear-to-r from-[#E8A838] via-[#D4922A] to-[#B87A1E] text-white shadow-md hover:shadow-lg hover:-translate-y-px transition-all"
+              className="flex items-center gap-1.5 px-6 py-2.5 rounded-full text-sm font-medium bg-linear-to-r from-[#D4703D] via-[#B9592D] to-[#9A4724] text-white shadow-md hover:shadow-lg hover:-translate-y-px transition-all"
             >
               Suivant
               <ChevronRight size={16} />
@@ -1117,7 +1339,7 @@ export default function SimulatorForm({
             <button
               onClick={onSimulate}
               disabled={isLoading}
-              className="flex items-center gap-2 px-8 py-3 rounded-full text-base font-medium bg-linear-to-r from-[#E8A838] via-[#D4922A] to-[#B87A1E] text-white shadow-md hover:shadow-lg hover:-translate-y-px transition-all disabled:opacity-50 animate-[sim-pulse-shadow_2.5s_ease-in-out_infinite]"
+              className="flex items-center gap-2 px-8 py-3 rounded-full text-base font-medium bg-linear-to-r from-[#D4703D] via-[#B9592D] to-[#9A4724] text-white shadow-md hover:shadow-lg hover:-translate-y-px transition-all disabled:opacity-50 animate-[sim-pulse-shadow_2.5s_ease-in-out_infinite]"
             >
               {isLoading ? 'Calcul en cours...' : 'Simuler'}
               {!isLoading && <Sparkles size={18} />}
@@ -1125,8 +1347,6 @@ export default function SimulatorForm({
           )}
         </div>
 
-        {/* Teasing preview — blurred estimate during form input */}
-        <TeasingPreview input={input} currentStep={step} />
       </div>
     </div>
   );
@@ -1141,6 +1361,7 @@ function InputField({
   value,
   onChange,
   suffix,
+  hint,
   step = 1,
   min,
   max,
@@ -1149,15 +1370,16 @@ function InputField({
   value: number;
   onChange: (v: number) => void;
   suffix?: string;
+  hint?: string;
   step?: number;
   min?: number;
   max?: number;
 }) {
-  const [localValue, setLocalValue] = useState<string>(String(value));
+  const [localValue, setLocalValue] = useState<string>(value === 0 ? '' : String(value));
 
   // Sync from parent when value changes externally (e.g. "Appliquer" button)
   useEffect(() => {
-    setLocalValue(String(value));
+    setLocalValue(value === 0 ? '' : String(value));
   }, [value]);
 
   return (
@@ -1169,25 +1391,26 @@ function InputField({
       )}
       <div className="relative">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           value={localValue}
           onChange={(e) => {
-            setLocalValue(e.target.value);
-            const parsed = parseFloat(e.target.value);
+            const raw = e.target.value.replace(/[^0-9.,\-]/g, '');
+            setLocalValue(raw);
+            const parsed = parseFloat(raw.replace(',', '.'));
             if (!isNaN(parsed)) onChange(parsed);
           }}
           onBlur={() => {
-            // On blur, if empty or invalid, reset to 0
-            const parsed = parseFloat(localValue);
-            if (isNaN(parsed)) {
-              setLocalValue('0');
+            const parsed = parseFloat(localValue.replace(',', '.'));
+            if (isNaN(parsed) || localValue.trim() === '') {
+              setLocalValue('');
               onChange(0);
             }
           }}
           step={step}
           min={min}
           max={max}
-          className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm pr-16 tabular-nums focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#E8A838]/12 focus:outline-none transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-(--sim-bg-card) px-4 py-3 text-sm pr-16 tabular-nums focus:border-(--sim-amber-400) focus:ring-[3px] focus:ring-[#B9592D]/12 focus:outline-none transition"
         />
         {suffix && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-neutral-400">
@@ -1195,6 +1418,9 @@ function InputField({
           </span>
         )}
       </div>
+      {hint && (
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{hint}</p>
+      )}
     </div>
   );
 }

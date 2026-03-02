@@ -62,7 +62,7 @@ export function PaywallOverlay({ children, isAuthenticated }: PaywallOverlayProp
           <button
             type="button"
             onClick={() => loginModal.onOpen()}
-            className="w-full py-3 rounded-full text-sm font-medium text-white bg-linear-to-r from-[#E8A838] via-[#D4922A] to-[#B87A1E] shadow-md hover:shadow-lg transition-all"
+            className="w-full py-3 rounded-full text-sm font-medium text-white bg-linear-to-r from-[#D4703D] via-[#B9592D] to-[#9A4724] shadow-md hover:shadow-lg transition-all"
           >
             Créer un compte gratuit
           </button>

@@ -137,6 +137,7 @@ function validateInput(body: unknown): string | null {
     ["furnitureAmortizationYears", 1, 30],
     ["resaleYear", 1, 40],
     ["resalePrice", 0],
+    ["seasonalRentalIncome", 0, 500000],
   ];
 
   for (const [field, min, max] of optionalNumbers) {
@@ -169,6 +170,15 @@ function validateInput(body: unknown): string | null {
     if (field in input && input[field] != null) {
       if (!allowed.includes(input[field] as string)) {
         return `${field} doit être l'un de : ${allowed.join(", ")}.`;
+      }
+    }
+  }
+
+  // V2 optional booleans
+  for (const field of ["isDonation", "hasGLI", "isSeasonalClassified"] as const) {
+    if (field in input && input[field] != null) {
+      if (typeof input[field] !== "boolean") {
+        return `${field} doit être un booléen.`;
       }
     }
   }

@@ -77,21 +77,21 @@ export function ExpertSection({ result, input, onSave, user }: ExpertSectionProp
                 <div className="bg-(--sim-bg-section) rounded-xl p-3">
                   <div className="flex items-center justify-between sm:flex-col sm:text-center gap-2">
                     <div className="text-xs text-neutral-500">TRI (Taux de Rentabilité Interne)</div>
-                    <div className="text-lg font-bold tabular-nums">{fmtPct(result.tri)}%</div>
+                    <div className="text-lg font-bold tabular-nums" style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}>{fmtPct(result.tri)}%</div>
                   </div>
                   <p className="text-xs text-neutral-400 mt-1">Performance globale incluant loyers, plus-value et effet de levier.</p>
                 </div>
                 <div className="bg-(--sim-bg-section) rounded-xl p-3">
                   <div className="flex items-center justify-between sm:flex-col sm:text-center gap-2">
                     <div className="text-xs text-neutral-500">VAN (Valeur Actuelle Nette)</div>
-                    <div className="text-lg font-bold tabular-nums">{fmt(result.van)}€</div>
+                    <div className="text-lg font-bold tabular-nums" style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}>{fmt(result.van)}€</div>
                   </div>
                   <p className="text-xs text-neutral-400 mt-1">Valeur créée par rapport à un placement alternatif. Positif = bon investissement.</p>
                 </div>
                 <div className="bg-(--sim-bg-section) rounded-xl p-3">
                   <div className="flex items-center justify-between sm:flex-col sm:text-center gap-2">
                     <div className="text-xs text-neutral-500">Point mort</div>
-                    <div className="text-lg font-bold tabular-nums">
+                    <div className="text-lg font-bold tabular-nums" style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}>
                       {result.breakevenMonth
                         ? result.breakevenMonth >= 12
                           ? `${Math.floor(result.breakevenMonth / 12)}a ${result.breakevenMonth % 12}m`
@@ -174,7 +174,7 @@ export function ExpertSection({ result, input, onSave, user }: ExpertSectionProp
                 <button
                   type="button"
                   onClick={onSave}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-linear-to-r from-[#E8A838] via-[#D4922A] to-[#B87A1E] text-white shadow-md hover:shadow-lg transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-linear-to-r from-[#D4703D] via-[#B9592D] to-[#9A4724] text-white shadow-md hover:shadow-lg transition-all"
                 >
                   <Save size={14} />
                   Sauvegarder

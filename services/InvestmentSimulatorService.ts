@@ -27,6 +27,7 @@ import {
   DEFAULT_FURNITURE_AMORTIZATION_YEARS,
   DEFAULT_GLI_RATE,
   FAMILY_TAX_SHARES,
+  MICRO_ENTREPRENEUR_CATEGORIES,
 } from "@/lib/simulatorDefaults";
 
 // ---------------------------------------------------------------------------
@@ -77,6 +78,7 @@ export interface InvestmentInput {
   furnitureAmortizationYears?: number;
 
   // === V2 — Financement ===
+  loanType?: 'AMORTISSABLE' | 'IN_FINE';
   downPayment?: number;
   guaranteeType?: 'CREDIT_LOGEMENT' | 'HYPOTHEQUE' | 'PPD' | 'NONE';
   guaranteeCost?: number;
@@ -96,6 +98,9 @@ export interface InvestmentInput {
 
   // === V2 — Fiscalité ===
   familyStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+  professionalStatus?: 'SALARIE' | 'FONCTIONNAIRE' | 'MICRO_ENTREPRENEUR' | 'INDEPENDANT' | 'RETRAITE' | 'SANS_ACTIVITE';
+  microEntrepreneurRevenue?: number;
+  microEntrepreneurCategory?: 'BNC' | 'BIC_SERVICES' | 'BIC_VENTE';
   annualIncomeDeclarant1?: number;
   annualIncomeDeclarant2?: number;
   taxShares?: number;
@@ -107,6 +112,10 @@ export interface InvestmentInput {
 
   // === V2 — Acquisition mode ===
   isDonation?: boolean; // true = donation/héritage: bien reçu gratuitement, seuls travaux/mobilier sont un coût
+
+  // === V2 — Location saisonnière ===
+  seasonalRentalIncome?: number;   // Revenus location courte durée (€/an)
+  isSeasonalClassified?: boolean;  // true = meublé tourisme classé, false = non classé
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +134,7 @@ interface NormalizedInput {
   surface: number;
 
   downPayment: number;
+  loanType: 'AMORTISSABLE' | 'IN_FINE';
   loanRate: number;
   loanDurationYears: number;
   loanInsuranceRate: number;
@@ -143,6 +153,8 @@ interface NormalizedInput {
   hasGLI: boolean;
   gliRate: number;
   vacancyWeeksPerYear: number;
+  seasonalRentalIncome: number;
+  isSeasonalClassified: boolean;
 
   taxRegime: string;
   marginalTaxRate: number;
@@ -207,11 +219,22 @@ export interface InvestmentResult {
   verdict: Verdict;
   verdictMessage: string;
   breakEvenYear: number | null;
+
+  // Yield on actual cash invested (relevant for donations where yieldBase = property value)
+  yieldOnCashInvested: number | null;
+
+  // Tax regime actually used in projection
+  usedRegimeLabel: string;
+
+  // Seasonal rental income (for UI display)
+  seasonalRentalIncome: number;
+  isSeasonalClassified: boolean;
 }
 
 export interface MonthlyRevenueBreakdown {
   rentHC: number;
   vacancyDeduction: number;
+  seasonalIncome: number;
   netRent: number;
 }
 
@@ -246,6 +269,9 @@ export interface YearlyProjection {
   taxWithout: number;
   taxWith: number;
   totalGain: number;
+  seasonalRent: number;
+  // V2.2 — per-regime tax for dynamic comparison
+  taxByRegime: Record<string, number>;
 }
 
 export interface LoanAmortizationRow {
@@ -268,10 +294,12 @@ export interface PlacementComparison {
 export interface TaxRegimeComparison {
   regime: string;
   label: string;
+  category: string;
   yearlyTax: number;
   netCashflow: number;
   isRecommended: boolean;
   eligible: boolean;
+  reason?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -326,10 +354,19 @@ export class InvestmentSimulatorService {
       + Math.max(0, (input.childrenCount ?? 0) - 2) * 1;
     const taxShares = input.taxShares ?? baseTaxShares + childrenParts;
 
-    const annualIncome =
-      input.annualIncomeDeclarant1 != null || input.annualIncomeDeclarant2 != null
-        ? (input.annualIncomeDeclarant1 ?? 0) + (input.annualIncomeDeclarant2 ?? 0)
-        : this.estimateRevenuFromTMI(input.marginalTaxRate);
+    let annualIncome: number;
+    if (input.professionalStatus === 'MICRO_ENTREPRENEUR' && input.microEntrepreneurRevenue != null) {
+      const catKey = input.microEntrepreneurCategory ?? 'BNC';
+      const abattement = MICRO_ENTREPRENEUR_CATEGORIES[catKey].abattement;
+      const netDeclarant1 = input.microEntrepreneurRevenue * (1 - abattement);
+      annualIncome = netDeclarant1 + (input.annualIncomeDeclarant2 ?? 0);
+    } else if (input.professionalStatus === 'SANS_ACTIVITE') {
+      annualIncome = input.annualIncomeDeclarant2 ?? 0;
+    } else if (input.annualIncomeDeclarant1 != null || input.annualIncomeDeclarant2 != null) {
+      annualIncome = (input.annualIncomeDeclarant1 ?? 0) + (input.annualIncomeDeclarant2 ?? 0);
+    } else {
+      annualIncome = this.estimateRevenuFromTMI(input.marginalTaxRate);
+    }
 
     // Computed
     const notaryFees = input.isDonation ? 0 : input.purchasePrice * input.notaryFeesRate;
@@ -340,8 +377,15 @@ export class InvestmentSimulatorService {
       : input.purchasePrice + notaryFees + input.renovationCost + input.furnitureCost + input.bankFees + guaranteeCost;
     const loanAmount = Math.max(0, totalInvestment - downPayment);
     const vacancyRate = vacancyWeeksPerYear / 52;
+    // Seasonal income only applicable to furnished properties with vacancy
+    const seasonalRentalIncome = (input.isFurnished && vacancyWeeksPerYear > 0)
+      ? Math.max(0, input.seasonalRentalIncome ?? 0)
+      : 0;
+    const isSeasonalClassified = seasonalRentalIncome > 0
+      ? (input.isSeasonalClassified ?? false)
+      : false;
     const annualGrossRent = monthlyRentHC * 12;
-    const effectiveAnnualRent = annualGrossRent * (1 - vacancyRate);
+    const effectiveAnnualRent = annualGrossRent * (1 - vacancyRate) + seasonalRentalIncome;
     const annualGLI = hasGLI ? annualGrossRent * gliRate : 0;
     const totalAnnualCharges =
       monthlyChargesProvision * 12 +
@@ -365,6 +409,7 @@ export class InvestmentSimulatorService {
       surface,
 
       downPayment,
+      loanType: input.loanType ?? 'AMORTISSABLE',
       loanRate: input.loanRate,
       loanDurationYears: input.loanDurationYears,
       loanInsuranceRate: input.loanInsuranceRate,
@@ -383,6 +428,8 @@ export class InvestmentSimulatorService {
       hasGLI,
       gliRate,
       vacancyWeeksPerYear,
+      seasonalRentalIncome,
+      isSeasonalClassified,
 
       taxRegime: input.taxRegime,
       marginalTaxRate: input.marginalTaxRate,
@@ -423,11 +470,17 @@ export class InvestmentSimulatorService {
             annualRate: n.loanRate,
             durationYears: n.loanDurationYears,
             insuranceRate: n.loanInsuranceRate,
+            loanType: n.loanType,
           })
         : [];
 
+    // For in fine, the regular monthly payment excludes the final capital repayment
     const monthlyLoanPayment =
-      loanAmortization.length > 0 ? loanAmortization[0].payment : 0;
+      loanAmortization.length > 0
+        ? (n.loanType === 'IN_FINE'
+          ? loanAmortization[0].interest + loanAmortization[0].insurance
+          : loanAmortization[0].payment)
+        : 0;
 
     // Yearly projection
     const yearlyProjection = this.projectYearly(
@@ -442,9 +495,10 @@ export class InvestmentSimulatorService {
 
     // Yields — for donations, use property value as denominator (not just reno costs)
     const yieldBase = input.isDonation ? n.purchasePrice : n.totalInvestment;
+    const totalFirstYearGross = n.annualGrossRent + n.seasonalRentalIncome;
     const grossYield =
       yieldBase > 0
-        ? (n.annualGrossRent / yieldBase) * 100
+        ? (totalFirstYearGross / yieldBase) * 100
         : 0;
     const netYield =
       yieldBase > 0
@@ -454,13 +508,26 @@ export class InvestmentSimulatorService {
     // Tax computation (year 1)
     const taxRegimeComparison = this.compareRegimes(input, loanAmortization);
     const recommended = taxRegimeComparison.find((r) => r.isRecommended);
-    const yearlyTax = recommended ? recommended.yearlyTax : 0;
     const recommendedRegime = recommended ? recommended.label : "";
+
+    // Use ACTUAL year 1 tax from the projection (consistent with selected regime)
+    const yearlyTax = year1 ? year1.tax : (recommended ? recommended.yearlyTax : 0);
+
+    // Determine which regime is actually used in the projection
+    const selectedRegimeObj = getRegime(input.taxRegime as Parameters<typeof getRegime>[0]);
+    const usedRegimeLabel = selectedRegimeObj
+      ? selectedRegimeObj.label
+      : (recommended ? recommended.label : 'Automatique');
 
     const netNetYield =
       yieldBase > 0
         ? ((netRentBeforeTax - yearlyTax) / yieldBase) * 100
         : 0;
+
+    // For donations: yield on actual cash invested (reno + furniture + fees)
+    const yieldOnCashInvested = input.isDonation && n.totalInvestment > 0
+      ? Math.round(((netRentBeforeTax - yearlyTax) / n.totalInvestment) * 100 * 100) / 100
+      : null;
 
     const monthlyCashflow = year1 ? year1.cashflow / 12 : 0;
 
@@ -496,7 +563,7 @@ export class InvestmentSimulatorService {
 
     // Placement comparisons
     const placements = this.comparePlacements({
-      investedAmount: n.downPayment,
+      investedAmount: n.totalInvestment - n.loanAmount,
       years: input.projectionYears,
     });
 
@@ -541,6 +608,7 @@ export class InvestmentSimulatorService {
       grossYield: Math.round(grossYield * 100) / 100,
       netYield: Math.round(netYield * 100) / 100,
       netNetYield: roundedNetNetYield,
+      yieldOnCashInvested,
       monthlyCashflow: roundedMonthlyCashflow,
       totalInvestment: Math.round(n.totalInvestment),
       loanAmount: Math.round(n.loanAmount),
@@ -575,6 +643,10 @@ export class InvestmentSimulatorService {
       verdict,
       verdictMessage: verdictMessages[verdict],
       breakEvenYear,
+
+      usedRegimeLabel,
+      seasonalRentalIncome: Math.round(n.seasonalRentalIncome),
+      isSeasonalClassified: n.isSeasonalClassified,
     };
   }
 
@@ -584,20 +656,46 @@ export class InvestmentSimulatorService {
 
   /**
    * Tableau d'amortissement du crédit mois par mois.
-   * Mensualité : M = C × (t/12) / (1 - (1 + t/12)^(-n×12))
+   *
+   * Amortissable : M = C × (t/12) / (1 - (1 + t/12)^(-n×12))
+   * In fine : mensualité = intérêts seuls, capital remboursé en totalité au dernier mois.
    */
   static calculateLoanAmortization(params: {
     loanAmount: number;
     annualRate: number;
     durationYears: number;
     insuranceRate: number;
+    loanType?: 'AMORTISSABLE' | 'IN_FINE';
   }): LoanAmortizationRow[] {
-    const { loanAmount, annualRate, durationYears, insuranceRate } = params;
+    const { loanAmount, annualRate, durationYears, insuranceRate, loanType = 'AMORTISSABLE' } = params;
     const totalMonths = durationYears * 12;
     const monthlyRate = annualRate / 12;
     const monthlyInsurance = (loanAmount * insuranceRate) / 12;
 
-    // Monthly payment (principal + interest, excluding insurance)
+    if (loanType === 'IN_FINE') {
+      // In fine: only interest paid monthly, capital repaid at maturity
+      const monthlyInterest = loanAmount * monthlyRate;
+      const rows: LoanAmortizationRow[] = [];
+
+      for (let m = 1; m <= totalMonths; m++) {
+        const isLastMonth = m === totalMonths;
+        const principal = isLastMonth ? loanAmount : 0;
+        const payment = monthlyInterest + monthlyInsurance + principal;
+
+        rows.push({
+          month: m,
+          payment: Math.round(payment * 100) / 100,
+          principal: Math.round(principal * 100) / 100,
+          interest: Math.round(monthlyInterest * 100) / 100,
+          insurance: Math.round(monthlyInsurance * 100) / 100,
+          remainingBalance: isLastMonth ? 0 : Math.round(loanAmount * 100) / 100,
+        });
+      }
+
+      return rows;
+    }
+
+    // Amortissable (standard)
     let monthlyPaymentPI: number;
     if (monthlyRate === 0) {
       monthlyPaymentPI = loanAmount / totalMonths;
@@ -853,7 +951,10 @@ export class InvestmentSimulatorService {
         n.monthlyRentHC * Math.pow(1 + n.annualRentIncrease, yearFactor);
       const grossRent = monthlyRentYear * 12;
       const vacancyLoss = grossRent * n.vacancyRate;
-      const effectiveRent = grossRent - vacancyLoss;
+      // Seasonal income with same annual increase
+      const seasonalRentYear = n.seasonalRentalIncome * Math.pow(1 + n.annualRentIncrease, yearFactor);
+      const effectiveRent = grossRent - vacancyLoss + seasonalRentYear;
+      const totalGrossRent = grossRent + seasonalRentYear;
 
       // Charges avec augmentation
       const chargesFactor = Math.pow(
@@ -903,12 +1004,19 @@ export class InvestmentSimulatorService {
       // Tax for this year (pass pre-normalized values to avoid re-normalizing)
       const tax = this.calculateYearlyTax(
         n,
-        grossRent,
+        totalGrossRent,
         propertyTaxYear,
         insuranceYear,
         coprYear,
         managementFees,
         yearlyInterest,
+        seasonalRentYear,
+      );
+
+      // Per-regime tax for dynamic comparison table
+      const taxByRegime = this.calculateAllRegimesTax(
+        n, totalGrossRent, propertyTaxYear, insuranceYear,
+        coprYear, managementFees, yearlyInterest, seasonalRentYear,
       );
 
       const taxWith = taxWithout + tax;
@@ -925,11 +1033,13 @@ export class InvestmentSimulatorService {
 
       // Monthly breakdowns
       const monthlyVacancy = (grossRent * n.vacancyRate) / 12;
-      const monthlyNetRent = monthlyRentYear - monthlyVacancy;
+      const monthlySeasonal = seasonalRentYear / 12;
+      const monthlyNetRent = monthlyRentYear - monthlyVacancy + monthlySeasonal;
 
       const monthlyRevenueBreakdown: MonthlyRevenueBreakdown = {
         rentHC: Math.round(monthlyRentYear),
         vacancyDeduction: Math.round(monthlyVacancy),
+        seasonalIncome: Math.round(monthlySeasonal),
         netRent: Math.round(monthlyNetRent),
       };
 
@@ -961,7 +1071,7 @@ export class InvestmentSimulatorService {
 
       projections.push({
         year,
-        grossRent: Math.round(grossRent),
+        grossRent: Math.round(totalGrossRent),
         netRent: Math.round(netRent),
         loanPayment: Math.round(yearlyLoanPayment),
         tax: Math.round(tax),
@@ -976,6 +1086,8 @@ export class InvestmentSimulatorService {
         taxWithout: Math.round(taxWithout),
         taxWith: Math.round(taxWith),
         totalGain: Math.round(totalGain),
+        seasonalRent: Math.round(seasonalRentYear),
+        taxByRegime,
       });
     }
 
@@ -994,6 +1106,7 @@ export class InvestmentSimulatorService {
     chargesCopropriete: number,
     fraisGestion: number,
     yearlyInterest: number,
+    seasonalRent: number = 0,
   ): number {
     const furnitureAmortYears = n.furnitureAmortizationYears;
 
@@ -1018,6 +1131,8 @@ export class InvestmentSimulatorService {
       nombreParts: n.taxShares,
       purchasePrice: n.purchasePrice,
       surface: n.surface,
+      loyerCourteDureeBrut: seasonalRent > 0 ? seasonalRent : undefined,
+      isSeasonalClassified: seasonalRent > 0 ? n.isSeasonalClassified : undefined,
     };
 
     // Try the selected regime first
@@ -1030,6 +1145,8 @@ export class InvestmentSimulatorService {
         purchasePrice: n.purchasePrice,
         surface: n.surface,
         travauxDeductibles: n.renovationCost,
+        loyerCourteDureeBrut: seasonalRent > 0 ? seasonalRent : undefined,
+        isSeasonalClassified: seasonalRent > 0 ? n.isSeasonalClassified : undefined,
       };
       const { eligible } = selectedRegime.isApplicable(ctx);
       if (eligible) {
@@ -1045,6 +1162,8 @@ export class InvestmentSimulatorService {
       purchasePrice: n.purchasePrice,
       surface: n.surface,
       travauxDeductibles: n.renovationCost,
+      loyerCourteDureeBrut: seasonalRent > 0 ? seasonalRent : undefined,
+      isSeasonalClassified: seasonalRent > 0 ? n.isSeasonalClassified : undefined,
     };
 
     const allRegimes = getApplicableRegimes(ctx);
@@ -1059,6 +1178,56 @@ export class InvestmentSimulatorService {
     }
 
     return minTax === Infinity ? 0 : minTax;
+  }
+
+  /**
+   * Calcule l'impôt pour TOUS les régimes éligibles (pour tableau comparatif dynamique).
+   */
+  private static calculateAllRegimesTax(
+    n: NormalizedInput,
+    grossRent: number,
+    taxeFonciere: number,
+    assurancePNO: number,
+    chargesCopropriete: number,
+    fraisGestion: number,
+    yearlyInterest: number,
+    seasonalRent: number = 0,
+  ): Record<string, number> {
+    const furnitureAmortYears = n.furnitureAmortizationYears;
+    const taxParams: TaxCalculationParams = {
+      loyerAnnuelBrut: grossRent,
+      interetsEmprunt: yearlyInterest,
+      taxeFonciere,
+      assurancePNO,
+      fraisGestion,
+      chargesCopropriete,
+      travauxDeductibles: 0,
+      amortissementBien: n.isFurnished ? (n.purchasePrice * 0.85) / 30 : 0,
+      amortissementMobilier: n.isFurnished ? n.furnitureCost / furnitureAmortYears : 0,
+      amortissementTravaux: n.isFurnished ? n.renovationCost / 10 : 0,
+      revenuGlobal: n.annualIncome,
+      nombreParts: n.taxShares,
+      purchasePrice: n.purchasePrice,
+      surface: n.surface,
+      loyerCourteDureeBrut: seasonalRent > 0 ? seasonalRent : undefined,
+      isSeasonalClassified: seasonalRent > 0 ? n.isSeasonalClassified : undefined,
+    };
+    const ctx: ApplicabilityContext = {
+      isFurnished: n.isFurnished,
+      loyerAnnuelBrut: grossRent,
+      revenuGlobal: n.annualIncome,
+      purchasePrice: n.purchasePrice,
+      surface: n.surface,
+      travauxDeductibles: n.renovationCost,
+      loyerCourteDureeBrut: seasonalRent > 0 ? seasonalRent : undefined,
+      isSeasonalClassified: seasonalRent > 0 ? n.isSeasonalClassified : undefined,
+    };
+    const result: Record<string, number> = {};
+    for (const { regime, eligible } of getApplicableRegimes(ctx)) {
+      if (!eligible) continue;
+      result[regime.id] = Math.round(regime.calculateAnnualTax(taxParams).totalImposition);
+    }
+    return result;
   }
 
   /**
@@ -1100,20 +1269,26 @@ export class InvestmentSimulatorService {
 
     const netRentBeforeTax = n.effectiveAnnualRent - n.totalAnnualCharges;
 
+    // Total gross rent includes seasonal income
+    const totalGrossRent = n.annualGrossRent + n.seasonalRentalIncome;
+    const hasSeasonal = n.seasonalRentalIncome > 0;
+
     // Applicability context
     const ctx: ApplicabilityContext = {
       isFurnished: n.isFurnished,
-      loyerAnnuelBrut: n.annualGrossRent,
+      loyerAnnuelBrut: totalGrossRent,
       revenuGlobal: n.annualIncome,
       purchasePrice: n.purchasePrice,
       surface: n.surface,
       travauxDeductibles: n.renovationCost,
+      loyerCourteDureeBrut: hasSeasonal ? n.seasonalRentalIncome : undefined,
+      isSeasonalClassified: hasSeasonal ? n.isSeasonalClassified : undefined,
     };
 
     // Tax calculation params
     const furnitureAmortYears = n.furnitureAmortizationYears;
     const taxParams: TaxCalculationParams = {
-      loyerAnnuelBrut: n.annualGrossRent,
+      loyerAnnuelBrut: totalGrossRent,
       interetsEmprunt: yearlyInterest,
       taxeFonciere: n.annualPropertyTax,
       assurancePNO: n.annualInsurancePNO,
@@ -1129,6 +1304,8 @@ export class InvestmentSimulatorService {
       nombreParts: n.taxShares,
       purchasePrice: n.purchasePrice,
       surface: n.surface,
+      loyerCourteDureeBrut: hasSeasonal ? n.seasonalRentalIncome : undefined,
+      isSeasonalClassified: hasSeasonal ? n.isSeasonalClassified : undefined,
     };
 
     // Get all regimes with eligibility
@@ -1138,15 +1315,17 @@ export class InvestmentSimulatorService {
     let minTax = Infinity;
     let bestKey = "";
 
-    for (const { regime, eligible } of allRegimes) {
+    for (const { regime, eligible, reason } of allRegimes) {
       if (!eligible) {
         results.push({
           regime: regime.id,
           label: regime.label,
+          category: regime.category,
           yearlyTax: 0,
           netCashflow: 0,
           isRecommended: false,
           eligible: false,
+          reason,
         });
         continue;
       }
@@ -1164,6 +1343,7 @@ export class InvestmentSimulatorService {
       results.push({
         regime: regime.id,
         label: regime.label,
+        category: regime.category,
         yearlyTax: Math.round(yearlyTax),
         netCashflow: Math.round(netCashflow),
         isRecommended: false,

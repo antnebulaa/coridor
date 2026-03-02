@@ -34,7 +34,7 @@ export function SignupBanner() {
         <button
           type="button"
           onClick={() => loginModal.onOpen()}
-          className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium text-white bg-linear-to-r from-[#E8A838] via-[#D4922A] to-[#B87A1E] shadow-md hover:shadow-lg transition-all"
+          className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium text-white bg-linear-to-r from-[#D4703D] via-[#B9592D] to-[#9A4724] shadow-md hover:shadow-lg transition-all"
         >
           Découvrir Coridor
           <ArrowRight size={14} />

@@ -75,7 +75,7 @@ export default function CashflowProjectionChart({
           />
           <Bar
             dataKey="cashflow"
-            fill="#E8A838"
+            fill="#B9592D"
             radius={[4, 4, 0, 0]}
             maxBarSize={24}
           />

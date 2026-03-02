@@ -233,7 +233,7 @@ const PropertiesClient: React.FC<PropertiesClientProps> = ({
             </div>
 
             {/* Floating Action Button (FAB) for Add Property */}
-            <div className="fixed bottom-24 right-6 md:bottom-10 md:right-10 z-50">
+            <div className="fixed bottom-28 right-6 md:bottom-10 md:right-10 z-50">
                 <DarkActionButton
                     onClick={() => rentModal.onOpen()}
                     icon={Plus}

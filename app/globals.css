@@ -365,22 +365,22 @@ hr {
   --sim-bg: #FAF9F6;
   --sim-bg-card: #FFFFFF;
   --sim-bg-section: #F5F3EE;
-  --sim-amber-50: #FFF8E7;
-  --sim-amber-100: #FFF0C7;
-  --sim-amber-400: #E8A838;
-  --sim-amber-500: #D4922A;
-  --sim-amber-600: #B87A1E;
+  --sim-amber-50: #FDF2EE;
+  --sim-amber-100: #FADDD3;
+  --sim-amber-400: #D4703D;
+  --sim-amber-500: #B9592D;
+  --sim-amber-600: #9A4724;
   --sim-shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
   --sim-shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
   --sim-effort: #78716C;
   --sim-effort-bg: #F5F5F4;
   /* V2.3 — Bandes alternées */
-  --sim-band-hero-from: #FFF8E7;
+  --sim-band-hero-from: #FDF2EE;
   --sim-band-white: #FFFFFF;
   --sim-band-offwhite: #F8F7F3;
   --sim-band-dark: #1A1A1A;
-  --sim-band-cta-from: #FFF8E7;
-  --sim-band-cta-to: #FFF0C7;
+  --sim-band-cta-from: #FDF2EE;
+  --sim-band-cta-to: #FADDD3;
   --sim-form-card-radius: 24px;
   --sim-form-card-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
   --sim-shadow-card-v23: 0 4px 24px rgba(0,0,0,0.08);
@@ -389,19 +389,19 @@ hr {
   --sim-bg: #0F0F0F;
   --sim-bg-card: #1A1A1A;
   --sim-bg-section: #151515;
-  --sim-amber-50: #1A1506;
-  --sim-amber-100: #231C0A;
+  --sim-amber-50: #1A110D;
+  --sim-amber-100: #231611;
   --sim-shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15);
   --sim-shadow-hover: 0 4px 16px rgba(0,0,0,0.3);
   --sim-effort: #A8A29E;
   --sim-effort-bg: #1C1B1A;
   /* V2.3 — Bandes alternées (dark) */
-  --sim-band-hero-from: rgba(184,122,30,0.15);
+  --sim-band-hero-from: rgba(185,89,45,0.15);
   --sim-band-white: #0A0A0A;
   --sim-band-offwhite: #111111;
   --sim-band-dark: #1A1A1A;
-  --sim-band-cta-from: rgba(184,122,30,0.2);
-  --sim-band-cta-to: rgba(184,122,30,0.05);
+  --sim-band-cta-from: rgba(185,89,45,0.2);
+  --sim-band-cta-to: rgba(185,89,45,0.05);
   --sim-form-card-shadow: 0 4px 24px rgba(0,0,0,0.3);
   --sim-shadow-card-v23: 0 4px 24px rgba(0,0,0,0.3);
 }
@@ -425,13 +425,64 @@ hr {
 }
 
 @keyframes sim-pulse-shadow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 146, 42, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(212, 146, 42, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(185, 89, 45, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(185, 89, 45, 0); }
 }
 
 @keyframes sim-slide-up-fade {
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Simulator range slider */
+.sim-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e5e5;
+  outline: none;
+  cursor: pointer;
+}
+.dark .sim-slider {
+  background: #333;
+}
+/* Dark band context (fiscal tab) */
+.sim-slider-dark {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+  cursor: pointer;
+}
+.sim-slider::-webkit-slider-thumb,
+.sim-slider-dark::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--sim-amber-400, #D4703D);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: grab;
+}
+.sim-slider::-moz-range-thumb,
+.sim-slider-dark::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--sim-amber-400, #D4703D);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: grab;
+}
+.sim-slider::-webkit-slider-thumb:active,
+.sim-slider-dark::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.15);
 }
 
 /* Leaflet Dark Mode Overrides */

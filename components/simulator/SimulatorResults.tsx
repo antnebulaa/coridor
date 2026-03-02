@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Wallet, BarChart3, Receipt, Landmark, Home } from 'lucide-react';
+import { Wallet, BarChart3, Receipt, Landmark, Home, Save, FileDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { InvestmentResult, InvestmentInput } from '@/services/InvestmentSimulatorService';
 import type { User } from '@prisma/client';
@@ -67,7 +67,7 @@ export default function SimulatorResults({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut', delay: 0.15 }}
         >
-          <EssentialSummary result={result} projectionYears={input.projectionYears} />
+          <EssentialSummary result={result} />
         </motion.div>
       </Band>
 
@@ -117,6 +117,42 @@ export default function SimulatorResults({
             isDonation={!!input.isDonation}
           />
         </ScrollReveal>
+      </Band>
+
+      {/* Action buttons — always visible */}
+      <Band bg="offwhite" py="py-6 md:py-8">
+        <div className="flex flex-wrap gap-3 justify-center">
+          <button
+            type="button"
+            onClick={onSave}
+            className="flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium bg-linear-to-r from-[#D4703D] via-[#B9592D] to-[#9A4724] text-white shadow-md hover:shadow-lg transition-all"
+          >
+            <Save size={15} />
+            Sauvegarder
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              fetch('/api/simulator/export-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inputs: input }),
+              })
+                .then((res) => res.blob())
+                .then((blob) => {
+                  const a = document.createElement('a');
+                  a.href = URL.createObjectURL(blob);
+                  a.download = 'rapport-investissement-coridor.pdf';
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                });
+            }}
+            className="flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <FileDown size={15} />
+            Exporter PDF
+          </button>
+        </div>
       </Band>
 
       {/* Expert section */}

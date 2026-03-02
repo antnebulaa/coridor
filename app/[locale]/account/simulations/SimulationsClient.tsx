@@ -128,7 +128,7 @@ export default function SimulationsClient() {
           <p className="text-neutral-500">Aucune simulation sauvegardée</p>
           <button
             onClick={() => router.push('/simulateur')}
-            className="mt-4 text-sm text-[#E8A838] hover:underline"
+            className="mt-4 text-sm text-[#B9592D] hover:underline"
           >
             Créer ma première simulation
           </button>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { YearSlider } from './YearSlider';
 import type { InvestmentResult } from '@/services/InvestmentSimulatorService';
 
 interface CostTabProps {
@@ -13,11 +12,11 @@ const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div className={`flex justify-between py-2.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-3 mt-1' : ''}`}>
-      <span className={`text-base ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
+    <div className={`flex justify-between py-0.5 ${bold ? 'border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-1' : ''}`}>
+      <span className={`text-sm ${bold ? 'font-semibold text-neutral-800 dark:text-neutral-200' : 'text-neutral-600 dark:text-neutral-400'}`}>
         {label}
       </span>
-      <span className={`text-base tabular-nums ${bold ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'font-medium text-neutral-800 dark:text-neutral-200'}`}>
+      <span className={`text-sm tabular-nums ${bold ? 'font-semibold text-neutral-900 dark:text-neutral-100' : 'font-medium text-neutral-800 dark:text-neutral-200'}`}>
         {value}
       </span>
     </div>
@@ -73,17 +72,23 @@ export function CostTab({ result, startYear }: CostTabProps) {
   return (
     <div className="space-y-6">
       <h3
-        className="text-3xl md:text-4xl text-neutral-900 dark:text-neutral-100"
-        style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+        className="text-3xl tracking-tight font-medium md:text-4xl text-neutral-900 dark:text-neutral-100"
+        
       >
         Combien ça me coûte par mois ?
       </h3>
 
-      <YearSlider
-        startYear={startYear}
-        endYear={endYear}
-        selectedYear={selectedYear}
-        onYearChange={setSelectedYear}
+      <div className="text-left text-xl font-medium text-neutral-400 dark:text-neutral-500">
+        Année <span className="font-medium text-neutral-900 dark:text-white">{selectedYear}</span> — <span className="font-medium text-neutral-900 dark:text-white">{yearIndex + 1}</span><sup>e</sup> année
+      </div>
+
+      <input
+        type="range"
+        min={startYear}
+        max={endYear}
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(Number(e.target.value))}
+        className="sim-slider w-full"
       />
 
       {/* EFFORT HERO — first visible element */}
@@ -97,58 +102,45 @@ export function CostTab({ result, startYear }: CostTabProps) {
               : 'linear-gradient(135deg, var(--sim-effort-bg), transparent)',
         }}
       >
-        <div className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
-          Effort d&apos;épargne mensuel
-        </div>
-        <div
-          className={`text-3xl md:text-5xl font-bold tabular-nums ${effortText}`}
-          style={{ fontFamily: 'var(--font-serif-sim), serif' }}
-        >
-          {effort >= 0 ? '+' : ''}{fmt(effort)}€<span className="text-lg md:text-2xl font-normal">/mois</span>
-        </div>
-        <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 tabular-nums">
-          Soit {effort >= 0 ? '+' : ''}{fmt(effort * 12)}€ par an
-        </div>
+        {effort >= 0 ? (
+          <>
+            <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-2">
+              Aucun effort d&apos;épargne
+            </div>
+            <div
+              className="text-3xl md:text-5xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400"
+              style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}
+            >
+              0€<span className="text-lg md:text-2xl font-normal">/mois</span>
+            </div>
+            <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+              Votre projet s&apos;autofinance{effort > 0 && <> et vous rapporte <span className="text-emerald-600 dark:text-emerald-400 font-medium">+{fmt(effort)}€/mois en plus</span></>}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+              Effort d&apos;épargne mensuel
+            </div>
+            <div
+              className={`text-3xl md:text-5xl font-bold tabular-nums ${effortText}`}
+              style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}
+            >
+              {fmt(effort)}€<span className="text-lg md:text-2xl font-normal">/mois</span>
+            </div>
+            <div className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 tabular-nums">
+              Soit {fmt(effort * 12)}€ par an
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Donut chart — revenus vs dépenses */}
-      {(() => {
-        const total = totalRevenue + totalExpenses;
-        if (total <= 0) return null;
-        const revPct = totalRevenue / total;
-        const revAngle = revPct * 360;
-        const r = 50;
-        const cx = 60;
-        const cy = 60;
-        const circumference = 2 * Math.PI * r;
-        const revArc = circumference * revPct;
-        const expArc = circumference * (1 - revPct);
-        return (
-          <div className="flex items-center justify-center gap-6">
-            <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ef4444" strokeWidth="14" strokeDasharray={`${expArc} ${circumference}`} strokeDashoffset={-revArc} transform={`rotate(-90 ${cx} ${cy})`} strokeLinecap="round" />
-              <circle cx={cx} cy={cy} r={r} fill="none" stroke="#22c55e" strokeWidth="14" strokeDasharray={`${revArc} ${circumference}`} strokeDashoffset="0" transform={`rotate(-90 ${cx} ${cy})`} strokeLinecap="round" />
-              <text x={cx} y={cy - 6} textAnchor="middle" className="text-xs fill-neutral-500 dark:fill-neutral-400" fontSize="11">Effort</text>
-              <text x={cx} y={cy + 10} textAnchor="middle" className="fill-neutral-900 dark:fill-neutral-100" fontSize="14" fontWeight="bold">{effort >= 0 ? '+' : ''}{fmt(effort)}€</text>
-            </svg>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-sm text-neutral-600 dark:text-neutral-400">Revenus : {fmt(totalRevenue)}€</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-sm text-neutral-600 dark:text-neutral-400">Dépenses : {fmt(totalExpenses)}€</span>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+     
 
       {/* Revenue vs Expense columns with visual bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Revenus */}
-        <div className="bg-emerald-50/50 dark:bg-emerald-950/30 rounded-xl p-4">
+        <div className="bg-white dark:bg-dark-900  rounded-3xl p-4">
           <h4 className="text-base font-semibold text-emerald-700 dark:text-emerald-400 mb-3">
             Revenus mensuels
           </h4>
@@ -156,9 +148,12 @@ export function CostTab({ result, startYear }: CostTabProps) {
           {rev.vacancyDeduction > 0 && (
             <Row label="Vacance locative" value={`-${fmt(rev.vacancyDeduction)}€`} />
           )}
+          {rev.seasonalIncome > 0 && (
+            <Row label="Location saisonnière" value={`+${fmt(rev.seasonalIncome)}€`} />
+          )}
           <Row label="Total revenus" value={`${fmt(totalRevenue)}€`} bold />
           {/* Visual bar */}
-          <div className="mt-3 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+          <div className="mt-3 h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all duration-500"
               style={{ width: `${(totalRevenue / maxBar) * 100}%` }}
@@ -167,7 +162,7 @@ export function CostTab({ result, startYear }: CostTabProps) {
         </div>
 
         {/* Dépenses */}
-        <div className="bg-red-50/50 dark:bg-red-950/30 rounded-xl p-4">
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-4">
           <h4 className="text-base font-semibold text-red-700 dark:text-red-400 mb-3">
             Dépenses mensuelles
           </h4>
@@ -183,7 +178,7 @@ export function CostTab({ result, startYear }: CostTabProps) {
           {exp.monthlyTax > 0 && <Row label="Impôts fonciers" value={`${fmt(exp.monthlyTax)}€`} />}
           <Row label="Total dépenses" value={`${fmt(totalExpenses)}€`} bold />
           {/* Visual bar */}
-          <div className="mt-3 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+          <div className="mt-3 h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-red-500 rounded-full transition-all duration-500"
               style={{ width: `${(totalExpenses / maxBar) * 100}%` }}

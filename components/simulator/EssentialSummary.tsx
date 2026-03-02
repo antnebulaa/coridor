@@ -25,7 +25,7 @@ function SummaryCard({
 }: {
   icon: React.ReactNode;
   title: string;
-  rows: { label: string; value: string; highlight?: boolean }[];
+  rows: { label: string; value: string; highlight?: boolean; bold?: boolean }[];
   color: CardColor;
   tabId: string;
   mainValue?: number;
@@ -40,16 +40,14 @@ function SummaryCard({
 
   return (
     <div
-      className={`rounded-[20px] border border-neutral-200 dark:border-neutral-800 bg-(--sim-bg-card) p-6 flex flex-col gap-4 transition-all duration-200 hover:-translate-y-1`}
-      style={{ boxShadow: 'var(--sim-shadow-card-v23)' }}
+      className={`rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 p-5 flex flex-col gap-4 transition-all duration-200 hover:-translate-y-1`}
+     
     >
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${iconBg}`}>
-          {icon}
-        </div>
+      <div className="flex items-center">
+        
         <h3
-          className="text-base font-semibold text-neutral-800 dark:text-neutral-200"
-          style={{ fontFamily: 'var(--font-serif-sim), serif' }}
+          className="text-base  tracking-tight font-medium text-neutral-800 dark:text-neutral-200"
+          
         >
           {title}
         </h3>
@@ -57,19 +55,21 @@ function SummaryCard({
 
       {/* Animated main KPI if provided */}
       {mainValue != null && (
-        <div className="text-2xl font-bold text-neutral-900 dark:text-white tabular-nums">
+        <div className="text-2xl font-bold text-neutral-900 dark:text-white tabular-nums" style={{ fontFamily: 'var(--font-nunito-sim), sans-serif' }}>
           {fmt(animatedMain)}€
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-0 sm:space-y-2">
         {rows.map((row) => (
           <div key={row.label} className="flex justify-between items-baseline">
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               {row.label}
             </span>
             <span
-              className={`text-base font-medium tabular-nums ${
+              className={`text-sm tabular-nums ${
+                row.bold ? 'font-bold text-base' : 'font-medium'
+              } ${
                 row.highlight
                   ? 'text-emerald-600 dark:text-emerald-400'
                   : 'text-neutral-900 dark:text-neutral-100'
@@ -96,51 +96,54 @@ function SummaryCard({
   );
 }
 
-export function EssentialSummary({ result, projectionYears }: EssentialSummaryProps) {
+export function EssentialSummary({ result }: EssentialSummaryProps) {
   const year1 = result.yearlyProjection[0];
   const year2 = result.yearlyProjection[1];
-  const lastYear = result.yearlyProjection[result.yearlyProjection.length - 1];
 
-  const effort1 = year1?.savingsEffort ?? 0;
-  const effort2 = year2?.savingsEffort ?? effort1;
-  const patrimoine = lastYear?.netWealth ?? 0;
+  // Coût mensuel = total des dépenses hors impôts (crédit + charges)
+  const expenses1 = year1?.monthlyExpenseBreakdown;
+  const expenses2 = year2?.monthlyExpenseBreakdown;
+  const totalCost = (exp: typeof expenses1) => {
+    if (!exp) return 0;
+    return exp.loanPayment + exp.loanInsurance + exp.propertyTax + exp.insurancePNO
+      + exp.coproCharges + exp.gli + exp.management + exp.maintenance + exp.otherCharges;
+  };
+  const cost1 = totalCost(expenses1);
+  const cost2 = totalCost(expenses2);
 
-  // Card 1 — Coût
-  const costColor: CardColor =
-    effort1 >= 0 ? 'green' : effort1 >= -200 ? 'orange' : 'red';
+
+  // Card 1 — Coût réel (hors impôts)
+  const costColor: CardColor = 'orange';
 
   const costRows = [
     {
-      label: 'Année 1',
-      value: `${effort1 >= 0 ? '+' : ''}${fmt(effort1)}€/mois`,
-      highlight: effort1 >= 0,
+      label: '1ère année',
+      value: `${fmt(cost1)}€/mois`,
     },
     {
       label: 'Années suivantes',
-      value: `${effort2 >= 0 ? '+' : ''}${fmt(effort2)}€/mois`,
-      highlight: effort2 >= 0,
-    },
-    {
-      label: `Patrimoine à ${projectionYears} ans`,
-      value: `${fmt(patrimoine)}€`,
+      value: `${fmt(cost2)}€/mois`,
     },
   ];
 
   // Card 2 — Rentabilité
   const rendement = result.netNetYield;
+  const hasDonationYield = result.yieldOnCashInvested != null;
   const profitColor: CardColor =
     rendement >= 5 ? 'green' : rendement >= 3 ? 'orange' : 'red';
 
   const profitRows = [
-    { label: 'Rendement net-net', value: `${rendement}%` },
+    {
+      label: hasDonationYield ? 'Rendement / valeur du bien' : 'Rendement net-net',
+      value: `${rendement}%`,
+    },
+    ...(hasDonationYield
+      ? [{ label: 'Rendement / apport réel', value: `${result.yieldOnCashInvested}%`, highlight: true }]
+      : []),
     {
       label: 'Cash-flow mensuel',
       value: `${result.monthlyCashflow >= 0 ? '+' : ''}${fmt(result.monthlyCashflow)}€/mois`,
       highlight: result.monthlyCashflow >= 0,
-    },
-    {
-      label: `En ${projectionYears} ans`,
-      value: `${fmt(patrimoine)}€`,
     },
   ];
 
@@ -148,13 +151,18 @@ export function EssentialSummary({ result, projectionYears }: EssentialSummaryPr
   const diff = result.taxDifference;
   const taxColor: CardColor = diff <= 0 ? 'green' : diff <= 1000 ? 'orange' : 'red';
 
+  const monthlyTaxWithout = Math.round(result.taxWithoutInvestment / 12);
+  const monthlyTaxWith = Math.round(result.taxWithInvestment / 12);
+  const monthlyDiff = Math.round(diff / 12);
+
   const taxRows = [
-    { label: 'Impôts sans investissement', value: `${fmt(result.taxWithoutInvestment)}€` },
-    { label: 'Impôts avec investissement', value: `${fmt(result.taxWithInvestment)}€` },
+    { label: 'Impôts sans investissement', value: `${fmt(monthlyTaxWithout)}€/mois` },
+    { label: 'Impôts avec investissement', value: `${fmt(monthlyTaxWith)}€/mois` },
     {
-      label: diff <= 0 ? 'Économie/an' : 'Surcoût/an',
-      value: `${diff > 0 ? '+' : ''}${fmt(diff)}€`,
-      highlight: diff <= 0,
+      label: monthlyDiff <= 0 ? 'Économie' : 'Surcoût',
+      value: `${monthlyDiff > 0 ? '+' : ''}${fmt(monthlyDiff)}€/mois`,
+      highlight: monthlyDiff <= 0,
+      bold: true,
     },
   ];
 
@@ -162,25 +170,24 @@ export function EssentialSummary({ result, projectionYears }: EssentialSummaryPr
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <SummaryCard
         icon={<Wallet size={18} />}
-        title="Combien ça me coûte ?"
+        title="Coût hors impôts"
         rows={costRows}
         color={costColor}
         tabId="section-cost"
       />
       <SummaryCard
-        icon={<BarChart3 size={18} />}
-        title="Combien ça rapporte ?"
-        rows={profitRows}
-        color={profitColor}
-        tabId="section-profitability"
-        mainValue={Math.round(patrimoine)}
-      />
-      <SummaryCard
         icon={<Receipt size={18} />}
-        title="Quel impact fiscal ?"
+        title="Impact fiscal"
         rows={taxRows}
         color={taxColor}
         tabId="section-fiscal"
+      />
+      <SummaryCard
+        icon={<BarChart3 size={18} />}
+        title="Revenu"
+        rows={profitRows}
+        color={profitColor}
+        tabId="section-profitability"
       />
     </div>
   );

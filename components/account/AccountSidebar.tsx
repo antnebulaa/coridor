@@ -279,7 +279,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             </div>
 
             {currentUser && (
-                <div className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 whitespace-nowrap">
+                <div className="md:hidden fixed bottom-28 left-1/2 -translate-x-1/2 z-40 whitespace-nowrap">
                     <motion.button
                         onClick={toggleMode}
                         disabled={isLoading}
