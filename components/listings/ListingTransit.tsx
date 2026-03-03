@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Bus, Train, TramFront, MapPin, Footprints, Car } from "lucide-react";
+import { Bus, Train, TramFront, MapPin, Footprints, Car, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface TransitLine {
     name: string;
@@ -129,17 +129,22 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
                                         {mainConnection.name}
                                     </span>
                                 </div>
-                                <div className="text-sm text-muted-foreground font-light line-clamp-2 leading-snug mt-1.5">
-                                    {mainConnection.headsign}
+                                <div className="flex flex-col gap-0.5 mt-1.5">
+                                    {mainConnection.headsign.split(" / ").map((direction, i) => (
+                                        <div key={i} className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal leading-snug">
+                                            {i === 0 ? <ArrowRight size={12} className="shrink-0" /> : <ArrowLeft size={12} className="shrink-0" />}
+                                            <span className="truncate">{direction}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            <div className="text-right flex flex-col items-end shrink-0 whitespace-nowrap">
-                                <span className="font-bold text-lg flex items-center gap-1.5">
-                                    {getTravelIcon(mainConnection.walkTime)}
+                            <div className="flex flex-col items-center shrink-0">
+                                <Footprints size={20} className="text-neutral-400 dark:text-neutral-500 mb-1" />
+                                <span className="font-semibold text-lg tabular-nums text-neutral-900 dark:text-neutral-100">
                                     {mainConnection.walkTime} min
                                 </span>
-                                <span className="text-xs text-muted-foreground bg-white px-2 py-0.5 rounded-full border border-neutral-100 mt-1">
+                                <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
                                     {mainConnection.distance > 1000 ? `${(mainConnection.distance / 1000).toFixed(1)} km` : `${mainConnection.distance}m`}
                                 </span>
                             </div>
@@ -150,7 +155,7 @@ const ListingTransit: React.FC<ListingTransitProps> = ({ latitude, longitude, li
                 {/* Block 2: Proximity */}
                 {nearby.length > 0 && (
                     <div className="flex flex-col gap-3">
-                        {mainConnection && <div className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Également à proximité</div>}
+                        {mainConnection && <div className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Également à proximité</div>}
 
                         <div className="grid grid-cols-1 gap-3">
                             {nearby.map((station, idx) => {

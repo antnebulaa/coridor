@@ -239,7 +239,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                             {(listing as any).propertyAdjective}
                         </span>
                     )}
-                    <h2 className="text-[22px] font-bold text-neutral-900 dark:text-neutral-100 leading-tight mt-0.5">
+                    <h2 className="text-[22px] font-semibold text-neutral-900 dark:text-neutral-100 leading-tight mt-0.5">
                         {titleDisplay}
                     </h2>
                     <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-1">
@@ -293,18 +293,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                         );
                     })()}
 
-                    {/* Price hero */}
-                    <div className="mt-4 flex items-baseline gap-1.5">
-                        <span className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">
-                            {totalCC} €
-                        </span>
-                        <span className="text-sm text-neutral-400 dark:text-neutral-500">/mois</span>
-                    </div>
-                    {chargesAmount > 0 && (
-                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
-                            dont {chargesAmount} € de {chargesType === 'FORFAIT' ? 'charges (forfait)' : 'provisions sur charges'}
-                        </p>
-                    )}
+
                 </div>
 
                 {/* ── Super atouts ── */}
@@ -323,68 +312,6 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 )}
 
                 <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
-
-                {/* ── Friendly sections ── */}
-                {((listing as any).petsAllowed || listing.isStudentFriendly) && (
-                    <>
-                        <div className="px-6 py-5 flex flex-col gap-6">
-                            <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 text-center">
-                                Un proprio accueillant
-                            </div>
-                            {(listing as any).petsAllowed && (
-                                <div className="flex flex-col items-center text-center">
-                                    <Image
-                                        src="/images/Pet-friendly.png"
-                                        alt="Pet friendly"
-                                        width={80}
-                                        height={80}
-                                        className="mb-3"
-                                    />
-                                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Animaux bienvenus</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
-                                        Le propriétaire accueille volontiers les animaux de compagnie. Rappel : un bailleur ne peut pas interdire la détention d'un animal domestique (loi du 9 juil. 1970).
-                                    </p>
-                                </div>
-                            )}
-                            {listing.isStudentFriendly && (
-                                <div className="flex flex-col items-center text-center">
-                                    <Image
-                                        src="/images/student-friendly.png"
-                                        alt="Student friendly"
-                                        width={80}
-                                        height={80}
-                                        className="mb-3"
-                                    />
-                                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Idéal étudiant</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
-                                        Ce logement est particulièrement adapté aux étudiants. Le propriétaire est ouvert aux dossiers étudiants, avec ou sans garant physique (Visale accepté).
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
-                    </>
-                )}
-
-                {/* ── Description ── */}
-                {listing.description && (
-                    <>
-                        <div className="px-6 py-5">
-                            <div className={`text-[14px] text-neutral-600 dark:text-neutral-400 leading-[1.65] whitespace-pre-line ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}>
-                                {listing.description}
-                            </div>
-                            {listing.description.length > 180 && (
-                                <button
-                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                                    className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-neutral-300 dark:decoration-neutral-600 hover:decoration-neutral-900 dark:hover:decoration-neutral-100 transition-colors inline-flex items-center gap-1"
-                                >
-                                    {isDescriptionExpanded ? <>Voir moins <ChevronUp size={14} /></> : <>Voir plus <ChevronDown size={14} /></>}
-                                </button>
-                            )}
-                        </div>
-                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
-                    </>
-                )}
 
                 {/* ── Loyer ── */}
                 <div className="px-6 py-5">
@@ -420,6 +347,68 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                 </div>
 
                 <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+
+                {/* ── Friendly sections ── */}
+                {((listing as any).petsAllowed || listing.isStudentFriendly) && (
+                    <>
+                        <div className="px-6 py-5 flex flex-col gap-6">
+                            <div className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 text-center">
+                                Un proprio accueillant
+                            </div>
+                            {(listing as any).petsAllowed && (
+                                <div className="flex flex-col items-center text-center">
+                                    <Image
+                                        src="/images/Pet-friendly.png"
+                                        alt="Pet friendly"
+                                        width={80}
+                                        height={80}
+                                        className="mb-3"
+                                    />
+                                    <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Animaux bienvenus</p>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
+                                        Le propriétaire accueille volontiers les animaux de compagnie. Rappel : un bailleur ne peut pas interdire la détention d'un animal domestique (loi du 9 juil. 1970).
+                                    </p>
+                                </div>
+                            )}
+                            {listing.isStudentFriendly && (
+                                <div className="flex flex-col items-center text-center">
+                                    <Image
+                                        src="/images/student-friendly.png"
+                                        alt="Student friendly"
+                                        width={80}
+                                        height={80}
+                                        className="mb-3"
+                                    />
+                                    <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Idéal étudiant</p>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
+                                        Ce logement est particulièrement adapté aux étudiants. Le propriétaire est ouvert aux dossiers étudiants, avec ou sans garant physique (Visale accepté).
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+                    </>
+                )}
+
+                {/* ── Description ── */}
+                {listing.description && (
+                    <>
+                        <div className="px-6 py-5">
+                            <div className={`text-[14px] text-neutral-600 dark:text-neutral-400 leading-[1.65] whitespace-pre-line ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}>
+                                {listing.description}
+                            </div>
+                            {listing.description.length > 180 && (
+                                <button
+                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                    className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-neutral-300 dark:decoration-neutral-600 hover:decoration-neutral-900 dark:hover:decoration-neutral-100 transition-colors inline-flex items-center gap-1"
+                                >
+                                    {isDescriptionExpanded ? <>Voir moins <ChevronUp size={14} /></> : <>Voir plus <ChevronDown size={14} /></>}
+                                </button>
+                            )}
+                        </div>
+                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+                    </>
+                )}
 
                 {/* ── Équipements ── */}
                 <div className="px-6 py-5">

@@ -44,7 +44,6 @@ const HomeClient: React.FC<HomeClientProps> = ({
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const t = useTranslations('home');
     const tCommon = useTranslations('common');
-    const tListing = useTranslations('listing');
 
     const currentSearch = useMemo(() => ({
         locationValue: searchParams?.get('locationValue') || undefined,
@@ -365,11 +364,11 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                     onClick={() => setSelectedListingId('')}
                                                     className="
                                                         w-9 h-9 flex items-center justify-center
-                                                        bg-transparent
-                                                        border border-white
-                                                        rounded-full 
-                                                        hover:bg-white/20
-                                                        text-white
+                                                        bg-white/80 dark:bg-black/40
+                                                        backdrop-blur-sm
+                                                        rounded-full
+                                                        hover:bg-white dark:hover:bg-black/60
+                                                        text-neutral-700 dark:text-neutral-200
                                                         shadow-sm
                                                         transition
                                                     "
@@ -379,7 +378,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                                 </button>
                                             </div>
 
-                                            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+                                            <div className="flex-1 overflow-y-auto scrollbar-hide">
                                                 <ListingPreview
                                                     listing={selectedListing}
                                                     currentUser={currentUser}
@@ -387,15 +386,18 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             </div>
                                             {/* Fixed Bottom Footer for Desktop Overlay */}
                                             <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-between">
-                                                <div className="flex flex-col">
-                                                    <div className="flex flex-row items-center gap-1">
-                                                        <div className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
+                                                <div className="flex flex-col shrink-0">
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="font-bold text-lg tabular-nums text-neutral-900 dark:text-neutral-100">
                                                             {selectedListing.price + ((selectedListing.charges as any)?.amount || 0)} €
-                                                        </div>
-                                                        <div className="font-light text-muted-foreground text-sm">
-                                                            {tListing('monthChargesIncluded')}
-                                                        </div>
+                                                        </span>
+                                                        <span className="text-sm text-neutral-400 dark:text-neutral-500">/mois</span>
                                                     </div>
+                                                    {(selectedListing.charges as any)?.amount > 0 && (
+                                                        <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                                                            dont {(selectedListing.charges as any).amount} € de {(selectedListing as any).chargesType === 'FORFAIT' ? 'charges (forfait)' : 'prov. charges'}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="w-[140px]">
                                                     <ListingPreview.ApplyButton
@@ -440,7 +442,6 @@ const HomeClient: React.FC<HomeClientProps> = ({
                             <ListingPreview
                                 listing={selectedListing}
                                 currentUser={currentUser}
-                                isMobileModal
                             />
                         </div>
                     ) : undefined
