@@ -402,11 +402,24 @@ export default async function getListings(
                 hasBathtub: property.hasBathtub,
                 hasAirConditioning: property.hasAirConditioning,
 
-                hasStorage: false,
-                hasLaundry: false,
-                hasArmoredDoor: false,
-                hasConcierge: false,
-                hasAutomaticDoors: false,
+                hasStorage: property.hasStorage ?? false,
+                hasLaundry: property.hasLaundry ?? false,
+                hasArmoredDoor: property.hasArmoredDoor ?? false,
+                hasConcierge: property.hasConcierge ?? false,
+                hasAutomaticDoors: property.hasAutomaticDoors ?? false,
+
+                // Outdoor / Building
+                hasBalcony: property.hasBalcony ?? false,
+                hasTerrace: property.hasTerrace ?? false,
+                hasLoggia: property.hasLoggia ?? false,
+                hasCourtyard: property.hasCourtyard ?? false,
+                hasShutters: property.hasShutters ?? false,
+                hasCave: property.hasCave ?? false,
+                hasParking: property.hasParking ?? false,
+                hasGarage: property.hasGarage ?? false,
+                propertySubType: property.propertySubType ?? null,
+                isKitchenEquipped: property.isKitchenEquipped ?? false,
+                hasSeparateKitchen: property.hasSeparateKitchen ?? false,
 
                 transitData: property.transitData,
 

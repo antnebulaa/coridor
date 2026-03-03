@@ -2,7 +2,6 @@
 
 import {
     Wifi,
-    Wind,
     Sun,
     Trees,
     School,
@@ -18,10 +17,8 @@ import {
     Bike,
     Shirt,
     Utensils,
-    PawPrint,
     Hammer,
     Flower2,
-    ArrowLeftRight,
     ArrowUpFromLine,
     Accessibility,
     Zap,
@@ -29,15 +26,12 @@ import {
     Waves,
     Bath,
     ThermometerSnowflake,
-    GraduationCap,
     ConciergeBell,
-    Check,
     Fence,
     Car,
     Warehouse,
     Archive,
 } from 'lucide-react';
-import { IconType } from 'react-icons';
 import { SafeListing } from '@/types';
 import { useTranslations } from 'next-intl';
 
@@ -54,7 +48,6 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
         { label: t('wifi'), icon: Wifi, value: listing.hasFiber },
         { label: t('garden'), icon: Flower2, value: listing.hasGarden },
         { label: t('refurbished'), icon: Hammer, value: listing.isRefurbished },
-        { label: t('pets'), icon: PawPrint, value: listing.petsAllowed },
         { label: t('kitchen'), icon: Utensils, value: listing.isKitchenEquipped },
         { label: t('south'), icon: Sun, value: listing.isSouthFacing },
         { label: t('storage'), icon: Box, value: listing.hasStorage },
@@ -81,7 +74,6 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
         { label: t('pool'), icon: Waves, value: listing.hasPool },
         { label: t('bathtub'), icon: Bath, value: listing.hasBathtub },
         { label: t('airConditioning'), icon: ThermometerSnowflake, value: listing.hasAirConditioning },
-        { label: t('student'), icon: GraduationCap, value: listing.isStudentFriendly },
         { label: t('concierge'), icon: ConciergeBell, value: listing.hasConcierge },
         { label: 'Balcon', icon: Fence, value: listing.hasBalcony },
         { label: 'Terrasse', icon: Fence, value: (listing as any).hasTerrace },
@@ -98,20 +90,20 @@ const ListingAmenities: React.FC<ListingAmenitiesProps> = ({
     }
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="text-xl font-semibold">
+        <div className="flex flex-col gap-5">
+            <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                 {t('title')}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 {amenities.map((item) => (
                     <div
                         key={item.label}
-                        className="flex items-center gap-3 p-1"
+                        className="flex items-center gap-3"
                     >
-                        <Check size={24} className="text-neutral-600" />
-                        <div className="font-normal text-neutral-600 text-base">
+                        <item.icon size={18} className="text-neutral-500 dark:text-neutral-400 shrink-0" />
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">
                             {item.label}
-                        </div>
+                        </span>
                     </div>
                 ))}
             </div>

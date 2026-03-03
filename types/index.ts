@@ -141,6 +141,18 @@ export type SafeListing = Omit<
     isStudentFriendly: boolean;
     hasConcierge: boolean;
 
+    // Outdoor / Building / Kitchen
+    hasBalcony: boolean;
+    hasTerrace: boolean;
+    hasLoggia: boolean;
+    hasCourtyard: boolean;
+    hasShutters: boolean;
+    hasCave: boolean;
+    hasParking: boolean;
+    hasGarage: boolean;
+    hasSeparateKitchen: boolean;
+    propertySubType?: string | null;
+
     // Missing Fields for UI
     rentalUnitType?: 'ENTIRE_PLACE' | 'PRIVATE_ROOM' | 'SHARED_ROOM'; // or RentalUnitType
     kitchenType?: string;

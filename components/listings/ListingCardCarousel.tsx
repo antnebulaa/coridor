@@ -7,11 +7,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface ListingCardCarouselProps {
     images: { url: string; label?: string }[];
     centeredLabel?: boolean;
+    onIndexChange?: (index: number) => void;
 }
 
 const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
     images,
-    centeredLabel
+    centeredLabel,
+    onIndexChange,
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -25,6 +27,7 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
 
         if (newIndex !== currentIndex) {
             setCurrentIndex(newIndex);
+            onIndexChange?.(newIndex);
         }
     };
 
@@ -118,18 +121,9 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                 ))}
             </div>
 
-            {/* Room Label Pill - outside scroll container so it's above overlays */}
-            {images[currentIndex]?.label && (
-                <div className={`
-                    absolute
-                    z-20
-                    pointer-events-none
-                    ${centeredLabel
-                        ? 'bottom-18 right-6 text-sm'
-                        : 'bottom-7 right-3 text-xs'
-                    }
-                    bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-medium
-                `}>
+            {/* Room Label Pill - only shown when NOT in centeredLabel mode (i.e. in ListingCard) */}
+            {!centeredLabel && images[currentIndex]?.label && (
+                <div className="absolute z-20 pointer-events-none bottom-7 right-3 text-xs bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full font-medium">
                     {images[currentIndex].label}
                 </div>
             )}
@@ -141,21 +135,21 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                         <button
                             onClick={handlePrev}
                             className="
-                                absolute 
-                                top-1/2 
-                                -translate-y-1/2 
-                                left-2 
-                                bg-white/80 
+                                absolute
+                                top-1/2
+                                -translate-y-1/2
+                                left-4
+                                bg-white/80
                                 hover:bg-white
                                 dark:bg-neutral-800/80
                                 dark:hover:bg-neutral-800
                                 text-neutral-900
                                 dark:text-white
-                                rounded-full 
-                                p-2 
-                                opacity-0 
-                                group-hover:opacity-100 
-                                transition 
+                                rounded-full
+                                p-2
+                                opacity-0
+                                group-hover:opacity-100
+                                transition
                                 z-10
                                 shadow-sm
                             "
@@ -167,21 +161,21 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                         <button
                             onClick={handleNext}
                             className="
-                                absolute 
-                                top-1/2 
-                                -translate-y-1/2 
-                                right-2 
-                                bg-white/80 
-                                hover:bg-white 
+                                absolute
+                                top-1/2
+                                -translate-y-1/2
+                                right-4
+                                bg-white/80
+                                hover:bg-white
                                 dark:bg-neutral-800/80
                                 dark:hover:bg-neutral-800
                                 text-neutral-900
                                 dark:text-white
-                                rounded-full 
-                                p-2 
-                                opacity-0 
-                                group-hover:opacity-100 
-                                transition 
+                                rounded-full
+                                p-2
+                                opacity-0
+                                group-hover:opacity-100
+                                transition
                                 z-10
                                 shadow-sm
                             "

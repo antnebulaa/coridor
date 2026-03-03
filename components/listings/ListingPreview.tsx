@@ -1,50 +1,42 @@
 'use client';
 
 import { SafeListing, SafeUser } from "@/types";
-import Avatar from "../Avatar";
 import useCountries from "@/hooks/useCountries";
 import { useSession } from "next-auth/react";
-import { useMemo, useState } from "react";
-import dynamic from "next/dynamic";
+import { useMemo, useState, useCallback } from "react";
 import ListingEnergy from "./ListingEnergy";
 import ListingAmenities from "./ListingAmenities";
 
-import Image from "next/image";
 import HeartButton from "../HeartButton";
-import Heading from "../Heading";
 import ListingTransit from "./ListingTransit";
 import ListingCommute from "./ListingCommute";
 import NeighborhoodScore from "./NeighborhoodScore";
 import ListingCardCarousel from "./ListingCardCarousel";
-import { Camera, Euro } from "lucide-react";
+import Image from "next/image";
+import { Calendar, ChevronDown, ChevronUp, Fence, Eye, Sun, Waves, Flower2, ArrowUpFromLine, Car } from "lucide-react";
 import ListingImageGallery from "./ListingImageGallery";
 import { Button } from "../ui/Button";
 import useLoginModal from "@/hooks/useLoginModal";
 import ApplicationModal from "../modals/ApplicationModal";
-import { useCallback } from "react";
 import ListingMobileFooter from "./ListingMobileFooter";
 import IncompleteProfileModal from "../modals/IncompleteProfileModal";
 import PollResults from "./PollResults";
 
-const MapComponent = dynamic(() => import('../Map'), {
-    ssr: false
-});
 
 interface ListingPreviewProps {
     listing: SafeListing & { user?: SafeUser };
     currentUser?: SafeUser | null;
-    isMobileModal?: boolean;
 }
 
 const ListingPreview: React.FC<ListingPreviewProps> = ({
     listing,
     currentUser,
-    isMobileModal = false
 }) => {
     const { getByValue } = useCountries();
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
     const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const loginModal = useLoginModal();
     const { data: session } = useSession();
     const effectiveUserId = currentUser?.id || (session?.user as any)?.id;
@@ -65,17 +57,9 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         setIsApplicationModalOpen(true);
     }, [currentUser, loginModal]);
 
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
     const location = getByValue((listing as any).locationValue);
-    const coordinates = listing.latitude && listing.longitude ? [listing.latitude, listing.longitude] : undefined;
-
-
-    const category = useMemo(() => {
-        return {
-            icon: undefined, //  We don't have icons map here easily without importing from constants, but text is fine
-            label: listing.category,
-            description: ''
-        }
-    }, [listing.category]);
 
     const locationLabel = useMemo(() => {
         if (listing) {
@@ -157,53 +141,36 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         });
     }, [listing.images, (listing as any).rooms]);
 
-    // Reusable Image Component
+    // Reusable Image Component — always full-width, no rounding, stuck to top
     const ImageSection = (
         <div
-            className={`
-                w-full
-                overflow-hidden 
-                relative
-                group
-                ${isMobileModal ? 'h-[55vh] rounded-none' : 'h-[40vh] rounded-xl'}
-            `}
+            className="w-full overflow-hidden relative group h-[280px] md:h-[260px]"
         >
             <div onClick={() => setIsImageModalOpen(true)} className="w-full h-full cursor-pointer">
-                <ListingCardCarousel images={listingImages} centeredLabel />
+                <ListingCardCarousel images={listingImages} centeredLabel onIndexChange={setCurrentImageIndex} />
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent z-10 pointer-events-none" />
 
+            <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center gap-2">
+                {/* Room label pill */}
+                {listingImages[currentImageIndex]?.label && (
+                    <div className="bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
+                        {listingImages[currentImageIndex].label}
+                    </div>
+                )}
 
-            <div className={`
-                absolute 
-                bottom-5 
-                right-6 
-                z-20
-                flex 
-                items-center 
-                gap-3
-            `}>
+                {/* Photo counter pill */}
                 <button
                     onClick={() => setIsImageModalOpen(true)}
-                    className="
-                    bg-white 
-                    hover:bg-neutral-100 
-                    text-black 
-                    px-4 
-                    h-10
-                    rounded-full 
-                    text-sm 
-                    font-semibold 
-                    transition 
-                    flex 
-                    items-center 
-                    justify-center
-                "
+                    className="bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium hover:bg-black/70 transition"
                 >
-                    {listingImages.length} photos
+                    {currentImageIndex + 1}/{listingImages.length}
                 </button>
 
+                <div className="flex-1" />
+
+                {/* Heart button */}
                 <HeartButton
                     listingId={listing.id}
                     currentUser={currentUser}
@@ -215,117 +182,254 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         </div>
     );
 
-    // Reusable Header Component
-    const HeaderSection = (
-        <Heading
-            title={titleDisplay}
-            subtitle={locationLabel}
-            subtitleClassName="mt-1"
-        />
-    );
+    const totalCC = listing.price + (listing.charges ? (listing.charges as any).amount : 0);
+    const chargesAmount = listing.charges ? (listing.charges as any).amount : 0;
+    const chargesType = (listing as any).chargesType;
 
+    const availabilityDisplay = useMemo(() => {
+        if (!listing.availableFrom) return null;
+        const date = new Date(listing.availableFrom);
+        const now = new Date();
+        if (date <= now) return { label: 'Disponible immédiatement', immediate: true };
+        return {
+            label: `Disponible le ${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+            immediate: false
+        };
+    }, [listing.availableFrom]);
+
+    // Super atouts — all premium amenities
+    const superAtouts = useMemo(() => {
+        const items: { icon: any; label: string; color: string }[] = [];
+        if (listing.hasTerrace) items.push({ icon: Fence, label: 'Terrasse', color: 'text-amber-600 dark:text-amber-400' });
+        if (listing.hasBalcony) items.push({ icon: Fence, label: 'Balcon', color: 'text-amber-600 dark:text-amber-400' });
+        if (listing.hasLoggia) items.push({ icon: Fence, label: 'Loggia', color: 'text-amber-600 dark:text-amber-400' });
+        if (listing.hasGarden) items.push({ icon: Flower2, label: 'Jardin', color: 'text-emerald-600 dark:text-emerald-400' });
+        if (listing.hasPool) items.push({ icon: Waves, label: 'Piscine', color: 'text-sky-600 dark:text-sky-400' });
+        if (listing.hasNoOpposite) items.push({ icon: Eye, label: 'Sans vis-à-vis', color: 'text-sky-600 dark:text-sky-400' });
+        if (listing.isBright) items.push({ icon: Sun, label: 'Lumineux', color: 'text-amber-500 dark:text-amber-400' });
+        if (listing.isLastFloor) items.push({ icon: ArrowUpFromLine, label: 'Dernier étage', color: 'text-violet-600 dark:text-violet-400' });
+        if (listing.hasParking) items.push({ icon: Car, label: 'Parking', color: 'text-neutral-600 dark:text-neutral-300' });
+        return items;
+    }, [listing]);
+
+    // Summary line: "3 pièces · 2 chambres · 1 SdB · 45 m² · 3e/5"
+    const summaryParts = useMemo(() => {
+        const parts: string[] = [];
+        if (listing.roomCount) parts.push(`${listing.roomCount} ${listing.roomCount > 1 ? 'pièces' : 'pièce'}`);
+        if (listing.guestCount) parts.push(`${listing.guestCount} ${listing.guestCount > 1 ? 'chambres' : 'chambre'}`);
+        if (listing.bathroomCount) parts.push(`${listing.bathroomCount} SdB`);
+        if (surfaceDisplay) parts.push(surfaceDisplay);
+        if (listing.floor !== undefined && listing.floor !== null) {
+            const floorStr = listing.floor === 0 ? 'RDC' : `${listing.floor}e`;
+            parts.push(listing.totalFloors ? `${floorStr}/${listing.totalFloors}` : floorStr);
+        }
+        return parts;
+    }, [listing, surfaceDisplay]);
 
     return (
         <>
-            <div className={`col-span-4 flex flex-col gap-8`}>
-                {/* Header Section */}
-                <div className={`flex flex-col gap-6 ${isMobileModal ? 'px-0' : ''}`}>
-                    {isMobileModal ? (
-                        <>
-                            {ImageSection}
-                            <div className="px-6">
-                                {HeaderSection}
+            <div className="col-span-4 flex flex-col">
+                {/* Image — full width, no rounding, stuck to top */}
+                {ImageSection}
+
+                {/* ── Hero ── */}
+                <div className="px-6 pt-5 pb-4">
+                    {(listing as any).propertyAdjective && (
+                        <span className="text-[11px] uppercase tracking-widest text-neutral-400 dark:text-neutral-500 font-semibold">
+                            {(listing as any).propertyAdjective}
+                        </span>
+                    )}
+                    <h2 className="text-[22px] font-bold text-neutral-900 dark:text-neutral-100 leading-tight mt-0.5">
+                        {titleDisplay}
+                    </h2>
+                    <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-1">
+                        {locationLabel}
+                    </p>
+
+                    {/* Summary line */}
+                    {summaryParts.length > 0 && (
+                        <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-2">
+                            {summaryParts.join(' · ')}
+                        </p>
+                    )}
+
+                    {/* ── Badges (meublé, bail, dispo…) ── */}
+                    {(() => {
+                        const badges: React.ReactNode[] = [];
+                        badges.push(
+                            <span key="furn" className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-medium px-3 py-1.5 rounded-full">
+                                {listing.isFurnished ? 'Meublé' : 'Non meublé'}
+                            </span>
+                        );
+                        if ((listing as any).buildYear) badges.push(
+                            <span key="year" className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-medium px-3 py-1.5 rounded-full">Construit en {(listing as any).buildYear}</span>
+                        );
+                        if (listing.propertySubType) badges.push(
+                            <span key="subtype" className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-medium px-3 py-1.5 rounded-full">{listing.propertySubType}</span>
+                        );
+                        if ((listing as any).leaseType === 'LONG_TERM') badges.push(
+                            <span key="lease" className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-medium px-3 py-1.5 rounded-full">{listing.isFurnished ? 'Bail 1 an' : 'Bail 3 ans'}</span>
+                        );
+                        if ((listing as any).acceptsStudentLease) badges.push(
+                            <span key="student" className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-medium px-3 py-1.5 rounded-full">Bail étudiant</span>
+                        );
+                        if ((listing as any).acceptsMobilityLease) badges.push(
+                            <span key="mobility" className="bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 text-xs font-medium px-3 py-1.5 rounded-full">Bail mobilité</span>
+                        );
+                        if (availabilityDisplay) badges.push(
+                            <span key="avail" className={`text-xs font-medium px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 ${
+                                availabilityDisplay.immediate
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
+                                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
+                            }`}>
+                                <Calendar size={12} />
+                                {availabilityDisplay.label}
+                            </span>
+                        );
+                        return (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {badges}
                             </div>
-                        </>
-                    ) : (
-                        <>
-                            {HeaderSection}
-                            {ImageSection}
-                        </>
+                        );
+                    })()}
+
+                    {/* Price hero */}
+                    <div className="mt-4 flex items-baseline gap-1.5">
+                        <span className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">
+                            {totalCC} €
+                        </span>
+                        <span className="text-sm text-neutral-400 dark:text-neutral-500">/mois</span>
+                    </div>
+                    {chargesAmount > 0 && (
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
+                            dont {chargesAmount} € de {chargesType === 'FORFAIT' ? 'charges (forfait)' : 'provisions sur charges'}
+                        </p>
                     )}
                 </div>
 
-
-                <div className={`
-                    flex 
-                    flex-row 
-                    flex-wrap 
-                    items-center 
-                    gap-4 
-                    font-normal
-                    text-base
-                    text-neutral-500
-                    ${isMobileModal ? 'px-6' : ''}
-                `}>
-                    <div>
-                        {listing.guestCount || 0} {(listing.guestCount || 0) > 1 ? 'chambres' : 'chambre'}
-                    </div>
-                    <div>
-                        {listing.roomCount || 0} {(listing.roomCount || 0) > 1 ? 'pièces' : 'pièce'}
-                    </div>
-                    <div>
-                        {listing.bathroomCount || 0} {(listing.bathroomCount || 0) > 1 ? 'salles de bain' : 'salle de bain'}
-                    </div>
-                    {listing.isFurnished !== undefined && (
-                        <div>• {listing.isFurnished ? 'Meublé' : 'Non meublé'}</div>
-                    )}
-                    {listing.floor !== undefined && listing.floor !== null && (
-                        <div>
-                            • {listing.floor === 0 ? 'RDC' : `Étage ${listing.floor}`}{listing.totalFloors ? ` / ${listing.totalFloors}` : ''}
+                {/* ── Super atouts ── */}
+                {superAtouts.length > 0 && (
+                    <div className="mx-6 mt-1 mb-1 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 px-4 py-3">
+                        <p className="text-[11px] uppercase tracking-widest text-neutral-400 dark:text-neutral-500 font-semibold mb-2">Super atouts</p>
+                        <div className="flex flex-wrap gap-x-5 gap-y-2">
+                            {superAtouts.map((item) => (
+                                <div key={item.label} className="flex items-center gap-2">
+                                    <item.icon size={16} className={item.color} />
+                                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{item.label}</span>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                </div>
-
-
-                <hr className={isMobileModal ? 'mx-6' : ''} />
-
-                <div className={`text-base font-normal text-neutral-500 ${isMobileModal ? 'px-6' : ''}`}>
-                    {listing.description}
-                </div>
-
-                <hr className={isMobileModal ? 'mx-6' : ''} />
-
-                {/* Financial Details Section */}
-                <div className={`flex flex-col gap-6 ${isMobileModal ? 'px-6' : ''}`}>
-                    <div className="text-xl font-semibold flex items-center gap-2">
-                        <Euro size={24} />
-                        Informations financières
                     </div>
-                    <div className="flex flex-col gap-4 text-muted-foreground">
-                        <div className="flex justify-between max-w-[400px]">
-                            <span>Loyer hors charges :</span>
-                            <span className="font-medium text-black">{listing.price} € / mois</span>
-                        </div>
-                        {listing.charges && (
-                            <div className="flex justify-between max-w-[400px]">
-                                <span>Provisions sur charges :</span>
-                                <span className="font-medium text-black">+ {(listing.charges as any).amount} € / mois</span>
+                )}
+
+                <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+
+                {/* ── Friendly sections ── */}
+                {((listing as any).petsAllowed || listing.isStudentFriendly) && (
+                    <>
+                        <div className="px-6 py-5 flex flex-col gap-6">
+                            <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 text-center">
+                                Un proprio accueillant
                             </div>
-                        )}
-                        {/* Total Display */}
-                        <div className="flex justify-between max-w-[400px] border-t pt-2 mt-1">
-                            <span className="font-medium text-black">Loyer charges comprises :</span>
-                            <span className="font-bold text-black">{listing.price + (listing.charges ? (listing.charges as any).amount : 0)} € / mois</span>
+                            {(listing as any).petsAllowed && (
+                                <div className="flex flex-col items-center text-center">
+                                    <Image
+                                        src="/images/Pet-friendly.png"
+                                        alt="Pet friendly"
+                                        width={80}
+                                        height={80}
+                                        className="mb-3"
+                                    />
+                                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Animaux bienvenus</p>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
+                                        Le propriétaire accueille volontiers les animaux de compagnie. Rappel : un bailleur ne peut pas interdire la détention d'un animal domestique (loi du 9 juil. 1970).
+                                    </p>
+                                </div>
+                            )}
+                            {listing.isStudentFriendly && (
+                                <div className="flex flex-col items-center text-center">
+                                    <Image
+                                        src="/images/student-friendly.png"
+                                        alt="Student friendly"
+                                        width={80}
+                                        height={80}
+                                        className="mb-3"
+                                    />
+                                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Idéal étudiant</p>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
+                                        Ce logement est particulièrement adapté aux étudiants. Le propriétaire est ouvert aux dossiers étudiants, avec ou sans garant physique (Visale accepté).
+                                    </p>
+                                </div>
+                            )}
                         </div>
+                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+                    </>
+                )}
 
+                {/* ── Description ── */}
+                {listing.description && (
+                    <>
+                        <div className="px-6 py-5">
+                            <div className={`text-[14px] text-neutral-600 dark:text-neutral-400 leading-[1.65] whitespace-pre-line ${!isDescriptionExpanded ? 'line-clamp-4' : ''}`}>
+                                {listing.description}
+                            </div>
+                            {listing.description.length > 180 && (
+                                <button
+                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                    className="mt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100 underline underline-offset-4 decoration-neutral-300 dark:decoration-neutral-600 hover:decoration-neutral-900 dark:hover:decoration-neutral-100 transition-colors inline-flex items-center gap-1"
+                                >
+                                    {isDescriptionExpanded ? <>Voir moins <ChevronUp size={14} /></> : <>Voir plus <ChevronDown size={14} /></>}
+                                </button>
+                            )}
+                        </div>
+                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+                    </>
+                )}
+
+                {/* ── Loyer ── */}
+                <div className="px-6 py-5">
+                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Détails du loyer</h3>
+                    <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700/60 overflow-hidden">
+                        <div className="px-5 py-4 flex flex-col gap-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-neutral-500 dark:text-neutral-400">Loyer hors charges</span>
+                                <span className="font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">{listing.price} €</span>
+                            </div>
+                            {chargesAmount > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-neutral-500 dark:text-neutral-400">
+                                        {chargesType === 'FORFAIT' ? 'Charges (forfait)' : 'Provisions sur charges'}
+                                    </span>
+                                    <span className="font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">+ {chargesAmount} €</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="bg-neutral-50 dark:bg-neutral-800/50 px-5 py-3.5 flex justify-between items-center">
+                            <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Total charges comprises</span>
+                            <span className="text-base font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">{totalCC} €<span className="text-xs font-normal text-neutral-400 ml-1">/mois</span></span>
+                        </div>
                         {listing.securityDeposit !== undefined && listing.securityDeposit !== null && (
-                            <div className="flex justify-between max-w-[400px] mt-2 bg-neutral-50 p-2 rounded-lg">
-                                <span>Dépôt de garantie :</span>
-                                <span className="font-medium text-black">{listing.securityDeposit === 0 ? "Aucun" : `${listing.securityDeposit} €`}</span>
+                            <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-700/60 flex justify-between text-sm">
+                                <span className="text-neutral-500 dark:text-neutral-400">Dépôt de garantie</span>
+                                <span className="font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">
+                                    {listing.securityDeposit === 0 ? 'Aucun' : `${listing.securityDeposit} €`}
+                                </span>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <hr className={isMobileModal ? 'mx-6' : ''} />
+                <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
 
-                <div className={isMobileModal ? 'px-6' : ''}>
+                {/* ── Équipements ── */}
+                <div className="px-6 py-5">
                     <ListingAmenities listing={listing} />
                 </div>
 
-                <hr className={isMobileModal ? 'mx-6' : ''} />
+                <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
 
-                <div className={isMobileModal ? 'px-6' : ''}>
+                {/* ── Énergie & Chauffage ── */}
+                <div className="px-6 py-5">
                     <ListingEnergy
                         dpe={listing.dpe}
                         ges={listing.ges}
@@ -335,37 +439,47 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                     />
                 </div>
 
-                <hr className={isMobileModal ? 'mx-6' : ''} />
+                <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
 
-                {/* Commute Section */}
-                <div className={isMobileModal ? 'px-6' : ''}>
+                {/* ── Transports ── */}
+                <div className="px-6 py-5">
                     <ListingCommute listing={listing} currentUser={currentUser} />
                 </div>
-                <hr className={isMobileModal ? 'mx-6' : ''} />
 
-                {/* Transit Section */}
+                {listing.latitude && listing.longitude && (
+                    <div className="px-6 pb-5">
+                        <ListingTransit
+                            latitude={listing.latitude}
+                            longitude={listing.longitude}
+                            listingId={listing.id}
+                        />
+                    </div>
+                )}
+
+                <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+
+                {/* ── Score de quartier ── */}
                 {listing.latitude && listing.longitude && (
                     <>
-                        <div className={isMobileModal ? 'px-6' : ''}>
-                            <ListingTransit
+                        <div className="px-6 py-5">
+                            <NeighborhoodScore
                                 latitude={listing.latitude}
                                 longitude={listing.longitude}
-                                listingId={listing.id}
                             />
                         </div>
-                        <hr className={isMobileModal ? 'mx-6' : ''} />
+                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
                     </>
                 )}
 
-                {/* Poll Results */}
-                <div className={isMobileModal ? 'px-6' : ''}>
+                {/* ── Sondages ── */}
+                <div className="px-6 py-5 pb-24">
                     <PollResults
                         city={listing.city}
                         zipCode={listing.zipCode}
                     />
                 </div>
 
-            </div >
+            </div>
 
             <ListingImageGallery
                 isOpen={isImageModalOpen}

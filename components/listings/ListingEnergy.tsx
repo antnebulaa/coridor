@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 
 import {
-    HelpCircle,
     Zap,
     Flame,
     Building2,
@@ -34,21 +33,8 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
     const cleanGes = ges?.trim().toUpperCase();
 
     const monthlyEstimate = useMemo(() => {
-        if (!listing) {
-            console.log('ListingEnergy: No listing provided');
-            return null;
-        }
-        console.log('ListingEnergy: listing data', {
-            surface: listing.surface,
-            dpe: listing.dpe,
-            heatingSystem: listing.heatingSystem,
-            min: listing.energy_cost_min,
-            max: listing.energy_cost_max
-        });
-
-        const estimate = getMonthlyEnergyEstimate(listing);
-        console.log('ListingEnergy: Calculated estimate', estimate);
-        return estimate;
+        if (!listing) return null;
+        return getMonthlyEnergyEstimate(listing);
     }, [listing]);
 
     const getDpeColor = (grade: string) => {
@@ -107,6 +93,10 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
 
     return (
         <div className="flex flex-col gap-6">
+            <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                Énergie & Diagnostics
+            </div>
+
             {(heatingInfo || glazingInfo) && (
                 <div className="flex flex-col gap-4">
                     <div className="text-xl font-semibold flex items-center gap-2">
@@ -132,7 +122,8 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
 
             {/* Energy Estimate Section */}
             {monthlyEstimate && (
-                <div className="bg-neutral-50 border border-neutral-100 rounded-xl p-4 flex flex-col gap-2">
+                <div className="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-100 dark:border-neutral-800 rounded-xl p-4 flex flex-col gap-2">
+                    <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">Estimation énergie</div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 font-semibold">
                             <Zap size={20} className="text-yellow-500 fill-yellow-500" />
@@ -167,11 +158,8 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
             <div className="flex flex-col gap-8">
                 {/* DPE Section */}
                 {dpe && (
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 text-neutral-500 font-normal">
-                            <span>Classe énergie</span>
-                            <HelpCircle size={16} className="text-neutral-400" />
-                        </div>
+                    <div className="flex flex-col gap-3">
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">Classe énergie</span>
                         <div className="flex flex-row items-end gap-1 h-12">
                             {grades.map((grade) => {
                                 const isActive = cleanDpe === grade;
@@ -182,8 +170,8 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
                                         key={`dpe-${grade}`}
                                         style={{ backgroundColor: color, color: isActive ? textColor : 'black' }}
                                         className={`
-                                            flex items-center justify-center font-bold text-sm
-                                            ${isActive ? 'w-8 h-12 z-10 rounded-sm' : 'w-8 h-8 opacity-50'}
+                                            flex-1 flex items-center justify-center font-bold text-sm rounded-lg
+                                            ${isActive ? 'h-12 z-10 ring-2 ring-neutral-900/20 dark:ring-white/30' : 'h-8 opacity-40'}
                                             transition-all duration-200
                                         `}
                                     >
@@ -197,11 +185,8 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
 
                 {/* GES Section */}
                 {ges && (
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 text-neutral-500 font-normal">
-                            <span>GES</span>
-                            <HelpCircle size={16} className="text-neutral-400" />
-                        </div>
+                    <div className="flex flex-col gap-3">
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">Émissions GES</span>
                         <div className="flex flex-row items-end gap-1 h-12">
                             {grades.map((grade) => {
                                 const isActive = cleanGes === grade;
@@ -212,8 +197,8 @@ const ListingEnergy: React.FC<ListingEnergyProps> = ({ dpe, ges, heatingSystem, 
                                         key={`ges-${grade}`}
                                         style={{ backgroundColor: color }}
                                         className={`
-                                            flex items-center justify-center font-bold text-sm
-                                            ${isActive ? 'w-8 h-12 z-10 rounded-sm' : 'w-8 h-8 opacity-50'}
+                                            flex-1 flex items-center justify-center font-bold text-sm rounded-lg
+                                            ${isActive ? 'h-12 z-10 ring-2 ring-neutral-900/20 dark:ring-white/30' : 'h-8 opacity-40'}
                                             ${isActive && isDark ? 'text-white' : 'text-neutral-900'}
                                             transition-all duration-200
                                         `}
