@@ -41,8 +41,9 @@ const RegisterModal = () => {
     });
 
     const onToggle = useCallback(() => {
+        const url = registerModal.callbackUrl;
         registerModal.onClose();
-        loginModal.onOpen();
+        loginModal.onOpen(url);
     }, [registerModal, loginModal]);
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
@@ -57,8 +58,9 @@ const RegisterModal = () => {
                         type="success"
                     />
                 ));
+                const url = registerModal.callbackUrl;
                 registerModal.onClose();
-                loginModal.onOpen();
+                loginModal.onOpen(url);
             })
             .catch((error) => {
                 toast.custom((t) => (
@@ -125,13 +127,13 @@ const RegisterModal = () => {
                 variant="outline"
                 label={tAuth('continueGoogle')}
                 icon={FcGoogle}
-                onClick={() => signIn('google')}
+                onClick={() => signIn('google', { callbackUrl: registerModal.callbackUrl || undefined })}
             />
             <Button
                 variant="outline"
                 label={tAuth('continueApple')}
                 icon={FaApple}
-                onClick={() => signIn('apple')}
+                onClick={() => signIn('apple', { callbackUrl: registerModal.callbackUrl || undefined })}
             />
             <div className="text-neutral-500 text-center mt-4 font-light">
                 <p>{tAuth('alreadyHaveAccount')}

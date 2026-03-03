@@ -40,8 +40,9 @@ const LoginModal = () => {
     });
 
     const onToggle = useCallback(() => {
+        const url = loginModal.callbackUrl;
         loginModal.onClose();
-        registerModal.onOpen();
+        registerModal.onOpen(url);
     }, [loginModal, registerModal]);
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
@@ -111,13 +112,13 @@ const LoginModal = () => {
                 variant="outline"
                 label={tAuth('continueGoogle')}
                 icon={FcGoogle}
-                onClick={() => signIn('google')}
+                onClick={() => signIn('google', { callbackUrl: loginModal.callbackUrl || undefined })}
             />
             <Button
                 variant="outline"
                 label={tAuth('continueApple')}
                 icon={FaApple}
-                onClick={() => signIn('apple')}
+                onClick={() => signIn('apple', { callbackUrl: loginModal.callbackUrl || undefined })}
             />
             <div className="text-neutral-500 text-center mt-4 font-light">
                 <p>{tAuth('firstTime')}
