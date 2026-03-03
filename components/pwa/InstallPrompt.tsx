@@ -21,6 +21,12 @@ const InstallPrompt = () => {
     const [isInstalled, setIsInstalled] = useState(false);
 
     useEffect(() => {
+        // Don't show install prompt inside Capacitor native app
+        if ((window as any).Capacitor?.isNativePlatform?.()) {
+            setIsInstalled(true);
+            return;
+        }
+
         // Check if already installed
         if (window.matchMedia('(display-mode: standalone)').matches) {
             setIsInstalled(true);

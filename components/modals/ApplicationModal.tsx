@@ -13,6 +13,7 @@ import { SafeListing, SafeUser } from "@/types";
 import Image from "next/image";
 import { Button } from "../ui/Button";
 import CustomToast from "../ui/CustomToast";
+import { hapticSuccess, hapticError } from "@/lib/haptics";
 import { FileText, GraduationCap, Briefcase, AlertTriangle } from "lucide-react";
 
 interface ApplicationModalProps {
@@ -85,6 +86,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
             ...(data.specificLeaseRequest === 'MOBILITY' && { mobilityReason: data.mobilityReason }),
         })
             .then((response) => {
+                hapticSuccess();
                 toast.custom((t) => (
                     <CustomToast
                         t={t}
@@ -97,6 +99,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
                 router.push(`/inbox/${response.data.id}`);
             })
             .catch((error) => {
+                hapticError();
                 const message = error?.response?.data || 'Une erreur est survenue.';
                 toast.custom((t) => (
                     <CustomToast

@@ -7,6 +7,7 @@ import { useCallback, useState, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { hapticLight } from "@/lib/haptics";
 
 interface LikeButtonProps {
     listingId: string;
@@ -36,6 +37,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         if (isLoading) return;
 
         shouldAnimate.current = true;
+        hapticLight();
         setHasLiked(!hasLiked);
         setIsLoading(true);
 

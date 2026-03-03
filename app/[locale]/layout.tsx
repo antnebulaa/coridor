@@ -12,6 +12,9 @@ import RentModalLoader from "@/components/modals/RentModalLoader";
 import WishlistModal from "@/components/modals/WishlistModal";
 import dynamic from "next/dynamic";
 
+import CapacitorInit from "@/components/native/CapacitorInit";
+import BackButtonHandler from "@/components/native/BackButtonHandler";
+import OfflineBanner from "@/components/native/OfflineBanner";
 
 import MyCodeModal from "@/components/modals/MyCodeModal";
 import PushNotificationManager from "@/components/PushNotificationManager";
@@ -113,6 +116,9 @@ export default async function LocaleLayout({
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
             </head>
             <body className={`${font.className} bg-background`}>
+                <CapacitorInit />
+                <BackButtonHandler />
+                <OfflineBanner />
                 <AuthProvider>
                     <NextIntlClientProvider messages={messages}>
                         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

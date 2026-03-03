@@ -170,6 +170,11 @@ hr {
   padding-top: calc(env(safe-area-inset-top, 0px) + 5rem);
 }
 
+/* ──── Capacitor Keyboard ──── */
+body.keyboard-open #bottom-nav {
+  display: none;
+}
+
 /* ──── Layout Utilities ──── */
 @utility container-custom {
   @apply max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-2 px-4;

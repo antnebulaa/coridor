@@ -8,6 +8,7 @@ import axios from 'axios';
 import { Plus, Check, Heart, Bookmark } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { hapticLight } from '@/lib/haptics';
 import BottomSheet from '@/components/ui/BottomSheet';
 
 import { SafeUser } from '@/types';
@@ -162,6 +163,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
     const handleToggleAll = async () => {
         setIsOpen(false);
+        hapticLight();
 
         // Optimistic Snapshot
         const previousFavoriteIds = [...localFavoriteIds];

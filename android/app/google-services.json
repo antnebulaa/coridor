@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "259358150143",
+    "project_id": "coridor-b5b41",
+    "storage_bucket": "coridor-b5b41.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259358150143:android:1f6654b7aa375f8f51ebca",
+        "android_client_info": {
+          "package_name": "fr.coridor.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrsqU9mMQ3kWxq36Ii4N_meqR7WFtBFi4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

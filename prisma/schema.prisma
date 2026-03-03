@@ -125,6 +125,7 @@ model User {
   visitSlots       VisitSlot[]   // Availability linked to User + Location
   bankConnections  BankConnection[] // NEW: Banking Connectivity
   pushSubscriptions PushSubscription[]
+  pushTokens        PushToken[]
   sessions         Session[] // NEW for DB Auth
   notificationPreferences NotificationPreferences?
   
@@ -1098,6 +1099,19 @@ model PushSubscription {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Native push tokens (FCM for Android, APNs via FCM for iOS)
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String
+  platform  String   // "android" | "ios"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, platform])
 }
 
 model NotificationPreferences {

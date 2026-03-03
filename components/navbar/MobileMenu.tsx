@@ -87,6 +87,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
         if (!currentUser && href !== '/') {
             return loginModal.onOpen();
         }
+        import('@/lib/haptics').then(({ hapticLight }) => hapticLight());
         setActivePath(href);
         router.push(href);
     }

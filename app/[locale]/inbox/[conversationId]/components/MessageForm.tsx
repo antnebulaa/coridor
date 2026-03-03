@@ -13,6 +13,7 @@ import {
     useForm
 } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { hapticLight } from "@/lib/haptics";
 import { useState, useRef } from "react";
 import axios from "axios";
 import useConversation from "@/hooks/useConversation";
@@ -89,6 +90,7 @@ const MessageForm: React.FC<FormProps> = ({
     };
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
+        hapticLight();
         setValue('message', '', { shouldValidate: true });
 
         // Optimistic update

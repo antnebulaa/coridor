@@ -8,6 +8,7 @@ import { HiArrowLeft, HiArrowDownTray, HiPrinter, HiPencilSquare, HiArrowPath, H
 import { HiOutlineArrowsExpand } from 'react-icons/hi';
 import LeaseDocument from '@/components/documents/LeaseDocument';
 import dynamic from 'next/dynamic';
+import { hapticSuccess } from '@/lib/haptics';
 
 // Dynamically import the PDF pages renderer (needs browser APIs)
 const PdfPagesRenderer = dynamic(() => import('./PdfPagesRenderer'), {
@@ -116,6 +117,7 @@ const LeaseViewerClient: React.FC<LeaseViewerClientProps> = ({ leaseConfig, isOw
         try {
             setLoading(true);
             await axios.post(`/api/leases/${leaseConfig.application_id}/sign`);
+            hapticSuccess();
             toast.success("Procédure de signature lancée (Yousign)");
             setStatus("PENDING_SIGNATURE");
         } catch (error: any) {

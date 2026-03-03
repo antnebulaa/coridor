@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import { SafeUser } from "@/types";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import CustomToast from "../ui/CustomToast";
+import { hapticSuccess, hapticError } from "@/lib/haptics";
 
 interface VisitSlotSelectorProps {
     listingId: string;
@@ -86,6 +87,7 @@ const VisitSlotSelector: React.FC<VisitSlotSelectorProps> = ({
                 endTime: selectedSlot.endTime,
                 conversationId // Pass conversationId
             });
+            hapticSuccess();
             toast.custom((t) => (
                 <CustomToast
                     t={t}

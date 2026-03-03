@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Coridor</string>
+    <string name="title_activity_main">Coridor</string>
+    <string name="package_name">fr.coridor.app</string>
+    <string name="custom_url_scheme">fr.coridor.app</string>
+</resources>
