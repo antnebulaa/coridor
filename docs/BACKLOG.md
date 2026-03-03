@@ -310,7 +310,26 @@
 - [✅] Manifest + Service Worker (`public/manifest.json`, `public/sw.js`)
 - [✅] Icône app + favicon (`app/icon.png`, `app/apple-icon.png`, `manifest.json`)
 - [✅] Safe area iOS PWA (`black-translucent` + `pt-safe` sur MainLayout, Modal, ScorecardSheet, ListingImageGallery, AllPhotosModal)
-- [✅] Install prompt (`components/pwa/InstallPrompt.tsx`) — beforeinstallprompt + cooldown 24h, intégré dans layout.tsx
+- [✅] Install prompt (`components/pwa/InstallPrompt.tsx`) — beforeinstallprompt + cooldown 24h, intégré dans layout.tsx, guard natif Capacitor
+
+### App Mobile (Capacitor)
+- [✅] Capacitor installé et configuré — remote URL mode (WebView → `https://coridor.fr`), `capacitor.config.ts`, 10 plugins (app, status-bar, splash-screen, keyboard, haptics, browser, camera, share, network, push-notifications)
+- [✅] Projets natifs générés — `android/` (Android Studio) + `ios/` (Xcode), 5 scripts npm (`cap:sync`, `cap:android`, `cap:ios`, `cap:android:run`, `cap:ios:run`, `cap:dev:android`, `cap:dev:ios`)
+- [✅] Détection plateforme SSR-safe — `lib/platform.ts` (isNative, isAndroid, isIOS, isWeb, nativeOnly)
+- [✅] Initialisation native — `components/native/CapacitorInit.tsx` (StatusBar light #FAF7F2, SplashScreen hide, Keyboard listeners, Push init, Deep links listener)
+- [✅] Bouton retour Android — `components/native/BackButtonHandler.tsx` (history.back si canGoBack, exitApp sinon), cleanup on unmount
+- [✅] Push notifications natives (Firebase) — `PushToken` model Prisma (userId+platform unique), `lib/pushNotifications.ts` (client FCM init, permission, token registration, notification tap routing), `app/api/push/register/route.ts` (upsert token), `services/PushService.ts` (Firebase Admin SDK, envoi via sendEach, nettoyage tokens invalides, méthodes notifyNewApplication/notifyMessage/notifyVisit/notifyLeaseReady)
+- [✅] Caméra native — `hooks/useNativeCamera.ts` (takePhoto + pickFromGallery, base64, fallback null sur web)
+- [✅] Partage natif — `hooks/useNativeShare.ts` (Share plugin → navigator.share → clipboard fallback)
+- [✅] Détection réseau — `hooks/useNetworkStatus.ts` (Network plugin natif + navigator.onLine web), `components/native/OfflineBanner.tsx` (bandeau rouge fixe)
+- [✅] Haptics — `lib/haptics.ts` (hapticLight/Medium/Success/Error, SSR-safe, try/catch, no-op web), intégré dans LikeButton, SaveListingMenu, ApplicationModal, VisitSlotSelector, MobileMenu, MessageForm, LeaseViewerClient
+- [✅] Deep links — `public/.well-known/assetlinks.json` (Android, placeholder SHA256), `public/.well-known/apple-app-site-association` (iOS, placeholder TEAM_ID), intent filter `autoVerify` dans AndroidManifest.xml, listener `appUrlOpen` dans CapacitorInit
+- [✅] Assets app — icônes source 1024×1024 (icon-only, foreground, background #FAF7F2), splash screens 2732×2732 (light ivoire + dark #1A1A1A, logo cuivre centré), 88 assets générés via `@capacitor/assets` (74 Android + 7 iOS + 7 PWA)
+- [✅] Guard InstallPrompt — n'affiche pas le prompt d'installation PWA en contexte natif Capacitor
+- [✅] CSS clavier — `body.keyboard-open #bottom-nav { display: none }` cache MobileMenu quand clavier ouvert
+- [🔧] Deep links placeholders — `assetlinks.json` nécessite le SHA256 fingerprint de la clé de signature Android, `apple-app-site-association` nécessite le TEAM_ID Apple Developer
+- [❌] Publication Google Play — compte, fiche store, signature APK/AAB, test interne, release
+- [❌] Publication App Store — compte Apple Developer, build Xcode, TestFlight, soumission review
 
 ### UI & Navigation
 - [✅] Bottom bar mobile : "Profil" → "Réglages" — icône `Settings` (engrenage), label `t('settings')`, lien vers `/account`
@@ -373,6 +392,9 @@
 - [ ] Lissage salaire freelance (calcul avancé)
 - [ ] Backfill communeCode propriétés existantes — script géocodage via api-adresse.data.gouv.fr pour enrichir les Property existantes (communeCode=null) et passer du fallback département à la donnée commune exacte
 - [ ] Estimateur charges affiné — remplacer le taux fixe (2,5€/m² appart, 1€/m² maison) par des données réelles issues des régularisations de charges des utilisateurs Coridor
+- [ ] App mobile : publication Google Play (compte, fiche store, signature, test interne)
+- [ ] App mobile : publication App Store (compte Apple Developer, Xcode, TestFlight)
+- [ ] App mobile : remplacer assets placeholder par des icônes/splash HD depuis Affinity
 
 ---
 
@@ -380,6 +402,7 @@
 
 - **Cron jobs activés** : 7 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h), `inspection-reminders` (7h).
 - **Données encadrement des loyers** : fichiers JSON statiques dans `lib/data/rent-control/`. Mise à jour annuelle recommandée (arrêtés préfectoraux publiés entre juin et août). Relancer `npx ts-node scripts/preprocess-zones-tendues.ts` si le décret zone tendue est modifié. Données Lille et Montpellier à vérifier quand les API officielles redeviennent disponibles.
+- **Capacitor (app mobile)** : Remote URL mode (WebView → `coridor.fr`). Projets `android/` et `ios/` versionnés. 10 plugins. Firebase push : 3 env vars requises (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`). Deep links : remplir SHA256 dans `assetlinks.json` + TEAM_ID dans `apple-app-site-association` avant publication. Assets source dans `assets/` — relancer `npx capacitor-assets generate` si les icônes/splash changent. Dev local : `CAPACITOR_SERVER_URL=http://IP:3000 npm run cap:dev:android`.
 
 ---
 
