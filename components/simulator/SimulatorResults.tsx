@@ -5,6 +5,7 @@ import { Wallet, BarChart3, Receipt, Landmark, Home, Save, FileDown } from 'luci
 import { motion } from 'framer-motion';
 import type { InvestmentResult, InvestmentInput } from '@/services/InvestmentSimulatorService';
 import type { User } from '@prisma/client';
+import useLoginModal from '@/hooks/useLoginModal';
 import { Band } from './Band';
 import { VerdictBadge } from './VerdictBadge';
 import { EssentialSummary } from './EssentialSummary';
@@ -31,6 +32,7 @@ export default function SimulatorResults({
   onSave,
   user,
 }: SimulatorResultsProps) {
+  const loginModal = useLoginModal();
   const currentYear = new Date().getFullYear();
   const hasLoan = result.loanAmount > 0;
 
@@ -133,6 +135,10 @@ export default function SimulatorResults({
           <button
             type="button"
             onClick={() => {
+              if (!user) {
+                loginModal.onOpen();
+                return;
+              }
               fetch('/api/simulator/export-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

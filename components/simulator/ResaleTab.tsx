@@ -108,6 +108,20 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
 
   const animatedGain = useCountUp(Math.abs(Math.round(totalGainNet)), 800);
 
+  // Find first year where total gain net turns positive
+  const breakEvenYear = useMemo(() => {
+    if (totalGainNet >= 0) return null; // already positive, no need
+    for (let i = yearIndex + 1; i < result.yearlyProjection.length; i++) {
+      const projYp = result.yearlyProjection[i];
+      const gGain = projYp.propertyValue - acquisitionPrice;
+      const hYears = i + 1;
+      const tax = calculateCapitalGainTaxClient(gGain, hYears);
+      const totalNet = tax.netGain + projYp.cumulativeCashflow;
+      if (totalNet >= 0) return startYear + i;
+    }
+    return null; // never turns positive within projection
+  }, [totalGainNet, yearIndex, result.yearlyProjection, acquisitionPrice, startYear]);
+
   // Detect milestone years on the slider
   const milestones = useMemo(() => {
     const totalYears = result.yearlyProjection.length;
@@ -156,7 +170,7 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
       <h3
         className="text-3xl font-medium md:text-4xl text-neutral-900 dark:text-neutral-100"
       >
-        Quelle plus-value à la revente me direz-vous?
+        Quelle plus-value à la revente?
       </h3>
 
       <div className="text-left text-2xl font-medium text-neutral-400 mt-12">
@@ -300,6 +314,16 @@ export function ResaleTab({ result, startYear, purchasePrice, notaryFeesRate, re
             >
               {totalGainNet >= 0 ? '+' : '-'}{fmt(animatedGain)}€
             </div>
+            {totalGainNet < 0 && breakEvenYear && (
+              <p className="text-sm opacity-60 mt-1">
+                Positif à partir de {breakEvenYear} (année {breakEvenYear - startYear + 1})
+              </p>
+            )}
+            {totalGainNet < 0 && !breakEvenYear && (
+              <p className="text-sm opacity-60 mt-1">
+                Non rentable sur la durée de projection
+              </p>
+            )}
           </div>
         </div>
         {/* Rendement pill */}

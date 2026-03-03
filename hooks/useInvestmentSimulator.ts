@@ -36,7 +36,7 @@ export function useInvestmentSimulator() {
     }
   }, []);
 
-  const save = useCallback(async (name: string, input: InvestmentInput) => {
+  const save = useCallback(async (name: string, input: InvestmentInput): Promise<{ id: string } | { error: string }> => {
     setError(null);
     try {
       const res = await fetch('/api/simulator/save', {
@@ -47,14 +47,16 @@ export function useInvestmentSimulator() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Erreur lors de la sauvegarde');
+        const msg = data.error || 'Erreur lors de la sauvegarde';
+        setError(msg);
+        return { error: msg };
       }
 
       return await res.json();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setError(message);
-      return null;
+      return { error: message };
     }
   }, []);
 

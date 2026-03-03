@@ -29,12 +29,12 @@ export function FiscalImpactTab({ result, startYear }: FiscalImpactTabProps) {
   return (
     <div className="space-y-6">
       <h3
-        className="text-3xl md:text-4xl text-white tracking-tight font-medium"
+        className="text-3xl md:text-4xl text-white tracking-tight font-medium mb-8"
       >
         Regardons maintenant l&apos;impact sur vos impôts
       </h3>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-neutral-800 p-3 rounded-xl mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-neutral-800 p-3 px-4 rounded-xl mb-4">
         <div className="text-left text-xl font-medium text-white/50 bg-dark-800">
         <span className="font-medium text-white">{yearIndex + 1}</span><sup>e</sup> année - Année <span className="font-medium text-white">{selectedYear}</span>
         </div>

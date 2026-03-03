@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import CustomToast from '@/components/ui/CustomToast';
 import SimulatorForm from '@/components/simulator/SimulatorForm';
 import SimulatorResults from '@/components/simulator/SimulatorResults';
 import { CalculationLoader } from '@/components/simulator/CalculationLoader';
 import { useInvestmentSimulator } from '@/hooks/useInvestmentSimulator';
+import useLoginModal from '@/hooks/useLoginModal';
 import type { InvestmentInput } from '@/services/InvestmentSimulatorService';
 import type { User } from '@prisma/client';
+
+const STORAGE_KEY = 'coridor-simulator-draft';
 import {
   NOTARY_FEES_OLD,
   DEFAULT_LOAN_RATE,
@@ -83,11 +86,62 @@ const defaultInput: InvestmentInput = {
 };
 
 export default function SimulatorClient({ user }: SimulatorClientProps) {
-  const [input, setInput] = useState<InvestmentInput>(defaultInput);
+  const loginModal = useLoginModal();
   const { result, isLoading, error, simulate, save } = useInvestmentSimulator();
   const [hasSimulated, setHasSimulated] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const hasAutoSaved = useRef(false);
+
+  // Restore draft from localStorage on mount
+  const [input, setInput] = useState<InvestmentInput>(() => {
+    if (typeof window === 'undefined') return defaultInput;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...defaultInput, ...parsed.input };
+      }
+    } catch { /* ignore */ }
+    return defaultInput;
+  });
+
+  // Persist inputs to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ input }));
+    } catch { /* ignore */ }
+  }, [input]);
+
+  // Auto-save after login: if user just logged in and there's a pending save
+  useEffect(() => {
+    if (!user || hasAutoSaved.current) return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pendingSave) {
+          hasAutoSaved.current = true;
+          // Clear pending flag
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ input: parsed.input }));
+          // Auto-simulate then save
+          simulate(parsed.input).then((res) => {
+            if (res) {
+              setHasSimulated(true);
+              setShowResults(true);
+              save('Ma simulation', parsed.input).then((saveRes) => {
+                if (saveRes) {
+                  toast.custom((t) => (
+                    <CustomToast t={t} message="Simulation sauvegardée !" type="success" />
+                  ));
+                }
+              });
+            }
+          });
+        }
+      }
+    } catch { /* ignore */ }
+  }, [user, simulate, save]);
 
   const handleSimulate = async () => {
     setShowLoader(true);
@@ -112,18 +166,23 @@ export default function SimulatorClient({ user }: SimulatorClientProps) {
   }, []);
 
   const handleSave = async () => {
+    if (!user) {
+      // Persist inputs + mark pending save, then open login/register modal
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ input, pendingSave: true }));
+      } catch { /* ignore */ }
+      loginModal.onOpen(window.location.pathname);
+      return;
+    }
+
     const res = await save('Ma simulation', input);
-    if (res) {
+    if ('error' in res) {
       toast.custom((t) => (
-        <CustomToast t={t} message="Simulation sauvegardée !" type="success" />
+        <CustomToast t={t} message={res.error} type="error" />
       ));
     } else {
       toast.custom((t) => (
-        <CustomToast
-          t={t}
-          message="Connectez-vous pour sauvegarder"
-          type="error"
-        />
+        <CustomToast t={t} message="Simulation sauvegardée !" type="success" />
       ));
     }
   };

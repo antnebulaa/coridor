@@ -46,8 +46,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ id: simulation.id });
   } catch (error) {
     console.error("[Simulator Save] POST Error:", error);
+    const message = error instanceof Error ? error.message : "Erreur lors de la sauvegarde";
     return NextResponse.json(
-      { error: "Erreur lors de la sauvegarde" },
+      { error: message },
       { status: 500 },
     );
   }

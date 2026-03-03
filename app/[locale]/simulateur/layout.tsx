@@ -23,7 +23,7 @@ export default function SimulateurLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`fixed inset-0 z-[10000] flex flex-col ${serifFont.variable} ${nunitoFont.variable}`}>
+    <div className={`fixed inset-0 z-9990 flex flex-col ${serifFont.variable} ${nunitoFont.variable}`}>
       {/* Minimal header with logo — transitions dark via data-dark attribute set by ScrollSpyNav */}
       <header
         data-sim-header
