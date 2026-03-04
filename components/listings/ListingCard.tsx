@@ -201,7 +201,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
                             {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
-                                <div className="bg-[#fbea00] opacity-80 px-2 py-1.5 rounded-[10px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
+                                <div className="bg-[#fbea00] opacity-100 px-2 py-1.5 border-2 border-amber-50 rounded-[10px] text-[10px] font-bold drop-shadow-sm uppercase tracking-widest text-black">
                                     {t('shared')}
                                 </div>
                             )}
@@ -276,7 +276,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
 
-                            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3 text-base text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
+                            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3 text-sm text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
                                 {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
                                     <FeatureTag>
                                         <span className="font-medium">1 ch</span>
@@ -342,7 +342,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
                             </div>
                             <div className="font-semibold text-[13px] md:text-[13px] text-blue-600 leading-tight pt-2">
-                                ✓ Annonce vérifiée
+                               
                             </div>
                         </div>
                     </div>

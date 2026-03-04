@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncListingCardData } from '@/lib/syncListingCardData';
 
 interface IParams {
     listingId?: string;
@@ -389,6 +390,9 @@ export async function PUT(
             return updatedListing;
         });
 
+        // Sync denormalized card data after successful transaction
+        syncListingCardData(listingId!).catch(console.error);
+
         return NextResponse.json(result);
     } catch (error) {
         console.error("PUT Listing Error:", error);
@@ -435,6 +439,9 @@ export async function PATCH(
             status: isPublished ? 'PENDING_REVIEW' : 'DRAFT'
         }
     });
+
+    // Sync denormalized card data (status/isPublished changed)
+    syncListingCardData(listingId).catch(console.error);
 
     return NextResponse.json(listing);
 }

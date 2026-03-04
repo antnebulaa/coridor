@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 
 interface IParams {
     roomId?: string;
@@ -69,6 +70,9 @@ export async function DELETE(
             }
         });
     }
+
+    // Sync denormalized card data (room deleted, images unassigned)
+    syncPropertyListings(room.propertyId).catch(console.error);
 
     return NextResponse.json(deletedRoom);
 }

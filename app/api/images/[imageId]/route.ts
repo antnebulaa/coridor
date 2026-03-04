@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 
 interface IParams {
     imageId?: string;
@@ -66,6 +67,10 @@ export async function PUT(
         }
     });
 
+    // Sync denormalized card data for affected listings
+    const propertyId = image.rentalUnit?.property?.id || image.property?.id;
+    if (propertyId) syncPropertyListings(propertyId).catch(console.error);
+
     return NextResponse.json(updatedImage);
 }
 
@@ -123,11 +128,17 @@ export async function DELETE(
         return NextResponse.error();
     }
 
+    // Get property ID before deleting
+    const propertyId = image.rentalUnit?.property?.id || image.property?.id;
+
     const deletedImage = await prisma.propertyImage.delete({
         where: {
             id: imageId
         }
     });
+
+    // Sync denormalized card data for affected listings
+    if (propertyId) syncPropertyListings(propertyId).catch(console.error);
 
     return NextResponse.json(deletedImage);
 }

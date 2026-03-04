@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -307,6 +308,8 @@ export async function GET(request: Request) {
                         where: { id: listing.rentalUnit.propertyId },
                         data: { transitData: result }
                     });
+                    // Sync denormalized card data (transitData changed)
+                    syncPropertyListings(listing.rentalUnit.propertyId).catch(console.error);
                 }
             } catch (error) {
                 console.error("Failed to cache transit data:", error);

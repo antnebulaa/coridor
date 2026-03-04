@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncListingCardData } from '@/lib/syncListingCardData';
 
 export async function POST(
     request: Request,
@@ -31,7 +32,8 @@ export async function POST(
             }
         });
 
-        // Optional: Send notification to owner
+        // Sync denormalized card data (status changed)
+        syncListingCardData(params.listingId).catch(console.error);
 
         return NextResponse.json(listing);
     } catch (error) {

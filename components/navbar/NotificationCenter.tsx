@@ -132,18 +132,21 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ currentUser, re
                 <Bell size={20} className="text-neutral-600 dark:text-neutral-300" />
                 {unreadCount > 0 && (
                     <div className="
-                        absolute 
-                        top-0 
-                        right-0 
-                        h-4 
-                        w-4 
-                        bg-red-500 
-                        text-white 
-                        text-[10px] 
-                        font-bold 
-                        flex 
-                        items-center 
-                        justify-center 
+                        absolute
+                        -top-1
+                        -right-1
+                        h-6
+                        w-6
+                        px-1
+                        bg-red-500
+                        text-white
+                        text-[11px]
+                        leading-5
+                        pt-px
+                        font-normal
+                        flex
+                        items-center
+                        justify-center
                         rounded-full
                         border-2
                         border-white

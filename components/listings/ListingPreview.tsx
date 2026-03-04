@@ -365,7 +365,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                                         className="mb-3"
                                     />
                                     <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Animaux bienvenus</p>
-                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-1 max-w-xs">
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-tight max-w-xs">
                                         Le propriétaire accueille volontiers les animaux de compagnie. Rappel : un bailleur ne peut pas interdire la détention d'un animal domestique (loi du 9 juil. 1970).
                                     </p>
                                 </div>
@@ -380,7 +380,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                                         className="mb-3"
                                     />
                                     <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Idéal étudiant</p>
-                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-1 max-w-xs">
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-tight max-w-xs">
                                         Ce logement est particulièrement adapté aux étudiants. Le propriétaire est ouvert aux dossiers étudiants, avec ou sans garant physique (Visale accepté).
                                     </p>
                                 </div>

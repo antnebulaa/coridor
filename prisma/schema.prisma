@@ -532,6 +532,20 @@ model Listing {
   // userId        String
   // user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // -- Denormalized fields (synced from Property/RentalUnit for search performance) --
+  // Eliminates 4-level deep joins (Listing → RentalUnit → Property → Owner/Images)
+  // Synced via lib/syncListingCardData.ts on create/update
+  dnCity      String?
+  dnZipCode   String?
+  dnLatitude  Float?
+  dnLongitude Float?
+  dnCategory  String?
+  dnOwnerId   String?
+  dnSurface   Float?
+
+  // Pre-computed card display data (images, amenities, floor, dpe, transit, owner, etc.)
+  cardData Json?
+
   @@index([rentalUnitId])
   // Search optimization
   @@index([description])
@@ -540,6 +554,11 @@ model Listing {
   @@index([roomCount])
   @@index([createdAt])
   @@index([status])
+  // Denormalized filter indexes
+  @@index([dnCity])
+  @@index([dnCategory])
+  @@index([dnOwnerId])
+  @@index([isPublished, status])
 }
 
 model Furniture {

@@ -62,7 +62,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                     const stored = localStorage.getItem('coridor_last_search');
                     if (stored) {
                         const data = JSON.parse(stored);
-                        const firstImage = listing.rentalUnit?.images?.[0]?.url || listing.rentalUnit?.property?.images?.[0]?.url;
+                        const firstImage = listing.images?.[0]?.url;
                         const updatedData = {
                             ...data,
                             lastListingImage: firstImage,

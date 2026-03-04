@@ -124,7 +124,7 @@ const PseudonymModal = () => {
                 <p className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider text-center mb-3">
                     {t('page.landlordView')}
                 </p>
-                <div className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-100 dark:border-neutral-700">
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-red-400 dark:border-neutral-700">
                     <div className="relative shrink-0">
                         <Avatar src={null} seed={displayPseudo.full} size={44} />
                         <span className="absolute inset-0 flex items-center justify-center text-2xl drop-shadow-sm">
@@ -193,6 +193,7 @@ const PseudonymModal = () => {
             onClose={handleClose}
             onSubmit={() => {}}
             body={bodyContent}
+            bgColor="#E1D9CB"
         />
     );
 };

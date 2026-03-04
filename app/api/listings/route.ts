@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { getMaxProperties } from '@/lib/features';
+import { syncListingCardData } from '@/lib/syncListingCardData';
 
 
 export async function POST(
@@ -289,6 +290,9 @@ export async function POST(
 
             return listing;
         });
+
+        // Sync denormalized card data after successful transaction
+        syncListingCardData(result.id).catch(console.error);
 
         return NextResponse.json(result);
     } catch (error: any) {

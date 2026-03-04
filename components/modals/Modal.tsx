@@ -28,6 +28,8 @@ interface ModalProps {
     closeButtonVariant?: 'default' | 'transparent-white';
     isLoading?: boolean;
     actionButtonComponent?: React.FC<any>;
+    bgClassName?: string;
+    bgColor?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -52,7 +54,9 @@ const Modal: React.FC<ModalProps> = ({
     totalSteps,
     closeButtonPosition = 'right',
     closeButtonVariant = 'default',
-    actionButtonComponent: ActionButtonComponent
+    actionButtonComponent: ActionButtonComponent,
+    bgClassName,
+    bgColor
 }) => {
     const [showModal, setShowModal] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -212,7 +216,7 @@ const Modal: React.FC<ModalProps> = ({
                     "
                     style={{ opacity: fermerOpacity }}
                 >
-                    <span className="bg-white/90 dark:bg-neutral-800/90 text-black dark:text-white px-6 py-2 rounded-full font-bold text-sm tracking-widest shadow-lg border border-black/5">
+                    <span className="opacity-30 bg-white/90 dark:bg-neutral-800/90 text-black dark:text-white px-6 py-2 rounded-full font-bold text-sm tracking-widest shadow-lg border border-black/5">
                         FERMER
                     </span>
                 </div>
@@ -245,7 +249,7 @@ const Modal: React.FC<ModalProps> = ({
                             ${isDragging ? 'transition-none' : ''} 
                         `}
                     >
-                        <div className="h-full md:h-auto max-h-full md:max-h-[calc(100dvh-48px)] border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full bg-white dark:bg-neutral-900 outline-none focus:outline-none overflow-hidden pt-safe md:pt-0">
+                        <div className={`h-full md:h-auto max-h-full md:max-h-[calc(100dvh-48px)] border-0 rounded-none md:rounded-[25px] shadow-none md:shadow-[0_0_30px_rgba(0,0,0,0.3)] relative flex flex-col w-full ${bgClassName || (bgColor ? '' : 'bg-white dark:bg-neutral-900')} outline-none focus:outline-none overflow-hidden pt-safe md:pt-0`} style={bgColor ? { backgroundColor: bgColor } : undefined}>
                             {/* HEADER */}
                             {!hideHeader && (
                                 <div
@@ -303,7 +307,7 @@ const Modal: React.FC<ModalProps> = ({
                             </div>
 
                             {/* FOOTER */}
-                            <div className="flex flex-col gap-2 p-6 pb-8 md:p-6 md:mb-0 bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800 md:border-t-0">
+                            <div className={`flex flex-col gap-2 p-6 pb-8 md:p-6 md:mb-0 ${bgClassName || (bgColor ? '' : 'bg-white dark:bg-neutral-900')} border-t border-neutral-100 dark:border-neutral-800 md:border-t-0`} style={bgColor ? { backgroundColor: bgColor } : undefined}>
                                 {/* Progress Bar (Moved above buttons) */}
                                 {currentStep && totalSteps && (
                                     <div className="hidden md:flex w-full justify-center mb-2">

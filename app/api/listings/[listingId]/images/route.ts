@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncListingCardData } from '@/lib/syncListingCardData';
 
 interface IParams {
     listingId?: string;
@@ -62,6 +63,9 @@ export async function POST(
             order: index // Basic ordering, might need refinement
         }))
     });
+
+    // Sync denormalized card data (images changed)
+    syncListingCardData(listingId).catch(console.error);
 
     return NextResponse.json(createdImages);
 }

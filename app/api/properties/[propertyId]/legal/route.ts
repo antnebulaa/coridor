@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 
 interface IParams {
     propertyId: string;
@@ -97,6 +98,9 @@ export async function PATCH(
                 ownerSiege: ownerSiege ?? undefined,
             },
         });
+
+        // Sync denormalized card data for all listings of this property
+        syncPropertyListings(propertyId).catch(console.error);
 
         return NextResponse.json(updatedProperty);
     } catch (error) {

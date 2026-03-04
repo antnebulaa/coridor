@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { RentalUnitType } from "@prisma/client";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 import fs from 'fs';
 import path from 'path';
 
@@ -198,6 +199,9 @@ export async function POST(
                 data: { isActive: false }
             });
         }
+
+        // Sync denormalized card data for all listings of this property
+        syncPropertyListings(listing.rentalUnit.propertyId).catch(console.error);
 
         return NextResponse.json({ success: true, targetListingId });
     } catch (error: any) {

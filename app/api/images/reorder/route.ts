@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 
 export async function PUT(
     request: Request
@@ -33,6 +34,16 @@ export async function PUT(
                 })
             )
         );
+
+        // Sync card data: find property from first image
+        if (updates.length > 0) {
+            const firstImage = await prisma.propertyImage.findUnique({
+                where: { id: updates[0].id },
+                select: { propertyId: true, rentalUnit: { select: { propertyId: true } } }
+            });
+            const propertyId = firstImage?.propertyId || firstImage?.rentalUnit?.propertyId;
+            if (propertyId) syncPropertyListings(propertyId).catch(console.error);
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

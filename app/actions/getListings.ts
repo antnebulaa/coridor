@@ -1,4 +1,3 @@
-import { Listing } from "@prisma/client";
 import prisma from "@/libs/prismadb";
 import { getIsochrone } from "@/app/libs/mapbox";
 
@@ -53,8 +52,6 @@ export default async function getListings(
             isPublished
         } = params;
 
-        // ...
-
         const query: any = {};
         let commuteIds: string[] | null = null;
         let commutePoints: any[] = [];
@@ -77,9 +74,8 @@ export default async function getListings(
             }];
         }
 
-        // Commute Filtering Logic with RAW SQL Join
+        // Commute Filtering — uses denormalized lat/lng (no joins!)
         if (commutePoints.length > 0) {
-            console.log(`Processing ${commutePoints.length} commute points...`);
             let validIds: Set<string> | null = null;
 
             for (const point of commutePoints) {
@@ -97,15 +93,14 @@ export default async function getListings(
                     const geometry = isochrone.features[0].geometry;
                     const geoJsonString = JSON.stringify(geometry);
 
+                    // Use denormalized lat/lng — no more RentalUnit/Property joins
                     const rawLists = await prisma.$queryRaw<{ id: string }[]>`
-                        SELECT l.id 
+                        SELECT l.id
                         FROM "Listing" l
-                        JOIN "RentalUnit" ru ON l."rentalUnitId" = ru.id
-                        JOIN "Property" p ON ru."propertyId" = p.id
-                        WHERE p."latitude" IS NOT NULL 
-                        AND p."longitude" IS NOT NULL
+                        WHERE l."dnLatitude" IS NOT NULL
+                        AND l."dnLongitude" IS NOT NULL
                         AND ST_Within(
-                            ST_SetSRID(ST_MakePoint(p."longitude", p."latitude"), 4326),
+                            ST_SetSRID(ST_MakePoint(l."dnLongitude", l."dnLatitude"), 4326),
                             ST_SetSRID(ST_GeomFromGeoJSON(${geoJsonString}), 4326)
                         )
                     `;
@@ -136,23 +131,16 @@ export default async function getListings(
             }
         }
 
-        // Handle isPublished filter
-        // Logic:
-        // Default (Public): isPublished = true
-        // Owner Dashboard: want ALL (Draft + Published).
-        // If isPublished is passed explicitly as null, we show ALL (do not filter).
-        // If passed as boolean, we filter.
-
+        // isPublished filter
         if (typeof isPublished !== 'undefined') {
             if (isPublished !== null) {
                 query.isPublished = isPublished;
             }
-            // If null, we do NOT set query.isPublished, thus returning all.
         } else {
-            // Default to showing only published
             query.isPublished = true;
         }
 
+        // Price filter (direct on Listing)
         if (minPrice && maxPrice) {
             query.price = {
                 gte: +minPrice,
@@ -160,55 +148,50 @@ export default async function getListings(
             };
         }
 
-
-
-        const rentalUnitQuery: any = {
-            isActive: true
-        };
-
+        // Room count filter (direct on Listing)
         if (roomCount) {
             query.roomCount = { gte: +roomCount };
         }
 
+        // Surface filter — denormalized (was on RentalUnit)
         if (minSurface && maxSurface) {
-            rentalUnitQuery.surface = {
+            query.dnSurface = {
                 gte: +minSurface,
                 lte: +maxSurface
             };
         }
 
-        const propertyQuery: any = {};
-
+        // Owner filter — denormalized (was on Property)
         if (userId) {
-            propertyQuery.ownerId = userId;
+            query.dnOwnerId = userId;
         }
 
+        // Category filter — denormalized (was on Property)
         if (category) {
             const categories = category.split(',');
             if (categories.length > 0) {
-                propertyQuery.category = { in: categories };
+                query.dnCategory = { in: categories };
             }
         }
 
+        // City filter — denormalized (was on Property)
         if (params.cities) {
             const cities = params.cities.split(',');
             if (cities.length > 0) {
-                propertyQuery.OR = cities.map((city: string) => ({
-                    city: { contains: city, mode: 'insensitive' }
+                query.OR = cities.map((city: string) => ({
+                    dnCity: { contains: city, mode: 'insensitive' }
                 }));
             }
         } else if (params.city) {
-            propertyQuery.city = { contains: params.city, mode: 'insensitive' };
+            query.dnCity = { contains: params.city, mode: 'insensitive' };
         }
 
+        // Minimal relation filter: RentalUnit.isActive + optional country
+        const rentalUnitFilter: any = { isActive: true };
         if (locationValue) {
-            propertyQuery.country = locationValue;
+            rentalUnitFilter.property = { country: locationValue };
         }
-
-        query.rentalUnit = {
-            ...rentalUnitQuery,
-            property: propertyQuery
-        };
+        query.rentalUnit = rentalUnitFilter;
 
         if (commuteIds && commuteIds.length > 0) {
             query.id = { in: commuteIds };
@@ -222,9 +205,6 @@ export default async function getListings(
         }
 
         // Exclude Rented Listings (Active Signed Lease)
-        // A listing is Rented if it has at least one application with leaseStatus='SIGNED' 
-        // AND the associated financial record is active (endDate is null or future).
-
         const excludeRentedCondition = {
             applications: {
                 none: {
@@ -241,7 +221,6 @@ export default async function getListings(
             }
         };
 
-        // Combine with existing query
         if (query.AND) {
             if (Array.isArray(query.AND)) {
                 query.AND.push(excludeRentedCondition);
@@ -252,90 +231,23 @@ export default async function getListings(
             query.AND = [excludeRentedCondition];
         }
 
+        // ========================================================
+        // QUERY: No deep includes! cardData has all display data.
+        // Only join RentalUnit for isActive filter (1 level).
+        // ========================================================
         const listings = await prisma.listing.findMany({
             where: query,
-            include: {
-                rentalUnit: {
-                    include: {
-                        property: {
-                            include: {
-                                owner: {
-                                    select: {
-                                        id: true,
-                                        name: true,
-                                        image: true,
-                                        createdAt: true,
-                                        updatedAt: true,
-                                    }
-                                },
-                                images: {
-                                    include: {
-                                        room: true
-                                    }
-                                },
-                                rooms: {
-                                    include: {
-                                        images: true
-                                    }
-                                }
-                            }
-                        },
-                        images: true,
-                        targetRoom: {
-                            include: {
-                                images: true
-                            }
-                        }
-                    }
-                },
-            },
             orderBy: orderBy
         });
 
-        // Mapper to SafeListing with Flattened Facade
+        // Map to SafeListing-compatible shape using denormalized + cardData
         const safeListings = listings.map((listing: any) => {
-            const unitImages = listing.rentalUnit.images || [];
-            const targetRoomImages = listing.rentalUnit.targetRoom?.images || [];
+            const cd = listing.cardData as any;
 
-            const targetRoomId = listing.rentalUnit.targetRoom?.id;
-            const propertyImagesRaw = listing.rentalUnit.property.images || [];
+            // Pre-backfill safety: skip listings without cardData
+            if (!cd) return null;
 
-            // Filter out images of OTHER bedrooms (keep common areas like Salon/Cuisine + target room)
-            const propertyImages = propertyImagesRaw.filter((img: any) => {
-                if (!img.roomId) return true; // Global property image
-                if (img.roomId === targetRoomId) return true; // Target room image
-                // If it has a room, check name. If it starts with 'Chambre' and is not target, exclude.
-                // Otherwise (Salon, Cuisine, SDB...), keep it.
-                return img.room && !img.room.name.toLowerCase().startsWith('chambre');
-            });
-
-            // Aggregating images from:
-            // 1. Rental Unit (Specific to this listing/unit)
-            // 2. Target Room (The physical room being rented)
-            // 3. Property (Common areas images directly attached to property)
-            // 4. Other Rooms (Common areas like Salon/Cuisine, excluding OTHER bedrooms)
-
-            const rooms = listing.rentalUnit.property.rooms || [];
-            const roomsImages = rooms.flatMap((room: any) => {
-                // Exclude OTHER bedrooms
-                if (room.id !== targetRoomId && room.name.toLowerCase().startsWith('chambre')) {
-                    return [];
-                }
-                return room.images || [];
-            });
-
-            const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
-            const uniqueUrls = new Set();
-            const aggregatedImages = allImages.filter(img => {
-                if (uniqueUrls.has(img.url)) return false;
-                uniqueUrls.add(img.url);
-                return true;
-            });
-
-            const itemsRooms = rooms;
-
-            const property = listing.rentalUnit.property;
-            const unit = listing.rentalUnit;
+            const owner = cd.owner || {};
 
             return {
                 ...listing,
@@ -343,102 +255,113 @@ export default async function getListings(
                 statusUpdatedAt: listing.statusUpdatedAt.toISOString(),
                 availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
 
-                // Mapped Fields for Facade
-                city: property.city,
-                country: property.country,
-                district: property.district,
-                neighborhood: property.neighborhood,
-                addressLine1: property.addressLine1,
-                building: property.building,
-                apartment: property.apartment,
-                zipCode: property.zipCode,
-                latitude: property.latitude,
-                longitude: property.longitude,
-                category: property.category,
+                // Location — from denormalized columns + cardData
+                city: listing.dnCity,
+                country: cd.country,
+                district: cd.district,
+                neighborhood: cd.neighborhood,
+                addressLine1: cd.addressLine1,
+                building: cd.building,
+                apartment: cd.apartment,
+                zipCode: listing.dnZipCode,
+                latitude: listing.dnLatitude,
+                longitude: listing.dnLongitude,
+                category: listing.dnCategory,
 
-                surface: unit.surface,
-                floor: property.floor,
-                totalFloors: property.totalFloors,
-                isFurnished: unit.isFurnished,
-                buildYear: property.constructionYear,
+                // Property characteristics
+                surface: listing.dnSurface,
+                floor: cd.floor,
+                totalFloors: cd.totalFloors,
+                isFurnished: cd.isFurnished,
+                buildYear: cd.buildYear,
 
-                // New Mapped Fields
-                rentalUnitType: unit.type,
-                heatingSystem: property.heatingSystem,
-                glazingType: property.glazingType,
-                dpe: property.dpe,
-                ges: property.ges,
-                dpe_year: property.dpe_year,
-                energy_cost_min: property.energy_cost_min,
-                energy_cost_max: property.energy_cost_max,
+                rentalUnitType: cd.rentalUnitType,
+                heatingSystem: cd.heatingSystem,
+                glazingType: cd.glazingType,
+                dpe: cd.dpe,
+                ges: cd.ges,
+                dpe_year: cd.dpe_year,
+                energy_cost_min: cd.energy_cost_min,
+                energy_cost_max: cd.energy_cost_max,
 
-                // Amenities (Union of Property + Unit)
-                hasElevator: property.hasElevator,
-                isAccessible: property.isAccessible,
-                hasFiber: property.hasFiber,
-                hasBikeRoom: property.hasBikeRoom,
-                hasPool: property.hasPool,
-                isNearTransport: property.isNearTransport,
-                hasDigicode: property.hasDigicode,
-                hasIntercom: property.hasIntercom,
-                hasCaretaker: property.hasCaretaker,
-                isQuietArea: property.isQuietArea,
-                isNearGreenSpace: property.isNearGreenSpace,
-                isNearSchools: property.isNearSchools,
-                isNearShops: property.isNearShops,
-                isNearHospital: property.isNearHospital,
+                // Amenities
+                hasElevator: cd.hasElevator ?? false,
+                isAccessible: cd.isAccessible ?? false,
+                hasFiber: cd.hasFiber ?? false,
+                hasBikeRoom: cd.hasBikeRoom ?? false,
+                hasPool: cd.hasPool ?? false,
+                isNearTransport: cd.isNearTransport ?? false,
+                hasDigicode: cd.hasDigicode ?? false,
+                hasIntercom: cd.hasIntercom ?? false,
+                hasCaretaker: cd.hasCaretaker ?? false,
+                isQuietArea: cd.isQuietArea ?? false,
+                isNearGreenSpace: cd.isNearGreenSpace ?? false,
+                isNearSchools: cd.isNearSchools ?? false,
+                isNearShops: cd.isNearShops ?? false,
+                isNearHospital: cd.isNearHospital ?? false,
 
-                isTraversant: property.isTraversant,
-                hasGarden: property.hasGarden,
-                isRefurbished: property.isRefurbished,
-                isSouthFacing: property.isSouthFacing,
-                isBright: property.isBright,
-                hasNoOpposite: property.hasNoOpposite,
-                hasView: property.hasView,
-                isQuiet: property.isQuiet,
-                hasBathtub: property.hasBathtub,
-                hasAirConditioning: property.hasAirConditioning,
+                isTraversant: cd.isTraversant ?? false,
+                hasGarden: cd.hasGarden ?? false,
+                isRefurbished: cd.isRefurbished ?? false,
+                isSouthFacing: cd.isSouthFacing ?? false,
+                isBright: cd.isBright ?? false,
+                hasNoOpposite: cd.hasNoOpposite ?? false,
+                hasView: cd.hasView ?? false,
+                isQuiet: cd.isQuiet ?? false,
+                hasBathtub: cd.hasBathtub ?? false,
+                hasAirConditioning: cd.hasAirConditioning ?? false,
 
-                hasStorage: property.hasStorage ?? false,
-                hasLaundry: property.hasLaundry ?? false,
-                hasArmoredDoor: property.hasArmoredDoor ?? false,
-                hasConcierge: property.hasConcierge ?? false,
-                hasAutomaticDoors: property.hasAutomaticDoors ?? false,
+                hasStorage: cd.hasStorage ?? false,
+                hasLaundry: cd.hasLaundry ?? false,
+                hasArmoredDoor: cd.hasArmoredDoor ?? false,
+                hasConcierge: cd.hasConcierge ?? false,
+                hasAutomaticDoors: cd.hasAutomaticDoors ?? false,
 
-                // Outdoor / Building
-                hasBalcony: property.hasBalcony ?? false,
-                hasTerrace: property.hasTerrace ?? false,
-                hasLoggia: property.hasLoggia ?? false,
-                hasCourtyard: property.hasCourtyard ?? false,
-                hasShutters: property.hasShutters ?? false,
-                hasCave: property.hasCave ?? false,
-                hasParking: property.hasParking ?? false,
-                hasGarage: property.hasGarage ?? false,
-                propertySubType: property.propertySubType ?? null,
-                isKitchenEquipped: property.isKitchenEquipped ?? false,
-                hasSeparateKitchen: property.hasSeparateKitchen ?? false,
+                hasBalcony: cd.hasBalcony ?? false,
+                hasTerrace: cd.hasTerrace ?? false,
+                hasLoggia: cd.hasLoggia ?? false,
+                hasCourtyard: cd.hasCourtyard ?? false,
+                hasShutters: cd.hasShutters ?? false,
+                hasCave: cd.hasCave ?? false,
+                hasParking: cd.hasParking ?? false,
+                hasGarage: cd.hasGarage ?? false,
+                propertySubType: cd.propertySubType ?? null,
+                isKitchenEquipped: cd.isKitchenEquipped ?? false,
+                hasSeparateKitchen: cd.hasSeparateKitchen ?? false,
 
-                transitData: property.transitData,
+                transitData: cd.transitData,
 
+                // Pre-aggregated images from cardData
+                images: cd.images || [],
+
+                // Minimal rentalUnit stub for type compatibility
                 rentalUnit: {
-                    ...listing.rentalUnit,
+                    id: listing.rentalUnitId,
+                    type: cd.rentalUnitType || 'ENTIRE_PLACE',
+                    surface: listing.dnSurface,
+                    isFurnished: cd.isFurnished ?? false,
                     property: {
-                        ...listing.rentalUnit.property,
-                        createdAt: listing.rentalUnit.property.createdAt.toISOString(),
-                        updatedAt: listing.rentalUnit.property.updatedAt.toISOString(),
+                        id: '',
+                        ownerId: listing.dnOwnerId,
+                        city: listing.dnCity,
+                        category: listing.dnCategory,
+                        createdAt: owner.createdAt || listing.createdAt.toISOString(),
+                        updatedAt: owner.updatedAt || listing.createdAt.toISOString(),
                         owner: {
-                            ...listing.rentalUnit.property.owner,
-                            createdAt: listing.rentalUnit.property.owner.createdAt.toISOString(),
-                            updatedAt: listing.rentalUnit.property.owner.updatedAt.toISOString(),
-                        }
+                            ...owner,
+                            createdAt: owner.createdAt || listing.createdAt.toISOString(),
+                            updatedAt: owner.updatedAt || listing.createdAt.toISOString(),
+                        },
+                        images: [],
+                        rooms: cd.rooms || [],
                     },
-                    images: listing.rentalUnit.images
+                    images: [],
                 },
-                images: aggregatedImages,
-                rooms: itemsRooms,
-                user: listing.rentalUnit.property.owner
+
+                rooms: cd.rooms || [],
+                user: owner,
             };
-        });
+        }).filter(Boolean);
 
         return safeListings;
 

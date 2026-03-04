@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { syncPropertyListings } from '@/lib/syncListingCardData';
 
 export async function POST(
     request: Request
@@ -112,6 +113,9 @@ export async function POST(
 
         return room;
     });
+
+    // Sync denormalized card data (rooms changed)
+    syncPropertyListings(propertyId).catch(console.error);
 
     return NextResponse.json(result);
 }
