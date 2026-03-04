@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 28 février 2026
+> Dernière mise à jour : 4 mars 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -355,6 +355,16 @@
 - [✅] PollResults (`components/listings/PollResults.tsx`) — résultats zone en lecture seule sur les annonces
 - [✅] Page admin sondages (`app/[locale]/admin/polls/PollManagementClient.tsx`) — formulaire + table avec options
 
+### Performance & Optimisation
+- [✅] Skeleton loaders (loading.tsx) — 7 routes principales (dashboard, inbox, conversation, properties, favorites, account, home), composant `Skeleton.tsx` réutilisable, feedback visuel instantané au clic
+- [✅] Parallélisation des requêtes serveur — `Promise.all` sur dashboard (4 queries landlord, 3 tenant), home (listings + user), conversation (6 queries en 2 batches), calendar, favorites, properties
+- [✅] Navigation avec prefetch — migration `router.push()` → `<Link>` dans MobileMenu, standardisation imports `@/i18n/navigation` sur 9 composants de navigation haute fréquence
+- [✅] Optimisation requêtes Prisma — `getConversations` (dernier message seulement au lieu de tous, `take: 1`), `getOperationalStats` (queries `count` directes), `getMessages` (select minimal sender/seen), `getProperties` (select minimal applications)
+- [✅] Lazy-loading modales — `dynamic(() => import(...), { ssr: false })` pour LoginModal, RegisterModal, SearchModal, RentModal, CommuteModal, ApplicationModal, SearchAlertModal
+- [✅] Suppression `force-dynamic` sur la home page — permet le cache Next.js
+- [✅] Suppression `ClientOnly` wrappers inutiles — élimine le flash blanc post-hydration sur dashboard, properties, favorites, calendar
+- [✅] Dénormalisation `getListings` — 7 colonnes indexées (`dnCity`, `dnZipCode`, `dnLatitude`, `dnLongitude`, `dnCategory`, `dnOwnerId`, `dnSurface`) + `cardData` JSONB sur Listing, élimine les includes 4 niveaux (Listing → RentalUnit → Property → Owner/Images/Rooms), `syncListingCardData` fire-and-forget branché sur 14 routes CRUD, backfill script, requête PostGIS commute sans JOIN
+
 ---
 
 ## ❌ À FAIRE (features non encore implémentées)
@@ -428,3 +438,5 @@
 - [x] ~~LegalInfoSection : pas de champ rentSupplementJustification~~ (corrigé — textarea conditionnel + mention légale art. 140 VI loi ELAN)
 - [x] ~~LegalInfoSection : checkZoneTendue ne passe pas le nom de ville~~ (corrigé — `checkZoneTendue(zipCode, city)` pour désambiguïsation)
 - [x] ~~Simulateur : champ apport personnel impossible à vider/modifier~~ (corrigé — remplacement du `<input>` brut avec `parseFloat(e.target.value) || 0` par `InputField` avec local state + onBlur reset, permettant de vider et retaper une valeur)
+- [x] ~~HomeClient : `listing.rentalUnit.images` toujours vide après dénormalisation~~ (corrigé — les images sont pré-agrégées dans `listing.images` via cardData, les stubs relation sont vides par design → changé en `listing.images?.[0]?.url`)
+- [x] ~~6 routes API sans sync cardData après modification~~ (corrigé — ajout `syncListingCardData`/`syncPropertyListings` sur PATCH listing status, admin reject/archive, rooms create/delete, transit update)
