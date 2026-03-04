@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import VisitsClient from "./VisitsClient";
-import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getVisits from "@/app/actions/getVisits";
 import EmptyState from "@/components/EmptyState";
@@ -20,12 +19,10 @@ const CalendarPage = async ({ searchParams }: { searchParams: Promise<{ view?: s
         const calendarData = await getLandlordCalendarData();
         if (calendarData) {
             return (
-                <ClientOnly>
-                    <LandlordCalendarClient
-                        data={calendarData}
-                        currentUser={currentUser}
-                    />
-                </ClientOnly>
+                <LandlordCalendarClient
+                    data={calendarData}
+                    currentUser={currentUser}
+                />
             );
         }
     }
@@ -36,22 +33,18 @@ const CalendarPage = async ({ searchParams }: { searchParams: Promise<{ view?: s
     if (view === 'visits') {
         const visits = await getVisits();
         return (
-            <ClientOnly>
-                <VisitsClient
-                    currentUser={currentUser}
-                    visits={visits}
-                />
-            </ClientOnly>
+            <VisitsClient
+                currentUser={currentUser}
+                visits={visits}
+            />
         );
     }
 
     return (
-        <ClientOnly>
-            <EmptyState
-                title="Calendar View"
-                subtitle="Not implemented yet."
-            />
-        </ClientOnly>
+        <EmptyState
+            title="Calendar View"
+            subtitle="Not implemented yet."
+        />
     )
 }
 

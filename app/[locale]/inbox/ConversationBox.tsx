@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import clsx from "clsx";

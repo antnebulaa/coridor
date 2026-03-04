@@ -248,7 +248,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
 
                     {/* Summary line */}
                     {summaryParts.length > 0 && (
-                        <p className="text-[13px] text-neutral-500 dark:text-neutral-400 mt-2">
+                        <p className="text-[15px] font-medium text-neutral-800 dark:text-neutral-400 mt-2 border-y border-neutral-100 py-3">
                             {summaryParts.join(' · ')}
                         </p>
                     )}
@@ -311,7 +311,7 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                     </div>
                 )}
 
-                <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+               
 
                 {/* ── Loyer ── */}
                 <div className="px-6 py-5">
@@ -356,31 +356,31 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                                 Un proprio accueillant
                             </div>
                             {(listing as any).petsAllowed && (
-                                <div className="flex flex-col items-center text-center">
+                                <div className="flex flex-col items-center text-center bg-neutral-50 p-5 rounded-2xl">
                                     <Image
                                         src="/images/Pet-friendly.png"
                                         alt="Pet friendly"
-                                        width={80}
-                                        height={80}
+                                        width={60}
+                                        height={60}
                                         className="mb-3"
                                     />
                                     <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Animaux bienvenus</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-1 max-w-xs">
                                         Le propriétaire accueille volontiers les animaux de compagnie. Rappel : un bailleur ne peut pas interdire la détention d'un animal domestique (loi du 9 juil. 1970).
                                     </p>
                                 </div>
                             )}
                             {listing.isStudentFriendly && (
-                                <div className="flex flex-col items-center text-center">
+                                <div className="flex flex-col items-center text-center bg-neutral-50 p-5 rounded-2xl">
                                     <Image
                                         src="/images/student-friendly.png"
                                         alt="Student friendly"
-                                        width={80}
-                                        height={80}
+                                        width={60}
+                                        height={60}
                                         className="mb-3"
                                     />
                                     <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Idéal étudiant</p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed max-w-xs">
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 leading-1 max-w-xs">
                                         Ce logement est particulièrement adapté aux étudiants. Le propriétaire est ouvert aux dossiers étudiants, avec ou sans garant physique (Visale accepté).
                                     </p>
                                 </div>

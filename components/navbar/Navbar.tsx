@@ -8,7 +8,7 @@ import NotificationCenter from './NotificationCenter';
 import { Search as SearchIcon } from 'lucide-react';
 import useSearchModal from '@/hooks/useSearchModal';
 
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/i18n/navigation';
 
 import useUserCounters from '@/hooks/useUserCounters';
 
@@ -18,7 +18,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     const pathname = usePathname();
-    const isHomePage = pathname === '/' || pathname === '/fr' || pathname === '/en';
+    const isHomePage = pathname === '/';
     const isAdmin = pathname?.includes('/admin');
     const isSimulator = pathname?.includes('/simulateur');
     const { unreadCount } = useUserCounters(currentUser);

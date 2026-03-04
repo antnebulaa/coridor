@@ -24,7 +24,7 @@ import useMyCodeModal from "@/hooks/useMyCodeModal";
 import CustomToast from "../ui/CustomToast";
 import { SafeUser } from "@/types";
 import { signOut } from "next-auth/react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 
 interface UserMenuProps {
@@ -50,9 +50,8 @@ const UserMenu: React.FC<UserMenuProps> = ({
     const menuRef = useRef<HTMLDivElement>(null);
 
     const switchLanguage = useCallback((newLocale: string) => {
-        const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
-        router.push(newPath);
-    }, [pathname, locale, router]);
+        router.replace(pathname, { locale: newLocale as 'fr' | 'en' });
+    }, [pathname, router]);
 
     const toggleOpen = useCallback(() => {
         setIsOpen((value) => !value);

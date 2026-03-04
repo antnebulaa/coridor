@@ -266,9 +266,6 @@ export default async function getListings(
                                         image: true,
                                         createdAt: true,
                                         updatedAt: true,
-                                        email: true,
-                                        emailVerified: true,
-                                        birthDate: true
                                     }
                                 },
                                 images: {
@@ -433,8 +430,6 @@ export default async function getListings(
                             ...listing.rentalUnit.property.owner,
                             createdAt: listing.rentalUnit.property.owner.createdAt.toISOString(),
                             updatedAt: listing.rentalUnit.property.owner.updatedAt.toISOString(),
-                            emailVerified: listing.rentalUnit.property.owner.emailVerified?.toISOString() || null,
-                            birthDate: listing.rentalUnit.property.owner.birthDate?.toISOString() || null
                         }
                     },
                     images: listing.rentalUnit.images

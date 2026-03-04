@@ -13,9 +13,11 @@ interface IParams {
 
 const ConversationId = async (props: { params: Promise<IParams> }) => {
     const params = await props.params;
-    const conversation = await getConversationById(params.conversationId);
-    const messages = await getMessages(params.conversationId) as FullMessageType[];
-    const currentUser = await getCurrentUser();
+    const [conversation, messages, currentUser] = await Promise.all([
+        getConversationById(params.conversationId),
+        getMessages(params.conversationId) as Promise<FullMessageType[]>,
+        getCurrentUser(),
+    ]);
     if (!currentUser) { redirect('/'); }
 
     if (!conversation) {
@@ -169,36 +171,33 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
     let confirmedVisit = null;
 
     if (safeListing && otherUser && currentUser) {
-        // Find the application for this listing — scope could be from either participant
-        const application = await prisma.rentalApplication.findFirst({
-            where: {
-                listingId: safeListing.id,
-                candidateScope: {
-                    creatorUserId: { in: [otherUser.id, currentUser.id] }
-                }
-            },
-            select: { id: true, status: true, rejectionReason: true, leaseStatus: true }
-        });
+        // Fetch application + visit in parallel
+        const [application, visit] = await Promise.all([
+            prisma.rentalApplication.findFirst({
+                where: {
+                    listingId: safeListing.id,
+                    candidateScope: {
+                        creatorUserId: { in: [otherUser.id, currentUser.id] }
+                    }
+                },
+                select: { id: true, status: true, rejectionReason: true, leaseStatus: true }
+            }),
+            prisma.visit.findFirst({
+                where: {
+                    listingId: safeListing.id,
+                    candidateId: {
+                        in: [otherUser.id, currentUser?.id].filter(Boolean) as string[]
+                    },
+                    status: 'CONFIRMED'
+                },
+                orderBy: { createdAt: 'desc' }
+            }),
+        ]);
+
         applicationId = application?.id || null;
         applicationStatus = application?.status || null;
         applicationRejectionReason = application?.rejectionReason || null;
         leaseStatus = application?.leaseStatus || null;
-
-        // Fetch valid visit (confirmed)
-        // We check if EITHER the current user OR the other user is the candidate for this listing.
-        // This covers both Candidate View (viewing their own visit) and Landlord View (viewing candidate's visit).
-        const visit = await prisma.visit.findFirst({
-            where: {
-                listingId: safeListing.id,
-                candidateId: {
-                    in: [otherUser.id, currentUser?.id].filter(Boolean) as string[]
-                },
-                status: 'CONFIRMED'
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
 
         if (visit) {
             confirmedVisit = {

@@ -36,14 +36,25 @@ const getConversations = async () => {
                             include: {
                                 property: {
                                     include: {
-                                        owner: true,
-                                        images: true
+                                        owner: {
+                                            select: { id: true, name: true, image: true }
+                                        },
+                                        images: {
+                                            take: 3,
+                                            select: { id: true, url: true, roomId: true }
+                                        }
                                     }
                                 },
-                                images: true,
+                                images: {
+                                    take: 3,
+                                    select: { id: true, url: true }
+                                },
                                 targetRoom: {
                                     include: {
-                                        images: true
+                                        images: {
+                                            take: 3,
+                                            select: { id: true, url: true }
+                                        }
                                     }
                                 }
                             }
@@ -54,9 +65,20 @@ const getConversations = async () => {
                     orderBy: {
                         createdAt: 'asc'
                     },
-                    include: {
-                        sender: true,
-                        seen: true
+                    select: {
+                        id: true,
+                        body: true,
+                        image: true,
+                        type: true,
+                        createdAt: true,
+                        listingId: true,
+                        senderId: true,
+                        sender: {
+                            select: { id: true, name: true, email: true, image: true }
+                        },
+                        seen: {
+                            select: { id: true, email: true }
+                        }
                     }
                 }
             }
@@ -134,9 +156,20 @@ const getConversations = async () => {
                         orderBy: {
                             createdAt: 'asc'
                         },
-                        include: {
-                            sender: true,
-                            seen: true
+                        select: {
+                            id: true,
+                            body: true,
+                            image: true,
+                            type: true,
+                            createdAt: true,
+                            listingId: true,
+                            senderId: true,
+                            sender: {
+                                select: { id: true, name: true, email: true, image: true }
+                            },
+                            seen: {
+                                select: { id: true, email: true }
+                            }
                         }
                     }
                 }

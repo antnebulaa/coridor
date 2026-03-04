@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { Heart, LayoutDashboard, Settings, Home, Building2, MessageSquare, Calendar, Bell } from "lucide-react";
+import { Link, usePathname } from "@/i18n/navigation";
+import { Heart, LayoutDashboard, Settings, Home, Building2, MessageSquare, Calendar } from "lucide-react";
 import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
 import { motion } from "framer-motion";
@@ -19,10 +19,8 @@ interface MobileMenuProps {
 const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     const { unreadCount, hasPendingAlert, notificationCount } = useUserCounters(currentUser);
     const pathname = usePathname();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const loginModal = useLoginModal();
-    const [activePath, setActivePath] = useState(pathname);
     const [isMounted, setIsMounted] = useState(false);
 
     const { isOpen } = useConversation();
@@ -33,10 +31,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     useEffect(() => {
         setIsMounted(true);
     }, []);
-
-    useEffect(() => {
-        setActivePath(pathname);
-    }, [pathname]);
 
     const t = useTranslations('nav');
 
@@ -50,47 +44,47 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
         {
             label: currentUser?.userMode === 'LANDLORD' ? t('agenda') : t('home'),
             icon: currentUser?.userMode === 'LANDLORD' ? Calendar : Home,
-            href: '/',
-            active: activePath === '/'
+            href: '/' as const,
+            active: pathname === '/'
         },
         currentUser?.userMode === 'LANDLORD' ? {
             label: t('properties'),
             icon: Building2,
-            href: '/properties',
-            active: activePath === '/properties'
+            href: '/properties' as const,
+            active: pathname === '/properties'
         } : {
             label: t('favorites'),
             icon: Heart,
-            href: '/favorites',
-            active: activePath === '/favorites'
+            href: '/favorites' as const,
+            active: pathname === '/favorites'
         },
         {
             label: t('dashboard'),
             icon: LayoutDashboard,
-            href: '/dashboard',
-            active: activePath === '/dashboard'
+            href: '/dashboard' as const,
+            active: pathname === '/dashboard'
         },
         {
             label: t('messages'),
             icon: MessageSquare,
-            href: '/inbox',
-            active: activePath === '/inbox'
+            href: '/inbox' as const,
+            active: pathname === '/inbox'
         },
         {
             label: t('settings'),
             icon: Settings,
-            href: '/account',
-            active: activePath?.startsWith('/account')
+            href: '/account' as const,
+            active: pathname?.startsWith('/account')
         }
     ];
 
-    const handleClick = (href: string) => {
+    const handleClick = (e: React.MouseEvent, href: string) => {
         if (!currentUser && href !== '/') {
-            return loginModal.onOpen();
+            e.preventDefault();
+            loginModal.onOpen();
+            return;
         }
         import('@/lib/haptics').then(({ hapticLight }) => hapticLight());
-        setActivePath(href);
-        router.push(href);
     }
 
     return (
@@ -102,18 +96,19 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             <div className="bg-linear-to-b from-transparent via-background/50 to-background/80 pt-6 pb-safe-nav px-4">
                 <div className="flex flex-row items-center justify-center max-w-[400px] mx-auto">
                     {/* Main Menu Pill */}
-                    <div className="flex-1 bg-card/70 backdrop-blur-md rounded-full shadow-2xl pointer-events-auto border border-border">
+                    <div className="flex-1 bg-card/70 backdrop-blur-md rounded-3xl shadow-2xl pointer-events-auto border border-border">
                         <div className="flex flex-row items-center justify-between p-1">
                             {routes.map((route) => (
-                                <div
+                                <Link
                                     key={route.label}
-                                    onClick={() => handleClick(route.href)}
+                                    href={route.href}
+                                    onClick={(e) => handleClick(e, route.href)}
                                     className="relative flex-1 flex items-center justify-center cursor-pointer py-2 px-1"
                                 >
                                     {route.active && (
                                         <motion.div
                                             layoutId="active-bubble"
-                                            className="absolute inset-0 bg-primary rounded-full"
+                                            className="absolute inset-0 bg-primary rounded-[20px]"
                                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                         />
                                     )}
@@ -149,7 +144,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                             {route.label}
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>

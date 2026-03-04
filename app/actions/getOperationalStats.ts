@@ -16,46 +16,26 @@ export default async function getOperationalStats(): Promise<OperationalStats | 
         const currentUser = await getCurrentUser();
         if (!currentUser) return null;
 
-        // 1. Fetch all Rental Units for Occupancy
-        const properties = await prisma.property.findMany({
-            where: { ownerId: currentUser.id },
-            include: {
-                rentalUnits: {
-                    include: {
-                        listings: {
-                            include: {
-                                applications: {
-                                    where: {
-                                        leaseStatus: 'SIGNED'
-                                    }
-                                }
+        // 1. Count total units and occupied units with efficient queries
+        const totalUnits = await prisma.rentalUnit.count({
+            where: {
+                property: { ownerId: currentUser.id }
+            }
+        });
+
+        const occupiedUnits = await prisma.rentalUnit.count({
+            where: {
+                property: { ownerId: currentUser.id },
+                listings: {
+                    some: {
+                        applications: {
+                            some: {
+                                leaseStatus: 'SIGNED'
                             }
                         }
                     }
                 }
             }
-        });
-
-        let totalUnits = 0;
-        let occupiedUnits = 0;
-
-        (properties as any[]).forEach(property => {
-            property.rentalUnits.forEach((unit: any) => {
-                totalUnits++;
-                let isUnitOccupied = false;
-
-                // Check if any listing for this unit has a signed lease
-                if (unit.listings && unit.listings.length > 0) {
-                    unit.listings.forEach((listing: any) => {
-                        // Check Signed Leases
-                        if (listing.applications && listing.applications.length > 0) {
-                            isUnitOccupied = true;
-                        }
-                    });
-                }
-
-                if (isUnitOccupied) occupiedUnits++;
-            });
         });
 
         const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;

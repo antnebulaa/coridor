@@ -9,8 +9,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: { searchParams: Promise<IListingsParams> }) {
   const resolvedParams = await searchParams;
-  const listings = await getListings(resolvedParams);
-  const currentUser = await getCurrentUser();
+  const [listings, currentUser] = await Promise.all([
+    getListings(resolvedParams),
+    getCurrentUser(),
+  ]);
 
   if (listings.length === 0) {
     return (

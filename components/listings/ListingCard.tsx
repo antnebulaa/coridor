@@ -2,7 +2,7 @@
 
 import useCountries from "@/hooks/useCountries";
 import { SafeListing, SafeUser } from "@/types";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useCallback, useMemo, useRef } from "react";
 import { format } from 'date-fns';
 import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront } from 'lucide-react';

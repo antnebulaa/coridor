@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import ClientOnly from "@/components/ClientOnly";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getProperties from "@/app/actions/getProperties";
@@ -18,14 +17,12 @@ const PropertiesPage = async () => {
     const properties = await getProperties();
 
     return (
-        <ClientOnly>
-            <div className="bg-neutral-100 min-h-screen">
-                <PropertiesClient
-                    properties={properties}
-                    currentUser={currentUser}
-                />
-            </div>
-        </ClientOnly>
+        <div className="bg-neutral-100 min-h-screen">
+            <PropertiesClient
+                properties={properties}
+                currentUser={currentUser}
+            />
+        </div>
     );
 };
 

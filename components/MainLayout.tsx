@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -8,7 +8,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const pathname = usePathname();
-    const isMainPage = pathname === '/' || pathname === '/fr' || pathname === '/en';
+    const isMainPage = pathname === '/';
 
     // Mobile:
     // Home: Categories visible -> pt-32 (approx)

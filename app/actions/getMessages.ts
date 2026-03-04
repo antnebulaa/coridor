@@ -10,8 +10,12 @@ const getMessages = async (
                 conversationId: conversationId
             },
             include: {
-                sender: true,
-                seen: true,
+                sender: {
+                    select: { id: true, name: true, email: true, image: true }
+                },
+                seen: {
+                    select: { id: true, email: true }
+                },
                 documents: {
                     select: {
                         id: true,

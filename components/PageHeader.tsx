@@ -2,7 +2,7 @@
 
 import { Button } from './ui/Button';
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { BiChevronLeft } from "react-icons/bi";
 
 interface PageHeaderProps {
