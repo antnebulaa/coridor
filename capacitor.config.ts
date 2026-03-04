@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
   // Remote URL mode: WebView loads from Vercel deployment
   // In dev, set CAPACITOR_SERVER_URL=http://192.168.x.x:3000
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || 'https://coridor.fr',
+    url: process.env.CAPACITOR_SERVER_URL || 'https://www.coridor.app',
     cleartext: !!process.env.CAPACITOR_SERVER_URL, // Allow HTTP in dev only
   },
 

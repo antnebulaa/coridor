@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { Heart, LayoutDashboard, Settings, Home, Building2, MessageSquare, Calendar, Bell } from "lucide-react";
 import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
