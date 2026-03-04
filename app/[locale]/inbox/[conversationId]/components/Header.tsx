@@ -8,6 +8,7 @@ import { HiChevronLeft } from "react-icons/hi";
 import Avatar from "@/components/Avatar";
 import { HiEllipsisHorizontal, HiInformationCircle } from "react-icons/hi2";
 import { useTranslations } from "next-intl";
+import DocumentsButton from "@/components/messaging/DocumentsButton";
 
 interface HeaderProps {
     conversation: Conversation & {
@@ -17,13 +18,17 @@ interface HeaderProps {
     onToggleDossier: () => void;
     onOpenListingRecap?: () => void;
     showDossier?: boolean;
+    onToggleDocuments?: () => void;
+    conversationId?: string;
 };
 
 const Header: React.FC<HeaderProps> = ({
     conversation,
     onToggleDossier,
     onOpenListingRecap,
-    showDossier
+    showDossier,
+    onToggleDocuments,
+    conversationId,
 }) => {
     const t = useTranslations('inbox.header');
     const router = useRouter();
@@ -101,25 +106,33 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
 
 
-                <div
-                    onClick={showDossier ? onToggleDossier : onOpenListingRecap}
-                    className="
-                        py-1.5
-                        px-3
-                        bg-neutral-100 dark:bg-neutral-800 
-                        hover:bg-neutral-200 dark:hover:bg-neutral-700
-                        rounded-full 
-                        cursor-pointer 
-                        transition
-                        xl:hidden
-                        flex
-                        items-center
-                        justify-center
-                    "
-                >
-                    <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
-                        {showDossier ? t('viewDossier') : t('viewRecap')}
-                    </span>
+                <div className="flex items-center gap-2">
+                    {conversationId && onToggleDocuments && (
+                        <DocumentsButton
+                            conversationId={conversationId}
+                            onToggleDocuments={onToggleDocuments}
+                        />
+                    )}
+                    <div
+                        onClick={showDossier ? onToggleDossier : onOpenListingRecap}
+                        className="
+                            py-1.5
+                            px-3
+                            bg-neutral-100 dark:bg-neutral-800
+                            hover:bg-neutral-200 dark:hover:bg-neutral-700
+                            rounded-full
+                            cursor-pointer
+                            transition
+                            xl:hidden
+                            flex
+                            items-center
+                            justify-center
+                        "
+                    >
+                        <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                            {showDossier ? t('viewDossier') : t('viewRecap')}
+                        </span>
+                    </div>
                 </div>
             </div >
         </>

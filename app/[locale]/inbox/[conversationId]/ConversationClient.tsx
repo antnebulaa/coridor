@@ -22,6 +22,8 @@ import Heading from "@/components/Heading";
 import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 import { XCircle, CalendarDays, Play } from "lucide-react";
 import BottomSheet from "@/components/ui/BottomSheet";
+import DocumentsPanel from "@/components/messaging/DocumentsPanel";
+import { AnimatePresence, motion } from "framer-motion";
 
 const REJECTION_REASONS = [
     "Le logement a déjà trouvé preneur",
@@ -112,6 +114,9 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         setMessages((current) => [...current, message]);
     }, []);
 
+    const [isDocumentsPanelOpen, setIsDocumentsPanelOpen] = useState(false);
+    const [highlightedDocumentId, setHighlightedDocumentId] = useState<string | null>(null);
+
     const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
     const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false);
     const [selectedReason, setSelectedReason] = useState<string>('');
@@ -166,6 +171,33 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
     const handleOpenListingRecap = useCallback(() => {
         setIsMobileRecapOpen(true);
+    }, []);
+
+    const handleToggleDocuments = useCallback(() => {
+        setIsDocumentsPanelOpen((v) => !v);
+        setHighlightedDocumentId(null);
+    }, []);
+
+    const handleViewInPanel = useCallback((documentId: string) => {
+        setIsDocumentsPanelOpen(true);
+        setHighlightedDocumentId(documentId);
+        // Auto-clear highlight after 3s
+        setTimeout(() => setHighlightedDocumentId(null), 3000);
+    }, []);
+
+    const handleScrollToMessage = useCallback((messageId: string) => {
+        setIsDocumentsPanelOpen(false);
+        // Small delay for panel close animation
+        setTimeout(() => {
+            const el = document.getElementById(`message-${messageId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add("bg-amber-50", "dark:bg-amber-900/20");
+                setTimeout(() => {
+                    el.classList.remove("bg-amber-50", "dark:bg-amber-900/20");
+                }, 2000);
+            }
+        }, 100);
     }, []);
 
     const handleDecline = useCallback(async () => {
@@ -410,6 +442,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         onToggleDossier={toggleDossier}
                         onOpenListingRecap={handleOpenListingRecap}
                         showDossier={showDossier}
+                        onToggleDocuments={handleToggleDocuments}
+                        conversationId={conversation.id}
                     />
                 </div>
                 <div className="flex-1 overflow-y-auto min-h-0">
@@ -422,6 +456,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         applicationId={applicationId}
                         confirmedVisit={confirmedVisit}
                         leaseStatus={initialLeaseStatus}
+                        onViewInPanel={handleViewInPanel}
                     />
                 </div>
                 <div className="flex-none bg-white dark:bg-neutral-900"
@@ -988,6 +1023,40 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     </div>
                 )
             }
+            {/* Documents Panel */}
+            <AnimatePresence>
+                {isDocumentsPanelOpen && (
+                    <>
+                        {/* Backdrop — mobile only */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                            onClick={() => setIsDocumentsPanelOpen(false)}
+                        />
+                        {/* Panel */}
+                        <motion.div
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", bounce: 0.05, duration: 0.35 }}
+                            className={clsx(
+                                "flex-col h-full bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-neutral-800",
+                                "fixed inset-y-0 right-0 z-50 w-full flex lg:static lg:z-auto lg:w-[360px]"
+                            )}
+                        >
+                            <DocumentsPanel
+                                conversationId={conversation.id}
+                                onClose={() => setIsDocumentsPanelOpen(false)}
+                                onScrollToMessage={handleScrollToMessage}
+                                highlightedDocumentId={highlightedDocumentId}
+                            />
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div >
     );
 }

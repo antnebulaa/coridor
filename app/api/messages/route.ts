@@ -56,6 +56,9 @@ export async function POST(
             fileUrl,
             fileName,
             fileType,
+            fileSize,
+            fileMimeType,
+            fileLabel,
             conversationId,
             listingId
         } = body;
@@ -126,6 +129,27 @@ export async function POST(
                 }
             }
         });
+
+        // Index file as ConversationDocument (non-blocking)
+        // Images use { image: url }, files use { fileUrl: url } — handle both
+        const actualFileUrl = image || fileUrl;
+        if (actualFileUrl && fileMimeType && fileSize) {
+            try {
+                const { DocumentService } = await import("@/services/DocumentService");
+                await DocumentService.createUserDocument({
+                    conversationId,
+                    messageId: newMessage.id,
+                    uploadedById: user.id,
+                    fileName: fileName || "fichier",
+                    fileType: fileMimeType,
+                    fileSize: fileSize,
+                    fileUrl: actualFileUrl,
+                    label: fileLabel || undefined,
+                });
+            } catch (docError) {
+                console.error("[DocumentService] Failed to index document:", docError);
+            }
+        }
 
         const updatedConversation = await prisma.conversation.update({
             where: {

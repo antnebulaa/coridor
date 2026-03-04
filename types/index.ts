@@ -259,6 +259,14 @@ export type SafeMessage = Omit<
     fileUrl?: string | null;
     fileName?: string | null;
     fileType?: string | null;
+    documents?: {
+        id: string;
+        fileName: string;
+        fileType: string;
+        fileSize: number;
+        fileUrl: string;
+        label: string | null;
+    }[];
 };
 
 export type SafeVisit = Omit<

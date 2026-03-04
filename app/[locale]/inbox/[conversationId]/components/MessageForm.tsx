@@ -4,8 +4,10 @@ import {
     HiPaperAirplane,
     HiPaperClip,
     HiPhoto,
-    HiDocumentText
+    HiDocumentText,
+    HiXMark
 } from "react-icons/hi2";
+import { FileText, Image as ImageIcon, File as FileIcon } from "lucide-react";
 import MessageInput from "./MessageInput";
 import {
     FieldValues,
@@ -20,6 +22,12 @@ import useConversation from "@/hooks/useConversation";
 import { useRouter } from "next/navigation";
 
 import { SafeUser, SafeMessage } from "@/types";
+
+interface PendingFile {
+    file: File;
+    preview?: string; // Object URL for image preview
+    label: string;
+}
 
 interface FormProps {
     onOptimisticMessage: (message: SafeMessage) => void;
@@ -37,6 +45,7 @@ const MessageForm: React.FC<FormProps> = ({
 
     const [isLoading, setIsLoading] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const {
@@ -60,14 +69,33 @@ const MessageForm: React.FC<FormProps> = ({
         }
     };
 
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        const isImg = file.type.startsWith("image/");
+        const preview = isImg ? URL.createObjectURL(file) : undefined;
+
+        setPendingFile({ file, preview, label: "" });
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const cancelPendingFile = () => {
+        if (pendingFile?.preview) {
+            URL.revokeObjectURL(pendingFile.preview);
+        }
+        setPendingFile(null);
+    };
+
+    const uploadAndSendFile = async () => {
+        if (!pendingFile) return;
         setIsLoading(true);
 
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", pendingFile.file);
         formData.append("upload_preset", "coridor_uploads");
 
         try {
@@ -77,15 +105,32 @@ const MessageForm: React.FC<FormProps> = ({
             );
 
             const result = response.data;
-            handleFileDirectUpload({ info: result });
+            const fileUrl = result.secure_url;
+            const fileName = result.original_filename;
+            const cloudinaryFormat = result.format;
+
+            if (!fileUrl) return;
+
+            const isImg = ["jpg", "jpeg", "png", "webp", "gif"].includes(cloudinaryFormat);
+
+            await axios.post("/api/messages", {
+                ...(isImg ? { image: fileUrl } : { fileUrl, fileType: cloudinaryFormat }),
+                fileName: fileName || pendingFile.file.name,
+                fileMimeType: pendingFile.file.type,
+                fileSize: pendingFile.file.size,
+                fileLabel: pendingFile.label.trim() || undefined,
+                conversationId: conversationId,
+            });
+
+            router.refresh();
         } catch (error) {
             console.error("Upload error:", error);
-            // Optionally add toast notification here
         } finally {
-            setIsLoading(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ''; // Reset input
+            if (pendingFile?.preview) {
+                URL.revokeObjectURL(pendingFile.preview);
             }
+            setPendingFile(null);
+            setIsLoading(false);
         }
     };
 
@@ -110,6 +155,7 @@ const MessageForm: React.FC<FormProps> = ({
                 fileUrl: null,
                 fileName: null,
                 fileType: null,
+                documents: [],
             };
             onOptimisticMessage(tempMessage);
         }
@@ -122,36 +168,71 @@ const MessageForm: React.FC<FormProps> = ({
         });
     };
 
-    const handleFileDirectUpload = (result: any) => {
-        const fileUrl = result?.info?.secure_url;
-        const fileName = result?.info?.original_filename;
-        const fileType = result?.info?.format; // e.g 'pdf', 'jpg'
-
-        if (!fileUrl) return;
-
-        // Is it an image?
-        const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(fileType);
-
-        axios.post('/api/messages', {
-            ...(isImg ? { image: fileUrl } : { fileUrl, fileName, fileType }),
-            conversationId: conversationId
-        }).then(() => {
-            router.refresh();
-        });
-    }
+    const getFileDisplayIcon = () => {
+        if (!pendingFile) return FileIcon;
+        if (pendingFile.file.type.startsWith("image/")) return ImageIcon;
+        if (pendingFile.file.type.includes("pdf")) return FileText;
+        return FileIcon;
+    };
 
     return (
-        <div className="
-       p-4 
+        <div className="bg-white border-t border-gray-200 w-full">
+            {/* Staged File Preview */}
+            {pendingFile && (
+                <div className="px-4 pt-3 pb-0">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                        {pendingFile.preview ? (
+                            <img
+                                src={pendingFile.preview}
+                                alt="Preview"
+                                className="w-12 h-12 rounded-lg object-cover shrink-0"
+                            />
+                        ) : (
+                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-400">
+                                {(() => { const Icon = getFileDisplayIcon(); return <Icon size={20} />; })()}
+                            </div>
+                        )}
+                        <div className="flex flex-col flex-1 min-w-0 gap-1">
+                            <span className="text-sm font-medium text-neutral-800 truncate">
+                                {pendingFile.file.name}
+                            </span>
+                            <input
+                                type="text"
+                                value={pendingFile.label}
+                                onChange={(e) => setPendingFile({ ...pendingFile, label: e.target.value })}
+                                placeholder="Ajouter un libellé (optionnel)"
+                                className="text-xs text-gray-500 bg-transparent border-none outline-none placeholder:text-gray-300 w-full"
+                            />
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                            <button
+                                onClick={cancelPendingFile}
+                                type="button"
+                                className="p-1.5 rounded-full hover:bg-gray-200 transition text-gray-400"
+                            >
+                                <HiXMark size={16} />
+                            </button>
+                            <button
+                                onClick={uploadAndSendFile}
+                                type="button"
+                                disabled={isLoading}
+                                className="p-2 rounded-full bg-primary text-white hover:bg-primary-hover transition disabled:opacity-50"
+                            >
+                                <HiPaperAirplane size={14} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="
+       p-4
        pb-[calc(env(safe-area-inset-bottom)+1rem)]
-       lg:pb-4 // Reset for desktop
-       bg-white 
-       border-t 
-       border-gray-200 
-       flex 
-       items-center 
-       gap-2 
-       lg:gap-4 
+       lg:pb-4
+       flex
+       items-center
+       gap-2
+       lg:gap-4
        w-full
     ">
             {/* Hidden File Input */}
@@ -266,12 +347,8 @@ const MessageForm: React.FC<FormProps> = ({
                 </button>
             </form>
         </div>
+        </div>
     );
-}
-
-// Helper to check if file is an image
-const isImage = (url: string) => {
-    return url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null;
 }
 
 export default MessageForm;

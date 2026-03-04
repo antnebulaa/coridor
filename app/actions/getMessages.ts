@@ -10,7 +10,17 @@ const getMessages = async (
             },
             include: {
                 sender: true,
-                seen: true
+                seen: true,
+                documents: {
+                    select: {
+                        id: true,
+                        fileName: true,
+                        fileType: true,
+                        fileSize: true,
+                        fileUrl: true,
+                        label: true,
+                    }
+                }
             },
             orderBy: {
                 createdAt: 'asc'

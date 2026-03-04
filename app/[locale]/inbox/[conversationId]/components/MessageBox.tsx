@@ -17,6 +17,7 @@ import { HiCheck, HiClock, HiCalendarDays } from "react-icons/hi2";
 import ImageModal from "./ImageModal";
 import MessageMenu from "./MessageMenu";
 import AddToCalendarButton from "@/components/calendar/AddToCalendarButton";
+import DocumentBanner from "@/components/messaging/DocumentBanner";
 
 interface MessageBoxProps {
     data: SafeMessage | FullMessageType;
@@ -36,6 +37,7 @@ interface MessageBoxProps {
         startTime: string;
         endTime: string;
     } | null;
+    onViewInPanel?: (documentId: string) => void;
 }
 
 const MessageBox: React.FC<MessageBoxProps> = ({
@@ -50,7 +52,8 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     showDossier,
     applicationId,
     leaseStatus,
-    confirmedVisit
+    confirmedVisit,
+    onViewInPanel,
 }) => {
     const t = useTranslations('inbox');
     const session = useSession();
@@ -147,7 +150,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     };
 
     return (
-        <div className={container} onClick={(e) => {
+        <div id={`message-${data.id}`} className={container} onClick={(e) => {
             // Stop propagation if clicking on message bubble actions so it doesn't close immediately via Body click
             // But Body click handles closing 'activeMessageId(null)', so if we click another message, it sets active to that. 
             // If we click the SAME message, we might toggle? 
@@ -983,32 +986,48 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                 </div>
                             )}
 
-                            {/* File Attachment */}
+                            {/* File Attachment — DocumentBanner if indexed, legacy fallback otherwise */}
                             {data.fileUrl && !data.image && (
                                 <div className="flex flex-col gap-2">
-                                    <a
-                                        href={data.fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className={clsx(
-                                            "flex items-center gap-3 p-3 rounded-lg border max-w-xs transition hover:bg-black/5",
-                                            isOwn ? "bg-white/10 border-white/20 text-white" : "bg-white border-gray-200 text-gray-900"
-                                        )}
-                                    >
-                                        <div className="p-2 bg-gray-100 rounded-lg text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                            </svg>
-                                        </div>
-                                        <div className="flex flex-col overflow-hidden">
-                                            <span className="text-sm font-medium truncate w-full">
-                                                {data.fileName || t('message.attachment.defaultName')}
-                                            </span>
-                                            <span className="text-xs opacity-70 uppercase">
-                                                {data.fileType || t('message.attachment.defaultType')}
-                                            </span>
-                                        </div>
-                                    </a>
+                                    {data.documents && data.documents.length > 0 ? (
+                                        data.documents.map((doc) => (
+                                            <DocumentBanner
+                                                key={doc.id}
+                                                documentId={doc.id}
+                                                fileName={doc.fileName}
+                                                fileType={doc.fileType}
+                                                fileSize={doc.fileSize}
+                                                fileUrl={doc.fileUrl}
+                                                label={doc.label}
+                                                isOwn={isOwn}
+                                                onViewInPanel={onViewInPanel}
+                                            />
+                                        ))
+                                    ) : (
+                                        <a
+                                            href={data.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={clsx(
+                                                "flex items-center gap-3 p-3 rounded-lg border max-w-xs transition hover:bg-black/5",
+                                                isOwn ? "bg-white/10 border-white/20 text-white" : "bg-white border-gray-200 text-gray-900"
+                                            )}
+                                        >
+                                            <div className="p-2 bg-gray-100 rounded-lg text-gray-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                </svg>
+                                            </div>
+                                            <div className="flex flex-col overflow-hidden">
+                                                <span className="text-sm font-medium truncate w-full">
+                                                    {data.fileName || t('message.attachment.defaultName')}
+                                                </span>
+                                                <span className="text-xs opacity-70 uppercase">
+                                                    {data.fileType || t('message.attachment.defaultType')}
+                                                </span>
+                                            </div>
+                                        </a>
+                                    )}
                                 </div>
                             )}
                         </div>

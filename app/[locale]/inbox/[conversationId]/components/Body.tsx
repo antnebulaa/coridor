@@ -1,6 +1,6 @@
 
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { FullMessageType, SafeMessage } from "@/types";
@@ -21,6 +21,7 @@ interface BodyProps {
         endTime: string;
     } | null;
     leaseStatus?: string | null;
+    onViewInPanel?: (documentId: string) => void;
 }
 
 const Body: React.FC<BodyProps> = ({
@@ -31,7 +32,8 @@ const Body: React.FC<BodyProps> = ({
     showDossier,
     applicationId,
     confirmedVisit,
-    leaseStatus
+    leaseStatus,
+    onViewInPanel,
 }) => {
     const [messages, setMessages] = useState(initialMessages);
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -56,6 +58,17 @@ const Body: React.FC<BodyProps> = ({
         setMessages(initialMessages);
     }, [initialMessages]);
 
+    const scrollToMessage = useCallback((messageId: string) => {
+        const el = document.getElementById(`message-${messageId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("bg-amber-50", "dark:bg-amber-900/20");
+            setTimeout(() => {
+                el.classList.remove("bg-amber-50", "dark:bg-amber-900/20");
+            }, 2000);
+        }
+    }, []);
+
     return (
         <div
             className="flex flex-col relative"
@@ -76,6 +89,7 @@ const Body: React.FC<BodyProps> = ({
                     onOpenMenu={() => setActiveMessageId(message.id)}
                     onCloseMenu={() => setActiveMessageId(null)}
                     confirmedVisit={confirmedVisit}
+                    onViewInPanel={onViewInPanel}
                 />
             ))}
             <div ref={bottomRef} className="pt-24" />
