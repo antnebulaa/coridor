@@ -4,8 +4,7 @@ import LandlordCalendarClient from "./components/calendar/LandlordCalendarClient
 import getLandlordCalendarData from "@/app/actions/getLandlordCalendarData";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getListings, { IListingsParams } from "@/app/actions/getListings"; // Fixed
-export const dynamic = 'force-dynamic';
+import getListings, { IListingsParams } from "@/app/actions/getListings";
 
 export default async function Home({ searchParams }: { searchParams: Promise<IListingsParams> }) {
   const resolvedParams = await searchParams;

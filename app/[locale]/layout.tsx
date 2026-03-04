@@ -4,20 +4,12 @@ import "../globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import ClientFooter from "@/components/ClientFooter";
-import SearchModal from "@/components/modals/SearchModal";
-import CommuteModal from "@/components/modals/CommuteModal";
-import RegisterModal from "@/components/modals/RegisterModal";
-import LoginModal from "@/components/modals/LoginModal";
-import RentModalLoader from "@/components/modals/RentModalLoader";
-import WishlistModal from "@/components/modals/WishlistModal";
-import PseudonymModal from "@/components/modals/PseudonymModal";
-import dynamic from "next/dynamic";
+import ModalProvider from "@/components/modals/ModalProvider";
 
 import CapacitorInit from "@/components/native/CapacitorInit";
 import BackButtonHandler from "@/components/native/BackButtonHandler";
 import OfflineBanner from "@/components/native/OfflineBanner";
 
-import MyCodeModal from "@/components/modals/MyCodeModal";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import { Toaster } from "react-hot-toast";
@@ -144,16 +136,7 @@ export default async function LocaleLayout({
                                     bottom: 112,
                                 }}
                             />
-                            <Suspense fallback={<div></div>}>
-                                <SearchModal />
-                                <CommuteModal />
-                            </Suspense>
-                            <RentModalLoader />
-                            <RegisterModal />
-                            <LoginModal />
-                            <WishlistModal />
-                            <PseudonymModal />
-                            <MyCodeModal currentUser={currentUser} />
+                            <ModalProvider currentUser={currentUser} />
                             <PushNotificationManager />
                             <InstallPrompt />
 
