@@ -75,15 +75,15 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
     return (
         <div className="flex flex-col h-full bg-white dark:bg-neutral-900">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 pt-safe border-b border-gray-200 dark:border-neutral-800">
-                <h3 className="text-base font-semibold text-neutral-900 dark:text-white">
+            <div className="flex items-center justify-between h-[72px] px-6 border-b border-gray-200 dark:border-neutral-800">
+                <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">
                     Documents
-                </h3>
+                </h2>
                 <button
                     onClick={onClose}
-                    className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                    className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
                 >
-                    <X size={18} className="text-neutral-500" />
+                    <X size={20} className="text-neutral-500" />
                 </button>
             </div>
 
@@ -218,15 +218,21 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
                         <MessageCircle size={14} />
                     </button>
                 )}
-                <a
-                    href={doc.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300"
+                <button
+                    onClick={async () => {
+                        try {
+                            const res = await fetch(`/api/documents/${doc.id}/download`);
+                            const { url } = await res.json();
+                            window.open(url, "_blank");
+                        } catch {
+                            window.open(doc.fileUrl, "_blank");
+                        }
+                    }}
+                    className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 cursor-pointer"
                     title="Télécharger"
                 >
                     <Download size={14} />
-                </a>
+                </button>
             </div>
         </div>
     );

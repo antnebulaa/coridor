@@ -106,14 +106,17 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 
     const avatar = clsx(isOwn && "order-2");
 
+    const isDocumentOnly = !!(data.fileUrl && !data.image && !data.body);
+
     const body = clsx(
         "flex flex-col gap-2",
-        isOwn && "items-end"
+        isDocumentOnly ? "w-full" : (isOwn && "items-end")
     );
 
     const message = clsx(
-        "text-[15px] w-fit transition select-none !ring-0 !outline-none !border-none", // Select none to prevent text selection on long press
-        // isMenuOpen && "scale-95 brightness-95", // Removed as per user feedback
+        "text-[15px] transition select-none !ring-0 !outline-none !border-none",
+        isDocumentOnly ? "p-0 w-full" : "w-fit",
+        isDocumentOnly ? null :
         data.body === 'LEASE_SENT_FOR_SIGNATURE' ? "p-0" :
         data.body === 'INVITATION_VISITE' ? "p-0" :
         data.body?.startsWith('INSPECTION_') ? "p-0" :
@@ -168,7 +171,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
             )}
 
             {/* Main Content + Hover Buttons Wrapper */}
-            <div className={clsx("flex items-end gap-2 max-w-[70%] relative", isOwn ? "flex-row-reverse" : "flex-row")}>
+            <div className={clsx("flex items-end gap-2 relative", isDocumentOnly ? "w-full" : "max-w-[70%]", isOwn ? "flex-row-reverse" : "flex-row")}>
 
                 <div className={body}>
                     <div className="flex items-center gap-1">
@@ -187,7 +190,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                         )}
                     </div>
 
-                    <div className="relative w-fit">
+                    <div className={clsx("relative", isDocumentOnly ? "w-full" : "w-fit")}>
                         {/* Mobile/Long-Press Menu Trigger */}
                         {isMenuOpen && menuTrigger === 'message' && (
                             <MessageMenu

@@ -325,7 +325,6 @@ export default function SubscriptionClient() {
             <div className="max-w-4xl mx-auto space-y-6">
                 <PageHeader
                     title="Mon abonnement"
-                    subtitle="Gérez votre plan, vos factures et votre moyen de paiement"
                 />
                 <div className="bg-white rounded-2xl border border-neutral-200 p-8 text-center">
                     <p className="text-neutral-600 mb-4">
@@ -350,7 +349,6 @@ export default function SubscriptionClient() {
         <div className="max-w-4xl mx-auto space-y-6">
             <PageHeader
                 title="Mon abonnement"
-                subtitle="Gérez votre plan, vos factures et votre moyen de paiement"
             />
 
             {/* ─── Section 1: Plan Summary ─────────────────────────────────────── */}

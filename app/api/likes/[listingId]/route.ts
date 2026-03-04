@@ -76,7 +76,7 @@ export async function POST(
                     sendPushNotification({
                         userId: landlordId,
                         title: "Votre annonce a plu !",
-                        body: `${currentUser.name || 'Quelqu\'un'} a aimé votre annonce "${listing.title}"`,
+                        body: `${currentUser.pseudonymFull || 'Quelqu\'un'} a aimé votre annonce "${listing.title}"`,
                         url: `/properties/${listingId}/edit`,
                         type: 'like'
                     }).catch(err => console.error("[Push] Failed to notify landlord:", err));

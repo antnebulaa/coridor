@@ -1,4 +1,7 @@
 import prisma from "@/libs/prismadb";
+import { supabaseAdmin } from "@/lib/supabaseServer";
+
+const BUCKET_NAME = "conversation-documents";
 
 export interface CreateUserDocumentInput {
     conversationId: string;
@@ -8,6 +11,7 @@ export interface CreateUserDocumentInput {
     fileType: string; // MIME type
     fileSize: number;
     fileUrl: string;
+    storagePath?: string;
     label?: string;
 }
 
@@ -38,9 +42,39 @@ export class DocumentService {
                 fileType: input.fileType,
                 fileSize: input.fileSize,
                 fileUrl: input.fileUrl,
+                storagePath: input.storagePath || null,
                 label: input.label || null,
             },
         });
+    }
+
+    /**
+     * Generate a signed URL for a Supabase Storage path.
+     * Returns null if supabaseAdmin is not configured or if generation fails.
+     */
+    static async getSignedUrl(storagePath: string, expiresIn = 3600): Promise<string | null> {
+        if (!supabaseAdmin) return null;
+        const { data, error } = await supabaseAdmin.storage
+            .from(BUCKET_NAME)
+            .createSignedUrl(storagePath, expiresIn);
+        if (error) {
+            console.error("[DocumentService] Failed to create signed URL:", error);
+            return null;
+        }
+        return data.signedUrl;
+    }
+
+    /**
+     * Resolve a document's file URL.
+     * If storagePath exists → fresh signed URL from Supabase Storage.
+     * Otherwise → return fileUrl as-is (legacy Cloudinary URL).
+     */
+    static async resolveFileUrl(doc: { fileUrl: string; storagePath?: string | null }): Promise<string> {
+        if (doc.storagePath) {
+            const signedUrl = await DocumentService.getSignedUrl(doc.storagePath);
+            if (signedUrl) return signedUrl;
+        }
+        return doc.fileUrl;
     }
 
     /**

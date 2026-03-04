@@ -80,7 +80,7 @@ export async function DELETE(
     sendPushNotification({
         userId: otherPartyId,
         title: "Visite annulée",
-        body: `La visite prévue a été annulée par ${currentUser.name || 'l\'autre partie'}`,
+        body: `La visite prévue a été annulée par ${currentUser.pseudonymFull || 'l\'autre partie'}`,
         url: `/calendar`,
         type: 'visit'
     }).catch(err => console.error("[Push] Failed to notify:", err));

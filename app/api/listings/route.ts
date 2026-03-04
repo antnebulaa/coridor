@@ -10,19 +10,19 @@ export async function POST(
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return NextResponse.error();
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check maxProperties limit
     const currentPropertyCount = await prisma.property.count({
-      where: { ownerId: currentUser.id },
+        where: { ownerId: currentUser.id },
     });
     const maxProperties = await getMaxProperties(currentUser.id);
     if (currentPropertyCount >= maxProperties) {
-      return NextResponse.json(
-        { error: `Vous avez atteint la limite de ${maxProperties} bien(s) pour votre plan. Passez à un plan supérieur.` },
-        { status: 403 }
-      );
+        return NextResponse.json(
+            { error: `Vous avez atteint la limite de ${maxProperties} bien(s) pour votre plan. Passez à un plan supérieur.` },
+            { status: 403 }
+        );
     }
 
 
@@ -71,7 +71,8 @@ export async function POST(
 
     // Validate essential fields
     if (!title || !description || (price === undefined || price === null || price === '') || (!location && !propertyId)) {
-        return NextResponse.error();
+        console.log("Missing fields in listing POST:", { title: !!title, description: !!description, price, location: !!location, propertyId: !!propertyId });
+        return NextResponse.json({ error: "Validation Error: Missing required fields (title, description, price, location or propertyId)" }, { status: 400 });
     }
 
     try {

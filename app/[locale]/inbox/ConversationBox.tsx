@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { FullConversationType } from "@/types";
 import Avatar from "@/components/Avatar";
 import useOtherUser from "@/hooks/useOtherUser";
+import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
 
 interface ConversationBoxProps {
     data: FullConversationType,
@@ -100,12 +101,12 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     }, [lastMessage, t]);
 
     // Application Status Logic
-    const { applicationStatus, applicationColor, applicationLabel } = useMemo(() => {
+    const { applicationStatus, applicationLeaseStatus, applicationColor, applicationLabel } = useMemo(() => {
         // 1. Find the listing ID discussed in this conversation
         const listingId = data.listingId || data.messages.find(m => m.listingId)?.listingId;
 
         if (!listingId) {
-            return { applicationStatus: null, applicationColor: null, applicationLabel: null };
+            return { applicationStatus: null, applicationLeaseStatus: null, applicationColor: null, applicationLabel: null };
         }
 
         // 2. Find if there is an application for this listing from the users in the conversation
@@ -129,7 +130,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
         }
 
         if (!application) {
-            return { applicationStatus: null, applicationColor: null, applicationLabel: null };
+            return { applicationStatus: null, applicationLeaseStatus: null, applicationColor: null, applicationLabel: null };
         }
 
         // 3. Determine label and color — lease status takes priority
@@ -212,11 +213,62 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
 
         return {
             applicationStatus: application.status,
+            applicationLeaseStatus: application.leaseStatus,
             applicationColor: color,
             applicationLabel: label
         };
 
     }, [data.messages, data.users, t]);
+
+    // PSEUDONYM LOGIC
+    const { showPseudonym, displayName, avatarSeed } = useMemo(() => {
+        const listing = data.listing as any;
+        const ownerId = listing?.rentalUnit?.property?.owner?.id;
+        const currentUserId = session.data?.user?.id;
+
+        // Only apply pseudonym when current user is the owner viewing a tenant
+        const iAmOwner = currentUserId && currentUserId === ownerId;
+        const otherIsTenant = otherUser && otherUser.id !== ownerId;
+        const hasPseudonym = !!(otherUser as any)?.pseudonymFull;
+
+        if (iAmOwner && otherIsTenant && hasPseudonym) {
+            const revealed = shouldRevealIdentity(applicationStatus, (applicationLeaseStatus as string) || null);
+            if (revealed) {
+                // Show real name with pseudonym in parentheses
+                const name = otherUser?.name || '';
+                const names = name.split(' ');
+                const formatted = names.length > 1
+                    ? `${names[0]} ${names[names.length - 1][0] ?? ''}.`
+                    : names[0] || '';
+                return {
+                    showPseudonym: false,
+                    displayName: formatted,
+                    avatarSeed: otherUser?.email || otherUser?.name,
+                };
+            }
+            // Anonymous: show pseudonym
+            return {
+                showPseudonym: true,
+                displayName: (otherUser as any).pseudonymFull,
+                avatarSeed: (otherUser as any).pseudonymFull,
+            };
+        }
+
+        // Default: show real name
+        if (otherUser?.name) {
+            const names = otherUser.name.split(' ');
+            const formatted = names.length > 1
+                ? `${names[0]} ${names[names.length - 1][0] ?? ''}.`
+                : names[0];
+            return { showPseudonym: false, displayName: formatted, avatarSeed: otherUser?.email || otherUser?.name };
+        }
+
+        const l = data.listing as any;
+        if (l?.category && l?.propertyAdjective) {
+            return { showPseudonym: false, displayName: `${l.category} ${l.propertyAdjective}`, avatarSeed: otherUser?.email || otherUser?.name };
+        }
+        return { showPseudonym: false, displayName: l?.title || data.name || t('unknownUser'), avatarSeed: otherUser?.email || otherUser?.name };
+    }, [data, otherUser, session.data?.user?.id, applicationStatus, applicationLeaseStatus, t]);
 
     // AVATAR LOGIC
     const avatarSrc = useMemo(() => {
@@ -234,11 +286,12 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             return mainImage || otherUser?.image; // Fallback to avatar if no image
         } else {
             // otherUser is NOT the Owner (so otherUser is Candidate). I am the Owner.
-            // As an owner, I want to see the Candidate's Avatar.
+            // If pseudonym is active, don't show the real photo
+            if (showPseudonym) return null;
             return otherUser?.image;
         }
 
-    }, [data.listing, otherUser]);
+    }, [data.listing, otherUser, showPseudonym]);
 
     return (
         <div
@@ -258,45 +311,29 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 selected ? 'bg-secondary' : 'bg-background'
             )}
         >
-            <Avatar src={avatarSrc} seed={otherUser?.email || otherUser?.name} size={52} />
+            <Avatar src={avatarSrc} seed={avatarSeed} size={52} />
             <div className="min-w-0 flex-1">
                 <div className="focus:outline-none flex flex-col gap-px">
                     <div className="flex justify-between items-center mb-0">
                         <p className={clsx(`
-                            text-base 
+                            text-[15px]
                             leading-tight
                             truncate
                             text-foreground
                         `,
                             hasSeen ? 'font-normal' : 'font-medium'
                         )}>
-                            {(() => {
-                                // Title Logic: Always return Other User Name formatted first
-                                if (otherUser?.name) {
-                                    const names = otherUser.name.split(' ');
-                                    if (names.length > 1) {
-                                        return `${names[0]} ${names[names.length - 1][0] ?? ''}.`;
-                                    }
-                                    return names[0];
-                                }
-
-                                // Fallback
-                                const l = data.listing as any;
-                                if (l?.category && l?.propertyAdjective) {
-                                    return `${l.category} ${l.propertyAdjective}`;
-                                }
-                                return l?.title || data.name || t('unknownUser');
-                            })()}
+                            {displayName}
                         </p>
                         {lastMessage?.createdAt && (
-                            <p className="text-sm text-muted-foreground font-normal leading-tight">
+                            <p className="text-[15px] text-muted-foreground font-normal leading-tight">
                                 {format(new Date(lastMessage.createdAt), 'p')}
                             </p>
                         )}
                     </div>
                     <p className={clsx(`
             truncate 
-            text-base
+            text-[15px] 
             leading-tight
           `,
                         hasSeen ? 'text-muted-foreground' : 'text-foreground font-medium'
@@ -306,7 +343,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                     {applicationStatus && (
                         <div className="flex items-center gap-2 mt-0">
                             <div className={clsx("w-2 h-2 rounded-full", applicationColor)}></div>
-                            <div className="text-sm text-muted-foreground font-medium leading-tight">{applicationLabel}</div>
+                            <div className="text-[15px] text-muted-foreground font-medium leading-tight">{applicationLabel}</div>
                         </div>
                     )}
                 </div>

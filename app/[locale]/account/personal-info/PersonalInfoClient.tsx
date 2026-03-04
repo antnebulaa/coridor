@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/Button";
 import { AlertCircle } from "lucide-react";
 import CustomToast from "@/components/ui/CustomToast";
 import ProfileGradientGenerator from "@/components/inputs/ProfileGradientGenerator";
+import Avatar from "@/components/Avatar";
+import Link from "next/link";
 import { useTranslations, useFormatter } from 'next-intl';
+import usePseudonymModal from "@/hooks/usePseudonymModal";
 
 // Helper for status badges
 const StatusBadge = ({ isComplete }: { isComplete: boolean }) => {
@@ -41,6 +44,7 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
     const t = useTranslations('account.personalInfo');
     const tCommon = useTranslations('common');
     const format = useFormatter();
+    const pseudonymModal = usePseudonymModal();
 
     // Toggle States
     const [isEditingIdentity, setIsEditingIdentity] = useState(false); // First/Last Name + Birth
@@ -150,53 +154,86 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
     }
 
     return (
-        <div className="flex flex-col gap-8 max-w-4xl mx-auto">
-            <PageHeader
-                title={t('title')}
-                subtitle={t('subtitle')}
-            />
-
-            {/* BLOCK 0: PHOTO DE PROFIL */}
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-row justify-between items-start">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-8 max-w-4xl mx-auto py-4">
+            
+            {/* BLOCK 0: AVATAR — pseudonyme (locataire) ou photo (propriétaire) */}
+            {currentUser?.userMode !== 'LANDLORD' && (currentUser as any)?.pseudonymEmoji ? (
+                <div className="flex flex-col gap-4">
+                    <div className="flex flex-row justify-between items-start">
+                        <div className="flex flex-col gap-1">
                             <div className="text-lg font-medium dark:text-white">
-                                {t('profilePhoto.title')}
+                                {t('pseudonym.title')}
                             </div>
-                        </div>
-                        <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
-                            {isEditingImage ?
-                                t('profilePhoto.editHint') :
-                                (
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 shrink-0 rounded-full overflow-hidden border border-neutral-200">
-                                            {currentUser?.image ? (
-                                                <img src={currentUser.image} alt="Avatar" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
-                                                    {t('profilePhoto.none')}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="text-neutral-500">
-                                            {t('profilePhoto.visibility')}
-                                        </div>
+                            <div className="flex items-center gap-4 text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                                <div className="flex items-center gap-3 p-2.5 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-100 dark:border-neutral-700">
+                                    <div className="relative shrink-0">
+                                        <Avatar src={null} seed={(currentUser as any).pseudonymFull} size={36} />
+                                        <span className="absolute inset-0 flex items-center justify-center text-xl drop-shadow-sm">
+                                            {(currentUser as any).pseudonymEmoji}
+                                        </span>
                                     </div>
-                                )
-                            }
+                                    <span className="text-sm font-medium text-neutral-900 dark:text-white">
+                                        {(currentUser as any).pseudonymText}
+                                    </span>
+                                </div>
+                            </div>
+                            <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
+                                {t('pseudonym.hint')}
+                            </p>
                         </div>
-                    </div>
-                    <div
-                        onClick={() => setIsEditingImage(!isEditingImage)}
-                        className="text-black dark:text-white animated-underline font-medium cursor-pointer"
-                    >
-                        {isEditingImage ? tCommon('cancel') : tCommon('edit')}
+                        <button
+                            onClick={() => {
+                                const user = currentUser as any;
+                                pseudonymModal.onOpen(
+                                    { emoji: user.pseudonymEmoji, text: user.pseudonymText || '', full: user.pseudonymFull || '' }
+                                );
+                            }}
+                            className="text-black dark:text-white animated-underline font-medium cursor-pointer"
+                        >
+                            {tCommon('edit')}
+                        </button>
                     </div>
                 </div>
+            ) : (
+                <div className="flex flex-col gap-4">
+                    <div className="flex flex-row justify-between items-start">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-3">
+                                <div className="text-lg font-medium dark:text-white">
+                                    {t('profilePhoto.title')}
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-2 text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                                {isEditingImage ?
+                                    t('profilePhoto.editHint') :
+                                    (
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-16 h-16 shrink-0 rounded-full overflow-hidden border border-neutral-200">
+                                                {currentUser?.image ? (
+                                                    <img src={currentUser.image} alt="Avatar" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
+                                                        {t('profilePhoto.none')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-neutral-500">
+                                                {t('profilePhoto.visibility')}
+                                            </div>
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        </div>
+                        <div
+                            onClick={() => setIsEditingImage(!isEditingImage)}
+                            className="text-black dark:text-white animated-underline font-medium cursor-pointer"
+                        >
+                            {isEditingImage ? tCommon('cancel') : tCommon('edit')}
+                        </div>
+                    </div>
 
-                {
-                    isEditingImage && (
+                    {isEditingImage && (
                         <div className="w-full flex flex-col gap-6">
                             <ProfileGradientGenerator
                                 initialImage={currentUser?.image}
@@ -212,9 +249,9 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                                 />
                             </div>
                         </div>
-                    )
-                }
-            </div >
+                    )}
+                </div>
+            )}
 
             <hr />
 

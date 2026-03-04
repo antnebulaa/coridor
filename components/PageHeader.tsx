@@ -53,7 +53,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             )}
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
-                    <div className={cn("text-2xl font-medium", titleClassName)}>
+                    <div className={cn("text-4xl font-medium tracking-tight", titleClassName)}>
                         {title}
                     </div>
                     {subtitle && (
@@ -83,7 +83,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                     </div>
                 )}
             </div>
-            {!hideSeparator && <hr />}
+            
         </div>
     );
 };

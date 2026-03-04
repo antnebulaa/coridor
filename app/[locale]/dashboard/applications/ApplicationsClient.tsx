@@ -28,6 +28,7 @@ const ApplicationsClient: React.FC<ApplicationsClientProps> = ({
     evaluatedListings = []
 }) => {
     const t = useTranslations('dashboard.applicationsPage');
+    const tDashboard = useTranslations('dashboard');
     const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
 
     const activeStatuses = ['PENDING', 'SENT', 'VISIT_PROPOSED', 'VISIT_CONFIRMED', 'ACCEPTED'];
@@ -38,6 +39,8 @@ const ApplicationsClient: React.FC<ApplicationsClientProps> = ({
             return activeStatuses.includes(app.status);
         }
         return archivedStatuses.includes(app.status) || !activeStatuses.includes(app.status); // Default to archived for unknown
+    }).sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
     return (
@@ -47,7 +50,7 @@ const ApplicationsClient: React.FC<ApplicationsClientProps> = ({
                     title={t('title')}
                     subtitle={t('subtitle')}
                     showBack
-                    backLabel={useTranslations('dashboard')('title')}
+                    backLabel={tDashboard('title')}
                 />
 
                 <div className="max-w-4xl mx-auto mt-8">

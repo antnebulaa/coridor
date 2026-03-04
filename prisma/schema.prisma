@@ -162,6 +162,12 @@ model User {
 
   // --- Documents Messagerie ---
   uploadedDocuments ConversationDocument[] @relation("UploadedDocuments")
+
+  // --- Pseudonyme Anonyme ---
+  pseudonymEmoji   String?
+  pseudonymText    String?
+  pseudonymFull    String?   @unique
+  pseudonymPattern String?
 }
 
 model TenantProfile {
@@ -747,7 +753,8 @@ model ConversationDocument {
   fileName String
   fileType String // MIME: "application/pdf", "image/jpeg"
   fileSize Int    // bytes (0 si taille inconnue)
-  fileUrl  String // URL Cloudinary permanente
+  fileUrl     String  // Legacy: URL Cloudinary. Nouveau: URL signée initiale
+  storagePath String? // Chemin Supabase Storage (null = legacy Cloudinary)
 
   label       String? // libellé libre ("Attestation assurance 2026")
   category    String? // futur filtrage

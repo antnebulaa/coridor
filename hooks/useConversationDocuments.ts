@@ -12,6 +12,7 @@ export interface ConversationDocument {
     fileType: string;
     fileSize: number;
     fileUrl: string;
+    storagePath: string | null;
     label: string | null;
     category: string | null;
     coridorType: string | null;

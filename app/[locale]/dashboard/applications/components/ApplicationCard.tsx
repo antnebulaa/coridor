@@ -117,7 +117,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-2">
-                        {/* Info Chips */}
                         <div className="px-2 py-1 bg-gray-50 border border-gray-100 rounded-lg text-xs font-medium text-gray-600">
                             {listing.rentalUnit.surface ? `${listing.rentalUnit.surface} m²` : 'Surface N/A'}
                         </div>

@@ -514,6 +514,10 @@
                 "visibility": "Cette photo sera visible par les autres utilisateurs.",
                 "save": "Enregistrer la photo"
             },
+            "pseudonym": {
+                "title": "Pseudonyme anonyme",
+                "hint": "Pour garantir votre anonymat, un pseudonyme est généré automatiquement. Vous pouvez le personnaliser "
+            },
             "identity": {
                 "title": "Identité",
                 "hint": "Modifiez votre nom, prénom et date de naissance.",
@@ -1083,6 +1087,7 @@
             "investmentSimulator": "Simulateur investissement",
             "mySimulations": "Mes simulations",
             "fiscalRecap": "Récap fiscal",
+            "pseudonym": "Mon pseudonyme",
             "sectionLandlord": "Gestion locative",
             "sectionTenant": "Recherche",
             "plan": {
@@ -1714,6 +1719,46 @@
             "sqm": "m²",
             "years": "ans",
             "weeks": "sem."
+        }
+    },
+    "pseudonym": {
+        "generator": {
+            "title": "Votre identité Coridor",
+            "description": "Votre candidature est anonyme. Les propriétaires verront ce pseudonyme jusqu'à ce qu'ils vous sélectionnent.",
+            "regenerate": "Générer à nouveau",
+            "confirm": "C'est moi ! Continuer",
+            "saving": "Enregistrement...",
+            "skip": "Passer pour l'instant"
+        },
+        "badge": {
+            "tooltip": "Identité anonyme — sera révélée après sélection"
+        },
+        "reveal": {
+            "transition": "est en fait",
+            "description": "Vous pouvez maintenant voir son profil complet et la contacter directement.",
+            "viewProfile": "Voir le profil",
+            "close": "Fermer"
+        },
+        "error": {
+            "activeApplication": "Vous ne pouvez pas changer de pseudonyme pendant une candidature active."
+        },
+        "page": {
+            "title": "Mon pseudonyme",
+            "subtitle": "Gérez votre identité anonyme sur Coridor.",
+            "landlordView": "Ce que les propriétaires voient",
+            "candidatLabel": "Candidat",
+            "saved": "Pseudonyme mis à jour !",
+            "saveError": "Erreur lors de la sauvegarde.",
+            "tryAnother": "Autre",
+            "cancel": "Annuler",
+            "infoAnonymous": {
+                "title": "Protection de votre identité",
+                "description": "Votre vrai nom est masqué jusqu'à ce qu'un propriétaire vous sélectionne. Cela garantit une évaluation équitable de votre candidature."
+            },
+            "infoReveal": {
+                "title": "Quand votre identité est révélée",
+                "description": "Lorsqu'un propriétaire vous sélectionne ou que vous signez un bail, votre vrai nom et votre photo deviennent visibles."
+            }
         }
     }
 }

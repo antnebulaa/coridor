@@ -27,9 +27,11 @@ interface ListingCardProps {
     tertiaryAction?: () => void;
     tertiaryActionLabel?: string;
     showHeart?: boolean;
+    showLike?: boolean;
     onSelect?: () => void;
     variant?: 'vertical' | 'horizontal';
     hasLiked?: boolean;
+    priority?: boolean;
 }
 
 const FeatureTag = ({
@@ -67,9 +69,11 @@ const ListingCard: React.FC<ListingCardProps> = ({
     tertiaryAction,
     tertiaryActionLabel,
     showHeart = true,
+    showLike = true,
     onSelect,
     variant = 'vertical',
-    hasLiked
+    hasLiked,
+    priority = false
 }) => {
     const router = useRouter();
     const { getByValue } = useCountries();
@@ -187,7 +191,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         shrink-0
                     ">
                         <div className="h-full w-full relative">
-                            <ListingCardCarousel images={data.images} />
+                            <ListingCardCarousel images={data.images} priority={priority} />
                         </div>
 
                         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
@@ -197,7 +201,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
                             {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
-                                <div className="bg-[#fbea00] px-2 py-2 rounded-[12px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
+                                <div className="bg-[#fbea00] opacity-80 px-2 py-1.5 rounded-[10px] text-[10px] font-medium drop-shadow-sm uppercase tracking-wide text-black">
                                     {t('shared')}
                                 </div>
                             )}
@@ -217,11 +221,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                     {showHeart && (
                                         <div className="ml-auto shrink-0 -mr-1 md:-mr-2 flex items-center gap-2">
-                                            <LikeButton
-                                                listingId={data.id}
-                                                currentUser={currentUser}
-                                                hasLiked={hasLiked}
-                                            />
+                                            {showLike && (
+                                                <LikeButton
+                                                    listingId={data.id}
+                                                    currentUser={currentUser}
+                                                    hasLiked={hasLiked}
+                                                />
+                                            )}
                                             <HeartButton
                                                 listingId={data.id}
                                                 currentUser={currentUser}
@@ -401,7 +407,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
           "
                 >
 
-                    <ListingCardCarousel images={data.images} />
+                    <ListingCardCarousel images={data.images} priority={priority} />
                     <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 items-start">
                         {isNew && (
                             <div className="bg-card px-3 py-1 rounded-full text-xs font-semibold shadow-sm text-card-foreground">
@@ -423,11 +429,13 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         </div>
                         {showHeart && (
                             <div className="ml-auto shrink-0 -mr-1 flex items-center gap-2">
-                                <LikeButton
-                                    listingId={data.id}
-                                    currentUser={currentUser}
-                                    hasLiked={hasLiked}
-                                />
+                                {showLike && (
+                                    <LikeButton
+                                        listingId={data.id}
+                                        currentUser={currentUser}
+                                        hasLiked={hasLiked}
+                                    />
+                                )}
                                 <HeartButton
                                     listingId={data.id}
                                     currentUser={currentUser}

@@ -28,14 +28,12 @@ interface HomeClientProps {
     listings: any[]; // SafeListing + relation
     currentUser?: SafeUser | null;
     isSearchActive?: boolean;
-    likes?: string[];
 }
 
 const HomeClient: React.FC<HomeClientProps> = ({
     listings,
     currentUser,
     isSearchActive = false,
-    likes = []
 }) => {
     const [selectedListingId, setSelectedListingId] = useState<string>('');
     const [isOverlayMinimized, setIsOverlayMinimized] = useState(false);
@@ -249,7 +247,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                     <div className="text-neutral-500">{t('noResultsDescription')}</div>
                                 </div>
                             ) : (
-                                listings.map((listing: any) => (
+                                listings.map((listing: any, index: number) => (
                                     <div
                                         key={listing.id}
                                         className="cursor-pointer border-b border-neutral-200 dark:border-neutral-800 pb-0 mb-0 md:border-none md:pb-0 md:mb-0 last:border-none last:pb-0 last:mb-0"
@@ -259,7 +257,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
                                             data={listing}
                                             variant="horizontal"
                                             onSelect={() => setSelectedListingId(listing.id)}
-                                            hasLiked={likes?.includes(listing.id)}
+                                            showLike={false}
+                                            priority={index === 0}
                                         />
                                     </div>
                                 ))

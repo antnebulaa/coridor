@@ -35,6 +35,7 @@ interface TenantProfilePreviewProps {
         childCount: number;
     } | null;
     showFullDossierLink?: boolean;
+    isIdentityRevealed?: boolean;
 }
 
 const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
@@ -43,7 +44,8 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
     rent,
     charges,
     candidateScope,
-    showFullDossierLink
+    showFullDossierLink,
+    isIdentityRevealed = true,
 }) => {
     if (!tenantProfile) return null;
 
@@ -112,11 +114,14 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
     return (
         <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex items-center gap-4 p-4 bg-white border border-neutral-200 rounded-xl">
-                <Avatar src={user.image} seed={user.email || user.name} />
+            <div className="flex items-center gap-4 p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl">
+                <Avatar
+                    src={isIdentityRevealed ? user.image : null}
+                    seed={isIdentityRevealed ? (user.email || user.name) : (user.pseudonymFull || user.name)}
+                />
                 <div className="flex flex-col">
                     <div className="text-lg font-bold flex items-center gap-2">
-                        {user.name}
+                        {isIdentityRevealed ? user.name : (user.pseudonymFull || user.name)}
                         {tenantProfile.verifiedMonths && tenantProfile.verifiedMonths >= 3 ? (
                             <PaymentBadge verifiedMonths={tenantProfile.verifiedMonths} compact />
                         ) : tenantProfile.rentVerified ? (
@@ -135,7 +140,7 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
             {tenantProfile.bio && (
                 <div className="flex flex-col gap-6 mt-5">
                     <h3 className="text-2xl font-medium text-neutral-900 flex items-center gap-2">
-                         À propos de {user.name?.split(' ')[0]}
+                         À propos de {isIdentityRevealed ? user.name?.split(' ')[0] : (user.pseudonymText || user.name?.split(' ')[0])}
                     </h3>
                     <div className="bg-white border border-neutral-200 rounded-xl p-4 text-base text-neutral-700 italic">
                         "{tenantProfile.bio}"

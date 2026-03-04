@@ -10,6 +10,7 @@ import RegisterModal from "@/components/modals/RegisterModal";
 import LoginModal from "@/components/modals/LoginModal";
 import RentModalLoader from "@/components/modals/RentModalLoader";
 import WishlistModal from "@/components/modals/WishlistModal";
+import PseudonymModal from "@/components/modals/PseudonymModal";
 import dynamic from "next/dynamic";
 
 import CapacitorInit from "@/components/native/CapacitorInit";
@@ -73,6 +74,10 @@ const font = localFont({
 export const metadata: Metadata = {
     title: "Coridor",
     description: "Location sharing app",
+    robots: {
+        index: false,
+        follow: false,
+    },
 };
 
 export const viewport = {
@@ -147,6 +152,7 @@ export default async function LocaleLayout({
                             <RegisterModal />
                             <LoginModal />
                             <WishlistModal />
+                            <PseudonymModal />
                             <MyCodeModal currentUser={currentUser} />
                             <PushNotificationManager />
                             <InstallPrompt />

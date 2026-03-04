@@ -43,7 +43,7 @@ export async function POST(
             candidateScope: {
                 include: {
                     creatorUser: {
-                        select: { id: true, name: true, firstName: true, email: true }
+                        select: { id: true, name: true, firstName: true, email: true, pseudonymFull: true }
                     }
                 }
             }
@@ -72,6 +72,15 @@ export async function POST(
     const listingTitle = application.listing.title;
 
     if (targetStatus === "SELECTED") {
+        // Notify landlord about identity reveal
+        await createNotification({
+            userId: currentUser.id,
+            type: "application",
+            title: "Identité révélée",
+            message: `L'identité de ${selectedCandidate.pseudonymFull || 'votre candidat'} vous est maintenant visible.`,
+            link: `/inbox`
+        });
+
         await createNotification({
             userId: selectedCandidate.id,
             type: "application",
@@ -120,7 +129,7 @@ export async function POST(
                 candidateScope: {
                     include: {
                         creatorUser: {
-                            select: { id: true, name: true, firstName: true, email: true }
+                            select: { id: true, name: true, firstName: true, email: true, pseudonymFull: true }
                         }
                     }
                 }

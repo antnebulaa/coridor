@@ -464,6 +464,10 @@
                 "visibility": "This photo will be visible to other users.",
                 "save": "Save photo"
             },
+            "pseudonym": {
+                "title": "Anonymous pseudonym",
+                "hint": "This is what landlords see before selecting you."
+            },
             "identity": {
                 "title": "Identity",
                 "hint": "Edit your first name, last name and date of birth.",
@@ -1059,6 +1063,7 @@
             "investmentSimulator": "Investment simulator",
             "mySimulations": "My simulations",
             "fiscalRecap": "Tax summary",
+            "pseudonym": "My pseudonym",
             "sectionLandlord": "Rental management",
             "sectionTenant": "Search",
             "plan": {
@@ -1674,6 +1679,46 @@
             "sqm": "sq m",
             "years": "yrs",
             "weeks": "wk."
+        }
+    },
+    "pseudonym": {
+        "generator": {
+            "title": "Your Coridor Identity",
+            "description": "Your application is anonymous. Landlords will see this pseudonym until they select you.",
+            "regenerate": "Generate another",
+            "confirm": "That's me! Continue",
+            "saving": "Saving...",
+            "skip": "Skip for now"
+        },
+        "badge": {
+            "tooltip": "Anonymous identity — will be revealed after selection"
+        },
+        "reveal": {
+            "transition": "is actually",
+            "description": "You can now see their full profile and contact them directly.",
+            "viewProfile": "View profile",
+            "close": "Close"
+        },
+        "error": {
+            "activeApplication": "You cannot change your pseudonym while you have an active application."
+        },
+        "page": {
+            "title": "My pseudonym",
+            "subtitle": "Manage your anonymous identity on Coridor.",
+            "landlordView": "What landlords see",
+            "candidatLabel": "Applicant",
+            "saved": "Pseudonym updated!",
+            "saveError": "Error saving pseudonym.",
+            "tryAnother": "Another",
+            "cancel": "Cancel",
+            "infoAnonymous": {
+                "title": "Identity protection",
+                "description": "Your real name is hidden until a landlord selects you. This ensures a fair evaluation of your application."
+            },
+            "infoReveal": {
+                "title": "When your identity is revealed",
+                "description": "When a landlord selects you or you sign a lease, your real name and photo become visible."
+            }
         }
     }
 }

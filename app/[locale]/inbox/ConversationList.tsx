@@ -149,14 +149,14 @@ const ConversationList: React.FC<ConversationListProps> = ({
              lg:h-full
              lg:block`
         )}>
-            <div className="px-5 pt-6 pb-2 flex-none bg-background z-10">
-                <div className="flex justify-between mb-4">
+            <div className="flex-none bg-background z-10">
+                <div className="flex items-center h-[72px] px-5">
                     <div className="text-2xl font-medium text-foreground">
                         {t('title')}
                     </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative px-5 pb-2">
                     {tabsFade.left && (
                         <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-r from-background to-transparent z-10 pointer-events-none" />
                     )}

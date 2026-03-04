@@ -30,6 +30,7 @@ export async function POST(
                 id: listingId
             },
             include: {
+                requirements: true,
                 rentalUnit: {
                     include: {
                         property: true
@@ -159,6 +160,10 @@ export async function POST(
             });
 
             if (!existingApp) {
+                // Vérifier l'unicité du pseudonyme au sein de ce listing
+                const PseudonymService = (await import("@/services/PseudonymService")).default;
+                await PseudonymService.ensureUniqueForListing(currentUser.id, listingId);
+
                 await prisma.rentalApplication.create({
                     data: {
                         listingId: listingId,
@@ -174,7 +179,7 @@ export async function POST(
                 sendPushNotification({
                     userId: ownerId,
                     title: "Nouvelle candidature",
-                    body: `${currentUser.name || 'Un candidat'} a postulé pour votre annonce "${listing.title}"`,
+                    body: `${currentUser.pseudonymFull || 'Un candidat'} a postulé pour votre annonce "${listing.title}"`,
                     url: `/inbox/${conversation.id}`,
                     type: 'application'
                 }).catch(err => console.error("[Push] Failed to notify landlord:", err));

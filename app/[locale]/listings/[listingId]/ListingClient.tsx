@@ -21,6 +21,7 @@ import ListingMobileFooter from "@/components/listings/ListingMobileFooter";
 import ReportButton from "@/components/reports/ReportButton";
 import PollResults from "@/components/listings/PollResults";
 import PollBanner from "@/components/listings/PollBanner";
+import ListingRequirementsCard from "@/components/listings/ListingRequirementsCard";
 
 interface ListingClientProps {
     listing: SafeListing & {
@@ -181,6 +182,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     </div>
                                 )}
                             </div>
+                            {(listing as any).requirements && (
+                                <ListingRequirementsCard
+                                    listingId={listing.id}
+                                    currentUser={currentUser || null}
+                                    requirements={(listing as any).requirements}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>

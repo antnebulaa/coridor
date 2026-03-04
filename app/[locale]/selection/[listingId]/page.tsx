@@ -3,6 +3,7 @@ import EmptyState from "@/components/EmptyState";
 import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
 import SelectionClient from "./SelectionClient";
 
 export const dynamic = 'force-dynamic';
@@ -89,6 +90,7 @@ const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
                                     id: true,
                                     firstName: true,
                                     lastName: true,
+                                    pseudonymFull: true,
                                 }
                             }
                         }
@@ -134,8 +136,10 @@ const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
     const candidates = evaluations.map((evaluation) => {
         const user = evaluation.application.candidateScope.creatorUser;
         const profile = profileMap.get(user.id);
-        const lastNameInitial = user.lastName ? user.lastName.charAt(0) + '.' : '';
-        const candidateName = `${user.firstName || 'Candidat'} ${lastNameInitial}`;
+        const revealed = shouldRevealIdentity(evaluation.application.status, evaluation.application.leaseStatus);
+        const candidateName = revealed
+            ? `${user.firstName || 'Candidat'} ${user.lastName ? user.lastName.charAt(0) + '.' : ''}`
+            : (user.pseudonymFull || 'Candidat');
 
         // Revenue ratio
         const netSalary = profile?.netSalary || null;

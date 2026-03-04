@@ -24,6 +24,7 @@ import { XCircle, CalendarDays, Play } from "lucide-react";
 import BottomSheet from "@/components/ui/BottomSheet";
 import DocumentsPanel from "@/components/messaging/DocumentsPanel";
 import { AnimatePresence, motion } from "framer-motion";
+import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
 
 const REJECTION_REASONS = [
     "Le logement a déjà trouvé preneur",
@@ -92,6 +93,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE' || m.body?.startsWith('VISIT_CONFIRMED|') || m.body?.startsWith('VISIT_PENDING|'));
     const [applicationStatus, setApplicationStatus] = useState(initialApplicationStatus);
     const isLandlord = listing?.user?.id === currentUser?.id;
+    const isIdentityRevealed = !isLandlord || shouldRevealIdentity(applicationStatus, initialLeaseStatus);
 
     useEffect(() => {
         setMessages(initialMessages);
@@ -444,6 +446,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         showDossier={showDossier}
                         onToggleDocuments={handleToggleDocuments}
                         conversationId={conversation.id}
+                        isIdentityRevealed={isIdentityRevealed}
                     />
                 </div>
                 <div className="flex-1 overflow-y-auto min-h-0">
@@ -475,235 +478,261 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     `,
                     isDossierOpen ? "fixed inset-0 z-50 w-full flex xl:static xl:z-auto xl:w-[410px] xl:border-l" : "hidden xl:flex"
                 )}>
-                    <div className="
-                        flex-none
-                        bg-white dark:bg-neutral-900
-                        w-full
-                        flex
-                        border-b
-                        border-gray-200 dark:border-neutral-800
-                        pt-safe
-                        py-3
-                        px-6
-                        items-center
-                        justify-between
-                    ">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
-                            {isRejected && (
-                                <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                                    Déclinée
-                                </span>
-                            )}
-                        </div>
-                        <button
-                            onClick={() => setIsDossierOpen(false)}
-                            className="xl:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                        >
-                            <span className="sr-only">Fermer</span>
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <div className="flex-none pt-safe bg-white dark:bg-neutral-900" />
 
-                    <div className={clsx("flex-1 overflow-y-auto p-6", isRejected && "opacity-50 grayscale")}>
-                        <TenantProfilePreview
-                            user={otherUser}
-                            tenantProfile={otherUser.tenantProfile as any}
-                            rent={rent}
-                            charges={listing?.charges}
-                            candidateScope={candidateScope}
-                            showFullDossierLink={
-                                hasProposedVisit &&
-                                otherUser.accounts?.some((acc: any) => acc.provider === 'dossier-facile')
-                            }
-                        />
-                    </div>
-
-                    {/* Action buttons - hidden when rejected */}
-                    {!isRejected && (
-                        <div className="
-                            flex-none
-                            bg-white dark:bg-neutral-900
-                            border-t
-                            border-gray-200 dark:border-neutral-800
-                            p-4
-                            pb-12
-                            flex flex-col gap-2
-                        ">
-                            {/* Lease status-based actions */}
-                            {initialLeaseStatus === 'SIGNED' ? (
-                                <div className="flex flex-col gap-2">
-                                    <Button
-                                        label="Voir le bail signé"
-                                        outline
-                                        onClick={() => {
-                                            if (applicationId) {
-                                                window.open(`/leases/${applicationId}`, '_blank');
-                                            }
-                                        }}
-                                    />
-                                    {/* EDL action button — landlord only for actions, PDF visible to both */}
-                                    {isLandlord ? (
-                                        !inspectionData || inspectionData.status === 'CANCELLED' ? (
-                                            /* No inspection or cancelled — show EDL button with BottomSheet */
-                                            <>
-                                                <Button
-                                                    label="État des lieux"
-                                                    onClick={() => setIsEdlSheetOpen(true)}
-                                                />
-                                                <BottomSheet
-                                                    isOpen={isEdlSheetOpen}
-                                                    onClose={() => setIsEdlSheetOpen(false)}
-                                                    title="État des lieux"
-                                                >
-                                                    <div className="flex flex-col p-2 pb-8">
-                                                        <button
-                                                            onClick={() => {
-                                                                setIsEdlSheetOpen(false);
-                                                                setIsScheduleModalOpen(true);
-                                                            }}
-                                                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
-                                                        >
-                                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                                                                <CalendarDays size={20} className="text-amber-600" />
-                                                            </div>
-                                                            <div className="flex flex-col text-left">
-                                                                <span className="font-medium text-[16px]">Planifier un état des lieux</span>
-                                                                <span className="text-sm text-neutral-500">Choisir une date et notifier le locataire</span>
-                                                            </div>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setIsEdlSheetOpen(false);
-                                                                if (applicationId) {
-                                                                    router.push(`/inspection/new/${applicationId}`);
-                                                                }
-                                                            }}
-                                                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
-                                                        >
-                                                            <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
-                                                                <Play size={20} className="text-green-600" />
-                                                            </div>
-                                                            <div className="flex flex-col text-left">
-                                                                <span className="font-medium text-[16px]">Démarrer l&apos;état des lieux</span>
-                                                                <span className="text-sm text-neutral-500">Commencer immédiatement</span>
-                                                            </div>
-                                                        </button>
-                                                    </div>
-                                                </BottomSheet>
-                                            </>
-
-                                        ) : inspectionData.status === 'DRAFT' ? (
-                                            /* DRAFT — Démarrer / Reprendre l'EDL */
-                                            <Button
-                                                label={inspectionData.scheduledAt ? "Démarrer l'état des lieux" : "Reprendre l'état des lieux"}
-                                                onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
-                                            />
-                                        ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
-                                            inspectionData.pdfUrl && (
-                                                <a
-                                                    href={inspectionData.pdfUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
-                                                >
-                                                    📄 Voir le PDF de l&apos;EDL
-                                                </a>
-                                            )
-                                        ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
-                                            <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-white bg-neutral-900 rounded-xl border border-neutral-900">
-                                                ⏳ En attente de signature locataire
-                                            </div>
-                                        ) : null
-                                    ) : (
-                                        /* Tenant: only show PDF link if signed (not cancelled) */
-                                        inspectionData && inspectionData.status !== 'CANCELLED' && (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') && inspectionData.pdfUrl ? (
-                                            <a
-                                                href={inspectionData.pdfUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
-                                            >
-                                                📄 Voir le PDF de l&apos;EDL
-                                            </a>
-                                        ) : null
-                                    )}
-                                </div>
-                            ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
-                                        En cours de signature...
-                                    </div>
-                                    <Button
-                                        label="Voir le bail"
-                                        outline
-                                        onClick={() => {
-                                            if (applicationId) {
-                                                window.open(`/leases/${applicationId}`, '_blank');
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                <Button
-                                    disabled={!listing}
-                                    label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
-                                    onClick={() => {
-                                        if (!listing) return;
-
-                                        if (hasProposedVisit) {
-                                            if (applicationId) {
-                                                window.open(`/leases/${applicationId}`, '_blank');
-                                            } else {
-                                                toast.error("Aucune demande de location trouvée pour ce dossier.");
-                                            }
-                                            return;
-                                        }
-
-                                        if (!hasAvailability) {
-                                            setIsAvailabilityModalOpen(true);
-                                            return;
-                                        }
-
-                                        axios.post('/api/messages', {
-                                            message: 'INVITATION_VISITE',
-                                            conversationId: conversation.id,
-                                            listingId: listing.id
-                                        })
-                                            .then(() => {
-                                                toast.success('Invitation envoyée');
-                                                router.refresh();
-                                            })
-                                            .catch(() => toast.error('Erreur lors de l\'envoi'));
-                                    }}
-                                />
-                            )}
-                            {!initialLeaseStatus && (
-                                <button
-                                    onClick={() => {
-                                        setSelectedReason('');
-                                        setCustomReason('');
-                                        setIsDeclineModalOpen(true);
-                                    }}
-                                    className="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
+                    {/* Sliding panels container */}
+                    <div className="flex-1 flex flex-col overflow-hidden relative">
+                        <AnimatePresence initial={false} mode="sync">
+                            {!isDocumentsPanelOpen ? (
+                                <motion.div
+                                    key="dossier"
+                                    initial={{ x: "-100%", opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    exit={{ x: "-100%", opacity: 0 }}
+                                    transition={{ type: "spring", bounce: 0.05, duration: 0.35 }}
+                                    className="absolute inset-0 flex flex-col"
                                 >
-                                    Décliner la candidature
-                                </button>
-                            )}
-                        </div>
-                    )}
+                                    {/* Dossier Header */}
+                                    <div className="
+                                        flex-none
+                                        bg-white dark:bg-neutral-900
+                                        w-full
+                                        flex
+                                        border-b
+                                        border-gray-200 dark:border-neutral-800
+                                        h-[72px]
+                                        px-6
+                                        items-center
+                                        justify-between
+                                    ">
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
+                                            {isRejected && (
+                                                <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                                    Déclinée
+                                                </span>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={() => setIsDossierOpen(false)}
+                                            className="xl:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                                        >
+                                            <span className="sr-only">Fermer</span>
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
 
-                    {/* Rejected state footer */}
-                    {isRejected && (
-                        <div className="flex-none border-t border-gray-200 dark:border-neutral-800 p-4">
-                            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg p-3">
-                                <XCircle size={16} className="shrink-0" />
-                                <span>Candidature déclinée</span>
-                            </div>
-                        </div>
-                    )}
+                                    {/* Dossier Content */}
+                                    <div className={clsx("flex-1 overflow-y-auto p-6", isRejected && "opacity-50 grayscale")}>
+                                        <TenantProfilePreview
+                                            user={otherUser}
+                                            tenantProfile={otherUser.tenantProfile as any}
+                                            rent={rent}
+                                            charges={listing?.charges}
+                                            candidateScope={candidateScope}
+                                            isIdentityRevealed={isIdentityRevealed}
+                                            showFullDossierLink={
+                                                hasProposedVisit &&
+                                                otherUser.accounts?.some((acc: any) => acc.provider === 'dossier-facile')
+                                            }
+                                        />
+                                    </div>
+
+                                    {/* Action buttons - hidden when rejected */}
+                                    {!isRejected && (
+                                        <div className="
+                                            flex-none
+                                            bg-white dark:bg-neutral-900
+                                            border-t
+                                            border-gray-200 dark:border-neutral-800
+                                            p-4
+                                            pb-12
+                                            flex flex-col gap-2
+                                        ">
+                                            {initialLeaseStatus === 'SIGNED' ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <Button
+                                                        label="Voir le bail signé"
+                                                        outline
+                                                        onClick={() => {
+                                                            if (applicationId) {
+                                                                window.open(`/leases/${applicationId}`, '_blank');
+                                                            }
+                                                        }}
+                                                    />
+                                                    {isLandlord ? (
+                                                        !inspectionData || inspectionData.status === 'CANCELLED' ? (
+                                                            <>
+                                                                <Button
+                                                                    label="État des lieux"
+                                                                    onClick={() => setIsEdlSheetOpen(true)}
+                                                                />
+                                                                <BottomSheet
+                                                                    isOpen={isEdlSheetOpen}
+                                                                    onClose={() => setIsEdlSheetOpen(false)}
+                                                                    title="État des lieux"
+                                                                >
+                                                                    <div className="flex flex-col p-2 pb-8">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setIsEdlSheetOpen(false);
+                                                                                setIsScheduleModalOpen(true);
+                                                                            }}
+                                                                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                                                                        >
+                                                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                                                                                <CalendarDays size={20} className="text-amber-600" />
+                                                                            </div>
+                                                                            <div className="flex flex-col text-left">
+                                                                                <span className="font-medium text-[16px]">Planifier un état des lieux</span>
+                                                                                <span className="text-sm text-neutral-500">Choisir une date et notifier le locataire</span>
+                                                                            </div>
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setIsEdlSheetOpen(false);
+                                                                                if (applicationId) {
+                                                                                    router.push(`/inspection/new/${applicationId}`);
+                                                                                }
+                                                                            }}
+                                                                            className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                                                                        >
+                                                                            <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+                                                                                <Play size={20} className="text-green-600" />
+                                                                            </div>
+                                                                            <div className="flex flex-col text-left">
+                                                                                <span className="font-medium text-[16px]">Démarrer l&apos;état des lieux</span>
+                                                                                <span className="text-sm text-neutral-500">Commencer immédiatement</span>
+                                                                            </div>
+                                                                        </button>
+                                                                    </div>
+                                                                </BottomSheet>
+                                                            </>
+                                                        ) : inspectionData.status === 'DRAFT' ? (
+                                                            <Button
+                                                                label={inspectionData.scheduledAt ? "Démarrer l'état des lieux" : "Reprendre l'état des lieux"}
+                                                                onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
+                                                            />
+                                                        ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
+                                                            inspectionData.pdfUrl && (
+                                                                <a
+                                                                    href={inspectionData.pdfUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
+                                                                >
+                                                                    Voir le PDF de l&apos;EDL
+                                                                </a>
+                                                            )
+                                                        ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
+                                                            <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-white bg-neutral-900 rounded-xl border border-neutral-900">
+                                                                En attente de signature locataire
+                                                            </div>
+                                                        ) : null
+                                                    ) : (
+                                                        inspectionData && inspectionData.status !== 'CANCELLED' && (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') && inspectionData.pdfUrl ? (
+                                                            <a
+                                                                href={inspectionData.pdfUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
+                                                            >
+                                                                Voir le PDF de l&apos;EDL
+                                                            </a>
+                                                        ) : null
+                                                    )}
+                                                </div>
+                                            ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
+                                                        En cours de signature...
+                                                    </div>
+                                                    <Button
+                                                        label="Voir le bail"
+                                                        outline
+                                                        onClick={() => {
+                                                            if (applicationId) {
+                                                                window.open(`/leases/${applicationId}`, '_blank');
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    disabled={!listing}
+                                                    label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
+                                                    onClick={() => {
+                                                        if (!listing) return;
+                                                        if (hasProposedVisit) {
+                                                            if (applicationId) {
+                                                                window.open(`/leases/${applicationId}`, '_blank');
+                                                            } else {
+                                                                toast.error("Aucune demande de location trouvée pour ce dossier.");
+                                                            }
+                                                            return;
+                                                        }
+                                                        if (!hasAvailability) {
+                                                            setIsAvailabilityModalOpen(true);
+                                                            return;
+                                                        }
+                                                        axios.post('/api/messages', {
+                                                            message: 'INVITATION_VISITE',
+                                                            conversationId: conversation.id,
+                                                            listingId: listing.id
+                                                        })
+                                                            .then(() => {
+                                                                toast.success('Invitation envoyée');
+                                                                router.refresh();
+                                                            })
+                                                            .catch(() => toast.error('Erreur lors de l\'envoi'));
+                                                    }}
+                                                />
+                                            )}
+                                            {!initialLeaseStatus && (
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedReason('');
+                                                        setCustomReason('');
+                                                        setIsDeclineModalOpen(true);
+                                                    }}
+                                                    className="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
+                                                >
+                                                    Décliner la candidature
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {isRejected && (
+                                        <div className="flex-none border-t border-gray-200 dark:border-neutral-800 p-4">
+                                            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg p-3">
+                                                <XCircle size={16} className="shrink-0" />
+                                                <span>Candidature déclinée</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="documents"
+                                    initial={{ x: "100%" }}
+                                    animate={{ x: 0 }}
+                                    exit={{ x: "100%" }}
+                                    transition={{ type: "spring", bounce: 0.05, duration: 0.35 }}
+                                    className="absolute inset-0 flex flex-col"
+                                >
+                                    <DocumentsPanel
+                                        conversationId={conversation.id}
+                                        onClose={() => setIsDocumentsPanelOpen(false)}
+                                        onScrollToMessage={handleScrollToMessage}
+                                        highlightedDocumentId={highlightedDocumentId}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             )}
 
@@ -1023,40 +1052,6 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                     </div>
                 )
             }
-            {/* Documents Panel */}
-            <AnimatePresence>
-                {isDocumentsPanelOpen && (
-                    <>
-                        {/* Backdrop — mobile only */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                            onClick={() => setIsDocumentsPanelOpen(false)}
-                        />
-                        {/* Panel */}
-                        <motion.div
-                            initial={{ x: "100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
-                            transition={{ type: "spring", bounce: 0.05, duration: 0.35 }}
-                            className={clsx(
-                                "flex-col h-full bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-neutral-800",
-                                "fixed inset-y-0 right-0 z-50 w-full flex lg:static lg:z-auto lg:w-[360px]"
-                            )}
-                        >
-                            <DocumentsPanel
-                                conversationId={conversation.id}
-                                onClose={() => setIsDocumentsPanelOpen(false)}
-                                onScrollToMessage={handleScrollToMessage}
-                                highlightedDocumentId={highlightedDocumentId}
-                            />
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
         </div >
     );
 }

@@ -3,17 +3,20 @@
 import Image from "next/image";
 import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getCloudinaryThumbnail } from "@/lib/cloudinaryTransforms";
 
 interface ListingCardCarouselProps {
     images: { url: string; label?: string }[];
     centeredLabel?: boolean;
     onIndexChange?: (index: number) => void;
+    priority?: boolean;
 }
 
 const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
     images,
     centeredLabel,
     onIndexChange,
+    priority = false,
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -107,13 +110,14 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                         <Image
                             fill
                             alt={`Instance ${index + 1}`}
-                            src={image.url}
+                            src={getCloudinaryThumbnail(image.url, 800)}
                             className="
-                                object-cover 
-                                h-full 
+                                object-cover
+                                h-full
                                 w-full
                             "
-                            priority={index === 0}
+                            sizes="(max-width: 768px) 100vw, 240px"
+                            priority={priority && index === 0}
                             draggable={false}
                         />
 

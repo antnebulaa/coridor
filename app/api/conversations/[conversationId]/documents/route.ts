@@ -40,7 +40,15 @@ export async function GET(
             search,
         });
 
-        return NextResponse.json(documents);
+        // Resolve signed URLs for documents stored in Supabase
+        const resolvedDocuments = await Promise.all(
+            documents.map(async (doc) => ({
+                ...doc,
+                fileUrl: await DocumentService.resolveFileUrl(doc),
+            }))
+        );
+
+        return NextResponse.json(resolvedDocuments);
     } catch (error) {
         console.error("[DOCUMENTS_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });

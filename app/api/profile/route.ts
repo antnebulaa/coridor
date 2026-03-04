@@ -24,7 +24,9 @@ export async function POST(
         aplAmount,
         aplDirectPayment,
         bio,
-        landlordName
+        landlordName,
+        hasPets,
+        isSmoker,
     } = body;
 
     // Upsert Tenant Profile
@@ -42,7 +44,9 @@ export async function POST(
             aplAmount: parseInt(aplAmount, 10) || 0,
             aplDirectPayment,
             bio,
-            landlordName
+            landlordName,
+            ...(hasPets !== undefined && { hasPets: hasPets ?? null }),
+            ...(isSmoker !== undefined && { isSmoker: isSmoker ?? null }),
         },
         create: {
             userId: currentUser.id,
@@ -55,7 +59,9 @@ export async function POST(
             aplAmount: parseInt(aplAmount, 10) || 0,
             aplDirectPayment,
             bio,
-            landlordName
+            landlordName,
+            ...(hasPets !== undefined && { hasPets: hasPets ?? null }),
+            ...(isSmoker !== undefined && { isSmoker: isSmoker ?? null }),
         }
     });
 

@@ -59,6 +59,7 @@ export async function POST(
             fileSize,
             fileMimeType,
             fileLabel,
+            storagePath,
             conversationId,
             listingId
         } = body;
@@ -144,6 +145,7 @@ export async function POST(
                     fileType: fileMimeType,
                     fileSize: fileSize,
                     fileUrl: actualFileUrl,
+                    storagePath: storagePath || undefined,
                     label: fileLabel || undefined,
                 });
             } catch (docError) {

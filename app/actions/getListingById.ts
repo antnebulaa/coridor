@@ -15,6 +15,7 @@ export default async function getListingById(
                 id: listingId,
             },
             include: {
+                requirements: true,
                 rentalUnit: {
                     include: {
                         property: {
@@ -307,6 +308,13 @@ export default async function getListingById(
                 date: slot.date.toISOString()
             })),
             upcomingVisitsCount,
+
+            // Requirements (serialized)
+            requirements: listing.requirements ? {
+                ...listing.requirements,
+                createdAt: listing.requirements.createdAt.toISOString(),
+                updatedAt: listing.requirements.updatedAt.toISOString(),
+            } : null,
         };
     } catch (error: any) {
         throw new Error(error);

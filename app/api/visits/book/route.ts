@@ -165,7 +165,7 @@ export async function POST(
             sendPushNotification({
                 userId: landlordId,
                 title: "Nouvelle visite réservée",
-                body: `${currentUser.name || 'Un candidat'} a réservé une visite le ${format(new Date(date), 'dd/MM/yyyy')} à ${startTime}. En attente de confirmation.`,
+                body: `${currentUser.pseudonymFull || 'Un candidat'} a réservé une visite le ${format(new Date(date), 'dd/MM/yyyy')} à ${startTime}. En attente de confirmation.`,
                 url: `/calendar`,
                 type: 'visit'
             }).catch(err => console.error("[Push] Failed to notify landlord:", err));

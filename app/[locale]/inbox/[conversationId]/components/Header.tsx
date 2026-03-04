@@ -20,6 +20,7 @@ interface HeaderProps {
     showDossier?: boolean;
     onToggleDocuments?: () => void;
     conversationId?: string;
+    isIdentityRevealed?: boolean;
 };
 
 const Header: React.FC<HeaderProps> = ({
@@ -29,6 +30,7 @@ const Header: React.FC<HeaderProps> = ({
     showDossier,
     onToggleDocuments,
     conversationId,
+    isIdentityRevealed,
 }) => {
     const t = useTranslations('inbox.header');
     const router = useRouter();
@@ -51,14 +53,13 @@ const Header: React.FC<HeaderProps> = ({
         border-b
         border-gray-200 dark:border-neutral-800
         sm:px-4
-        py-2
+        h-[72px]
         px-4
         lg:px-6
         justify-between
         items-center
         relative
         z-10
-        min-h-[60px]
       ">
                 <div className="flex gap-3 items-center">
                     <button
@@ -74,35 +75,47 @@ const Header: React.FC<HeaderProps> = ({
                     >
                         <HiChevronLeft size={32} />
                     </button>
-                    {conversation.listing ? (
-                        <>
-                            <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
-                                {/* Ideally we use Image component or Avatar with listing image */}
-                                <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} size={40} />
-                                {/* Actually let's just stick to user avatar for now but change title */}
-                            </div>
-                            <div className="flex flex-col overflow-hidden">
-                                <div className="text-sm font-semibold text-neutral-800 dark:text-white truncate max-w-[150px] sm:max-w-xs">
-                                    {conversation.listing.title}
+                    {(() => {
+                        const hasPseudonym = !!otherUser?.pseudonymFull;
+                        const showPseudo = hasPseudonym && isIdentityRevealed === false;
+                        const pseudonymFull = otherUser?.pseudonymFull;
+                        const avatarSeed = showPseudo ? pseudonymFull : (otherUser?.email || otherUser?.name);
+                        const avatarImage = showPseudo ? null : otherUser?.image;
+                        const otherName = showPseudo
+                            ? pseudonymFull
+                            : otherUser?.name;
+
+                        if (conversation.listing) {
+                            return (
+                                <>
+                                    <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
+                                        <Avatar src={avatarImage} seed={avatarSeed} size={40} />
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <div className="text-sm font-semibold text-neutral-800 dark:text-white truncate max-w-[150px] sm:max-w-xs">
+                                            {conversation.listing.title}
+                                        </div>
+                                        <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
+                                            {otherName}
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        }
+                        return (
+                            <>
+                                <Avatar src={avatarImage} seed={avatarSeed} size={40} />
+                                <div className="flex flex-col">
+                                    <div className="text-base font-semibold text-neutral-800 dark:text-white">
+                                        {conversation.name || otherName}
+                                    </div>
+                                    <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
+                                        {statusText}
+                                    </div>
                                 </div>
-                                <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
-                                    {otherUser?.name}
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <Avatar src={otherUser?.image} seed={otherUser?.email || otherUser?.name} size={40} />
-                            <div className="flex flex-col">
-                                <div className="text-base font-semibold text-neutral-800 dark:text-white">
-                                    {conversation.name || otherUser?.name}
-                                </div>
-                                <div className="text-sm font-light text-neutral-500 dark:text-neutral-400">
-                                    {statusText}
-                                </div>
-                            </div>
-                        </>
-                    )}
+                            </>
+                        );
+                    })()}
                 </div>
 
 

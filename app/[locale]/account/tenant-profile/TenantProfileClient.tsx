@@ -124,7 +124,9 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
         aplAmount: tenantProfile?.aplAmount || '',
         aplDirectPayment: tenantProfile?.aplDirectPayment || false,
         bio: tenantProfile?.bio || '',
-        landlordName: tenantProfile?.landlordName || ''
+        landlordName: tenantProfile?.landlordName || '',
+        hasPets: tenantProfile?.hasPets ?? null,
+        isSmoker: tenantProfile?.isSmoker ?? null,
     };
 
     const {
@@ -335,6 +337,47 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                             register={register}
                             errors={errors}
                         />
+                    </section>
+
+                    {/* Lifestyle Section */}
+                    <section>
+                        <div className="mb-4">
+                            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Mode de vie</h2>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                                Ces informations sont utilisées pour le score de compatibilité avec les annonces.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            {[
+                                { id: 'hasPets' as const, label: 'J\'ai un animal de compagnie', value: watch('hasPets') },
+                                { id: 'isSmoker' as const, label: 'Je suis fumeur/fumeuse', value: watch('isSmoker') },
+                            ].map(({ id, label, value }) => (
+                                <button
+                                    key={id}
+                                    type="button"
+                                    disabled={isLoading}
+                                    onClick={() => setValue(id, value === true ? false : true)}
+                                    className={`
+                                        p-4 rounded-2xl border flex items-center justify-between text-left transition w-full
+                                        ${value === true
+                                            ? 'border-black dark:border-white bg-neutral-50 dark:bg-neutral-800'
+                                            : 'border-neutral-200 dark:border-neutral-700'
+                                        }
+                                    `}
+                                >
+                                    <span className="font-medium text-sm">{label}</span>
+                                    <div className={`
+                                        w-10 h-6 rounded-full transition-colors relative shrink-0
+                                        ${value === true ? 'bg-black dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700'}
+                                    `}>
+                                        <div className={`
+                                            w-5 h-5 rounded-full bg-white dark:bg-neutral-900 absolute top-0.5 transition-transform
+                                            ${value === true ? 'translate-x-4' : 'translate-x-0.5'}
+                                        `} />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                     </section>
 
                     <hr className="border-neutral-200 dark:border-neutral-800" />

@@ -89,7 +89,7 @@ export async function POST(
         userId: landlordId,
         type: 'visit',
         title: 'Visite confirmée',
-        message: `${currentUser.name || 'Un candidat'} a confirmé sa visite du ${visitDate} à ${visit.startTime}.`,
+        message: `${currentUser.pseudonymFull || 'Un candidat'} a confirmé sa visite du ${visitDate} à ${visit.startTime}.`,
         link: '/calendar'
     });
 
@@ -98,7 +98,7 @@ export async function POST(
     sendPushNotification({
         userId: landlordId,
         title: "Visite confirmée ✓",
-        body: `${currentUser.name || 'Un candidat'} a confirmé sa visite du ${visitDate} à ${visit.startTime}`,
+        body: `${currentUser.pseudonymFull || 'Un candidat'} a confirmé sa visite du ${visitDate} à ${visit.startTime}`,
         url: `/calendar`,
         type: 'visit'
     }).catch(err => console.error("[Push] Failed to notify landlord:", err));
@@ -118,7 +118,7 @@ export async function POST(
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #111;">Visite confirmée</h2>
                 <p>Bonjour ${landlord.name || ''},</p>
-                <p><strong>${currentUser.name || 'Un candidat'}</strong> a confirmé sa présence pour la visite prévue le <strong>${visitDate} à ${visit.startTime}</strong>.</p>
+                <p><strong>${currentUser.pseudonymFull || 'Un candidat'}</strong> a confirmé sa présence pour la visite prévue le <strong>${visitDate} à ${visit.startTime}</strong>.</p>
                 <p style="margin-top: 24px;">
                     <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr'}/calendar"
                        style="background: #111; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">

@@ -31,7 +31,8 @@ export async function GET(
             return new NextResponse("Forbidden", { status: 403 });
         }
 
-        return NextResponse.json({ url: document.fileUrl });
+        const url = await DocumentService.resolveFileUrl(document);
+        return NextResponse.json({ url });
     } catch (error) {
         console.error("[DOCUMENT_DOWNLOAD]", error);
         return new NextResponse("Internal Error", { status: 500 });

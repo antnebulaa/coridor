@@ -5,15 +5,12 @@ import getLandlordCalendarData from "@/app/actions/getLandlordCalendarData";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getListings, { IListingsParams } from "@/app/actions/getListings"; // Fixed
-import getLikes from "@/app/actions/getLikes";
-
 export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: { searchParams: Promise<IListingsParams> }) {
   const resolvedParams = await searchParams;
   const listings = await getListings(resolvedParams);
   const currentUser = await getCurrentUser();
-  const likes = await getLikes();
 
   if (listings.length === 0) {
     return (
@@ -41,7 +38,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<ILi
       listings={listings}
       currentUser={currentUser}
       isSearchActive={isSearchActive}
-      likes={likes}
     />
   );
 }

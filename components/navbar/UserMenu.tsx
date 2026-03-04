@@ -159,27 +159,20 @@ const UserMenu: React.FC<UserMenuProps> = ({
           "
                 >
                     <Menu size={18} strokeWidth={3} />
-                    <div className="hidden md:block">
-                        <div
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                console.log("Manual refresh triggered");
-                                axios.get('/api/user/counters').then((res) => {
-                                    console.log("Manual refresh result:", res.data);
-                                    window.location.reload();
-                                });
-                            }}
-                            className="bg-gray-100 hover:bg-gray-200 text-xs rounded px-1 cursor-pointer mr-2"
-                            title="Debug: Refresh Counters"
-                        >
-                            ↻
-                        </div>
-                    </div>
                     {unreadCount && unreadCount > 0 ? (
                         <div className="absolute top-0 right-0 h-3 w-3 bg-primary rounded-full border-2 border-background" />
                     ) : null}
-                    <div className="hidden md:block">
-                        <Avatar src={currentUser?.image} seed={currentUser?.email || currentUser?.name} />
+                    <div className="hidden md:block relative">
+                        {currentUser?.userMode !== 'LANDLORD' && (currentUser as any)?.pseudonymEmoji ? (
+                            <>
+                                <Avatar src={null} seed={(currentUser as any).pseudonymFull} size={30} />
+                                <span className="absolute inset-0 flex items-center justify-center text-lg drop-shadow-sm">
+                                    {(currentUser as any).pseudonymEmoji}
+                                </span>
+                            </>
+                        ) : (
+                            <Avatar src={currentUser?.image} seed={currentUser?.email || currentUser?.name} />
+                        )}
                     </div>
                 </div>
             </div>

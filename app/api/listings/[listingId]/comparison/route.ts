@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
+import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
 
 interface IParams {
     listingId: string;
@@ -52,7 +53,9 @@ export async function GET(
                                     id: true,
                                     firstName: true,
                                     lastName: true,
-                                    image: true
+                                    image: true,
+                                    pseudonymFull: true,
+                                    pseudonymEmoji: true,
                                 }
                             }
                         }
@@ -101,11 +104,23 @@ export async function GET(
                 status: evaluation.application.status,
                 appliedAt: evaluation.application.appliedAt
             },
-            candidate: {
-                firstName: user.firstName,
-                lastNameInitial: user.lastName ? user.lastName.charAt(0) + "." : null,
-                image: user.image
-            },
+            candidate: (() => {
+                const revealed = shouldRevealIdentity(evaluation.application.status, evaluation.application.leaseStatus);
+                if (revealed) {
+                    return {
+                        firstName: user.firstName,
+                        lastNameInitial: user.lastName ? user.lastName.charAt(0) + "." : null,
+                        image: user.image,
+                        pseudonymFull: user.pseudonymFull,
+                    };
+                }
+                return {
+                    firstName: user.pseudonymFull || 'Candidat',
+                    lastNameInitial: null,
+                    image: null,
+                    pseudonymFull: user.pseudonymFull,
+                };
+            })(),
             tenantProfile: profile
                 ? {
                       netSalary: profile.netSalary,

@@ -94,37 +94,33 @@ const MessageForm: React.FC<FormProps> = ({
         if (!pendingFile) return;
         setIsLoading(true);
 
-        const formData = new FormData();
-        formData.append("file", pendingFile.file);
-        formData.append("upload_preset", "coridor_uploads");
-
         try {
-            const response = await axios.post(
-                `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
-                formData
+            // Step 1: Upload file to our server (Supabase Storage)
+            const uploadFormData = new FormData();
+            uploadFormData.append("file", pendingFile.file);
+
+            const uploadResponse = await axios.post(
+                `/api/conversations/${conversationId}/upload`,
+                uploadFormData
             );
 
-            const result = response.data;
-            const fileUrl = result.secure_url;
-            const fileName = result.original_filename;
-            const cloudinaryFormat = result.format;
+            const { storagePath, fileName, fileType, fileSize, signedUrl } = uploadResponse.data;
+            const isImg = fileType.startsWith("image/");
 
-            if (!fileUrl) return;
-
-            const isImg = ["jpg", "jpeg", "png", "webp", "gif"].includes(cloudinaryFormat);
-
+            // Step 2: Create message with signed URL for immediate display
             await axios.post("/api/messages", {
-                ...(isImg ? { image: fileUrl } : { fileUrl, fileType: cloudinaryFormat }),
+                ...(isImg ? { image: signedUrl } : { fileUrl: signedUrl }),
+                storagePath,
                 fileName: fileName || pendingFile.file.name,
-                fileMimeType: pendingFile.file.type,
-                fileSize: pendingFile.file.size,
+                fileMimeType: fileType,
+                fileSize,
                 fileLabel: pendingFile.label.trim() || undefined,
                 conversationId: conversationId,
             });
 
             router.refresh();
-        } catch (error) {
-            console.error("Upload error:", error);
+        } catch (error: any) {
+            console.error("Upload error:", error?.response?.data || error);
         } finally {
             if (pendingFile?.preview) {
                 URL.revokeObjectURL(pendingFile.preview);

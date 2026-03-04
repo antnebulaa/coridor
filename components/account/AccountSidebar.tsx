@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings, TrendingUp, FolderOpen } from "lucide-react";
+import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings, TrendingUp, FolderOpen, Drama } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -11,6 +11,7 @@ import { toast } from "react-hot-toast";
 import CustomToast from "@/components/ui/CustomToast";
 import Avatar from "@/components/Avatar";
 import { useTranslations } from 'next-intl';
+import usePseudonymModal from "@/hooks/usePseudonymModal";
 
 interface AccountSidebarProps {
     currentUser?: SafeUser | null;
@@ -28,6 +29,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const t = useTranslations('account.navigation');
+    const pseudonymModal = usePseudonymModal();
 
     const toggleMode = async () => {
         setIsLoading(true);
@@ -195,11 +197,20 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                 {/* Header — profile card */}
                 <Link
                     href="/account/personal-info"
-                    className="flex justify-between items-center p-5 sm:p-4 rounded-3xl bg-neutral-50 hover:shadow-md transition mb-4 group cursor-pointer"
+                    className="flex justify-between items-center p-5 sm:p-4 rounded-3xl bg-neutral-50 hover:shadow-lg hover:bg-neutral-100 hover:backdrop-blur-md transition mb-4 group cursor-pointer"
                 >
                     <div className="flex items-center gap-4">
-                        <div className="shrink-0">
-                            <Avatar src={currentUser?.image} size={52} />
+                        <div className="relative shrink-0">
+                            {!isLandlord && (currentUser as any)?.pseudonymEmoji ? (
+                                <>
+                                    <Avatar src={null} seed={(currentUser as any).pseudonymFull} size={52} />
+                                    <span className="absolute inset-0 flex items-center justify-center text-2xl drop-shadow-sm">
+                                        {(currentUser as any).pseudonymEmoji}
+                                    </span>
+                                </>
+                            ) : (
+                                <Avatar src={currentUser?.image} size={52} />
+                            )}
                         </div>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-2 flex-wrap pb-0.5">
@@ -243,6 +254,23 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                             {t('sectionTenant')}
                         </h3>
                         <div className="flex flex-col gap-0.5">
+                            <button
+                                onClick={() => {
+                                    const user = currentUser as any;
+                                    pseudonymModal.onOpen(
+                                        user?.pseudonymEmoji
+                                            ? { emoji: user.pseudonymEmoji, text: user.pseudonymText || '', full: user.pseudonymFull || '' }
+                                            : undefined
+                                    );
+                                }}
+                                className="flex items-center justify-between gap-4 py-2.5 px-3 hover:bg-secondary transition rounded-2xl w-full cursor-pointer"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <Drama size={20} className="text-neutral-600" />
+                                    <span className="text-[15px] text-neutral-700">{t('pseudonym')}</span>
+                                </div>
+                                <ChevronRight size={18} className="text-neutral-400 md:hidden" />
+                            </button>
                             {tenantRoutes.map(renderRoute)}
                         </div>
                     </div>

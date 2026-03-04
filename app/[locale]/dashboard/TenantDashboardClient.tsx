@@ -3,7 +3,7 @@
 import { SafeUser } from "@/types";
 import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
-import { CheckCircle2, Circle, FolderOpen, Calendar, Bell, FileText, Receipt, ChevronRight, Shield, ArrowRight, BellRing, Home } from "lucide-react";
+import { CheckCircle2, Circle, FolderOpen, Calendar, Bell, FileText, Receipt, ChevronRight, Shield, ArrowRight, BellRing, Home, Compass } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import VisitCard from "./components/VisitCard";
@@ -13,6 +13,7 @@ import PassportCard from "@/components/passport/PassportCard";
 import usePassportCompletion from "@/hooks/usePassportCompletion";
 import { useMoveInGuide } from "@/hooks/useMoveInGuide";
 import { getCompletedCount } from "@/lib/moveInGuide";
+import usePseudonymModal from "@/hooks/usePseudonymModal";
 
 interface TenantDashboardClientProps {
     currentUser: SafeUser;
@@ -29,6 +30,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
 }) => {
     const router = useRouter();
     const t = useTranslations('dashboard');
+    const pseudonymModal = usePseudonymModal();
     const tenantProfile = (currentUser as any).tenantProfile;
 
     // Passport completion (progressive disclosure)
@@ -186,6 +188,18 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                     : 'Aucune candidature en cours'
                                 }
                             </p>
+                            {(currentUser as any).pseudonymFull && (
+                                <button
+                                    onClick={() => {
+                                        const user = currentUser as any;
+                                        pseudonymModal.onOpen({ emoji: user.pseudonymEmoji, text: user.pseudonymText || '', full: user.pseudonymFull || '' });
+                                    }}
+                                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition w-fit cursor-pointer"
+                                >
+                                    <span className="text-base">{(currentUser as any).pseudonymEmoji}</span>
+                                    <span>{(currentUser as any).pseudonymText}</span>
+                                </button>
+                            )}
                         </div>
                         <Link
                             href="/notifications"
@@ -358,7 +372,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     {/* === ACCES RAPIDE === */}
                     <div>
                         
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-4 gap-3">
                             <Link
                                 href="/account/tenant-profile"
                                 className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
@@ -385,6 +399,15 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                                     <BellRing size={14} className="text-white dark:text-purple-400" />
                                 </div>
                                 <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Alertes</span>
+                            </Link>
+                            <Link
+                                href="/account/project"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
+                            >
+                                <div className="p-2 bg-green-600 dark:bg-green-900/30 rounded-full">
+                                    <Compass size={14} className="text-white dark:text-green-400" />
+                                </div>
+                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Projet</span>
                             </Link>
                         </div>
                     </div>

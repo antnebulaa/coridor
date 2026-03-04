@@ -14,7 +14,7 @@ export async function POST(
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return NextResponse.error();
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { propertyId } = await params;
@@ -39,7 +39,7 @@ export async function POST(
 
     if (!propertyId || !category || !label || amountTotalCents === undefined || amountTotalCents === null || !dateOccurred || !frequency) {
         console.log("Missing fields:", { propertyId, category, label, amountTotalCents, dateOccurred, frequency });
-        return NextResponse.error();
+        return NextResponse.json({ error: "Validation Error: Missing required fields (propertyId, category, label, amountTotalCents, dateOccurred, frequency)" }, { status: 400 });
     }
 
     // Verify ownership
@@ -51,7 +51,7 @@ export async function POST(
 
     if (!property || property.ownerId !== currentUser.id) {
         console.log("Property not found or not owner");
-        return NextResponse.error();
+        return NextResponse.json({ error: "Forbidden: Not owner" }, { status: 403 });
     }
 
     try {
@@ -92,7 +92,7 @@ export async function GET(
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
-        return NextResponse.error();
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { propertyId } = await params;
@@ -106,7 +106,7 @@ export async function GET(
 
     // Strict check: Only owner can see expenses
     if (!property || property.ownerId !== currentUser.id) {
-        return NextResponse.error();
+        return NextResponse.json({ error: "Forbidden: Not owner" }, { status: 403 });
     }
 
     const expenses = await prisma.expense.findMany({

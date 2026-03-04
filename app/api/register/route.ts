@@ -2,6 +2,7 @@ import { generateUniqueCode } from "@/libs/uniqueCode";
 import bcrypt from "bcrypt";
 import prisma from "@/libs/prismadb";
 import { NextResponse } from "next/server";
+import { generatePseudonym } from "@/lib/pseudonym";
 
 export async function POST(request: Request) {
     const body = await request.json();
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
 
     // Generate a unique code (simple loop to ensure uniqueness could be added but for MVP just generating is fine, chance of collision is low but handled by DB constraint unique error if really needed, but for now just single attempt)
     const uniqueCode = generateUniqueCode();
+    const pseudonym = generatePseudonym();
 
     const user = await prisma.user.create({
         data: {
@@ -27,7 +29,11 @@ export async function POST(request: Request) {
             phoneNumber,
             birthDate: birthDate ? new Date(birthDate) : null,
             address,
-            uniqueCode // Add unique code
+            uniqueCode,
+            pseudonymEmoji: pseudonym.emoji,
+            pseudonymText: pseudonym.text,
+            pseudonymFull: pseudonym.full,
+            pseudonymPattern: pseudonym.pattern,
         },
     });
 
