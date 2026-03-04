@@ -288,6 +288,8 @@
 - [✅] Badges statut bail dans la boîte de réception — priorité leaseStatus sur applicationStatus (`Bail signé` vert, `Bail en signature` bleu, `Sélectionné`, `Finaliste`, `Présélectionné`)
 - [✅] Traduction des messages système dans l'aperçu ConversationBox — `LEASE_SENT_FOR_SIGNATURE` → "Bail envoyé pour signature", `INVITATION_VISITE` → "Invitation à une visite", etc.
 - [✅] Timeline enrichie dans le récapitulatif conversation — étapes dynamiques : Candidature reçue → Visite (proposée/confirmée) → Candidature retenue → Bail envoyé pour signature → Bail signé, avec états completed/pending
+- [✅] Système de documents intégré — modèle `ConversationDocument` (indexation fichiers échangés), `DocumentService.ts` (CRUD), API `GET/POST /api/conversations/[id]/documents` + `GET /api/documents/[id]/download` (auth participant), `useConversationDocuments` hook SWR, `DocumentBanner.tsx` (bandeau fichier inline avec icône/nom/taille/téléchargement + "Voir dans Documents"), `DocumentsPanel.tsx` (panneau latéral avec recherche, filtres Tous/PDF/Images/Coridor, groupement par mois, scroll vers message), `DocumentsButton.tsx` (header conversation, compteur badge, compact mobile), `MessageForm.tsx` enrichi (staged file preview avec libellé optionnel avant envoi), navigation bidirectionnelle conversation↔panel (highlight amber 2s), animation framer-motion slide-in + backdrop mobile, safe area iOS (`pt-safe`), images + fichiers indexés automatiquement via `messages/route.ts`
+- [❌] Intégration auto-documents Coridor — indexer les quittances, baux signés, EDL, mises en demeure dans le panneau Documents via `DocumentService.createCoridorDocument()`
 
 ### Notifications
 - [✅] Notifications in-app (`Notification`, polling 60s, `NotificationCenter.tsx`)
