@@ -121,6 +121,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
         data.body === 'INVITATION_VISITE' ? "p-0" :
         data.body?.startsWith('INSPECTION_') ? "p-0" :
         data.body?.startsWith('DEPOSIT_EVENT|') ? "p-0" :
+        data.body?.startsWith('CORIDOR_DOCUMENT|') ? "p-0" :
             (data.image || data.listing) ? "rounded-md p-0 overflow-hidden" :
                 clsx(
                     "overflow-hidden py-2 px-3",
@@ -946,6 +947,58 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                 >
                                                     {config.cta}
                                                 </button>
+                                            )}
+                                        </div>
+                                    );
+                                })()
+
+                            ) : data.body?.startsWith('CORIDOR_DOCUMENT|') ? (
+                                (() => {
+                                    const parts = data.body!.split('|');
+                                    const docType = parts[1];
+                                    const label = parts[2];
+                                    const url = parts[3];
+
+                                    const CORIDOR_DOC_CONFIG: Record<string, { emoji: string; color: string; border: string; bg: string; desc: string }> = {
+                                        quittance: { emoji: '🧾', color: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50', desc: 'Disponible en téléchargement.' },
+                                        bail: { emoji: '📝', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', desc: 'Signé par toutes les parties.' },
+                                        edl: { emoji: '📋', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', desc: 'Document disponible.' },
+                                        mise_en_demeure: { emoji: '⚖️', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50', desc: 'Document juridique généré.' },
+                                        inventaire: { emoji: '🪑', color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50', desc: 'Inventaire du mobilier.' },
+                                    };
+
+                                    const config = CORIDOR_DOC_CONFIG[docType] || {
+                                        emoji: '📄', color: 'text-gray-700', border: 'border-gray-200', bg: 'bg-gray-50', desc: 'Document disponible.'
+                                    };
+
+                                    return (
+                                        <div className={clsx(
+                                            "flex flex-col gap-2 p-4 rounded-2xl max-w-xs",
+                                            config.bg, `border ${config.border}`,
+                                            isOwn ? "rounded-br-none" : "rounded-bl-none"
+                                        )}>
+                                            <div className={clsx("flex items-center gap-2 font-medium text-sm", config.color)}>
+                                                <span className="text-base">{config.emoji}</span>
+                                                {label}
+                                            </div>
+                                            <div className={clsx("text-sm", config.color.replace('700', '600'))}>
+                                                {config.desc}
+                                            </div>
+                                            {url && (
+                                                <a
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className={clsx(
+                                                        "mt-1 px-4 py-2 text-white rounded-lg text-sm font-medium transition w-fit inline-block",
+                                                        docType === 'mise_en_demeure' ? "bg-red-600 hover:bg-red-700" :
+                                                        docType === 'quittance' ? "bg-emerald-600 hover:bg-emerald-700" :
+                                                        "bg-blue-600 hover:bg-blue-700"
+                                                    )}
+                                                >
+                                                    Télécharger
+                                                </a>
                                             )}
                                         </div>
                                     );

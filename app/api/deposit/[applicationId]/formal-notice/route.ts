@@ -6,6 +6,8 @@ import getCurrentUser from '@/app/actions/getCurrentUser';
 import { FormalNoticeDocument } from '@/components/documents/FormalNoticeDocument';
 import type { FormalNoticeData } from '@/components/documents/FormalNoticeDocument';
 import { DepositService } from '@/services/DepositService';
+import { DocumentService } from '@/services/DocumentService';
+import { findConversationByListingAndUsers } from '@/lib/findConversation';
 
 type Params = { params: Promise<{ applicationId: string }> };
 
@@ -152,6 +154,50 @@ export async function POST(request: Request, props: Params) {
         actorId: currentUser.id,
       },
     });
+
+    // Index formal notice as Coridor document in conversation
+    try {
+      const appForListing = await prisma.rentalApplication.findUnique({
+        where: { id: applicationId },
+        select: { listingId: true },
+      });
+
+      if (appForListing?.listingId && landlordId && tenantId) {
+        const conversationId = await findConversationByListingAndUsers(
+          appForListing.listingId,
+          [landlordId, tenantId]
+        );
+        if (conversationId) {
+          const msg = await prisma.message.create({
+            data: {
+              body: `CORIDOR_DOCUMENT|mise_en_demeure|Mise en demeure — Restitution dépôt de garantie|${pdfUrl}`,
+              conversation: { connect: { id: conversationId } },
+              sender: { connect: { id: tenantId } },
+              seen: { connect: { id: tenantId } },
+            },
+          });
+
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { lastMessageAt: new Date() },
+          });
+
+          await DocumentService.createCoridorDocument({
+            conversationId,
+            messageId: msg.id,
+            fileName: `mise-en-demeure-${applicationId}.pdf`,
+            fileType: 'application/pdf',
+            fileSize: pdfBuffer.length,
+            fileUrl: pdfUrl,
+            coridorType: 'mise_en_demeure',
+            coridorRef: deposit.id,
+            label: 'Mise en demeure — Restitution dépôt de garantie',
+          });
+        }
+      }
+    } catch (docErr) {
+      console.error('[FormalNotice] Error indexing document:', docErr);
+    }
 
     return NextResponse.json({ url: pdfUrl }, { status: 201 });
   } catch (error: unknown) {

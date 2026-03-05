@@ -4,6 +4,8 @@ import prisma from "@/libs/prismadb";
 import { YousignService } from "@/services/YousignService";
 import { PassportService } from "@/services/PassportService";
 import { DepositService } from "@/services/DepositService";
+import { DocumentService } from "@/services/DocumentService";
+import { findConversationByListingAndUsers } from "@/lib/findConversation";
 import { DEFAULT_MOVE_IN_STEPS } from "@/lib/moveInGuide";
 
 const YOUSIGN_WEBHOOK_SECRET = process.env.YOUSIGN_WEBHOOK_SECRET;
@@ -190,6 +192,45 @@ export async function POST(request: Request) {
                     console.log("[Yousign Webhook] SecurityDeposit created for application:", application.id);
                 } catch (depositErr) {
                     console.error("[Yousign Webhook] Failed to create SecurityDeposit:", depositErr);
+                }
+
+                // Index signed lease as Coridor document in conversation
+                try {
+                    if (signedUrl && ownerId && tenantUserId && application.listingId) {
+                        const conversationId = await findConversationByListingAndUsers(
+                            application.listingId,
+                            [ownerId, tenantUserId]
+                        );
+                        if (conversationId) {
+                            const msg = await prisma.message.create({
+                                data: {
+                                    body: `CORIDOR_DOCUMENT|bail|Bail signé — ${propertyCity}|${signedUrl}`,
+                                    conversation: { connect: { id: conversationId } },
+                                    sender: { connect: { id: ownerId } },
+                                    seen: { connect: { id: ownerId } },
+                                },
+                            });
+
+                            await prisma.conversation.update({
+                                where: { id: conversationId },
+                                data: { lastMessageAt: new Date() },
+                            });
+
+                            await DocumentService.createCoridorDocument({
+                                conversationId,
+                                messageId: msg.id,
+                                fileName: `bail-signe-${propertyCity}.pdf`,
+                                fileType: 'application/pdf',
+                                fileSize: 0,
+                                fileUrl: signedUrl,
+                                coridorType: 'bail',
+                                coridorRef: application.id,
+                                label: `Bail signé — ${propertyCity}`,
+                            });
+                        }
+                    }
+                } catch (docErr) {
+                    console.error("[Yousign Webhook] Failed to index signed lease document:", docErr);
                 }
 
                 // Auto-create Move-In Guide for the tenant

@@ -8,6 +8,7 @@ import type { InspectionPdfData } from '@/components/documents/InspectionDocumen
 import { createNotification } from '@/libs/notifications';
 import { sendPushNotification } from '@/app/lib/sendPushNotification';
 import { sendEmail } from '@/lib/email';
+import { DocumentService } from '@/services/DocumentService';
 
 type Params = { params: Promise<{ inspectionId: string }> };
 
@@ -239,7 +240,7 @@ export async function POST(request: Request, props: Params) {
       });
 
       if (conversation) {
-        await prisma.message.create({
+        const edlMessage = await prisma.message.create({
           data: {
             body: `INSPECTION_PDF_READY|${inspectionId}|${pdfUrl}`,
             conversation: { connect: { id: conversation.id } },
@@ -252,6 +253,24 @@ export async function POST(request: Request, props: Params) {
           where: { id: conversation.id },
           data: { lastMessageAt: new Date() },
         });
+
+        // Index EDL PDF as Coridor document
+        try {
+          const edlTypeLabel = inspection.type === 'EXIT' ? 'de sortie' : "d'entrée";
+          await DocumentService.createCoridorDocument({
+            conversationId: conversation.id,
+            messageId: edlMessage.id,
+            fileName: `edl-${inspection.type.toLowerCase()}-${inspectionId}.pdf`,
+            fileType: 'application/pdf',
+            fileSize: 0,
+            fileUrl: pdfUrl,
+            coridorType: 'edl',
+            coridorRef: inspectionId,
+            label: `État des lieux ${edlTypeLabel}`,
+          });
+        } catch (docErr) {
+          console.error('[Inspection Generate-PDF] Error indexing EDL document:', docErr);
+        }
       }
 
       // Notify both parties

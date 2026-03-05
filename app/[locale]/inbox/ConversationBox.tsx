@@ -94,6 +94,11 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 };
                 return DEPOSIT_LABELS[eventType] || '🏦 Dépôt de garantie';
             }
+            if (lastMessage.body.startsWith('CORIDOR_DOCUMENT|')) {
+                const parts = lastMessage.body.split('|');
+                const label = parts[2];
+                return `📄 ${label}`;
+            }
             return lastMessage.body;
         }
 

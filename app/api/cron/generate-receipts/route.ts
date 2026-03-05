@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/libs/prismadb";
 import { RentReceiptService } from "@/services/RentReceiptService";
+import { DocumentService } from "@/services/DocumentService";
+import { findConversationByListingAndUsers } from "@/lib/findConversation";
 
 /**
  * Cron job — Génération automatique de quittances.
@@ -65,6 +67,58 @@ export async function GET(request: Request) {
 
         // Envoyer notification + email
         await RentReceiptService.sendReceiptNotification(receipt.id);
+
+        // Index receipt as Coridor document in conversation
+        try {
+          const app = await prisma.rentalApplication.findUnique({
+            where: { id: lease.id },
+            select: {
+              listingId: true,
+              listing: { select: { rentalUnit: { select: { property: { select: { ownerId: true } } } } } },
+              candidateScope: { select: { creatorUserId: true } },
+            },
+          });
+
+          const landlordId = app?.listing?.rentalUnit?.property?.ownerId;
+          const tenantId = app?.candidateScope?.creatorUserId;
+          const listingId = app?.listingId;
+
+          if (landlordId && tenantId && listingId) {
+            const conversationId = await findConversationByListingAndUsers(listingId, [landlordId, tenantId]);
+            if (conversationId) {
+              const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+              const monthLabel = `${monthNames[targetMonth - 1]} ${targetYear}`;
+
+              const msg = await prisma.message.create({
+                data: {
+                  body: `CORIDOR_DOCUMENT|quittance|Quittance de loyer — ${monthLabel}|/api/receipts/${receipt.id}/download`,
+                  conversation: { connect: { id: conversationId } },
+                  sender: { connect: { id: landlordId } },
+                  seen: { connect: { id: landlordId } },
+                },
+              });
+
+              await prisma.conversation.update({
+                where: { id: conversationId },
+                data: { lastMessageAt: new Date() },
+              });
+
+              await DocumentService.createCoridorDocument({
+                conversationId,
+                messageId: msg.id,
+                fileName: `quittance-${targetMonth}-${targetYear}.pdf`,
+                fileType: 'application/pdf',
+                fileSize: 0,
+                fileUrl: `/api/receipts/${receipt.id}/download`,
+                coridorType: 'quittance',
+                coridorRef: receipt.id,
+                label: `Quittance de loyer — ${monthLabel}`,
+              });
+            }
+          }
+        } catch (docErr) {
+          console.error(`[Cron] Error indexing receipt document:`, docErr);
+        }
 
         generated++;
         console.log(`[Cron] Generated receipt for lease ${lease.id} (${targetMonth}/${targetYear})`);
