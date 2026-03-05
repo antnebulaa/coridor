@@ -108,7 +108,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                     {route.active && (
                                         <motion.div
                                             layoutId="active-bubble"
-                                            className="absolute inset-0 bg-primary rounded-[20px]"
+                                            className="absolute inset-0 bg-[#854020] rounded-[20px]"
                                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                         />
                                     )}

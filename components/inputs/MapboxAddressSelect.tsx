@@ -255,11 +255,11 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
     }
 
     return (
-        <div ref={wrapperRef} className="relative">
+        <div ref={wrapperRef} className="relative bg-white rounded-2xl px-3 py-1 ">
             <div className="relative">
                 {Icon && (
                     <div className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 text-neutral-800 dark:text-neutral-200 pointer-events-none ${customIconWrapperClass || ''}`}>
-                        <Icon size={18} strokeWidth={2.5} />
+                        <Icon size={16} strokeWidth={2.5} />
                     </div>
                 )}
                 <input
@@ -271,12 +271,12 @@ const MapboxAddressSelect: React.FC<MapboxAddressSelectProps> = ({
                     className={`
                         peer
                         w-full
-                        p-4
+                        p-8
                         ${Icon ? 'pl-12' : ''}
                         font-medium
-                        text-lg
+                        text-xl
                         text-left
-                        bg-background
+                        bg-white
                         dark:bg-[#282828]
                         dark:focus:bg-[#323232]
                         rounded-full

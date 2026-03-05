@@ -11,8 +11,6 @@ import useSearchModal from '@/hooks/useSearchModal';
 import useCommuteModal from '@/hooks/useCommuteModal';
 import Heading from '../Heading';
 import MapboxAddressSelect, { AddressSelectValue } from '../inputs/MapboxAddressSelect';
-import CategoryInput from '../inputs/CategoryInput';
-import Counter from '../inputs/Counter';
 
 import SoftInput from '../inputs/SoftInput';
 import { categories } from '../navbar/Categories';
@@ -45,9 +43,21 @@ const SearchModal = () => {
     const [maxPrice, setMaxPrice] = useState<string>('');
     const [minSurface, setMinSurface] = useState<string>('9');
     const [maxSurface, setMaxSurface] = useState<string>('');
-    const [roomCount, setRoomCount] = useState(1);
-    const [bedroomCount, setBedroomCount] = useState(0); // Added bedroomCount
-    const [bathroomCount, setBathroomCount] = useState(1);
+    const [roomCount, setRoomCount] = useState(0);
+    const [roomCountMax, setRoomCountMax] = useState(0);
+    const [bedroomCount, setBedroomCount] = useState(0);
+    const [bedroomCountMax, setBedroomCountMax] = useState(0);
+    const [bathroomCount, setBathroomCount] = useState(0);
+    const [bathroomCountMax, setBathroomCountMax] = useState(0);
+
+    // Advanced filters
+    const [furnished, setFurnished] = useState<'furnished' | 'unfurnished' | null>(null);
+    const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+    const [floorTypes, setFloorTypes] = useState<string[]>([]);
+    const [dpeMin, setDpeMin] = useState('');
+    const [dpeMax, setDpeMax] = useState('');
+    const [amenities, setAmenities] = useState<string[]>([]);
+    const [heatingTypes, setHeatingTypes] = useState<string[]>([]);
 
     // UI State
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -274,13 +284,23 @@ const SearchModal = () => {
         }
 
         if (category) urlParams.set('category', category);
-        if (roomCount > 1) urlParams.set('roomCount', roomCount.toString());
-        if (bedroomCount > 0) urlParams.set('bedroomCount', bedroomCount.toString()); // Added bedroomCount param
-        if (bathroomCount > 1) urlParams.set('bathroomCount', bathroomCount.toString());
+        if (roomCount > 0) urlParams.set('roomCount', roomCount.toString());
+        if (roomCountMax > 0 && roomCountMax !== roomCount) urlParams.set('roomCountMax', roomCountMax.toString());
+        if (bedroomCount > 0) urlParams.set('bedroomCount', bedroomCount.toString());
+        if (bedroomCountMax > 0 && bedroomCountMax !== bedroomCount) urlParams.set('bedroomCountMax', bedroomCountMax.toString());
+        if (bathroomCount > 0) urlParams.set('bathroomCount', bathroomCount.toString());
+        if (bathroomCountMax > 0 && bathroomCountMax !== bathroomCount) urlParams.set('bathroomCountMax', bathroomCountMax.toString());
         if (minPrice) urlParams.set('minPrice', minPrice);
         if (maxPrice) urlParams.set('maxPrice', maxPrice);
         if (minSurface) urlParams.set('minSurface', minSurface);
         if (maxSurface) urlParams.set('maxSurface', maxSurface);
+        if (furnished) urlParams.set('furnished', furnished);
+        if (propertyTypes.length > 0) urlParams.set('propertyTypes', propertyTypes.join(','));
+        if (floorTypes.length > 0) urlParams.set('floorTypes', floorTypes.join(','));
+        if (dpeMin) urlParams.set('dpeMin', dpeMin);
+        if (dpeMax) urlParams.set('dpeMax', dpeMax);
+        if (amenities.length > 0) urlParams.set('amenities', amenities.join(','));
+        if (heatingTypes.length > 0) urlParams.set('heatingTypes', heatingTypes.join(','));
 
         // Commute Params
         if (step === STEPS.COMMUTE && commutePoints.length > 0) {
@@ -297,9 +317,20 @@ const SearchModal = () => {
 
         const detailsParts = [];
         if (category) detailsParts.push(category);
-        if (roomCount > 1) detailsParts.push(`${roomCount} pièces`);
-        if (bedroomCount > 0) detailsParts.push(`${bedroomCount} ch`);
-        if (bathroomCount > 1) detailsParts.push(`${bathroomCount} sdb`);
+        if (roomCount > 0) detailsParts.push(roomCountMax > roomCount ? `${roomCount}-${roomCountMax} pièces` : `${roomCount} pièces`);
+        if (bedroomCount > 0) detailsParts.push(bedroomCountMax > bedroomCount ? `${bedroomCount}-${bedroomCountMax} ch` : `${bedroomCount} ch`);
+        if (bathroomCount > 0) detailsParts.push(bathroomCountMax > bathroomCount ? `${bathroomCount}-${bathroomCountMax} sdb` : `${bathroomCount} sdb`);
+        if (furnished) detailsParts.push(furnished === 'furnished' ? 'Meublé' : 'Non meublé');
+        if (dpeMin) detailsParts.push(dpeMax && dpeMax !== dpeMin ? `DPE ${dpeMin}-${dpeMax}` : `DPE ${dpeMin}`);
+        if (amenities.length > 0) {
+            const amenityLabels: Record<string, string> = { hasParking: 'Parking', hasGarage: 'Garage', hasBalcony: 'Balcon', hasTerrace: 'Terrasse', hasGarden: 'Jardin', hasPool: 'Piscine', hasCave: 'Cave', isKitchenEquipped: 'Cuisine équipée', hasElevator: 'Ascenseur', isAccessible: 'PMR', hasAirConditioning: 'Clim', hasFiber: 'Fibre', isBright: 'Lumineux', hasArmoredDoor: 'Porte blindée', petsAllowed: 'Pet friendly', isStudentFriendly: 'Étudiant' };
+            detailsParts.push(amenities.map(a => amenityLabels[a] || a).join(', '));
+        }
+        if (propertyTypes.length > 0) detailsParts.push(propertyTypes.join(', '));
+        if (floorTypes.length > 0) {
+            const floorLabels: Record<string, string> = { rdc: 'RDC', lastFloor: 'Dernier étage', highFloor: 'Étage élevé' };
+            detailsParts.push(floorTypes.map(f => floorLabels[f] || f).join(', '));
+        }
         if (minSurface) detailsParts.push(`${minSurface}m² min`);
         if (maxPrice) detailsParts.push(`Max ${maxPrice}€`);
         if (step === STEPS.COMMUTE && commutePoints.length > 0) {
@@ -331,12 +362,22 @@ const SearchModal = () => {
         params,
         commutePoints,
         roomCount,
+        roomCountMax,
         bedroomCount,
+        bedroomCountMax,
         bathroomCount,
+        bathroomCountMax,
         minPrice,
         maxPrice,
         minSurface,
-        maxSurface
+        maxSurface,
+        furnished,
+        propertyTypes,
+        floorTypes,
+        dpeMin,
+        dpeMax,
+        amenities,
+        heatingTypes
     ]);
 
     const [listingCount, setListingCount] = useState<number | null>(null);
@@ -355,13 +396,23 @@ const SearchModal = () => {
                 }
 
                 if (category) params.set('category', category);
-                if (roomCount > 1) params.set('roomCount', roomCount.toString());
+                if (roomCount > 0) params.set('roomCount', roomCount.toString());
+                if (roomCountMax > 0 && roomCountMax !== roomCount) params.set('roomCountMax', roomCountMax.toString());
                 if (bedroomCount > 0) params.set('bedroomCount', bedroomCount.toString());
-                if (bathroomCount > 1) params.set('bathroomCount', bathroomCount.toString());
+                if (bedroomCountMax > 0 && bedroomCountMax !== bedroomCount) params.set('bedroomCountMax', bedroomCountMax.toString());
+                if (bathroomCount > 0) params.set('bathroomCount', bathroomCount.toString());
+                if (bathroomCountMax > 0 && bathroomCountMax !== bathroomCount) params.set('bathroomCountMax', bathroomCountMax.toString());
                 if (minPrice) params.set('minPrice', minPrice);
                 if (maxPrice) params.set('maxPrice', maxPrice);
                 if (minSurface) params.set('minSurface', minSurface);
                 if (maxSurface) params.set('maxSurface', maxSurface);
+                if (furnished) params.set('furnished', furnished);
+                if (propertyTypes.length > 0) params.set('propertyTypes', propertyTypes.join(','));
+                if (floorTypes.length > 0) params.set('floorTypes', floorTypes.join(','));
+                if (dpeMin) params.set('dpeMin', dpeMin);
+                if (dpeMax) params.set('dpeMax', dpeMax);
+                if (amenities.length > 0) params.set('amenities', amenities.join(','));
+                if (heatingTypes.length > 0) params.set('heatingTypes', heatingTypes.join(','));
 
                 // Count API currently might NOT support complex commute JSON, but let's pass it anyway if we update API
                 if (commutePoints.length > 0) {
@@ -381,7 +432,7 @@ const SearchModal = () => {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [locations, category, roomCount, bedroomCount, bathroomCount, minPrice, maxPrice, minSurface, maxSurface, commutePoints]);
+    }, [locations, category, roomCount, roomCountMax, bedroomCount, bedroomCountMax, bathroomCount, bathroomCountMax, minPrice, maxPrice, minSurface, maxSurface, commutePoints, furnished, propertyTypes, floorTypes, dpeMin, dpeMax, amenities, heatingTypes]);
 
     const actionLabel = useMemo(() => {
         if (step === STEPS.SAVE_FAVORITE) {
@@ -395,11 +446,7 @@ const SearchModal = () => {
     }, [step, listingCount]);
 
     const secondaryActionLabel = useMemo(() => {
-        if (step === STEPS.LOCATION) {
-            return undefined;
-        }
-
-        return 'Retour';
+        return undefined;
     }, [step]);
 
     const handleLocationSelect = (value: AddressSelectValue) => {
@@ -514,13 +561,13 @@ const SearchModal = () => {
                     {/* 1. LOCATION SECTION */}
                     <motion.div
                         variants={itemVariants}
-                        className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.LOCATION ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.LOCATION ? 'shadow-md ring-opacity-5' : ''}`}
                     >
                         <div
                             onClick={() => setStep(STEPS.LOCATION)}
                             className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.LOCATION ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
-                            <div className={`transition-all duration-300 ${step === STEPS.LOCATION ? "text-lg font-bold text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Où ?</div>
+                            <div className={`transition-all duration-300 ${step === STEPS.LOCATION ? "text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Localisation</div>
                             <AnimatePresence mode="wait">
                                 {step !== STEPS.LOCATION && (
                                     <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }} className="text-sm font-semibold truncate max-w-[200px]">
@@ -592,9 +639,9 @@ const SearchModal = () => {
                                                     <>
                                                         <div
                                                             onClick={() => setStep(STEPS.COMMUTE)}
-                                                            className="flex items-center gap-2 text-sm font-semibold cursor-pointer hover:underline"
+                                                            className="flex items-center gap-2 text-base font-semibold cursor-pointer bg-amber-400 rounded-2xl p-3 hover:underline"
                                                         >
-                                                            <div className="p-1.5 bg-neutral-100 rounded-full">
+                                                            <div className="p-1.5 rounded-full">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                                 </svg>
@@ -655,13 +702,13 @@ const SearchModal = () => {
                     {/* 2. CATEGORY SECTION */}
                     <motion.div
                         variants={itemVariants}
-                        className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.CATEGORY ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.CATEGORY ? 'shadow-md ring-opacity-5' : ''}`}
                     >
                         <div
                             onClick={() => setStep(STEPS.CATEGORY)}
                             className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.CATEGORY ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
-                            <div className={`transition-all duration-300 ${step === STEPS.CATEGORY ? "text-lg font-bold text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Quoi ?</div>
+                            <div className={`transition-all duration-300 ${step === STEPS.CATEGORY ? "mb-4 text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Type</div>
                             <AnimatePresence mode="wait">
                                 {step !== STEPS.CATEGORY && (
                                     <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }} className="text-sm font-semibold truncate max-w-[200px]">
@@ -681,32 +728,35 @@ const SearchModal = () => {
                                     transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="px-4 pb-4 pt-1">
-                                        <div className="flex flex-row flex-wrap gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                            {categories.map((item) => {
-                                                const isSelected = category.split(',').includes(item.label);
-                                                return (
-                                                    <div key={item.label}>
-                                                        <CategoryInput
-                                                            onClick={(label) => {
-                                                                let current = category ? category.split(',') : [];
-                                                                if (current.includes(label)) {
-                                                                    current = current.filter(c => c !== label);
-                                                                } else {
-                                                                    current = current.length > 0 ? [...current, label] : [label];
-                                                                    setStep(STEPS.BUDGET);
-                                                                }
-                                                                setCategory(current.join(','));
-                                                            }}
-                                                            selected={isSelected}
-                                                            label={item.label}
-                                                            icon={item.icon}
-                                                            variant="search"
-                                                        />
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
+                                    <div className="px-4 pb-4 pt-1 flex flex-col gap-2">
+                                        {categories.map((item) => {
+                                            const Icon = item.icon;
+                                            const isSelected = category.split(',').includes(item.label);
+                                            return (
+                                                <div
+                                                    key={item.label}
+                                                    onClick={() => {
+                                                        let current = category ? category.split(',') : [];
+                                                        if (current.includes(item.label)) {
+                                                            current = current.filter(c => c !== item.label);
+                                                        } else {
+                                                            current = current.length > 0 ? [...current, item.label] : [item.label];
+                                                            setStep(STEPS.BUDGET);
+                                                        }
+                                                        setCategory(current.join(','));
+                                                    }}
+                                                    className={`
+                                                        w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border cursor-pointer transition active:scale-[0.98]
+                                                        ${isSelected
+                                                            ? 'bg-neutral-900 border-neutral-900 text-white dark:bg-white dark:border-white dark:text-neutral-900'
+                                                            : 'bg-white border-neutral-200 text-neutral-900 hover:border-neutral-400 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-100 dark:hover:border-neutral-500'}
+                                                    `}
+                                                >
+                                                    <Icon className="w-6 h-6 shrink-0" />
+                                                    <span className="text-base font-medium">{item.label}</span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </motion.div>
                             )}
@@ -716,7 +766,7 @@ const SearchModal = () => {
                     {/* 3. BUDGET SECTION */}
                     <motion.div
                         variants={itemVariants}
-                        className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.BUDGET ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.BUDGET ? 'shadow-md ring-opacity-5' : ''}`}
                     >
                         <div
                             onClick={() => {
@@ -725,7 +775,7 @@ const SearchModal = () => {
                             }}
                             className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.BUDGET ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
-                            <div className={`transition-all duration-300 ${step === STEPS.BUDGET ? "text-lg font-bold text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Budget</div>
+                            <div className={`transition-all duration-300 ${step === STEPS.BUDGET ? "text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Budget</div>
                             <AnimatePresence mode="wait">
                                 {step !== STEPS.BUDGET && (
                                     <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }} className="text-sm font-semibold truncate max-w-[200px]">
@@ -792,17 +842,26 @@ const SearchModal = () => {
                     {/* 4. FILTERS SECTION (Features) */}
                     <motion.div
                         variants={itemVariants}
-                        className={`flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.FILTERS ? 'shadow-lg ring-1 ring-black ring-opacity-5' : ''}`}
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.FILTERS ? 'shadow-md ring-opacity-5' : ''}`}
                     >
                         <div
                             onClick={() => setStep(STEPS.FILTERS)}
                             className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.FILTERS ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
-                            <div className={`transition-all duration-300 ${step === STEPS.FILTERS ? "text-lg font-bold text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Filtres</div>
+                            <div className={`transition-all duration-300 ${step === STEPS.FILTERS ? "text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Filtres</div>
                             <AnimatePresence mode="wait">
                                 {step !== STEPS.FILTERS && (
                                     <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }} className="text-sm font-semibold truncate max-w-[200px]">
-                                        Surface, pièces...
+                                        {(() => {
+                                            const parts = [];
+                                            if (minSurface || maxSurface) parts.push('Surface');
+                                            if (roomCount > 0) parts.push('Pièces');
+                                            if (furnished) parts.push(furnished === 'furnished' ? 'Meublé' : 'Non meublé');
+                                            if (dpeMin) parts.push(`DPE ${dpeMin}${dpeMax && dpeMax !== dpeMin ? `-${dpeMax}` : ''}`);
+                                            if (amenities.length > 0) parts.push(`${amenities.length} caract.`);
+                                            if (propertyTypes.length > 0) parts.push(propertyTypes.join(', '));
+                                            return parts.length > 0 ? parts.join(', ') : 'Surface, pièces...';
+                                        })()}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -848,37 +907,369 @@ const SearchModal = () => {
 
                                         <hr className="border-neutral-100" />
 
-                                        {/* Rooms & Bedrooms */}
-                                        <div className="flex flex-col gap-4">
-                                            <Counter
-                                                title="Pièces"
-                                                subtitle="Minimum"
-                                                value={roomCount}
-                                                onChange={(value) => {
-                                                    setRoomCount(value);
-                                                    if (value <= bedroomCount) {
-                                                        setBedroomCount(Math.max(0, value - 1));
+                                        {/* Rooms & Bedrooms — Range Picker */}
+                                        <div className="flex flex-col gap-6">
+                                            {([
+                                                { label: 'Pièces', min: roomCount, max: roomCountMax, setMin: setRoomCount, setMax: setRoomCountMax },
+                                                { label: 'Chambres', min: bedroomCount, max: bedroomCountMax, setMin: setBedroomCount, setMax: setBedroomCountMax },
+                                            ] as const).map((field, idx) => (
+                                                <div key={field.label} className="flex flex-col gap-2">
+                                                    {idx > 0 && <hr className="border-neutral-100 dark:border-neutral-800 -mt-3 mb-1" />}
+                                                    <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">{field.label}</div>
+                                                    <div className="flex gap-2">
+                                                        {[1, 2, 3, 4, 5, 6].map((n) => {
+                                                            const isMin = field.min === n;
+                                                            const isMax = field.max === n;
+                                                            const isInRange = field.min > 0 && field.max > 0 && n > field.min && n < field.max;
+                                                            return (
+                                                                <button
+                                                                    key={n}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if (isMin && field.max === 0) {
+                                                                            // Only min selected, deselect
+                                                                            field.setMin(0);
+                                                                        } else if (isMin && field.max > 0) {
+                                                                            // Deselect min, max becomes the only value
+                                                                            field.setMin(field.max);
+                                                                            field.setMax(0);
+                                                                        } else if (isMax) {
+                                                                            // Deselect max
+                                                                            field.setMax(0);
+                                                                        } else if (field.min === 0) {
+                                                                            // Nothing selected, set as min
+                                                                            field.setMin(n);
+                                                                        } else if (field.max === 0) {
+                                                                            // One value selected, create range
+                                                                            const lo = Math.min(field.min, n);
+                                                                            const hi = Math.max(field.min, n);
+                                                                            if (lo === hi) {
+                                                                                field.setMin(0);
+                                                                                field.setMax(0);
+                                                                            } else {
+                                                                                field.setMin(lo);
+                                                                                field.setMax(hi);
+                                                                            }
+                                                                        } else {
+                                                                            // Range exists, tap inside range or outside — reset to single
+                                                                            field.setMin(n);
+                                                                            field.setMax(0);
+                                                                        }
+                                                                    }}
+                                                                    className={`
+                                                                        w-11 h-11 rounded-xl text-lg font-semibold transition-all active:scale-95 border-2
+                                                                        ${(isMin || isMax)
+                                                                            ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                            : isInRange
+                                                                                ? 'bg-neutral-200 text-neutral-900 border-neutral-300 dark:bg-neutral-700 dark:text-white dark:border-neutral-600'
+                                                                                : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                                        }
+                                                                    `}
+                                                                >
+                                                                    {n}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Salles de bain */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Salles de bain</div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (bathroomCount >= 2) {
+                                                        setBathroomCount(0);
+                                                        setBathroomCountMax(0);
+                                                    } else {
+                                                        setBathroomCount(2);
+                                                        setBathroomCountMax(0);
                                                     }
                                                 }}
-                                            />
-                                            <Counter
-                                                title="Chambres"
-                                                subtitle="Minimum"
-                                                value={bedroomCount}
-                                                min={0}
-                                                onChange={(value) => {
-                                                    setBedroomCount(value);
-                                                    if (roomCount <= value) {
-                                                        setRoomCount(value + 1);
-                                                    }
-                                                }}
-                                            />
-                                            <Counter
-                                                title="Salles de bain"
-                                                subtitle="Minimum"
-                                                value={bathroomCount}
-                                                onChange={(value) => setBathroomCount(value)}
-                                            />
+                                                className={`w-fit px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                    ${bathroomCount >= 2
+                                                        ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                        : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                    }`}
+                                            >
+                                                2+ salles de bain
+                                            </button>
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Type de location */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Type de location</div>
+                                            <div className="flex gap-2">
+                                                {([
+                                                    { key: 'furnished' as const, label: 'Meublé' },
+                                                    { key: 'unfurnished' as const, label: 'Non meublé' },
+                                                ] as const).map((opt) => (
+                                                    <button
+                                                        key={opt.key}
+                                                        type="button"
+                                                        onClick={() => setFurnished(furnished === opt.key ? null : opt.key)}
+                                                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                            ${furnished === opt.key
+                                                                ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                            }`}
+                                                    >
+                                                        {opt.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Type de bail */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Type de bail</div>
+                                            <div className="flex gap-2">
+                                                {[
+                                                    { key: 'classique', label: 'Classique' },
+                                                    { key: 'colocation', label: 'Colocation' },
+                                                ].map((opt) => {
+                                                    const isSelected = propertyTypes.includes(opt.key);
+                                                    return (
+                                                        <button
+                                                            key={opt.key}
+                                                            type="button"
+                                                            onClick={() => setPropertyTypes(isSelected ? propertyTypes.filter(t => t !== opt.key) : [...propertyTypes, opt.key])}
+                                                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                                ${isSelected
+                                                                    ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                    : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                                }`}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Type de bien */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Type de bien</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    { key: 'studio', label: 'Studio' },
+                                                    { key: 'duplex', label: 'Duplex' },
+                                                    { key: 'triplex', label: 'Triplex' },
+                                                    { key: 'loft', label: 'Loft' },
+                                                ].map((opt) => {
+                                                    const isSelected = propertyTypes.includes(opt.key);
+                                                    return (
+                                                        <button
+                                                            key={opt.key}
+                                                            type="button"
+                                                            onClick={() => setPropertyTypes(isSelected ? propertyTypes.filter(t => t !== opt.key) : [...propertyTypes, opt.key])}
+                                                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                                ${isSelected
+                                                                    ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                    : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                                }`}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Étage */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Étage</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    { key: 'rdc', label: 'RDC' },
+                                                    { key: 'lastFloor', label: 'Dernier étage' },
+                                                    { key: 'highFloor', label: 'Étage élevé' },
+                                                ].map((opt) => {
+                                                    const isSelected = floorTypes.includes(opt.key);
+                                                    return (
+                                                        <button
+                                                            key={opt.key}
+                                                            type="button"
+                                                            onClick={() => setFloorTypes(isSelected ? floorTypes.filter(t => t !== opt.key) : [...floorTypes, opt.key])}
+                                                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                                ${isSelected
+                                                                    ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                    : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                                }`}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* DPE */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">DPE</div>
+                                            <div className="flex gap-1.5">
+                                                {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((letter) => {
+                                                    const DPE_BG: Record<string, string> = {
+                                                        A: '#30953a', B: '#50a747', C: '#c8df46', D: '#f3e51f',
+                                                        E: '#f0b41c', F: '#eb8234', G: '#d7231e',
+                                                    };
+                                                    const DPE_TEXT: Record<string, string> = {
+                                                        A: '#fff', B: '#fff', C: '#000', D: '#000',
+                                                        E: '#000', F: '#fff', G: '#fff',
+                                                    };
+                                                    const grades = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+                                                    const idx = grades.indexOf(letter);
+                                                    const minIdx = dpeMin ? grades.indexOf(dpeMin) : -1;
+                                                    const maxIdx = dpeMax ? grades.indexOf(dpeMax) : -1;
+                                                    const isEndpoint = letter === dpeMin || letter === dpeMax;
+                                                    const isInRange = minIdx >= 0 && maxIdx >= 0 && idx > minIdx && idx < maxIdx;
+                                                    const isSelected = isEndpoint || isInRange;
+
+                                                    return (
+                                                        <button
+                                                            key={letter}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (letter === dpeMin && !dpeMax) {
+                                                                    setDpeMin('');
+                                                                } else if (letter === dpeMin && dpeMax) {
+                                                                    setDpeMin(dpeMax); setDpeMax('');
+                                                                } else if (letter === dpeMax) {
+                                                                    setDpeMax('');
+                                                                } else if (!dpeMin) {
+                                                                    setDpeMin(letter);
+                                                                } else if (!dpeMax) {
+                                                                    const lo = Math.min(grades.indexOf(dpeMin), idx);
+                                                                    const hi = Math.max(grades.indexOf(dpeMin), idx);
+                                                                    if (lo === hi) { setDpeMin(''); setDpeMax(''); }
+                                                                    else { setDpeMin(grades[lo]); setDpeMax(grades[hi]); }
+                                                                } else {
+                                                                    setDpeMin(letter); setDpeMax('');
+                                                                }
+                                                            }}
+                                                            className="flex-1 h-10 rounded-xl text-xs font-bold transition-all active:scale-95"
+                                                            style={{
+                                                                backgroundColor: isSelected ? DPE_BG[letter] : `${DPE_BG[letter]}20`,
+                                                                color: isSelected ? DPE_TEXT[letter] : DPE_BG[letter],
+                                                            }}
+                                                        >
+                                                            {letter}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Caractéristiques par catégories */}
+                                        <div className="flex flex-col gap-6">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Caractéristiques</div>
+                                            {[
+                                                {
+                                                    title: 'Extérieur & Annexes',
+                                                    items: [
+                                                        { key: 'hasBalcony', label: 'Balcon' },
+                                                        { key: 'hasTerrace', label: 'Terrasse' },
+                                                        { key: 'hasGarden', label: 'Jardin' },
+                                                        { key: 'hasPool', label: 'Piscine' },
+                                                        { key: 'hasParking', label: 'Parking' },
+                                                        { key: 'hasGarage', label: 'Garage' },
+                                                        { key: 'hasCave', label: 'Cave' },
+                                                    ],
+                                                },
+                                                {
+                                                    title: 'Confort & Intérieur',
+                                                    items: [
+                                                        { key: 'isKitchenEquipped', label: 'Cuisine équipée' },
+                                                        { key: 'hasAirConditioning', label: 'Climatisation' },
+                                                        { key: 'hasFiber', label: 'Fibre' },
+                                                        { key: 'isBright', label: 'Lumineux' },
+                                                    ],
+                                                },
+                                                {
+                                                    title: 'Sécurité & Accessibilité',
+                                                    items: [
+                                                        { key: 'hasElevator', label: 'Ascenseur' },
+                                                        { key: 'isAccessible', label: 'Accès PMR' },
+                                                        { key: 'hasArmoredDoor', label: 'Porte blindée' },
+                                                    ],
+                                                },
+                                                {
+                                                    title: 'Accueil',
+                                                    items: [
+                                                        { key: 'petsAllowed', label: 'Pet friendly' },
+                                                        { key: 'isStudentFriendly', label: 'Étudiant friendly' },
+                                                    ],
+                                                },
+                                            ].map((group) => (
+                                                <div key={group.title} className="flex flex-col gap-2">
+                                                    <div className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wide">{group.title}</div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {group.items.map((opt) => {
+                                                            const isSelected = amenities.includes(opt.key);
+                                                            return (
+                                                                <button
+                                                                    key={opt.key}
+                                                                    type="button"
+                                                                    onClick={() => setAmenities(isSelected ? amenities.filter(a => a !== opt.key) : [...amenities, opt.key])}
+                                                                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                                        ${isSelected
+                                                                            ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                            : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                                        }`}
+                                                                >
+                                                                    {opt.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                                        {/* Chauffage */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Chauffage</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    { key: 'COL_GAS', label: 'Collectif gaz' },
+                                                    { key: 'COL_URB', label: 'Collectif urbain' },
+                                                ].map((opt) => {
+                                                    const isSelected = heatingTypes.includes(opt.key);
+                                                    return (
+                                                        <button
+                                                            key={opt.key}
+                                                            type="button"
+                                                            onClick={() => setHeatingTypes(isSelected ? heatingTypes.filter(h => h !== opt.key) : [...heatingTypes, opt.key])}
+                                                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 border
+                                                                ${isSelected
+                                                                    ? 'bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white'
+                                                                    : 'bg-white text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                                }`}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>

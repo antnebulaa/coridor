@@ -301,7 +301,7 @@ const Modal: React.FC<ModalProps> = ({
                                 onTouchStart={onTouchStart}
                                 onTouchMove={onTouchMove}
                                 onTouchEnd={onTouchEnd}
-                                className={`relative w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden ${noBodyPadding ? 'p-0' : 'p-6'}`}
+                                className={`relative w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden ${noBodyPadding ? 'p-0' : 'p-2.5'}`}
                             >
                                 {body}
                             </div>

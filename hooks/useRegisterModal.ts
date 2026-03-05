@@ -10,7 +10,10 @@ interface RegisterModalStore {
 const useRegisterModal = create<RegisterModalStore>((set) => ({
     isOpen: false,
     callbackUrl: undefined,
-    onOpen: (callbackUrl?: string) => set({ isOpen: true, callbackUrl }),
+    onOpen: (callbackUrl?: string | any) => set({
+        isOpen: true,
+        callbackUrl: typeof callbackUrl === 'string' ? callbackUrl : undefined
+    }),
     onClose: () => set({ isOpen: false, callbackUrl: undefined }),
 }));
 

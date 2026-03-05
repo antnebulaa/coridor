@@ -46,7 +46,7 @@ const ResumeSearch: React.FC<ResumeSearchProps> = ({ className }) => {
                 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30
                 border border-rose-100 dark:border-rose-900
                 rounded-2xl overflow-hidden
-                cursor-pointer shadow-sm hover:shadow-xl
+                cursor-pointer shadow-lg hover:shadow-xl
                 transition-all duration-300
                 mb-6
                 ${className}
@@ -70,18 +70,15 @@ const ResumeSearch: React.FC<ResumeSearchProps> = ({ className }) => {
                     <div className="text-rose-600 dark:text-rose-400 text-xs font-semibold uppercase tracking-wide mb-1">
                         {t('title')}
                     </div>
-                    <div className="font-bold text-neutral-900 dark:text-neutral-100 text-base md:text-lg mb-1 truncate">
+                    <div className="font-normal text-neutral-900 dark:text-neutral-100 text-xl md:text-lg mb-1 truncate">
                         {lastSearch.locationLabel}
                     </div>
-                    <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 text-sm">
-                        <MapPin size={14} />
-                        <span className="truncate">{lastSearch.details || t('continue')}</span>
-                    </div>
+                    
                 </div>
 
                 {/* Arrow */}
                 <div className="shrink-0">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white dark:bg-neutral-800 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all">
+                    <div className="w-10 h-20 md:w-12 md:h-12 rounded-xl bg-white dark:bg-neutral-800 flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all">
                         <ArrowRight className="text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform" size={20} />
                     </div>
                 </div>

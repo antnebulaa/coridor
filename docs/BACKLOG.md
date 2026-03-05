@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 4 mars 2026
+> Dernière mise à jour : 5 mars 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -19,6 +19,7 @@
 - [✅] Google Maps / Mapbox : autocomplete adresse, coordonnées, quartier, transports
 - [✅] Vérification conformité meublé : check-list (model `Furniture` — 13 éléments obligatoires + optionnels)
 - [✅] Adjectif marketing pour l'annonce (`propertyAdjective`) — utilisé dans ListingCard + RentModal
+- [✅] Badge DPE sur les ListingCards — pill en forme de flèche (arrondie à gauche, pointe à droite) avec couleur officielle A→G (vert→rouge), affichée après la pill meublé/non meublé, sur les deux variants (horizontal + vertical)
 
 ### Zone Tendue & Encadrement des Loyers
 - [✅] Détection zone tendue officielle — 3 689 communes (décret 22/12/2025), lookup JSON preprocessé depuis CSV data.gouv.fr (`lib/zoneTendue.ts`, `lib/data/zones-tendues.json`), désambiguïsation par nom de ville pour codes postaux mixtes (`lib/data/postal-insee-mapping.json`)
@@ -276,6 +277,9 @@
 - [✅] Paramètres (`components/account/SettingsClient.tsx`) — thème clair/sombre/système
 - [✅] Plans FREE/PLUS/PRO
 - [✅] Page pricing (`app/[locale]/pricing/`) — mensuel/annuel
+- [✅] OAuth providers optionnels — `libs/auth.ts` gère gracieusement les env vars manquantes (GitHub, Google, Apple, DossierFacile), providers instanciés uniquement si credentials configurées
+- [✅] Gestion erreurs OAuth — toast d'erreur dans LoginModal/RegisterModal en cas d'échec de connexion sociale
+- [✅] Normalisation email — `toLowerCase()` sur le credentials provider pour éviter les bugs de casse
 
 ### Messagerie
 - [✅] Conversations liées aux annonces (`Conversation`, `Message`)
@@ -339,6 +343,9 @@
 - [✅] PhoneInput avec préfixe +33 — composant dédié avec formatage automatique, validation, flag français
 - [✅] Passeport Locatif progressive disclosure — `PassportExplainerModal` carousel multi-étapes (explication du concept avant activation), intégré dans `PassportClient`
 - [✅] Font Boldonse — correction chargement custom font dans `layout.tsx`
+- [✅] FAB mobile "Louer mon bien" sur la home — bouton flottant centré avec texte complet, se transforme en rond "+" à droite au scroll down, revient au texte complet au scroll up, ouvre le RentModal, masqué sur desktop (`md:hidden`), animation spring framer-motion + CSS transition pour la position
+- [✅] SearchModal — catégories redesignées en boutons full-width verticaux (un par ligne) avec icône + label, toggle noir/blanc, remplace les pills `CategoryInput` compactes
+- [✅] Bookmark icon sur les ListingCards — remplace le bouton favori heart/check par une icône Bookmark simple (remplie si sauvegardée), sans conteneur rond
 
 ### Signalements
 - [✅] Report annonce ou utilisateur (`Report`, `components/reports/ReportButton.tsx`) — modal avec raison/détails
@@ -440,3 +447,4 @@
 - [x] ~~Simulateur : champ apport personnel impossible à vider/modifier~~ (corrigé — remplacement du `<input>` brut avec `parseFloat(e.target.value) || 0` par `InputField` avec local state + onBlur reset, permettant de vider et retaper une valeur)
 - [x] ~~HomeClient : `listing.rentalUnit.images` toujours vide après dénormalisation~~ (corrigé — les images sont pré-agrégées dans `listing.images` via cardData, les stubs relation sont vides par design → changé en `listing.images?.[0]?.url`)
 - [x] ~~6 routes API sans sync cardData après modification~~ (corrigé — ajout `syncListingCardData`/`syncPropertyListings` sur PATCH listing status, admin reject/archive, rooms create/delete, transit update)
+- [x] ~~Google OAuth `TypeError: Invalid URL, input: '[object Object]'`~~ (corrigé — `onClick={loginModal.onOpen}` passait le `MouseEvent` comme `callbackUrl` au store Zustand → NextAuth recevait `[object Object]` comme URL. Fix : filtrage des arguments non-string dans `useLoginModal.ts` et `useRegisterModal.ts`)

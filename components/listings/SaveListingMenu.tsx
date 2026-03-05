@@ -344,18 +344,21 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                             exit={{ opacity: 0, marginTop: -20 }}
                             transition={{ duration: 0.2 }}
                             onClick={() => setIsCreating(true)}
-                            className="flex items-center gap-3 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
+                            className="flex items-center gap-4 p-[9px] hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl cursor-pointer transition group"
                         >
                             <div className="
-                                w-10 h-10 
+                                pl-3 
+                                pr-4
+                                h-10 
                                 rounded-xl 
                                 bg-neutral-100 
                                 flex items-center justify-center 
                                 shrink-0
                             ">
                                 <Plus size={20} className="text-neutral-500" />
-                            </div>
-                            <div className="font-medium text-[18px] md:text-base">Créer une nouvelle liste</div>
+                           
+                            <div className="pl-2 font-medium text-[18px] md:text-base">Créer une nouvelle liste</div>
+                             </div>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -430,11 +433,8 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     z-10
                     active:scale-90
                     ${variant === 'button'
-                        ? glass
-                            ? 'bg-white dark:bg-black/20 dark:backdrop-blur-md rounded-full w-8 h-8 flex items-center justify-center'
-                            : 'bg-white rounded-full w-8 h-8 flex items-center justify-center'
+                        ? 'flex items-center justify-center'
                         : ''}
-                    ${withBorder ? 'border border-neutral-200 dark:border-neutral-800' : (glass ? 'border border-transparent dark:border-white/40' : '')}
                 `}
             >
                 {variant === 'icon' ? (
@@ -448,24 +448,17 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         strokeWidth={isSavedAnywhere ? 0 : 2}
                     />
                 ) : (
-                    <div className={`
-                        w-full h-full
-                        rounded-full 
-                        text-sm font-medium 
-                        transition-all
-                        flex items-center justify-center
-                        ${isSavedAnywhere
-                            ? 'bg-neutral-100 text-black dark:bg-neutral-800 dark:text-white'
-                            : (glass
-                                ? 'bg-transparent text-black dark:text-white hover:bg-neutral-50 dark:hover:bg-white/10'
-                                : 'bg-white text-black hover:bg-neutral-50')}
-                    `}>
-                        {isSavedAnywhere ? (
-                            <Check size={18} />
-                        ) : (
-                            <Plus size={18} />
-                        )}
-                    </div>
+                    <Bookmark
+                        size={22}
+                        className={`
+                            transition-all
+                            ${isSavedAnywhere
+                                ? 'fill-neutral-900 text-neutral-900 dark:fill-white dark:text-white'
+                                : (glass
+                                    ? 'text-neutral-600 dark:text-neutral-300'
+                                    : 'text-neutral-600')}
+                        `}
+                    />
                 )}
             </div>
 

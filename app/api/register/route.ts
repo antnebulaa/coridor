@@ -7,7 +7,7 @@ import { generatePseudonym } from "@/lib/pseudonym";
 export async function POST(request: Request) {
     const body = await request.json();
     const {
-        email,
+        email: rawEmail,
         name,
         password,
         phoneNumber,
@@ -15,6 +15,7 @@ export async function POST(request: Request) {
         address
     } = body;
 
+    const email = rawEmail?.toLowerCase();
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Generate a unique code (simple loop to ensure uniqueness could be added but for MVP just generating is fine, chance of collision is low but handled by DB constraint unique error if really needed, but for now just single attempt)

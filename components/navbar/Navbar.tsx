@@ -79,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
     return (
         <div
             data-navbar
-            className={`${isHomePage ? 'fixed' : 'sticky top-0'} w-full z-9998 pt-safe bg-background ${!isHomePage ? 'hidden md:block' : ''} ${isSearchModalOpen ? 'invisible' : 'transition-transform duration-300 ease-out'} ${isHomePage && hideNav ? '-translate-y-full md:translate-y-0' : ''}`}
+            className={`${isHomePage ? 'fixed' : 'relative'} w-full z-9998 pt-safe bg-background ${!isHomePage ? 'hidden md:block' : ''} ${isSearchModalOpen ? 'invisible' : 'transition-transform duration-300 ease-out'} ${isHomePage && hideNav ? '-translate-y-full md:translate-y-0' : ''}`}
             suppressHydrationWarning
         >
             <div className={`py-2 md:py-4 ${isHomePage ? 'border-none md:border-b' : 'border-b'} border-border`}>

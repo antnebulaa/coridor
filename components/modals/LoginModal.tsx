@@ -112,13 +112,27 @@ const LoginModal = () => {
                 variant="outline"
                 label={tAuth('continueGoogle')}
                 icon={FcGoogle}
-                onClick={() => signIn('google', { callbackUrl: loginModal.callbackUrl || undefined })}
+                onClick={() => {
+                    signIn('google', { callbackUrl: loginModal.callbackUrl || undefined })
+                        .catch(() => {
+                            toast.custom((t) => (
+                                <CustomToast t={t} message={tAuth('loginError')} type="error" />
+                            ));
+                        });
+                }}
             />
             <Button
                 variant="outline"
                 label={tAuth('continueApple')}
                 icon={FaApple}
-                onClick={() => signIn('apple', { callbackUrl: loginModal.callbackUrl || undefined })}
+                onClick={() => {
+                    signIn('apple', { callbackUrl: loginModal.callbackUrl || undefined })
+                        .catch(() => {
+                            toast.custom((t) => (
+                                <CustomToast t={t} message={tAuth('loginError')} type="error" />
+                            ));
+                        });
+                }}
             />
             <div className="text-neutral-500 text-center mt-4 font-light">
                 <p>{tAuth('firstTime')}

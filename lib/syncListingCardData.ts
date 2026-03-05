@@ -105,6 +105,7 @@ export async function syncListingCardData(listingId: string) {
         energy_cost_min: property.energy_cost_min,
         energy_cost_max: property.energy_cost_max,
         propertySubType: property.propertySubType ?? null,
+        isLastFloor: (property as any).isLastFloor ?? (property.floor != null && property.totalFloors != null && property.floor > 0 && property.floor === property.totalFloors),
 
         // RentalUnit
         isFurnished: unit.isFurnished,
@@ -150,6 +151,8 @@ export async function syncListingCardData(listingId: string) {
         hasGarage: property.hasGarage ?? false,
         isKitchenEquipped: property.isKitchenEquipped ?? false,
         hasSeparateKitchen: property.hasSeparateKitchen ?? false,
+        petsAllowed: property.petsAllowed ?? false,
+        isStudentFriendly: property.isStudentFriendly ?? false,
 
         // Transit
         transitData: property.transitData,

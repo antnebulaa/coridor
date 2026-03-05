@@ -10,11 +10,13 @@ const MapMain = dynamic(() => import('@/components/MapMain'), {
 });
 import Footer from "@/components/Footer";
 import { SafeUser } from "@/types";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useTranslations } from 'next-intl';
 
 import { IoClose } from 'react-icons/io5';
-import { Minimize2, BellPlus } from 'lucide-react';
+import { Minimize2, BellPlus, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import useRentModal from '@/hooks/useRentModal';
 import MobileBottomSheet from "@/components/MobileBottomSheet";
 import Modal from "@/components/modals/Modal";
 import ResumeSearch from "@/components/listings/ResumeSearch";
@@ -40,6 +42,8 @@ const HomeClient: React.FC<HomeClientProps> = ({
     const searchParams = useSearchParams();
     const [isochrones, setIsochrones] = useState<any[]>([]);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [fabCollapsed, setFabCollapsed] = useState(false);
+    const rentModal = useRentModal();
     const t = useTranslations('home');
     const tCommon = useTranslations('common');
 
@@ -76,6 +80,24 @@ const HomeClient: React.FC<HomeClientProps> = ({
             }
         }
     }, [selectedListingId, listings, isSearchActive]);
+
+    // FAB collapse on scroll direction
+    const lastScrollTop = useRef(0);
+    useEffect(() => {
+        const el = document.getElementById('home-scroll-container');
+        if (!el) return;
+        const onScroll = () => {
+            const st = el.scrollTop;
+            if (st > lastScrollTop.current && st > 80) {
+                setFabCollapsed(true);   // scroll down
+            } else if (st < lastScrollTop.current) {
+                setFabCollapsed(false);  // scroll up
+            }
+            lastScrollTop.current = st;
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => el.removeEventListener('scroll', onScroll);
+    }, []);
 
     // Fetch Isochrone Clientside for Visualization
     useEffect(() => {
@@ -189,7 +211,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
             ">
                 {/* Left Column: List + Footer */}
                 <div id="home-scroll-container" className={listColumnClasses}>
-                    <div className="pt-safe-navbar md:pt-4 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
+                    <div className="pt-safe-navbar md:pt-4 mt-10 md:mt-10 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
 
                         {!isSearchActive && (
                             <ResumeSearch />
@@ -209,10 +231,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                             </button>
                         </div>
 
-                        {/* Sort dropdown */}
-                        <div className="mb-4">
-                            <ListingSort />
-                        </div>
+                       
 
                         {/* Alert Banner - Desktop only, when search is active */}
                         {isSearchActive && (
@@ -423,6 +442,40 @@ const HomeClient: React.FC<HomeClientProps> = ({
                     />
                 )}
             </div>
+
+            {/* FAB mobile — "Louer mon bien" → rond "+" au scroll */}
+            <motion.button
+                onClick={() => rentModal.onOpen()}
+                whileTap={{ scale: 0.9 }}
+                animate={{
+                    width: fabCollapsed ? 48 : 195,
+                    paddingLeft: fabCollapsed ? 0 : 20,
+                    paddingRight: fabCollapsed ? 0 : 20,
+                }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className="md:hidden fixed bottom-28 z-50
+                           bg-[#854020] dark:bg-white text-white dark:text-neutral-900
+                           rounded-full shadow-lg flex items-center justify-center
+                           font-medium text-sm overflow-hidden"
+                style={{
+                    height: 48,
+                    right: fabCollapsed ? 16 : 'calc(50% - 97.5px)',
+                    transition: 'right 0.3s ease-out',
+                }}
+            >
+                <Plus size={20} className="shrink-0" />
+                <motion.span
+                    animate={{
+                        opacity: fabCollapsed ? 0 : 1,
+                        width: fabCollapsed ? 0 : 'auto',
+                        marginLeft: fabCollapsed ? 0 : 8,
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="whitespace-nowrap"
+                >
+                    Louer mon bien
+                </motion.span>
+            </motion.button>
 
             {/* Mobile Listing Modal - Using Shared Modal Component to fix scroll */}
             <Modal

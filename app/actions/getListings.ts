@@ -24,6 +24,14 @@ export interface IListingsParams {
     commute?: string; // JSON Array of CommutePoint
     sort?: string;
     isPublished?: boolean; // NEW: Allow filtering by published status
+    // Advanced filters
+    furnished?: string;
+    propertyTypes?: string;
+    floorTypes?: string;
+    dpeMin?: string;
+    dpeMax?: string;
+    amenities?: string;
+    heatingTypes?: string;
 }
 
 export default async function getListings(
@@ -49,7 +57,14 @@ export default async function getListings(
             commuteMaxTime,
             commute,
             sort,
-            isPublished
+            isPublished,
+            furnished,
+            propertyTypes,
+            floorTypes,
+            dpeMin,
+            dpeMax,
+            amenities: amenitiesParam,
+            heatingTypes
         } = params;
 
         const query: any = {};
@@ -184,6 +199,82 @@ export default async function getListings(
             }
         } else if (params.city) {
             query.dnCity = { contains: params.city, mode: 'insensitive' };
+        }
+
+        // Advanced filters — JSONB path queries on cardData
+        const cardDataConditions: any[] = [];
+
+        if (furnished === 'furnished') {
+            cardDataConditions.push({ cardData: { path: ['isFurnished'], equals: true } });
+        } else if (furnished === 'unfurnished') {
+            cardDataConditions.push({ cardData: { path: ['isFurnished'], equals: false } });
+        }
+
+        if (propertyTypes) {
+            const types = propertyTypes.split(',');
+            const typeConditions: any[] = [];
+            for (const t of types) {
+                if (t === 'colocation') {
+                    typeConditions.push(
+                        { cardData: { path: ['rentalUnitType'], equals: 'PRIVATE_ROOM' } },
+                        { cardData: { path: ['rentalUnitType'], equals: 'SHARED_ROOM' } }
+                    );
+                } else if (t === 'classique') {
+                    typeConditions.push(
+                        { cardData: { path: ['rentalUnitType'], equals: 'ENTIRE_PLACE' } }
+                    );
+                } else {
+                    typeConditions.push({ cardData: { path: ['propertySubType'], equals: t } });
+                }
+            }
+            if (typeConditions.length > 0) {
+                cardDataConditions.push({ OR: typeConditions });
+            }
+        }
+
+        if (floorTypes) {
+            const floors = floorTypes.split(',');
+            const floorConditions: any[] = [];
+            for (const f of floors) {
+                if (f === 'rdc') floorConditions.push({ cardData: { path: ['floor'], equals: 0 } });
+                if (f === 'lastFloor') floorConditions.push({ cardData: { path: ['isLastFloor'], equals: true } });
+                if (f === 'highFloor') floorConditions.push({ cardData: { path: ['floor'], gte: 4 } });
+            }
+            if (floorConditions.length > 0) {
+                cardDataConditions.push({ OR: floorConditions });
+            }
+        }
+
+        if (dpeMin || dpeMax) {
+            const grades = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+            const minIdx = dpeMin ? grades.indexOf(dpeMin) : 0;
+            const maxIdx = dpeMax ? grades.indexOf(dpeMax) : (dpeMin ? grades.indexOf(dpeMin) : 6);
+            const validGrades = grades.slice(minIdx, maxIdx + 1);
+            const dpeConditions = validGrades.map(g => ({ cardData: { path: ['dpe'], equals: g } }));
+            if (dpeConditions.length > 0 && dpeConditions.length < 7) {
+                cardDataConditions.push({ OR: dpeConditions });
+            }
+        }
+
+        if (amenitiesParam) {
+            const amenitiesList = amenitiesParam.split(',');
+            for (const a of amenitiesList) {
+                cardDataConditions.push({ cardData: { path: [a], equals: true } });
+            }
+        }
+
+        if (heatingTypes) {
+            const htypes = heatingTypes.split(',');
+            const heatingConditions = htypes.map(h => ({ cardData: { path: ['heatingSystem'], equals: h } }));
+            if (heatingConditions.length > 0) {
+                cardDataConditions.push({ OR: heatingConditions });
+            }
+        }
+
+        if (cardDataConditions.length > 0) {
+            if (!query.AND) query.AND = [];
+            if (!Array.isArray(query.AND)) query.AND = [query.AND];
+            query.AND.push(...cardDataConditions);
         }
 
         // Minimal relation filter: RentalUnit.isActive + optional country

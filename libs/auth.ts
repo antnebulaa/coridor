@@ -8,25 +8,31 @@ import bcrypt from "bcryptjs";
 
 import prisma from "@/libs/prismadb";
 
-export const authOptions: AuthOptions = {
-    adapter: PrismaAdapter(prisma),
-    providers: [
+// Only include providers when their env vars are configured
+const optionalProviders = [
+    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET ? [
         GithubProvider({
-            clientId: process.env.GITHUB_ID as string,
-            clientSecret: process.env.GITHUB_SECRET as string,
+            clientId: process.env.GITHUB_ID,
+            clientSecret: process.env.GITHUB_SECRET,
         }),
+    ] : []),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         }),
+    ] : []),
+    ...(process.env.APPLE_ID && process.env.APPLE_SECRET ? [
         AppleProvider({
-            clientId: process.env.APPLE_ID as string,
-            clientSecret: process.env.APPLE_SECRET as string,
+            clientId: process.env.APPLE_ID,
+            clientSecret: process.env.APPLE_SECRET,
         }),
+    ] : []),
+    ...(process.env.DOSSIER_FACILE_CLIENT_ID && process.env.DOSSIER_FACILE_CLIENT_SECRET ? [
         {
             id: "dossier-facile",
             name: "DossierFacile",
-            type: "oauth",
+            type: "oauth" as const,
             authorization: {
                 url: "https://sso-preprod.dossierfacile.fr/auth/realms/dossier-facile/protocol/openid-connect/auth",
                 params: { scope: "openid profile email" },
@@ -35,7 +41,7 @@ export const authOptions: AuthOptions = {
             userinfo: "https://sso-preprod.dossierfacile.fr/auth/realms/dossier-facile/protocol/openid-connect/userinfo",
             clientId: process.env.DOSSIER_FACILE_CLIENT_ID,
             clientSecret: process.env.DOSSIER_FACILE_CLIENT_SECRET,
-            profile(profile) {
+            profile(profile: { sub: string; given_name: string; family_name: string; email: string }) {
                 return {
                     id: profile.sub,
                     name: profile.given_name + " " + profile.family_name,
@@ -44,6 +50,13 @@ export const authOptions: AuthOptions = {
                 };
             },
         },
+    ] : []),
+];
+
+export const authOptions: AuthOptions = {
+    adapter: PrismaAdapter(prisma),
+    providers: [
+        ...optionalProviders,
         CredentialsProvider({
             name: "credentials",
             credentials: {
@@ -57,7 +70,7 @@ export const authOptions: AuthOptions = {
 
                 const user = await prisma.user.findUnique({
                     where: {
-                        email: credentials.email,
+                        email: credentials.email.toLowerCase(),
                     },
                 });
 

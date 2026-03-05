@@ -359,7 +359,7 @@
             "create": "Créer une alerte"
         },
         "resumeSearch": {
-            "title": "Reprendre votre recherche",
+            "title": "Reprendre votre dernière recherche",
             "lastViewed": "Dernier bien consulté",
             "continue": "Continuer"
         },
@@ -516,7 +516,7 @@
             },
             "pseudonym": {
                 "title": "Pseudonyme anonyme",
-                "hint": "Pour garantir votre anonymat, un pseudonyme est généré automatiquement. Vous pouvez le personnaliser "
+                "hint": "Pour garantir votre anonymat, un pseudonyme est généré automatiquement. Vous pouvez le personnaliser."
             },
             "identity": {
                 "title": "Identité",

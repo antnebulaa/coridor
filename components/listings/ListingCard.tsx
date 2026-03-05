@@ -57,6 +57,16 @@ const FeatureTag = ({
     );
 };
 
+const DPE_COLORS: Record<string, { bg: string; text: string }> = {
+    A: { bg: '#30953a', text: '#fff' },
+    B: { bg: '#50a747', text: '#fff' },
+    C: { bg: '#c8df46', text: '#000' },
+    D: { bg: '#f3e51f', text: '#000' },
+    E: { bg: '#f0b41c', text: '#000' },
+    F: { bg: '#eb8234', text: '#fff' },
+    G: { bg: '#d7231e', text: '#fff' },
+};
+
 const ListingCard: React.FC<ListingCardProps> = ({
     data,
     onAction,
@@ -220,7 +230,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         </div>
                                     </div>
                                     {showHeart && (
-                                        <div className="ml-auto shrink-0 -mr-1 md:-mr-2 flex items-center gap-2">
+                                        <div className="ml-auto shrink-0 flex items-center gap-2">
                                             {showLike && (
                                                 <LikeButton
                                                     listingId={data.id}
@@ -306,6 +316,23 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     <span className="font-medium">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
                                 </FeatureTag>
 
+                                {data.dpe && DPE_COLORS[data.dpe.toUpperCase()] && (
+                                    <div className="flex items-center">
+                                        <div
+                                            className="rounded-l-xl pl-3 pr-1.5 h-7 flex items-center justify-center font-bold text-xs"
+                                            style={{
+                                                backgroundColor: DPE_COLORS[data.dpe.toUpperCase()].bg,
+                                                color: DPE_COLORS[data.dpe.toUpperCase()].text,
+                                            }}
+                                        >
+                                            {data.dpe.toUpperCase()}
+                                        </div>
+                                        <svg width="7" height="28" viewBox="0 0 7 28" className="shrink-0">
+                                            <path d="M0 0 L5 10 Q7 14, 5 18 L0 28Z" fill={DPE_COLORS[data.dpe.toUpperCase()].bg} />
+                                        </svg>
+                                    </div>
+                                )}
+
                                 {data.transitData?.mainConnection && (
                                     <div className="flex items-center justify-center gap-1.5 rounded-[12px] px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
                                         <div className="flex items-center gap-1">
@@ -342,7 +369,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 )}
                             </div>
                             <div className="font-semibold text-[13px] md:text-[13px] text-blue-600 leading-tight pt-2">
-                               
+
                             </div>
                         </div>
                     </div>
@@ -478,6 +505,22 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 <span className="font-medium text-xs md:text-sm">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
                             </FeatureTag>
                         </div>
+                        {data.dpe && DPE_COLORS[data.dpe.toUpperCase()] && (
+                            <div className="flex items-center">
+                                <div
+                                    className="rounded-l-full pl-2.5 pr-0.5 h-7 flex items-center justify-center font-bold text-xs"
+                                    style={{
+                                        backgroundColor: DPE_COLORS[data.dpe.toUpperCase()].bg,
+                                        color: DPE_COLORS[data.dpe.toUpperCase()].text,
+                                    }}
+                                >
+                                    {data.dpe.toUpperCase()}
+                                </div>
+                                <svg width="7" height="28" viewBox="0 0 7 28" className="shrink-0">
+                                    <path d="M0 0 L5 10 Q7 14, 5 18 L0 28Z" fill={DPE_COLORS[data.dpe.toUpperCase()].bg} />
+                                </svg>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 py-[5px] text-neutral-700 dark:text-neutral-300 text-base">

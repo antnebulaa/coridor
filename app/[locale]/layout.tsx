@@ -1,6 +1,3 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "../globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import MobileMenu from "@/components/navbar/MobileMenu";
 import ClientFooter from "@/components/ClientFooter";
@@ -27,61 +24,6 @@ import { notFound } from 'next/navigation';
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const font = localFont({
-    src: [
-        {
-            path: '../../public/fonts/Matter-Light.ttf',
-            weight: '300',
-            style: 'normal',
-        },
-        {
-            path: '../../public/fonts/Matter-Regular.ttf',
-            weight: '400',
-            style: 'normal',
-        },
-        {
-            path: '../../public/fonts/Matter-Medium.ttf',
-            weight: '500',
-            style: 'normal',
-        },
-        {
-            path: '../../public/fonts/Matter-SemiBold.ttf',
-            weight: '600',
-            style: 'normal',
-        },
-        {
-            path: '../../public/fonts/Matter-Bold.ttf',
-            weight: '700',
-            style: 'normal',
-        },
-        {
-            path: '../../public/fonts/Matter-Heavy.ttf',
-            weight: '800',
-            style: 'normal',
-        },
-    ],
-    variable: '--font-matter',
-});
-
-export const metadata: Metadata = {
-    title: "Coridor",
-    description: "Location sharing app",
-    robots: {
-        index: false,
-        follow: false,
-    },
-};
-
-export const viewport = {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    interactiveWidget: 'resizes-content',
-    viewportFit: 'cover',
-    themeColor: '#ffffff',
-};
-
 export function generateStaticParams() {
     return routing.locales.map((locale) => ({ locale }));
 }
@@ -103,60 +45,64 @@ export default async function LocaleLayout({
     // Enable static rendering
     setRequestLocale(locale);
 
+    // Set html lang attribute for the current locale
+    // (html/body tags are in root layout, lang is set client-side)
+    const langScript = `document.documentElement.lang="${locale}";`;
+
     const currentUser = await getCurrentUser();
     const messages = await getMessages();
 
     return (
-        <html lang={locale} suppressHydrationWarning className={font.variable}>
-            <head>
-                <meta name="apple-mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-            </head>
-            <body className={`${font.className} bg-background`}>
-                <CapacitorInit />
-                <BackButtonHandler />
-                <OfflineBanner />
-                <AuthProvider>
-                    <NextIntlClientProvider messages={messages}>
-                        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                            <Toaster
-                                position="bottom-center"
-                                toastOptions={{
-                                    className: 'z-[100000] !max-w-[calc(100vw-32px)] !w-full md:!w-auto md:!min-w-[400px] text-center justify-center',
-                                    style: {
-                                        padding: '16px 30px',
-                                        fontSize: '16px',
-                                        borderRadius: '20px',
-                                        fontWeight: 500,
-                                    },
-                                    duration: 2000
-                                }}
-                                containerStyle={{
-                                    zIndex: 100000,
-                                    bottom: 112,
-                                }}
-                            />
-                            <ModalProvider currentUser={currentUser} />
-                            <PushNotificationManager />
-                            <InstallPrompt />
+        <>
+            <script dangerouslySetInnerHTML={{ __html: langScript }} />
+            <CapacitorInit />
+            <BackButtonHandler />
+            <OfflineBanner />
+            <AuthProvider>
+                <NextIntlClientProvider messages={messages}>
+                    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                        <Toaster
+                            position="bottom-center"
+                            toastOptions={{
+                                className: 'z-[100000] !max-w-[calc(100vw-32px)] !w-full md:!w-auto md:!min-w-[400px] text-center justify-center',
+                                style: {
+                                    padding: '16px 30px',
+                                    fontSize: '16px',
+                                    borderRadius: '20px',
+                                    fontWeight: 500,
+                                },
+                                duration: 2000
+                            }}
+                            containerStyle={{
+                                zIndex: 100000,
+                                bottom: 112,
+                            }}
+                        />
+                        <ModalProvider currentUser={currentUser} />
+                        <PushNotificationManager />
+                        <InstallPrompt />
 
+                        {/* Desktop: flex-col layout keeps navbar at top, content scrolls below */}
+                        <div className="md:flex md:flex-col md:h-dvh">
                             <Suspense fallback={<div></div>}>
                                 <Navbar currentUser={currentUser} />
                             </Suspense>
-                            <MainLayout>
-                                <TransitionProvider>
-                                    {children}
-                                </TransitionProvider>
-                            </MainLayout>
-                            <ClientFooter />
-                            <Suspense fallback={<div></div>}>
-                                <MobileMenu currentUser={currentUser} />
-                            </Suspense>
-                            <SpeedInsights />
-                        </ThemeProvider>
-                    </NextIntlClientProvider>
-                </AuthProvider>
-            </body>
-        </html>
+                            <div className="md:flex-1 md:overflow-y-auto md:min-h-0">
+                                <MainLayout>
+                                    <TransitionProvider>
+                                        {children}
+                                    </TransitionProvider>
+                                </MainLayout>
+                                <ClientFooter />
+                            </div>
+                        </div>
+                        <Suspense fallback={<div></div>}>
+                            <MobileMenu currentUser={currentUser} />
+                        </Suspense>
+                        <SpeedInsights />
+                    </ThemeProvider>
+                </NextIntlClientProvider>
+            </AuthProvider>
+        </>
     );
 }

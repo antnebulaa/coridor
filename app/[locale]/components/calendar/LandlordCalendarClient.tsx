@@ -7,24 +7,12 @@ import { ChevronLeft, ChevronRight, MapPin, User, Clock, Calendar, List, Clipboa
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import Container from "@/components/Container";
-import Heading from "@/components/Heading";
 import VisitDetailsModal from "./VisitDetailsModal";
+import EventDetailPanel from "./EventDetailPanel";
 import Avatar from "@/components/Avatar";
 import BottomSheet from "@/components/ui/BottomSheet";
 import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
-
-interface PropertyData {
-    id: string;
-    category: string;
-    city: string | null;
-    visitSlots: {
-        id: string;
-        startTime: string;
-        endTime: string;
-        date: string;
-    }[];
-}
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface SlotData {
     id: string;
@@ -90,7 +78,8 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [headerHeight, setHeaderHeight] = useState(0);
     const headerRef = useRef<HTMLDivElement>(null);
-    const NAVBAR_HEIGHT_DESKTOP = 64; // Global navbar height on desktop (hidden on mobile)
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const isDesktop = useMediaQuery('(min-width: 768px)');
 
     // Inspection action menu
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
@@ -123,16 +112,15 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
 
         const observer = new ResizeObserver(updateHeight);
         observer.observe(headerRef.current);
-        updateHeight(); // Initial measure
+        updateHeight();
 
         return () => observer.disconnect();
     }, []);
 
-    // Auto-scroll to Today (or first future date)
+    // Auto-scroll to Today (or first future date) — scrolls within the left panel
     useEffect(() => {
         if (view === 'agenda' && headerHeight > 0) {
             const timer = setTimeout(() => {
-                // Try today first, then first future date, then empty state
                 let targetElement = document.getElementById('today-anchor');
                 if (!targetElement) {
                     targetElement = document.getElementById('first-future-anchor');
@@ -141,13 +129,13 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                     targetElement = document.getElementById('empty-state-anchor');
                 }
 
-                if (targetElement) {
-                    const elementPosition = targetElement.getBoundingClientRect().top + window.scrollY;
-                    const isMobile = window.innerWidth < 768;
-                    const navbarOffset = isMobile ? 0 : NAVBAR_HEIGHT_DESKTOP;
-                    const offsetPosition = elementPosition - navbarOffset - headerHeight - 10;
+                if (targetElement && scrollContainerRef.current) {
+                    const container = scrollContainerRef.current;
+                    const containerRect = container.getBoundingClientRect();
+                    const elementRect = targetElement.getBoundingClientRect();
+                    const offsetPosition = elementRect.top - containerRect.top + container.scrollTop - headerHeight - 10;
 
-                    window.scrollTo({
+                    container.scrollTo({
                         top: Math.max(0, offsetPosition),
                         behavior: "auto"
                     });
@@ -177,7 +165,6 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 applicationId: null,
                 evaluation: null,
                 color: 'bg-amber-50 border-amber-400 text-amber-800',
-                // Inspection-specific fields
                 inspectionType: item.type,
                 inspectionStatus: item.status,
                 tenantName: item.tenantName,
@@ -216,13 +203,12 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
     }, [data, currentDate]);
 
-    // Agenda Events (All from Today onwards)
+    // Agenda Events (All dates)
     const agendaEvents = useMemo(() => {
         const rawSlots = (data.slots || []).map(s => formatEvent(s, 'SLOT'));
         const rawVisits = (data.visits || []).map(v => formatEvent(v, 'VISIT'));
         const rawInspections = (data.inspections || []).map(i => formatEvent(i, 'INSPECTION'));
 
-        // Helper to merge slots
         const mergeSlots = (slots: any[]) => {
             if (slots.length === 0) return [];
             const sorted = [...slots].sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -242,41 +228,34 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
             return merged;
         };
 
-        // Group everything by Date
         const groupedByDate: Record<string, any[]> = {};
 
-        // Add Visits first
         rawVisits.forEach(v => {
             if (!groupedByDate[v.date]) groupedByDate[v.date] = [];
             groupedByDate[v.date].push(v);
         });
 
-        // Add Inspections
         rawInspections.forEach(i => {
             if (!groupedByDate[i.date]) groupedByDate[i.date] = [];
             groupedByDate[i.date].push(i);
         });
 
-        // Group slots by date separately to merge them
         const slotsByDate: Record<string, any[]> = {};
         rawSlots.forEach(s => {
             if (!slotsByDate[s.date]) slotsByDate[s.date] = [];
             slotsByDate[s.date].push(s);
         });
 
-        // Merge slots per day and add to main group
         Object.entries(slotsByDate).forEach(([date, daySlots]) => {
             const merged = mergeSlots(daySlots);
             if (!groupedByDate[date]) groupedByDate[date] = [];
             groupedByDate[date].push(...merged);
         });
 
-        // Filter for Today+ and Sort final lists
         const sortedDates = Object.keys(groupedByDate).sort();
         const final: Record<string, any[]> = {};
 
         sortedDates.forEach(date => {
-            // Keep all dates, including past ones
             final[date] = groupedByDate[date].sort((a, b) => a.startTime.localeCompare(b.startTime));
         });
 
@@ -284,7 +263,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     }, [data]);
 
     // Hours Grid (8:00 to 20:00)
-    const hours = Array.from({ length: 13 }).map((_, i) => i + 8); // 8 to 20
+    const hours = Array.from({ length: 13 }).map((_, i) => i + 8);
 
     const getPositionStyle = (startTime: string, endTime: string) => {
         const [startH, startM] = startTime.split(':').map(Number);
@@ -292,7 +271,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         const startMinutes = (startH - 8) * 60 + startM;
         const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
         return {
-            top: `${startMinutes * 2}px`, // 2px per minute
+            top: `${startMinutes * 2}px`,
             height: `${durationMinutes * 2}px`
         };
     };
@@ -347,9 +326,10 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     const handleEventClick = (event: any) => {
         if (event.type === 'VISIT') {
             setSelectedEvent(event);
-            setIsModalOpen(true);
+            if (!isDesktop) {
+                setIsModalOpen(true);
+            }
         } else if (event.type === 'INSPECTION') {
-            // Navigate to inspection based on status
             if (event.inspectionStatus === 'DRAFT') {
                 router.push(`/inspection/${event.id}/rooms`);
             } else if (event.inspectionStatus === 'SIGNED') {
@@ -360,13 +340,18 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         }
     };
 
+    const handleEvaluationSaved = () => {
+        router.refresh();
+    };
+
     return (
-        <Container>
+        <>
+            {/* Mobile-only visit details modal */}
             <VisitDetailsModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 event={selectedEvent}
-                onEvaluationSaved={() => router.refresh()}
+                onEvaluationSaved={handleEvaluationSaved}
             />
 
             {/* Action Menu BottomSheet */}
@@ -382,14 +367,14 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                             setActionMenuId(null);
                             if (id) setRescheduleId(id);
                         }}
-                        className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                        className="flex items-center gap-3 p-3 hover:bg-secondary rounded-xl transition"
                     >
                         <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
                             <CalendarClock size={20} className="text-amber-600" />
                         </div>
                         <div className="flex flex-col text-left">
                             <span className="font-medium text-[16px]">Reprogrammer</span>
-                            <span className="text-sm text-neutral-500">Choisir une nouvelle date</span>
+                            <span className="text-sm text-muted-foreground">Choisir une nouvelle date</span>
                         </div>
                     </button>
                     <button
@@ -406,7 +391,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                         </div>
                         <div className="flex flex-col text-left">
                             <span className="font-medium text-[16px] text-red-600">Annuler l&apos;EDL</span>
-                            <span className="text-sm text-neutral-500">Le locataire sera notifié</span>
+                            <span className="text-sm text-muted-foreground">Le locataire sera notifié</span>
                         </div>
                     </button>
                 </div>
@@ -419,42 +404,39 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                 title="Reprogrammer l'état des lieux"
             >
                 <div className="flex flex-col px-6 pb-8">
-                    {/* Hero date */}
                     {(() => {
                         const displayDate = rescheduleDate ? new Date(rescheduleDate + 'T12:00') : new Date();
                         const hasSelected = !!rescheduleDate;
                         return (
                             <div className="flex flex-col items-center py-6">
-                                <span className={clsx("text-sm font-medium uppercase tracking-widest", hasSelected ? "text-neutral-400" : "text-neutral-300 dark:text-neutral-600")}>
+                                <span className={clsx("text-sm font-medium uppercase tracking-widest", hasSelected ? "text-muted-foreground" : "text-muted-foreground/50")}>
                                     {format(displayDate, 'EEEE', { locale: fr })}
                                 </span>
-                                <span className={clsx("text-7xl font-bold leading-none mt-1", hasSelected ? "text-neutral-900 dark:text-white" : "text-neutral-200 dark:text-neutral-700")}>
+                                <span className={clsx("text-7xl font-bold leading-none mt-1", hasSelected ? "text-foreground" : "text-muted-foreground/30")}>
                                     {format(displayDate, 'd')}
                                 </span>
-                                <span className={clsx("text-xl font-medium mt-1", hasSelected ? "text-neutral-400" : "text-neutral-300 dark:text-neutral-600")}>
+                                <span className={clsx("text-xl font-medium mt-1", hasSelected ? "text-muted-foreground" : "text-muted-foreground/50")}>
                                     {format(displayDate, 'MMMM yyyy', { locale: fr })}
                                 </span>
                             </div>
                         );
                     })()}
 
-                    {/* Date picker */}
                     <div className="relative mb-5">
                         <input
                             type="date"
                             value={rescheduleDate}
                             onChange={(e) => setRescheduleDate(e.target.value)}
                             min={format(new Date(), 'yyyy-MM-dd')}
-                            className="w-full px-4 py-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-2xl text-center text-sm font-medium text-transparent focus:outline-none transition appearance-none"
+                            className="w-full px-4 py-3.5 bg-secondary rounded-2xl text-center text-sm font-medium text-transparent focus:outline-none transition appearance-none"
                         />
-                        <span className="absolute inset-0 flex items-center justify-center text-xl font-medium text-neutral-500 dark:text-neutral-400 pointer-events-none">
+                        <span className="absolute inset-0 flex items-center justify-center text-xl font-medium text-muted-foreground pointer-events-none">
                             {rescheduleDate ? 'Modifier la date' : 'Choisir une date'}
                         </span>
                     </div>
 
-                    {/* Time pills */}
                     <div className="mb-5">
-                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-3 block">Heure</span>
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 block">Heure</span>
                         <div className="flex flex-wrap gap-2">
                             {['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00'].map((time) => (
                                 <button
@@ -463,8 +445,8 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                     className={clsx(
                                         "px-4 py-2.5 rounded-full text-sm font-semibold transition-all",
                                         rescheduleTime === time
-                                            ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 scale-105"
-                                            : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                            ? "bg-foreground text-background scale-105"
+                                            : "bg-secondary text-muted-foreground hover:bg-secondary/80"
                                     )}
                                 >
                                     {time}
@@ -473,386 +455,425 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                         </div>
                     </div>
 
-                    <p className="text-xs text-neutral-400 text-center mb-5">Le locataire sera notifié du changement</p>
+                    <p className="text-xs text-muted-foreground text-center mb-5">Le locataire sera notifié du changement</p>
 
                     <button
                         onClick={handleRescheduleInspection}
                         disabled={isSubmitting || !rescheduleDate}
-                        className="w-full py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-base font-semibold disabled:opacity-30 transition-all active:scale-[0.98]"
+                        className="w-full py-4 bg-foreground text-background rounded-2xl text-base font-semibold disabled:opacity-30 transition-all active:scale-[0.98]"
                     >
                         {isSubmitting ? 'Reprogrammation...' : 'Confirmer'}
                     </button>
                 </div>
             </BottomSheet>
 
-            <div className="flex flex-col gap-6">
+            {/* Main split-panel layout */}
+            <div className="md:h-full flex flex-col md:flex-row md:min-h-0">
 
-                {/* Header with Ref */}
-                <div
-                    ref={headerRef}
-                    className="sticky top-0 md:top-16 z-30 bg-white pt-safe md:pt-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all"
-                >
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <Heading
-                            title="Mon Calendrier"
+                {/* Left Panel: Event list */}
+                <div ref={scrollContainerRef} className="flex-1 md:flex-[3] md:min-h-0 md:overflow-y-auto md:border-r md:border-border md:px-2">
 
-                        />
+                    {/* Header */}
+                    <div
+                        ref={headerRef}
+                        className="sticky top-0 z-30 bg-background pt-safe md:pt-4 pb-2 px-4 transition-all"
+                    >
+                      <div className="max-w-3xl mx-auto w-full">
+                        {/* Row 1: Title + View Toggle (always stable) */}
+                        <div className="flex items-center justify-between gap-4">
+                            <h1 className="text-2xl font-medium tracking-tight text-foreground">Mon Calendrier</h1>
 
-                        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                            {/* View Toggle */}
-                            <div className="bg-neutral-100 p-1 rounded-lg flex items-center">
+                            <div className="bg-secondary p-1 rounded-2xl flex items-center">
                                 <button
                                     onClick={() => setView('day')}
-                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center gap-2 ${view === 'day' ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-700'}`}
+                                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition flex items-center gap-2 ${view === 'day' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
-                                    <Clock size={16} />
-                                    Journée
+                                    <Clock size={20} />
+                                    
                                 </button>
                                 <button
                                     onClick={() => setView('agenda')}
-                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center gap-2 ${view === 'agenda' ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-700'}`}
+                                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition flex items-center gap-2 ${view === 'agenda' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
-                                    <List size={16} />
-                                    Agenda
+                                    <List size={20} />
+                                  
                                 </button>
                             </div>
-
-                            {/* Date Navigation (Only for Day View) */}
-                            {view === 'day' && (
-                                <div className="flex items-center justify-between gap-4 bg-white border border-neutral-200 rounded-lg p-1 pl-4">
-                                    <div className="font-medium capitalize text-neutral-900 min-w-[120px] text-center text-sm md:text-base">
-                                        {format(currentDate, 'EEEE d MMMM', { locale: fr })}
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={() => setCurrentDate(prev => subDays(prev, 1))}
-                                            className="w-8 h-8 rounded-full hover:bg-neutral-100 flex items-center justify-center transition"
-                                        >
-                                            <ChevronLeft size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => setCurrentDate(startOfToday())}
-                                            className="px-3 py-1 text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 rounded-full transition hidden sm:block"
-                                        >
-                                            Auj.
-                                        </button>
-                                        <button
-                                            onClick={() => setCurrentDate(prev => addDays(prev, 1))}
-                                            className="w-8 h-8 rounded-full hover:bg-neutral-100 flex items-center justify-center transition"
-                                        >
-                                            <ChevronRight size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
-                    </div>
-                </div>
 
-                {/* Content */}
-                <div className="bg-white rounded-none sm:rounded-xl p-0 min-h-[600px] -mx-4 sm:mx-0 border-y sm:border-0 border-neutral-200" onClick={() => actionMenuId && setActionMenuId(null)}>
-
-                    {/* AGENDA VIEW */}
-                    {view === 'agenda' && (
-                        <div className="flex flex-col pb-[10vh]">
-                            {Object.keys(agendaEvents).length === 0 ? (
-                                <div id="empty-state-anchor" className="flex flex-col items-center justify-center h-[400px] text-neutral-500">
-                                    <Calendar size={48} className="mb-4 text-neutral-300" />
-                                    <p>Aucun événement à venir.</p>
+                        {/* Row 2: Date Navigation (Only for Day View) */}
+                        {view === 'day' && (
+                            <div className="flex items-center justify-between gap-4 bg-background border border-border rounded-lg p-1 pl-4 mt-3">
+                                <div className="font-medium capitalize text-foreground min-w-[120px] text-center text-sm md:text-base">
+                                    {format(currentDate, 'EEEE d MMMM', { locale: fr })}
                                 </div>
-                            ) : (() => {
-                                let firstFutureFound = false;
-                                return Object.entries(agendaEvents).map(([date, events]) => {
-                                    const parsedDate = parseISO(date);
-                                    const isToday = isSameDay(parsedDate, new Date());
-                                    const isPastDate = isBefore(parsedDate, startOfToday());
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => setCurrentDate(prev => subDays(prev, 1))}
+                                        className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition"
+                                    >
+                                        <ChevronLeft size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentDate(startOfToday())}
+                                        className="px-3 py-1 text-xs font-semibold bg-secondary hover:bg-secondary/80 rounded-full transition hidden sm:block"
+                                    >
+                                        Auj.
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentDate(prev => addDays(prev, 1))}
+                                        className="w-8 h-8 rounded-full hover:bg-secondary flex items-center justify-center transition"
+                                    >
+                                        <ChevronRight size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                      </div>
+                    </div>
 
-                                    // Mark the first non-past date as fallback anchor
-                                    const isFirstFuture = !isPastDate && !firstFutureFound && !isToday;
-                                    if (isFirstFuture) firstFutureFound = true;
+                    {/* Content */}
+                    <div className="min-h-[400px] max-w-3xl mx-auto w-full" onClick={() => actionMenuId && setActionMenuId(null)}>
 
-                                    const anchorId = isToday ? 'today-anchor' : (isFirstFuture ? 'first-future-anchor' : undefined);
-
-                                    return (
-                                        <div key={date} id={anchorId}>
-                                            <div
-                                                className={`sticky z-20 text-lg backdrop-blur-sm px-4 py-3 font-semibold flex items-center gap-2 border-b transition-colors
-                                                    ${isPastDate ? 'bg-white text-neutral-500 border-neutral-100' : 'bg-white/95 text-neutral-700 border-neutral-200'}
-                                                `}
-                                                style={{ top: `${headerHeight}px` }}
-                                            >
-                                                <Calendar size={16} className={isPastDate ? "text-neutral-500" : ""} />
-                                                <span className="capitalize">{format(parsedDate, 'EEEE d MMMM yyyy', { locale: fr })}</span>
-                                                {isToday && <span className="text-xs font-normal capitalize text-red-500 px-2 py-1 rounded-2xl ml-2">Aujourd'hui</span>}
-                                            </div>
-                                            <div className="space-y-2 pt-4 pb-6 px-3">
-                                                {events.sort((a: any, b: any) => {
-                                                    // Priority: INSPECTION > VISIT > SLOT
-                                                    const priority: Record<string, number> = { INSPECTION: 0, VISIT: 1, SLOT: 2 };
-                                                    const diff = (priority[a.type] ?? 1) - (priority[b.type] ?? 1);
-                                                    if (diff !== 0) return diff;
-                                                    return a.startTime.localeCompare(b.startTime);
-                                                }).map((event: any) => {
-                                                    // Determine if event is passed
-                                                    const [endH, endM] = event.endTime.split(':').map(Number);
-                                                    const eventEndDateTime = new Date(parsedDate);
-                                                    eventEndDateTime.setHours(endH, endM, 0, 0);
-                                                    const isPastEvent = isBefore(eventEndDateTime, new Date());
-
-                                                    if (event.type === 'VISIT') {
-                                                        // VISIT: Card Style (Restored)
-                                                        return (
-                                                            <div
-                                                                key={`${event.type}-${event.id}`}
-                                                                onClick={() => handleEventClick(event)}
-                                                                className={`
-                                                                    group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-1
-                                                                    ${isPastEvent
-                                                                        ? 'bg-neutral-50 border-neutral-200 opacity-80 hover:opacity-100'
-                                                                        : 'bg-white border-neutral-500 hover:border-neutral-400 hover:shadow-md'
-                                                                    }
-                                                                `}
-                                                            >
-                                                                {/* Time Block */}
-                                                                <div className={`flex flex-col items-center justify-center min-w-[70px] border-r pr-4 ${isPastEvent ? 'border-neutral-100' : 'border-neutral-200'}`}>
-                                                                    <span className={`text-lg font-medium ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.startTime}</span>
-                                                                    <span className={`text-sm ${isPastEvent ? 'text-neutral-500' : 'text-neutral-500'}`}>{event.endTime}</span>
-                                                                </div>
-
-                                                                {/* Content */}
-                                                                <div className="flex-1 flex items-start gap-3">
-                                                                    <div className={`shrink-0 ${isPastEvent ? "opacity-80" : ""}`}>
-                                                                        <Avatar src={event.image} seed={event.title} size={42} />
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className="flex items-center justify-between gap-2">
-                                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                                <h4 className={`font-semibold truncate ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>{event.title}</h4>
-                                                                                {/* Evaluation decision badge */}
-                                                                                {event.evaluation?.decision === 'SHORTLISTED' && (
-                                                                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Shortliste" />
-                                                                                )}
-                                                                                {event.evaluation?.decision === 'UNDECIDED' && (
-                                                                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title="Indecis" />
-                                                                                )}
-                                                                                {event.evaluation?.decision === 'ELIMINATED' && (
-                                                                                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" title="Ecarte" />
-                                                                                )}
-                                                                            </div>
-                                                                            {event.status === 'PENDING' && (
-                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 uppercase shrink-0">En attente</span>
-                                                                            )}
-                                                                            {event.status === 'CONFIRMED' && !event.evaluation && (
-                                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase shrink-0">Confirmée</span>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className={`flex items-center gap-1.5 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
-                                                                            <MapPin size={13} className="shrink-0 -translate-y-px" />
-                                                                            <span className="line-clamp-1">{event.subtitle}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    if (event.type === 'INSPECTION') {
-                                                        const statusLabel = event.inspectionStatus === 'DRAFT'
-                                                            ? `${event.completedRooms}/${event.totalRooms} pièces`
-                                                            : event.inspectionStatus === 'PENDING_SIGNATURE'
-                                                                ? 'Attente signature'
-                                                                : 'Signé';
-                                                        return (
-                                                            <div
-                                                                key={`${event.type}-${event.id}`}
-                                                                onClick={() => handleEventClick(event)}
-                                                                className={`
-                                                                    group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-0
-                                                                    ${isPastEvent
-                                                                        ? 'bg-neutral-50 border-neutral-200 opacity-80 hover:opacity-100'
-                                                                        : 'bg-amber-50 border-amber-300 hover:border-amber-400 hover:shadow-md'
-                                                                    }
-                                                                `}
-                                                            >
-                                                                {/* Time Block */}
-                                                                <div className={`flex flex-col items-center justify-center min-w-[70px] border-r pr-4 ${isPastEvent ? 'border-neutral-100' : 'border-amber-200'}`}>
-                                                                    <span className={`text-lg font-medium ${isPastEvent ? 'text-neutral-600' : 'text-amber-700'}`}>{event.startTime}</span>
-                                                                    <span className={`text-sm ${isPastEvent ? 'text-neutral-500' : 'text-amber-500'}`}>{event.endTime}</span>
-                                                                </div>
-
-                                                                {/* Content */}
-                                                                <div className="flex-1">
-                                                                    <div className="flex items-center justify-between gap-2">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <ClipboardCheck size={15} className={`shrink-0 -translate-y-px ${isPastEvent ? 'text-neutral-500' : 'text-amber-700'}`} />
-                                                                            <h4 className={`font-semibold ${isPastEvent ? 'text-neutral-600' : 'text-amber-800'}`}>{event.title}</h4>
-                                                                        </div>
-                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
-                                                                            event.inspectionStatus === 'SIGNED'
-                                                                                ? 'bg-emerald-100 text-emerald-800'
-                                                                                : event.inspectionStatus === 'PENDING_SIGNATURE'
-                                                                                    ? 'bg-blue-100 text-blue-800'
-                                                                                    : 'bg-amber-100 text-amber-800'
-                                                                        }`}>
-                                                                            {statusLabel}
-                                                                        </span>
-                                                                    </div>
-                                                                    {event.tenantName && (
-                                                                        <div className={`text-sm font-medium mt-1.5 ${isPastEvent ? 'text-neutral-500' : 'text-amber-800'}`}>
-                                                                            Avec {event.tenantName}
-                                                                        </div>
-                                                                    )}
-                                                                    <div className={`flex items-center gap-1.5 text-sm mt-0.5 ${isPastEvent ? 'text-neutral-500' : 'text-amber-700'}`}>
-                                                                        <MapPin size={13} className="shrink-0 -translate-y-px" />
-                                                                        <span className="line-clamp-1">au {event.subtitle}</span>
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Actions */}
-                                                                <div className="flex items-center gap-1">
-                                                                    {event.inspectionStatus === 'DRAFT' && !isPastEvent && (
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                setActionMenuId(event.id);
-                                                                            }}
-                                                                            className="p-1.5 rounded-full hover:bg-amber-100 transition text-amber-500 hover:text-amber-700"
-                                                                        >
-                                                                            <MoreHorizontal size={18} />
-                                                                        </button>
-                                                                    )}
-                                                                    <div className={`hidden sm:flex items-center transition ${isPastEvent ? 'text-neutral-300' : 'text-amber-400 group-hover:text-amber-700'}`}>
-                                                                        <ChevronRight size={20} />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    // SLOT: Pill Style (Restored)
-                                                    return (
-                                                        <div
-                                                            key={`${event.type}-${event.id}`}
-                                                            className={`flex items-center px-0 mb-2 ${isPastEvent ? 'opacity-80' : ''}`}
-                                                        >
-                                                            <div className={`px-4 py-3 mt-1 mb-1 rounded-2xl font-medium text-sm w-full sm:w-auto text-left sm:text-left ${isPastEvent ? 'bg-neutral-100 text-neutral-500' : 'bg-[#FBF7F2] text-neutral-700'}`}>
-                                                                <div className={`font-medium text-xl ${isPastEvent ? 'text-neutral-600' : 'text-neutral-700'}`}>Visites</div>
-                                                                <div>Créneaux ouverts de {event.startTime} à {event.endTime}</div>
-                                                                {event.subtitle && (
-                                                                    <div className={`text-xs mt-0.5 flex items-center justify-start gap-1.5 ${isPastEvent ? 'text-neutral-500' : 'text-neutral-700'}`}>
-                                                                        <MapPin size={11} className="shrink-0 -translate-y-px" />
-                                                                        au {event.subtitle}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            })()}
-
-                            {/* Empty Future State */}
-                            {(() => {
-                                const hasFutureEvents = Object.values(agendaEvents).some(events =>
-                                    events.some(event => {
-                                        const parsedDate = parseISO(event.date);
-                                        if (isAfter(parsedDate, new Date())) return true;
-                                        if (isSameDay(parsedDate, new Date())) {
-                                            const [endH, endM] = event.endTime.split(':').map(Number);
-                                            const eventEndDateTime = new Date(parsedDate);
-                                            eventEndDateTime.setHours(endH, endM, 0, 0);
-                                            return isAfter(eventEndDateTime, new Date());
+                        {/* AGENDA VIEW */}
+                        {view === 'agenda' && (
+                            <div className="flex flex-col pb-[10vh]">
+                                {Object.keys(agendaEvents).length === 0 ? (
+                                    <div id="empty-state-anchor" className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
+                                        <Calendar size={48} className="mb-4 opacity-30" />
+                                        <p>Aucun événement à venir.</p>
+                                    </div>
+                                ) : (() => {
+                                    // Check if there are any future/current events
+                                    const hasFutureEvents = Object.entries(agendaEvents).some(([date, evts]) => {
+                                        const pd = parseISO(date);
+                                        if (isAfter(pd, new Date())) return true;
+                                        if (isSameDay(pd, new Date())) {
+                                            return evts.some((e: any) => {
+                                                const [eH, eM] = e.endTime.split(':').map(Number);
+                                                const end = new Date(pd);
+                                                end.setHours(eH, eM, 0, 0);
+                                                return isAfter(end, new Date());
+                                            });
                                         }
                                         return false;
-                                    })
-                                );
+                                    });
 
-                                if (!hasFutureEvents && Object.keys(agendaEvents).length > 0) {
-                                    return (
-                                        <div id="empty-state-anchor" className="flex flex-col items-center justify-center p-10 mt-4 mb-4 text-neutral-600 bg-white rounded-xl mx-4 sm:mx-0">
-                                            <Calendar size={32} className="mb-3 opacity-50" />
-                                            <p className="font-medium text-lg">Aucune visite à venir</p>
-                                            <p className="text-sm opacity-75">Vos événements passés sont affichés ci-dessus.</p>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                            })()}
-                        </div>
-                    )}
+                                    // Descending order: newest/upcoming first
+                                    const allDates = Object.keys(agendaEvents).sort().reverse();
+                                    const elements: React.ReactNode[] = [];
+                                    let emptyStateInserted = false;
 
-                    {/* DAY VIEW */}
-                    {view === 'day' && (
-                        <div className="flex flex-row overflow-x-auto h-full">
-                            {/* Existing Day View Logic */}
-                            <div className="w-16 md:w-20 border-r border-neutral-100 bg-neutral-50 flex-none relative">
-                                {hours.map(hour => (
-                                    <div key={hour} className="h-[120px] relative border-b border-neutral-100 last:border-0">
-                                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-medium text-neutral-400 bg-neutral-50 px-1">
-                                            {hour}:00
-                                        </span>
-                                    </div>
-                                ))}
+                                    // If no future events at all, show empty state at the TOP
+                                    if (!hasFutureEvents && allDates.length > 0) {
+                                        emptyStateInserted = true;
+                                        elements.push(
+                                            <div key="empty-state" id="empty-state-anchor" className="flex flex-col items-center justify-center rounded-2xl m-3 mt-2 md:mt-2 bg-[#F0EEE6] py-[80px] text-neutral-700">
+                                                <Calendar size={32} className="mb-3 opacity-50" />
+                                                <p className="font-medium text-base">Aucune visite à venir</p>
+                                                <p className="text-sm opacity-75">Vos événements passés sont affichés ci-dessous.</p>
+                                            </div>
+                                        );
+                                    }
+
+                                    // Find closest future date for auto-scroll anchor (last future in descending = closest to today)
+                                    const closestFutureDate = allDates.filter(d => {
+                                        const pd = parseISO(d);
+                                        return !isBefore(pd, startOfToday()) && !isSameDay(pd, new Date());
+                                    }).pop() || null;
+
+                                    allDates.forEach((date, idx) => {
+                                        const events = agendaEvents[date];
+                                        const parsedDate = parseISO(date);
+                                        const isToday = isSameDay(parsedDate, new Date());
+                                        const isPastDate = isBefore(parsedDate, startOfToday());
+
+                                        const anchorId = isToday ? 'today-anchor' : (date === closestFutureDate ? 'first-future-anchor' : undefined);
+
+                                        // Render date group
+                                        elements.push(
+                                            <div key={date} id={anchorId}>
+                                                <div
+                                                    className={`sticky z-20 text-lg backdrop-blur-sm px-4 py-3 font-medium flex items-center gap-2 border-b transition-colors
+                                                        ${isPastDate ? 'bg-background text-muted-foreground border-border' : 'bg-background/95 text-foreground border-border'}
+                                                    `}
+                                                    style={{ top: `${headerHeight}px` }}
+                                                >
+                                                    <Calendar size={16} className={isPastDate ? "text-muted-foreground" : ""} />
+                                                    <span className="capitalize">{format(parsedDate, 'EEEE d MMMM yyyy', { locale: fr })}</span>
+                                                    {isToday && <span className="text-xs font-normal capitalize text-red-500 px-2 py-1 rounded-2xl ml-2">Aujourd&apos;hui</span>}
+                                                </div>
+                                                <div className="space-y-2 pt-4 pb-6 px-3">
+                                                    {events.sort((a: any, b: any) => {
+                                                        const priority: Record<string, number> = { INSPECTION: 0, VISIT: 1, SLOT: 2 };
+                                                        const diff = (priority[a.type] ?? 1) - (priority[b.type] ?? 1);
+                                                        if (diff !== 0) return diff;
+                                                        return a.startTime.localeCompare(b.startTime);
+                                                    }).map((event: any) => {
+                                                        const [endH, endM] = event.endTime.split(':').map(Number);
+                                                        const eventEndDateTime = new Date(parsedDate);
+                                                        eventEndDateTime.setHours(endH, endM, 0, 0);
+                                                        const isPastEvent = isBefore(eventEndDateTime, new Date());
+                                                        const isSelected = selectedEvent?.id === event.id && selectedEvent?.type === event.type;
+
+                                                        if (event.type === 'VISIT') {
+                                                            return (
+                                                                <div
+                                                                    key={`${event.type}-${event.id}`}
+                                                                    onClick={() => handleEventClick(event)}
+                                                                    className={`
+                                                                        group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-1
+                                                                        ${isPastEvent
+                                                                            ? 'bg-secondary opacity-80 hover:opacity-100'
+                                                                            : 'bg-background border-foreground/20 hover:border-foreground/40 hover:shadow-md'
+                                                                        }
+                                                                        ${isSelected ? 'border-2 border-amber-800' : ''}
+                                                                    `}
+                                                                >
+                                                                    {/* Time Block */}
+                                                                    <div className="flex flex-col items-center justify-center min-w-[70px] border-r border-border pr-4">
+                                                                        <span className={`text-lg font-medium ${isPastEvent ? 'text-muted-foreground' : 'text-foreground'}`}>{event.startTime}</span>
+                                                                        <span className="text-sm text-muted-foreground">{event.endTime}</span>
+                                                                    </div>
+
+                                                                    {/* Content */}
+                                                                    <div className="flex-1 flex items-start gap-3 pl-3">
+                                                                        <div className={`shrink-0 ${isPastEvent ? "opacity-80" : ""}`}>
+                                                                            <Avatar src={event.image} seed={event.title} size={42} />
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="flex items-center justify-between gap-2">
+                                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                                    <h4 className={`font-medium truncate ${isPastEvent ? 'text-muted-foreground' : 'text-foreground'}`}>{event.title}</h4>
+                                                                                    {event.evaluation?.decision === 'SHORTLISTED' && (
+                                                                                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Retenu" />
+                                                                                    )}
+                                                                                    {event.evaluation?.decision === 'UNDECIDED' && (
+                                                                                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" title="Indécis" />
+                                                                                    )}
+                                                                                    {event.evaluation?.decision === 'ELIMINATED' && (
+                                                                                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" title="Ecarté" />
+                                                                                    )}
+                                                                                </div>
+                                                                                {event.status === 'PENDING' && (
+                                                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 uppercase shrink-0">En attente</span>
+                                                                                )}
+                                                                                {event.status === 'CONFIRMED' && !event.evaluation && (
+                                                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800 uppercase shrink-0">Confirmée</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1.5 text-sm mt-0.5 text-muted-foreground">
+                                                                                <MapPin size={13} className="shrink-0 -translate-y-px" />
+                                                                                <span className="line-clamp-1">{event.subtitle}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        if (event.type === 'INSPECTION') {
+                                                            const statusLabel = event.inspectionStatus === 'DRAFT'
+                                                                ? `${event.completedRooms}/${event.totalRooms} pièces`
+                                                                : event.inspectionStatus === 'PENDING_SIGNATURE'
+                                                                    ? 'Attente signature'
+                                                                    : 'Signé';
+                                                            return (
+                                                                <div
+                                                                    key={`${event.type}-${event.id}`}
+                                                                    onClick={() => handleEventClick(event)}
+                                                                    className={`
+                                                                        group border rounded-2xl p-3 cursor-pointer transition flex flex-row items-center gap-0
+                                                                        ${isPastEvent
+                                                                            ? 'bg-secondary opacity-80 hover:opacity-100'
+                                                                            : 'bg-amber-50 border-amber-300 hover:border-amber-400 hover:shadow-md dark:bg-amber-950/20 dark:border-amber-700'
+                                                                        }
+                                                                    `}
+                                                                >
+                                                                    {/* Time Block */}
+                                                                    <div className={`flex flex-col items-center justify-center min-w-[70px] border-r pr-4 ${isPastEvent ? 'border-border' : 'border-amber-200 dark:border-amber-800'}`}>
+                                                                        <span className={`text-lg font-medium ${isPastEvent ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400'}`}>{event.startTime}</span>
+                                                                        <span className={`text-sm ${isPastEvent ? 'text-muted-foreground' : 'text-amber-500 dark:text-amber-500'}`}>{event.endTime}</span>
+                                                                    </div>
+
+                                                                    {/* Content */}
+                                                                    <div className="flex-1 pl-3">
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <ClipboardCheck size={15} className={`shrink-0 -translate-y-px ${isPastEvent ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400'}`} />
+                                                                                <h4 className={`font-medium ${isPastEvent ? 'text-muted-foreground' : 'text-amber-800 dark:text-amber-300'}`}>{event.title}</h4>
+                                                                            </div>
+                                                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase shrink-0 ${
+                                                                                event.inspectionStatus === 'SIGNED'
+                                                                                    ? 'bg-emerald-100 text-emerald-800'
+                                                                                    : event.inspectionStatus === 'PENDING_SIGNATURE'
+                                                                                        ? 'bg-blue-100 text-blue-800'
+                                                                                        : 'bg-amber-100 text-amber-800'
+                                                                            }`}>
+                                                                                {statusLabel}
+                                                                            </span>
+                                                                        </div>
+                                                                        {event.tenantName && (
+                                                                            <div className={`text-sm font-medium mt-0 ${isPastEvent ? 'text-muted-foreground' : 'text-amber-800 dark:text-amber-300'}`}>
+                                                                                Avec {event.tenantName}
+                                                                            </div>
+                                                                        )}
+                                                                        <div className={`flex items-center gap-1 text-sm mt-0 ${isPastEvent ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400'}`}>
+                                                                            <MapPin size={13} className="shrink-0 -translate-y-px" />
+                                                                            <span className="line-clamp-1">au {event.subtitle}</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Actions */}
+                                                                    <div className="flex items-center gap-1">
+                                                                        {event.inspectionStatus === 'DRAFT' && !isPastEvent && (
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setActionMenuId(event.id);
+                                                                                }}
+                                                                                className="p-1.5 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition text-amber-500 hover:text-amber-700"
+                                                                            >
+                                                                                <MoreHorizontal size={18} />
+                                                                            </button>
+                                                                        )}
+                                                                        <div className={`hidden sm:flex items-center transition ${isPastEvent ? 'text-muted-foreground/30' : 'text-amber-400 group-hover:text-amber-700'}`}>
+                                                                            <ChevronRight size={20} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        // SLOT: Pill Style
+                                                        return (
+                                                            <div
+                                                                key={`${event.type}-${event.id}`}
+                                                                className={`flex items-center px-0 mb-2 ${isPastEvent ? 'opacity-80' : ''}`}
+                                                            >
+                                                                <div className={`px-4 py-3 mt-1 mb-1 rounded-2xl font-base text-sm w-full sm:w-auto text-left ${isPastEvent ? 'bg-secondary text-muted-foreground' : 'bg-[#FBF7F2] dark:bg-secondary text-foreground'}`}>
+                                                                    <div className={`font-medium text-xl ${isPastEvent ? 'text-muted-foreground' : 'text-foreground'}`}>Visites</div>
+                                                                    <div>Créneaux ouverts de {event.startTime} à {event.endTime}</div>
+                                                                    {event.subtitle && (
+                                                                        <div className="text-xs mt-0.5 flex items-center justify-start gap-1.5 text-muted-foreground">
+                                                                            <MapPin size={11} className="shrink-0 -translate-y-px" />
+                                                                            au {event.subtitle}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+
+                                        // Insert empty state between future/today and past dates (descending order)
+                                        if (!emptyStateInserted && hasFutureEvents && !isPastDate) {
+                                            const nextDate = allDates[idx + 1];
+                                            if (nextDate && isBefore(parseISO(nextDate), startOfToday())) {
+                                                emptyStateInserted = true;
+                                                elements.push(
+                                                    <div key="empty-state" id="empty-state-anchor" className="flex flex-col items-center justify-center p-10 mt-2 mb-4 text-muted-foreground">
+                                                        <Calendar size={32} className="mb-3 opacity-50" />
+                                                        <p className="font-medium text-base">Aucune visite à venir</p>
+                                                        <p className="text-sm opacity-75">Vos événements passés sont affichés ci-dessous.</p>
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                    });
+
+                                    return elements;
+                                })()}
                             </div>
+                        )}
 
-                            <div className="flex-1 relative bg-white h-[1560px]">
-                                {hours.map(hour => (
-                                    <div key={hour} className="h-[120px] border-b border-dashed border-neutral-100 w-full box-border" />
-                                ))}
+                        {/* DAY VIEW */}
+                        {view === 'day' && (
+                            <div className="flex flex-row overflow-x-auto h-full">
+                                <div className="w-16 md:w-20 border-r border-border bg-secondary flex-none relative">
+                                    {hours.map(hour => (
+                                        <div key={hour} className="h-[120px] relative border-b border-border last:border-0">
+                                            <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-medium text-muted-foreground bg-secondary px-1">
+                                                {hour}:00
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
 
-                                {dayEvents.map((event) => {
-                                    const style = getPositionStyle(event.startTime, event.endTime);
-                                    const isVisit = event.type === 'VISIT';
-                                    const isInspection = event.type === 'INSPECTION';
-                                    const zIndex = isVisit ? 20 : isInspection ? 25 : 10;
-                                    const width = isVisit || isInspection ? '90%' : '95%';
-                                    const left = isVisit || isInspection ? '5%' : '0';
+                                <div className="flex-1 relative bg-background h-[1560px]">
+                                    {hours.map(hour => (
+                                        <div key={hour} className="h-[120px] border-b border-dashed border-border w-full box-border" />
+                                    ))}
 
-                                    return (
-                                        <div
-                                            key={`${event.type}-${event.id}`}
-                                            onClick={() => handleEventClick(event)}
-                                            className={`
+                                    {dayEvents.map((event) => {
+                                        const style = getPositionStyle(event.startTime, event.endTime);
+                                        const isVisit = event.type === 'VISIT';
+                                        const isInspection = event.type === 'INSPECTION';
+                                        const zIndex = isVisit ? 20 : isInspection ? 25 : 10;
+                                        const width = isVisit || isInspection ? '90%' : '95%';
+                                        const left = isVisit || isInspection ? '5%' : '0';
+
+                                        return (
+                                            <div
+                                                key={`${event.type}-${event.id}`}
+                                                onClick={() => handleEventClick(event)}
+                                                className={`
                                                     absolute left-2 right-2 rounded-lg p-3 border-l-4
                                                     ${event.color}
                                                     transition hover:brightness-95 cursor-pointer
                                                     flex flex-col justify-center
                                                     overflow-hidden shadow-xs
                                                 `}
-                                            style={{ ...style, zIndex, width, left }}
-                                        >
-                                            <div className="flex items-center gap-2 mb-1">
-                                                {isInspection ? <ClipboardCheck size={14} /> : isVisit ? <User size={14} /> : <Clock size={14} />}
-                                                <span className="font-semibold text-sm truncate">{event.title}</span>
-                                                <span className="text-xs opacity-75">{event.startTime} - {event.endTime}</span>
+                                                style={{ ...style, zIndex, width, left }}
+                                            >
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    {isInspection ? <ClipboardCheck size={14} /> : isVisit ? <User size={14} /> : <Clock size={14} />}
+                                                    <span className="font-semibold text-sm truncate">{event.title}</span>
+                                                    <span className="text-xs opacity-75">{event.startTime} - {event.endTime}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 opacity-75 text-xs truncate">
+                                                    <MapPin size={12} />
+                                                    {event.subtitle}
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-1 opacity-75 text-xs truncate">
-                                                <MapPin size={12} />
-                                                {event.subtitle}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
 
-                                {isSameDay(currentDate, new Date()) && (
-                                    <div
-                                        className="absolute left-0 right-0 border-t-2 border-red-500 z-30 pointer-events-none flex items-center"
-                                        style={{
-                                            top: `${((new Date().getHours() - 8) * 60 + new Date().getMinutes()) * 2}px`
-                                        }}
-                                    >
-                                        <div className="w-2 h-2 rounded-full bg-red-500 -ml-1"></div>
-                                    </div>
-                                )}
+                                    {isSameDay(currentDate, new Date()) && (
+                                        <div
+                                            className="absolute left-0 right-0 border-t-2 border-red-500 z-30 pointer-events-none flex items-center"
+                                            style={{
+                                                top: `${((new Date().getHours() - 8) * 60 + new Date().getMinutes()) * 2}px`
+                                            }}
+                                        >
+                                            <div className="w-2 h-2 rounded-full bg-red-500 -ml-1"></div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Panel: Event details (desktop only) */}
+                <div className="hidden md:flex md:flex-col md:flex-[2] md:max-w-[480px] h-full overflow-y-auto">
+                    {selectedEvent && selectedEvent.type === 'VISIT' ? (
+                        <EventDetailPanel
+                            event={selectedEvent}
+                            onEvaluationSaved={handleEvaluationSaved}
+                            onClose={() => setSelectedEvent(null)}
+                        />
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+                            <Calendar size={48} className="mb-4 opacity-30" />
+                            <p className="text-sm">Sélectionnez un événement</p>
                         </div>
                     )}
                 </div>
             </div>
-        </Container>
+                    </>
     );
 };
 
