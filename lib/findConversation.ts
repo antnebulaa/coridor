@@ -11,7 +11,9 @@ export async function findConversationByListingAndUsers(
     const conversation = await prisma.conversation.findFirst({
         where: {
             listingId,
-            users: { every: { id: { in: userIds } } },
+            AND: userIds.map(uid => ({
+                users: { some: { id: uid } },
+            })),
         },
         select: { id: true },
     });

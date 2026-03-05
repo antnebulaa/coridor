@@ -957,7 +957,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const parts = data.body!.split('|');
                                     const docType = parts[1];
                                     const label = parts[2];
-                                    const url = parts[3];
+                                    const url = parts.slice(3).join('|');
 
                                     const CORIDOR_DOC_CONFIG: Record<string, { emoji: string; color: string; border: string; bg: string; desc: string }> = {
                                         quittance: { emoji: '🧾', color: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50', desc: 'Disponible en téléchargement.' },
