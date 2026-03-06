@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -68,6 +68,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
     const buildYear = watch('buildYear');
 
     const isRoomMode = isRoom; // rentalUnitType !== 'ENTIRE_PLACE';
+
+    // Clamp floor to totalFloors when totalFloors decreases
+    useEffect(() => {
+        if (totalFloors != null && floor != null && floor > totalFloors) {
+            setValue('floor', totalFloors, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+        }
+    }, [totalFloors, floor, setValue]);
 
     const setCustomValue = (id: string, value: any) => {
         setValue(id, value, {
@@ -356,6 +363,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 value={floor || 0}
                 onChange={(value) => setCustomValue('floor', value)}
                 min={0}
+                max={totalFloors || undefined}
             />
 
             <hr />

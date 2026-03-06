@@ -9,6 +9,7 @@ interface CounterProps {
     value: number;
     onChange: (value: number) => void;
     min?: number;
+    max?: number;
 }
 
 const Counter: React.FC<CounterProps> = ({
@@ -16,11 +17,13 @@ const Counter: React.FC<CounterProps> = ({
     subtitle,
     value,
     onChange,
-    min = 1
+    min = 1,
+    max
 }) => {
     const onAdd = useCallback(() => {
+        if (max != null && value >= max) return;
         onChange(value + 1);
-    }, [onChange, value]);
+    }, [onChange, value, max]);
 
     const onReduce = useCallback(() => {
         if (value === min) {
@@ -66,7 +69,7 @@ const Counter: React.FC<CounterProps> = ({
                 </div>
                 <div
                     onClick={onAdd}
-                    className="
+                    className={`
                         w-10
                         h-10
                         rounded-full
@@ -83,7 +86,8 @@ const Counter: React.FC<CounterProps> = ({
                         transition
                         bg-neutral-50
                         dark:bg-neutral-800
-                    "
+                        ${max != null && value >= max ? 'opacity-20 cursor-not-allowed' : ''}
+                    `}
                 >
                     <AiOutlinePlus />
                 </div>
