@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
+import { toast } from 'react-hot-toast';
 import { useInspection, getEntryElement, getEntryRoomPhoto, computeEvolution } from '@/hooks/useInspection';
 import type { InspectionRoomWithElements } from '@/hooks/useInspection';
 import RoomPills from '@/components/inspection/RoomPills';
@@ -164,11 +165,12 @@ export default function RoomInspectionPage() {
     // Room has data — skip intro, land on first incomplete step
     setShowIntro(false);
 
-    // Check surfaces
+    // Check surfaces — EXIT skips SURFACE_PHOTO, goes straight to SURFACE_QUALIFY
+    const isExitMode = inspection?.type === 'EXIT';
     for (let i = 0; i < SURFACE_ELEMENTS.length; i++) {
       const el = surfEls[i];
       if (!el?.condition) {
-        setPhase(el?.photos?.length ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO');
+        setPhase(isExitMode ? 'SURFACE_QUALIFY' : (el?.photos?.length ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO'));
         setCurrentSurfaceIndex(i);
         return;
       }
@@ -185,7 +187,7 @@ export default function RoomInspectionPage() {
     // Everything done — show overview with thumbnails
     setPhase('OVERVIEW');
     setCurrentSurfaceIndex(0);
-  }, [roomId, currentRoom]);
+  }, [roomId, currentRoom, inspection?.type]);
 
   // Auto-dismiss intro after 1s once room data is available
   useEffect(() => {
@@ -256,9 +258,9 @@ export default function RoomInspectionPage() {
     } else if (stepKey.startsWith('surface-')) {
       const idx = parseInt(stepKey.split('-')[1], 10);
       setCurrentSurfaceIndex(idx);
-      setPhase('SURFACE_PHOTO');
+      setPhase(isExit ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO');
     }
-  }, []);
+  }, [isExit]);
 
   if (!currentRoom) {
     return (
@@ -330,7 +332,7 @@ export default function RoomInspectionPage() {
             });
           }}
           onDone={() => {
-            setPhase('SURFACE_PHOTO');
+            setPhase(isExit ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO');
             setCurrentSurfaceIndex(0);
           }}
           onCancel={() => router.push(`/inspection/${inspectionId}/rooms`)}
@@ -454,11 +456,40 @@ export default function RoomInspectionPage() {
             />
           </div>
 
+          {/* EXIT mode: "Conforme" quick button */}
+          {isExit && entryElement?.condition && !currentSurface?.condition && (
+            <button
+              onClick={async () => {
+                if (currentSurface && entryElement?.condition) {
+                  await updateElement(currentSurface.id, {
+                    condition: entryElement.condition,
+                    evolution: 'UNCHANGED',
+                    nature: entryElement.nature || undefined,
+                  });
+                  // Auto-advance to next surface or equipment
+                  if (currentSurfaceIndex < SURFACE_ELEMENTS.length - 1) {
+                    setCurrentSurfaceIndex(currentSurfaceIndex + 1);
+                  } else {
+                    setPhase('EQUIP');
+                  }
+                }
+              }}
+              className="w-full mb-5 py-4 rounded-2xl text-[17px] font-semibold bg-green-50 text-green-700 border-2 border-green-200 hover:bg-green-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <Check size={20} /> Conforme — état identique à l&apos;entrée
+            </button>
+          )}
+
           {/* Condition chips */}
           <div className="mb-5">
             <div className={`text-[22px] font-medium mb-3 ${t.textPrimary}`}>
               {isExit ? 'État actuel' : 'État'}
             </div>
+            {isExit && entryElement?.condition && !currentSurface?.condition && (
+              <div className={`text-[14px] mb-3 ${t.textMuted}`}>
+                ou qualifiez un changement ci-dessous
+              </div>
+            )}
             <ConditionChips
               value={currentSurface?.condition}
               onChange={async (condition: ElementCondition) => {
@@ -501,7 +532,7 @@ export default function RoomInspectionPage() {
             // Move to next surface or to EQUIP
             if (currentSurfaceIndex < SURFACE_ELEMENTS.length - 1) {
               setCurrentSurfaceIndex(currentSurfaceIndex + 1);
-              setPhase('SURFACE_PHOTO');
+              setPhase(isExit ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO');
             } else {
               setPhase('EQUIP');
             }
@@ -548,7 +579,7 @@ export default function RoomInspectionPage() {
               // Was in surface qualify
               if (currentSurfaceIndex < SURFACE_ELEMENTS.length - 1) {
                 setCurrentSurfaceIndex(currentSurfaceIndex + 1);
-                setPhase('SURFACE_PHOTO');
+                setPhase(isExit ? 'SURFACE_QUALIFY' : 'SURFACE_PHOTO');
               } else {
                 setPhase('EQUIP');
               }
@@ -589,6 +620,35 @@ export default function RoomInspectionPage() {
           
 
           <InspectionAIBubble>{aiTip}</InspectionAIBubble>
+
+          {/* EXIT mode: "Tout conforme" bulk button */}
+          {isExit && equipmentElements.some((e) => !e.condition && !e.isAbsent) && (
+            <button
+              onClick={async () => {
+                const unqualified = equipmentElements.filter((e) => !e.condition && !e.isAbsent);
+                const withEntry = unqualified.filter((equip) => {
+                  const entryEquip = currentRoom ? getEntryElement(equip, currentRoom, entryInspection) : null;
+                  return entryEquip?.condition;
+                });
+                const skipped = unqualified.length - withEntry.length;
+                await Promise.all(
+                  withEntry.map((equip) => {
+                    const entryEquip = getEntryElement(equip, currentRoom!, entryInspection)!;
+                    return updateElement(equip.id, {
+                      condition: entryEquip.condition || undefined,
+                      evolution: 'UNCHANGED',
+                    });
+                  })
+                );
+                if (skipped > 0) {
+                  toast(`${skipped} équipement${skipped > 1 ? 's' : ''} sans donnée d'entrée — à qualifier manuellement`);
+                }
+              }}
+              className="w-full mb-5 py-4 rounded-2xl text-[17px] font-semibold bg-green-50 text-green-700 border-2 border-green-200 hover:bg-green-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <Check size={20} /> Tout conforme
+            </button>
+          )}
 
           <div className="space-y-3.5">
             {equipmentElements.map((equip) => {
@@ -653,6 +713,28 @@ export default function RoomInspectionPage() {
                       }`}>
                         {EVOLUTION_CONFIG[equipEvolution].label}
                       </span>
+                    </div>
+                  )}
+                  {/* ENTRY mode: installationYear (for vétusté calculation at exit) */}
+                  {!isExit && equip.condition && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <label className={`text-[13px] ${t.textMuted}`}>Année de pose</label>
+                      <input
+                        type="number"
+                        min={1950}
+                        max={new Date().getFullYear()}
+                        placeholder="—"
+                        defaultValue={equip.installationYear || ''}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 1950 && val <= new Date().getFullYear()) {
+                            updateElement(equip.id, { installationYear: val });
+                          } else if (!e.target.value) {
+                            updateElement(equip.id, { installationYear: null });
+                          }
+                        }}
+                        className={`w-20 px-2 py-1 rounded-lg text-[14px] text-center border ${t.border} bg-transparent ${t.textSecondary} focus:outline-none focus:ring-1 focus:ring-amber-400`}
+                      />
                     </div>
                   )}
                 </div>

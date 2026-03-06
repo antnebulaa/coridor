@@ -68,6 +68,13 @@ interface ConversationClientProps {
         pdfUrl: string | null;
         scheduledAt: string | null;
     } | null;
+    exitInspectionData?: {
+        id: string;
+        status: string;
+        type: string;
+        pdfUrl: string | null;
+        scheduledAt: string | null;
+    } | null;
 }
 
 const ConversationClient: React.FC<ConversationClientProps> = ({
@@ -85,7 +92,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     leaseStatus: initialLeaseStatus,
     conversationId,
     confirmedVisit,
-    inspectionData
+    inspectionData,
+    exitInspectionData
 }) => {
     const router = useRouter();
 
@@ -131,6 +139,10 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const [scheduleDate, setScheduleDate] = useState('');
     const [scheduleTime, setScheduleTime] = useState('10:00');
     const [isScheduling, setIsScheduling] = useState(false);
+
+    // EDL sortie
+    const [isExitEdlSheetOpen, setIsExitEdlSheetOpen] = useState(false);
+    const [isStartingExitEdl, setIsStartingExitEdl] = useState(false);
 
     const isRejected = applicationStatus === 'REJECTED';
 
@@ -250,6 +262,29 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             setIsScheduling(false);
         }
     }, [scheduleDate, scheduleTime, applicationId, router]);
+
+    const handleStartExitEdl = useCallback(async (scheduled?: boolean) => {
+        if (!applicationId) return;
+        setIsStartingExitEdl(true);
+        try {
+            const payload: Record<string, unknown> = { applicationId, type: 'EXIT' };
+            if (scheduled && scheduleDate) {
+                payload.scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+            }
+            const res = await axios.post('/api/inspection', payload);
+            toast.success('État des lieux de sortie créé');
+            setIsExitEdlSheetOpen(false);
+            if (!scheduled) {
+                router.push(`/inspection/${res.data.id}`);
+            } else {
+                router.refresh();
+            }
+        } catch {
+            toast.error("Erreur lors de la création de l'EDL de sortie");
+        } finally {
+            setIsStartingExitEdl(false);
+        }
+    }, [applicationId, scheduleDate, scheduleTime, router]);
 
     const isImperial = currentUser?.measurementSystem === 'imperial';
     const surface = listing?.surface;
@@ -432,8 +467,46 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             }
         }
 
+        // EXIT inspection timeline step
+        if (exitInspectionData) {
+            if (exitInspectionData.status === 'CANCELLED') {
+                steps.push({
+                    title: "EDL de sortie annulé",
+                    description: "L'état des lieux de sortie a été annulé.",
+                    completed: true
+                });
+            } else if (exitInspectionData.status === 'SIGNED' || exitInspectionData.status === 'LOCKED') {
+                steps.push({
+                    title: "EDL de sortie signé",
+                    description: "L'état des lieux de sortie a été signé par les deux parties.",
+                    completed: true
+                });
+            } else if (exitInspectionData.status === 'DRAFT' && exitInspectionData.scheduledAt) {
+                const schedDate = new Date(exitInspectionData.scheduledAt);
+                const dateStr = schedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+                const timeStr = schedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                steps.push({
+                    title: "EDL de sortie planifié",
+                    description: `Prévu le ${dateStr} à ${timeStr}.`,
+                    completed: false
+                });
+            } else if (exitInspectionData.status === 'DRAFT') {
+                steps.push({
+                    title: "EDL de sortie en cours",
+                    description: "L'état des lieux de sortie est en cours de réalisation.",
+                    completed: false
+                });
+            } else if (exitInspectionData.status === 'PENDING_SIGNATURE') {
+                steps.push({
+                    title: "EDL de sortie — signature",
+                    description: "En attente de la signature du locataire.",
+                    completed: false
+                });
+            }
+        }
+
         return steps;
-    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, isSelected, hasLeaseAction, initialLeaseStatus, applicationId, inspectionData]);
+    }, [hasProposedVisit, confirmedVisit, getCalendarEvent, isRejected, initialRejectionReason, isSelected, hasLeaseAction, initialLeaseStatus, applicationId, inspectionData, exitInspectionData]);
 
     return (
         <div className="h-full flex flex-row">
@@ -616,32 +689,99 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                 onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
                                                             />
                                                         ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
-                                                            inspectionData.pdfUrl && (
-                                                                <a
-                                                                    href={inspectionData.pdfUrl}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
-                                                                >
-                                                                    Voir le PDF de l&apos;EDL
-                                                                </a>
-                                                            )
+                                                            <>
+                                                                {inspectionData.pdfUrl && (
+                                                                    <a
+                                                                        href={inspectionData.pdfUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
+                                                                    >
+                                                                        Voir le PDF de l&apos;EDL d&apos;entrée
+                                                                    </a>
+                                                                )}
+                                                                {/* EXIT inspection buttons */}
+                                                                {!exitInspectionData || exitInspectionData.status === 'CANCELLED' ? (
+                                                                    <>
+                                                                        <Button
+                                                                            label="État des lieux de sortie"
+                                                                            onClick={() => setIsExitEdlSheetOpen(true)}
+                                                                        />
+                                                                        <BottomSheet
+                                                                            isOpen={isExitEdlSheetOpen}
+                                                                            onClose={() => setIsExitEdlSheetOpen(false)}
+                                                                            title="État des lieux de sortie"
+                                                                        >
+                                                                            <div className="flex flex-col p-2 pb-8">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setIsExitEdlSheetOpen(false);
+                                                                                        handleStartExitEdl(false);
+                                                                                    }}
+                                                                                    disabled={isStartingExitEdl}
+                                                                                    className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition"
+                                                                                >
+                                                                                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+                                                                                        <Play size={20} className="text-green-600" />
+                                                                                    </div>
+                                                                                    <div className="flex flex-col text-left">
+                                                                                        <span className="font-medium text-[16px]">Démarrer maintenant</span>
+                                                                                        <span className="text-sm text-neutral-500">Comparer avec l&apos;EDL d&apos;entrée</span>
+                                                                                    </div>
+                                                                                </button>
+                                                                            </div>
+                                                                        </BottomSheet>
+                                                                    </>
+                                                                ) : exitInspectionData.status === 'DRAFT' ? (
+                                                                    <Button
+                                                                        label={exitInspectionData.scheduledAt ? "Démarrer l'EDL de sortie" : "Reprendre l'EDL de sortie"}
+                                                                        onClick={() => router.push(`/inspection/${exitInspectionData!.id}`)}
+                                                                    />
+                                                                ) : exitInspectionData.status === 'SIGNED' || exitInspectionData.status === 'LOCKED' ? (
+                                                                    exitInspectionData.pdfUrl && (
+                                                                        <a
+                                                                            href={exitInspectionData.pdfUrl}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="w-full py-2.5 px-4 text-sm font-medium text-center text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition block"
+                                                                        >
+                                                                            Voir le PDF de l&apos;EDL de sortie
+                                                                        </a>
+                                                                    )
+                                                                ) : exitInspectionData.status === 'PENDING_SIGNATURE' ? (
+                                                                    <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
+                                                                        EDL de sortie — en attente de signature
+                                                                    </div>
+                                                                ) : null}
+                                                            </>
                                                         ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
                                                             <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-white bg-neutral-900 rounded-xl border border-neutral-900">
                                                                 En attente de signature locataire
                                                             </div>
                                                         ) : null
                                                     ) : (
-                                                        inspectionData && inspectionData.status !== 'CANCELLED' && (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') && inspectionData.pdfUrl ? (
-                                                            <a
-                                                                href={inspectionData.pdfUrl}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
-                                                            >
-                                                                Voir le PDF de l&apos;EDL
-                                                            </a>
-                                                        ) : null
+                                                        <>
+                                                            {inspectionData && inspectionData.status !== 'CANCELLED' && (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') && inspectionData.pdfUrl && (
+                                                                <a
+                                                                    href={inspectionData.pdfUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
+                                                                >
+                                                                    Voir le PDF de l&apos;EDL d&apos;entrée
+                                                                </a>
+                                                            )}
+                                                            {exitInspectionData && exitInspectionData.status !== 'CANCELLED' && (exitInspectionData.status === 'SIGNED' || exitInspectionData.status === 'LOCKED') && exitInspectionData.pdfUrl && (
+                                                                <a
+                                                                    href={exitInspectionData.pdfUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="w-full py-2.5 px-4 text-sm font-medium text-center text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition block"
+                                                                >
+                                                                    Voir le PDF de l&apos;EDL de sortie
+                                                                </a>
+                                                            )}
+                                                        </>
                                                     )}
                                                 </div>
                                             ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (

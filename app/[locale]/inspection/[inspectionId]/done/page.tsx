@@ -163,6 +163,7 @@ export default function DonePage() {
 
   const landlordSignedDate = formatDate(inspection?.landlordSignedAt as string | null);
   const tenantSignedDate = formatDate(inspection?.tenantSignedAt as string | null);
+  const isExit = inspection?.type === 'EXIT';
 
   return (
     <div className="h-full flex flex-col items-center overflow-y-auto px-6 py-12">
@@ -170,7 +171,7 @@ export default function DonePage() {
       <div className="text-center mb-6">
         <CircleCheck size={72} color={t.green} className="mx-auto mb-4 animate-bounce" />
         <h1 className={`text-[28px] font-bold tracking-tight ${t.textPrimary}`}>
-          État des lieux terminé !
+          {isExit ? 'État des lieux de sortie terminé !' : 'État des lieux terminé !'}
         </h1>
         <p className={`text-[17px] mt-3 max-w-xs ${t.textSecondary}`}>
           Le document a été envoyé par email aux deux parties.
@@ -206,7 +207,11 @@ export default function DonePage() {
         <Info size={18} color={t.blue} className="shrink-0 mt-0.5" />
         <div className={`text-[12px] leading-relaxed ${t.textSecondary}`}>
           {isWithin10Days ? (
-            <>Le locataire dispose de <strong className={t.textPrimary}>{daysRemaining} jour{daysRemaining > 1 ? 's' : ''}</strong> pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989).</>
+            isExit ? (
+              <>Le locataire dispose de <strong className={t.textPrimary}>{daysRemaining} jour{daysRemaining > 1 ? 's' : ''}</strong> pour contester l&apos;état des lieux de sortie. Le propriétaire dispose d&apos;un mois (2 mois si dégradations) pour restituer le dépôt de garantie.</>
+            ) : (
+              <>Le locataire dispose de <strong className={t.textPrimary}>{daysRemaining} jour{daysRemaining > 1 ? 's' : ''}</strong> pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989).</>
+            )
           ) : (
             <>Le délai de 10 jours pour signaler des défauts est expiré.</>
           )}
@@ -378,6 +383,16 @@ export default function DonePage() {
             </>
           )}
         </button>
+
+        {isExit && isLandlord && (
+          <button
+            onClick={() => router.push(`/inspection/${inspectionId}/deductions`)}
+            className="w-full py-4 rounded-2xl text-[17px] font-bold flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all active:scale-[0.98]"
+          >
+            Gérer les retenues sur dépôt
+            <ArrowRight size={18} />
+          </button>
+        )}
 
         <button
           onClick={() => router.push('/dashboard')}

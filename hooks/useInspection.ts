@@ -478,6 +478,7 @@ export function useInspection(inspectionId: string | undefined) {
       degradationTypes?: string[];
       isAbsent?: boolean;
       evolution?: ElementEvolution;
+      installationYear?: number | null;
     }
   ) => {
     if (!inspectionId) return;

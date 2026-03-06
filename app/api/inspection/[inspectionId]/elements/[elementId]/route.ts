@@ -52,7 +52,7 @@ export async function PATCH(request: Request, props: Params) {
     }
 
     const body = await request.json();
-    const allowedFields = ['condition', 'nature', 'observations', 'degradationTypes', 'isAbsent', 'evolution'];
+    const allowedFields = ['condition', 'nature', 'observations', 'degradationTypes', 'isAbsent', 'evolution', 'installationYear'];
     const updateData: Record<string, unknown> = {};
     for (const field of allowedFields) {
       if (body[field] !== undefined) {

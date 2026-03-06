@@ -157,6 +157,13 @@ model User {
   depositsTotal          Int @default(0)
   depositsReturnedOnTime Int @default(0)
 
+  // --- Profil public propriétaire ---
+  bio                 String?    // Courte description (max 200 chars)
+  languages           String[]   // Langues parlées (ex: ["Français", "English"])
+  lastActiveAt        DateTime?  // Dernière activité sur la plateforme
+  averageResponseTime Int?       // Temps de réponse moyen en minutes
+  responseRate        Int?       // Taux de réponse 0-100
+
   // --- Simulateur d'investissement ---
   investmentSimulations InvestmentSimulation[]
 
@@ -200,6 +207,15 @@ model TenantProfile {
   punctualityRate    Float? // 0-100
   lastVerifiedAt     DateTime?
   verificationStatus String? // "PENDING", "VERIFIED", "FAILED", "EXPIRED"
+
+  // Revenus freelance lissés (auto-détectés via Powens)
+  freelanceSmoothedIncome     Int?       // revenu mensuel lissé en euros
+  freelanceAnnualIncome       Int?       // revenu annuel total en euros
+  freelanceIncomeConfidence   String?    // "HIGH" | "MEDIUM" | "LOW"
+  freelanceIncomeVerifiedAt   DateTime?
+  freelanceIncomeMonths       Int?       // nombre de mois avec données
+  freelanceIncomeSources      Json?      // détail des émetteurs détectés
+  freelanceIncomeBreakdown    Json?      // breakdown mensuel
 
   // Bio
   bio String?
@@ -2014,6 +2030,9 @@ model InspectionElement {
   isAbsent         Boolean           @default(false) // Équipement inexistant (chip "Absent")
   observations     String? // Observation texte (dictée ou clavier)
   degradationTypes String[] // ["Tache", "Rayure", "Fissure", ...] multi-sélection
+
+  // Vétusté — année de pose/rénovation du matériau (optionnel, pour calcul vétusté à la sortie)
+  installationYear Int?
 
   // [Sortie] Comparaison avec l'entrée
   evolution ElementEvolution?

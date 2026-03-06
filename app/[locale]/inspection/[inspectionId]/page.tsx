@@ -20,18 +20,27 @@ export default async function InspectionRedirectPage({ params }: PageProps) {
   }
 
   // Determine where to redirect based on inspection state
-  if (inspection.status === 'SIGNED' || inspection.status === 'LOCKED') {
+  if (inspection.status === 'SIGNED' || inspection.status === 'LOCKED' || inspection.status === 'AMENDED') {
     redirect(`/${locale}/inspection/${inspectionId}/done`);
+  }
+
+  if (inspection.status === 'CANCELLED') {
+    redirect(`/${locale}/dashboard`);
   }
 
   if (inspection.status === 'PENDING_SIGNATURE') {
     redirect(`/${locale}/inspection/${inspectionId}/sign`);
   }
 
+  const isExit = inspection.type === 'EXIT';
+
   // DRAFT: find the current step
-  const hasMeters = await prisma.inspectionMeter.count({ where: { inspectionId } });
-  if (hasMeters === 0) {
-    redirect(`/${locale}/inspection/${inspectionId}/meters`);
+  // EXIT inspections skip meters (already done at entry) → go straight to rooms
+  if (!isExit) {
+    const hasMeters = await prisma.inspectionMeter.count({ where: { inspectionId } });
+    if (hasMeters === 0) {
+      redirect(`/${locale}/inspection/${inspectionId}/meters`);
+    }
   }
 
   const allRoomsComplete = inspection.rooms.length > 0 && inspection.rooms.every((r) => r.isCompleted);

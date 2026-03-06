@@ -209,21 +209,33 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
         }
     }
 
-    // Fetch inspection data if lease is signed
+    // Fetch inspection data if lease is signed (ENTRY + EXIT separately)
     let inspectionData: { id: string; status: string; type: string; pdfUrl: string | null; scheduledAt: string | null } | null = null;
+    let exitInspectionData: { id: string; status: string; type: string; pdfUrl: string | null; scheduledAt: string | null } | null = null;
     if (applicationId && leaseStatus === 'SIGNED') {
-        const inspection = await prisma.inspection.findFirst({
+        const inspections = await prisma.inspection.findMany({
             where: { applicationId },
             select: { id: true, status: true, type: true, pdfUrl: true, scheduledAt: true },
             orderBy: { createdAt: 'desc' },
         });
-        if (inspection) {
+        const entryInspection = inspections.find(i => i.type === 'ENTRY') || null;
+        const exitInspection = inspections.find(i => i.type === 'EXIT') || null;
+        if (entryInspection) {
             inspectionData = {
-                id: inspection.id,
-                status: inspection.status,
-                type: inspection.type,
-                pdfUrl: inspection.pdfUrl,
-                scheduledAt: inspection.scheduledAt?.toISOString() || null,
+                id: entryInspection.id,
+                status: entryInspection.status,
+                type: entryInspection.type,
+                pdfUrl: entryInspection.pdfUrl,
+                scheduledAt: entryInspection.scheduledAt?.toISOString() || null,
+            };
+        }
+        if (exitInspection) {
+            exitInspectionData = {
+                id: exitInspection.id,
+                status: exitInspection.status,
+                type: exitInspection.type,
+                pdfUrl: exitInspection.pdfUrl,
+                scheduledAt: exitInspection.scheduledAt?.toISOString() || null,
             };
         }
     }
@@ -246,6 +258,7 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 conversationId={conversation.id}
                 confirmedVisit={confirmedVisit}
                 inspectionData={inspectionData}
+                exitInspectionData={exitInspectionData}
             />
         </div>
     );

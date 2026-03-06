@@ -271,7 +271,7 @@ export const ANTI_FORGET_CHECKLIST = [
 
 export const EVOLUTION_CONFIG: Record<ElementEvolution, { label: string; color: string }> = {
   UNCHANGED: { label: 'Identique', color: EDL_COLORS.green },
-  NORMAL_WEAR: { label: 'Usure naturelle', color: EDL_COLORS.yellow },
+  NORMAL_WEAR: { label: 'Usure normale', color: EDL_COLORS.yellow },
   DETERIORATION: { label: 'Dégradation', color: EDL_COLORS.red },
   IMPROVEMENT: { label: 'Amélioration', color: EDL_COLORS.blue },
 };
@@ -298,6 +298,7 @@ export const INSPECTION_STATUS_LABELS: Record<InspectionStatus, string> = {
   SIGNED: 'Signé',
   LOCKED: 'Verrouillé',
   AMENDED: 'Rectifié',
+  CANCELLED: 'Annulé',
 };
 
 /** Labels pour les types de compteurs */
