@@ -22,6 +22,7 @@ import ReportButton from "@/components/reports/ReportButton";
 import PollResults from "@/components/listings/PollResults";
 import PollBanner from "@/components/listings/PollBanner";
 import ListingRequirementsCard from "@/components/listings/ListingRequirementsCard";
+import LandlordProfileCard from "@/components/listings/LandlordProfileCard";
 
 interface ListingClientProps {
     listing: SafeListing & {
@@ -53,6 +54,22 @@ const ListingClient: React.FC<ListingClientProps> = ({
     const sessionUserId = (session?.user as any)?.id;
     const effectiveUserId = currentUser?.id || sessionUserId;
     const isOwner = effectiveUserId === listing.user.id;
+
+    const landlordData = useMemo(() => ({
+        id: listing.user.id,
+        firstName: listing.user.firstName || listing.user.name?.split(' ')[0] || 'Propriétaire',
+        lastInitial: listing.user.lastName?.charAt(0) || listing.user.name?.split(' ')[1]?.charAt(0) || '',
+        avatarUrl: listing.user.image,
+        bio: (listing.user as any).bio,
+        languages: (listing.user as any).languages || [],
+        propertyCount: (listing.user as any).propertyCount || 1,
+        averageResponseTime: (listing.user as any).averageResponseTime,
+        responseRate: (listing.user as any).responseRate,
+        memberSince: listing.user.createdAt,
+        isActive: (listing.user as any).lastActiveAt
+            ? Date.now() - new Date((listing.user as any).lastActiveAt).getTime() < 7 * 24 * 60 * 60 * 1000
+            : false,
+    }), [listing.user]);
 
     const onContactHost = useCallback(() => {
         if (!effectiveUserId) {
@@ -150,7 +167,13 @@ const ListingClient: React.FC<ListingClientProps> = ({
                             zipCode={listing.zipCode}
                         />
                         <div className="order-first mb-10 md:order-last md:col-span-3">
-                            <div className="bg-card border border-border overflow-hidden rounded-xl p-4 flex flex-col gap-4 sticky top-28">
+                            <div className="flex flex-col gap-4 sticky top-28">
+                            <LandlordProfileCard
+                                landlord={landlordData}
+                                onContact={onContactHost}
+                                isOwner={isOwner}
+                            />
+                            <div className="bg-card border border-border overflow-hidden rounded-xl p-4 flex flex-col gap-4">
                                 <div className="text-xl font-semibold">
                                     {t('status.interested')}
                                 </div>
@@ -189,6 +212,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                                     requirements={(listing as any).requirements}
                                 />
                             )}
+                            </div>
                         </div>
                     </div>
                 </div>

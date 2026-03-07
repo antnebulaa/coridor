@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
 import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
+import { getVerifiedIncome } from "@/lib/income";
 
 interface IParams {
     listingId: string;
@@ -123,7 +124,7 @@ export async function GET(
             })(),
             tenantProfile: profile
                 ? {
-                      netSalary: profile.netSalary,
+                      netSalary: getVerifiedIncome(profile).amount,
                       jobType: profile.jobType,
                       jobTitle: profile.jobTitle,
                       guarantors: profile.guarantors.map((g) => ({

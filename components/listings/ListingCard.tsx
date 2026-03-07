@@ -5,8 +5,8 @@ import { SafeListing, SafeUser } from "@/types";
 import { useRouter } from "@/i18n/navigation";
 import { useCallback, useMemo, useRef } from "react";
 import { format } from 'date-fns';
-import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront } from 'lucide-react';
-import { TbElevator } from 'react-icons/tb';
+import { LayoutGrid, Bus, Train, TramFront, Wifi, Bike, BusFront, PawPrint, GraduationCap } from 'lucide-react';
+import { TbElevator, TbStairsUp } from 'react-icons/tb';
 import HeartButton from "../HeartButton";
 import { Button } from "../ui/Button";
 import LikeButton from "../LikeButton";
@@ -43,7 +43,7 @@ const FeatureTag = ({
     variant?: 'default' | 'yellow' | 'blue';
     title?: string;
 }) => {
-    const baseStyles = "flex items-center justify-center gap-1  py-2 rounded-[12px] px-3 md:px-3.5 h-8 leading-none text-sm border border-neutral-100";
+    const baseStyles = "flex items-center justify-center gap-1  py-2 rounded-[12px] px-3 md:px-2 h-7 leading-none text-sm border border-neutral-100";
     const variants = {
         default: "bg-secondary text-foreground",
         yellow: "bg-[#FFFE3C] text-[#282828]",
@@ -130,27 +130,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
     const floorDisplay = useMemo(() => {
         if (data.floor === 0) return t('groundFloor');
         if (data.floor) {
-            const floorText = data.totalFloors
+            return data.totalFloors
                 ? t('floorTotal', { floor: data.floor, total: data.totalFloors })
                 : t('floor', { floor: data.floor });
-            const elevatorText = data.hasElevator ? t('elevator') : t('noElevator');
-
-            return (
-                <span className="flex items-center gap-1.5">
-                    {floorText}
-                    <span className="text-[8px] text-neutral-400">●</span>
-                    {elevatorText}
-                    {data.isAccessible && (
-                        <>
-                            <span className="text-[8px] text-neutral-400">●</span>
-                            {t('accessible')}
-                        </>
-                    )}
-                </span>
-            );
         }
         return null;
-    }, [data.floor, data.totalFloors, data.hasElevator, data.isAccessible]);
+    }, [data.floor, data.totalFloors]);
 
     const dragStart = useRef({ x: 0, y: 0 });
     const isDrag = useRef(false);
@@ -190,7 +175,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 onClick={handleClick}
                 className="col-span-1 cursor-pointer group w-full listing-card-container"
             >
-                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-3xl md:p-2 hover:bg-secondary transition">
+                <div className="flex flex-col md:flex-row gap-1.5 md:gap-4 lg:gap-3 w-full h-auto md:h-[180px] bg-card rounded-3xl md:p-2 hover:bg-neutral-50 border border-white hover:border hover:border-neutral-200 transition">
                     {/* Image Section - Stacked on Mobile, Side by Side on Tablet, Stacked on Desktop */}
                     <div className="
                         w-full h-[200px]
@@ -211,7 +196,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
                             {data.rentalUnit?.type === 'PRIVATE_ROOM' && (
-                                <div className="bg-[#fbea00] opacity-100 px-2 py-1.5 border-2 border-amber-50 rounded-[10px] text-[10px] font-bold drop-shadow-sm uppercase tracking-widest text-black">
+                                <div className="bg-[#fbea00] opacity-100 px-3 py-1  rounded-full text-[12px] font-medium drop-shadow-sm tracking-wide text-black">
                                     {t('shared')}
                                 </div>
                             )}
@@ -225,7 +210,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             <div className="flex flex-col gap-0">
                                 <div className="flex flex-row justify-between items-start w-full">
                                     <div className="flex flex-col items-start whitespace-nowrap">
-                                        <div className="font-medium text-[26px] md:text-[22px] text-[#1b1b1b] leading-tight">
+                                        <div className="font-medium text-[26px] md:text-[22px] text-[#1b1b1b] leading-tight md:mb-2 items-start">
                                             {price}€<span className="text-neutral-400 font-normal text-sm ml-1">{t('monthChargesIncluded')}</span>
                                         </div>
                                     </div>
@@ -263,11 +248,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                             </span>
                                         )}
                                     </div>
-                                    {floorDisplay && (
-                                        <div className="hidden md:block font-normal text-muted-foreground text-sm">
-                                            {floorDisplay}
-                                        </div>
-                                    )}
+                                    
                                 </div>
                             </div>
 
@@ -286,36 +267,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </div>
                             )}
 
-                            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-3 text-sm text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
-                                {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
-                                    <FeatureTag>
-                                        <span className="font-medium">1 ch</span>
-                                    </FeatureTag>
-                                ) : data.roomCount === 1 ? (
-                                    <FeatureTag>
-                                        <span className="font-medium">{t('studio')}</span>
-                                    </FeatureTag>
-                                ) : data.roomCount && data.roomCount > 1 ? (
-                                    <>
-                                        <FeatureTag>
-                                            <span className="font-medium">{data.roomCount} {data.roomCount === 1 ? 'pièce' : 'pièces'}</span>
-                                        </FeatureTag>
-                                        <FeatureTag>
-                                            <span className="font-medium">{Math.max(0, data.roomCount - 1)} {Math.max(0, data.roomCount - 1) <= 1 ? 'ch' : 'ch'}</span>
-                                        </FeatureTag>
-                                    </>
-                                ) : null}
-
-                                {surfaceDisplay && (
-                                    <FeatureTag>
-                                        <span className="font-medium">{surfaceDisplay}</span>
-                                    </FeatureTag>
-                                )}
-
-                                <FeatureTag>
-                                    <span className="font-medium">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
-                                </FeatureTag>
-
+                            <div className="flex flex-row flex-wrap items-center gap-2 md:gap-1.5 text-sm text-muted-foreground mt-[7px] md:mt-2 mb-[5px] md:mb-0.5">
                                 {data.dpe && DPE_COLORS[data.dpe.toUpperCase()] && (
                                     <div className="flex items-center">
                                         <div
@@ -333,33 +285,59 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                     </div>
                                 )}
 
+                                {data.rentalUnit?.type === 'PRIVATE_ROOM' ? (
+                                    <FeatureTag>
+                                        <span className="font-base">1 ch</span>
+                                    </FeatureTag>
+                                ) : data.roomCount === 1 ? (
+                                    <FeatureTag>
+                                        <span className="font-medium">{t('studio')}</span>
+                                    </FeatureTag>
+                                ) : data.roomCount && data.roomCount > 1 ? (
+                                    <FeatureTag>
+                                        <span className="font-base">{data.roomCount} {data.roomCount === 1 ? 'pièce' : 'pièces'}</span>
+                                    </FeatureTag>
+                                ) : null}
+
+                                {surfaceDisplay && (
+                                    <FeatureTag>
+                                        <span className="font-base">{surfaceDisplay}</span>
+                                    </FeatureTag>
+                                )}
+
+                                <FeatureTag>
+                                    <span className="font-base">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
+                                </FeatureTag>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
                                 {data.transitData?.mainConnection && (
-                                    <div className="flex items-center justify-center gap-1.5 rounded-[12px] px-2 h-8 leading-none text-sm bg-white border border-neutral-200 text-neutral-700">
+                                    <div className="flex items-center gap-1.5 rounded-xl px-1 mr-2 h-8 leading-none text-sm bg-white text-neutral-700 w-fit">
                                         <div className="flex items-center gap-1">
                                             {(() => {
                                                 const type = (data.transitData.mainConnection.type || "").toLowerCase();
-                                                if (type.includes('bus')) return <BusFront size={16} className="text-neutral-700" />;
-                                                if (type.includes('train') || type.includes('rail')) return <Train size={16} className="text-neutral-700" />;
+                                                if (type.includes('bus')) return <BusFront size={20} className="text-neutral-700" />;
+                                                if (type.includes('train') || type.includes('rail')) return <Train size={20} className="text-neutral-700" />;
                                                 if (type.includes('tram')) return (
-                                                    <div className="w-4 h-4 rounded-full border border-neutral-700 flex items-center justify-center">
-                                                        <span className="text-[8px] font-bold text-neutral-700">T</span>
+                                                    <div className="w-5 h-5 rounded-full border border-neutral-700 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-neutral-700">T</span>
                                                     </div>
                                                 );
                                                 return (
-                                                    <div className="w-4 h-4 rounded-full border border-neutral-700 flex items-center justify-center">
-                                                        <span className="text-[8px] font-bold text-neutral-700 items-center">M</span>
+                                                    <div className="w-5 h-5 rounded-full border border-neutral-700 flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-neutral-700 items-center">M</span>
                                                     </div>
                                                 );
                                             })()}
 
                                             <div
-                                                className="h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center"
+                                                className="h-5 min-w-[20px] px-1 rounded-md flex items-center justify-center"
                                                 style={{
                                                     backgroundColor: data.transitData.mainConnection.color || '#000',
                                                     color: data.transitData.mainConnection.textColor || '#FFF'
                                                 }}
                                             >
-                                                <span className="text-[10px] font-bold leading-none pt-px">
+                                                <span className="h-3 text-[12px] font-bold leading-none pt-px items-center justify-center">
                                                     {data.transitData.mainConnection.line}
                                                 </span>
                                             </div>
@@ -367,6 +345,18 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                         <span className="font-medium">{data.transitData.mainConnection.walkTime} min</span>
                                     </div>
                                 )}
+                                {data.petsAllowed && <PawPrint size={18} className="text-neutral-500" />}
+                                {data.isStudentFriendly && <GraduationCap size={18} className="text-neutral-500" />}
+                                {data.hasElevator ? (
+                                    <span className="flex items-center gap-1 text-sm font-medium text-neutral-500">
+                                        <TbElevator size={18} />
+                                        {data.floor != null && data.floor > 0 && <span>{data.floor}/{data.totalFloors || '?'}</span>}
+                                    </span>
+                                ) : data.floor != null && data.floor > 0 ? (
+                                    <span className="flex items-center gap-1 text-sm font-medium text-neutral-500">
+                                        <TbStairsUp size={18} /> {data.floor}/{data.totalFloors || '?'}
+                                    </span>
+                                ) : null}
                             </div>
                             <div className="font-semibold text-[13px] md:text-[13px] text-blue-600 leading-tight pt-2">
 
@@ -492,21 +482,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
                         </div>
                     )}
                     <div className="flex flex-row items-center gap-1 text-muted-foreground text-[18px] mb-1">
-                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
-                            ? `${t('shared')} • ${surfaceDisplay}`
-                            : data.roomCount === 1
-                                ? `${t('studio')} • ${surfaceDisplay}`
-                                : data.roomCount && data.roomCount > 1
-                                    ? `${data.roomCount} ${data.roomCount === 1 ? 'pièce' : 'pièces'} • ${Math.max(0, data.roomCount - 1)} ch • ${surfaceDisplay}`
-                                    : surfaceDisplay || ''
-                        }
-                        <div className="ml-2">
-                            <FeatureTag>
-                                <span className="font-medium text-xs md:text-sm">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
-                            </FeatureTag>
-                        </div>
                         {data.dpe && DPE_COLORS[data.dpe.toUpperCase()] && (
-                            <div className="flex items-center">
+                            <div className="flex items-center mr-1">
                                 <div
                                     className="rounded-l-full pl-2.5 pr-0.5 h-7 flex items-center justify-center font-bold text-xs"
                                     style={{
@@ -521,6 +498,19 @@ const ListingCard: React.FC<ListingCardProps> = ({
                                 </svg>
                             </div>
                         )}
+                        {data.rentalUnit?.type === 'PRIVATE_ROOM'
+                            ? `${t('shared')} • ${surfaceDisplay}`
+                            : data.roomCount === 1
+                                ? `${t('studio')} • ${surfaceDisplay}`
+                                : data.roomCount && data.roomCount > 1
+                                    ? `${data.roomCount} ${data.roomCount === 1 ? 'pièce' : 'pièces'} • ${surfaceDisplay}`
+                                    : surfaceDisplay || ''
+                        }
+                        <div className="ml-2">
+                            <FeatureTag>
+                                <span className="font-medium text-xs md:text-sm">{data.isFurnished || data.rentalUnit?.type === 'PRIVATE_ROOM' ? t('furnished') : t('unfurnished')}</span>
+                            </FeatureTag>
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 py-[5px] text-neutral-700 dark:text-neutral-300 text-base">
@@ -583,7 +573,20 @@ const ListingCard: React.FC<ListingCardProps> = ({
                             </div>
                         )}
 
-                        {!data.transitData?.mainConnection && !data.hasFiber && !data.hasBikeRoom && (
+                        {data.petsAllowed && <PawPrint size={18} className="text-neutral-500 dark:text-neutral-400" />}
+                        {data.isStudentFriendly && <GraduationCap size={18} className="text-neutral-500 dark:text-neutral-400" />}
+                        {data.hasElevator ? (
+                            <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                                <TbElevator size={18} />
+                                {data.floor != null && data.floor > 0 && <span>{data.floor}/{data.totalFloors || '?'}</span>}
+                            </span>
+                        ) : data.floor != null && data.floor > 0 ? (
+                            <span className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                                <TbStairsUp size={18} /> {data.floor}/{data.totalFloors || '?'}
+                            </span>
+                        ) : null}
+
+                        {!data.transitData?.mainConnection && !data.hasFiber && !data.hasBikeRoom && !data.petsAllowed && !data.isStudentFriendly && (
                             <div className="h-5" />
                         )}
                     </div>

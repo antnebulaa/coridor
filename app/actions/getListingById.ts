@@ -20,7 +20,11 @@ export default async function getListingById(
                     include: {
                         property: {
                             include: {
-                                owner: true,
+                                owner: {
+                                    include: {
+                                        _count: { select: { properties: true } },
+                                    },
+                                },
                                 images: {
                                     orderBy: {
                                         order: 'asc'
@@ -245,6 +249,7 @@ export default async function getListingById(
                         updatedAt: listing.rentalUnit.property.owner.updatedAt.toISOString(),
                         emailVerified: listing.rentalUnit.property.owner.emailVerified?.toISOString() || null,
                         birthDate: listing.rentalUnit.property.owner.birthDate?.toISOString() || null,
+                        lastActiveAt: (listing.rentalUnit.property.owner as any).lastActiveAt?.toISOString() || null,
                         tenantProfile: null,
                         wishlists: null,
                         commuteLocations: null,
@@ -299,6 +304,8 @@ export default async function getListingById(
                 updatedAt: listing.rentalUnit.property.owner.updatedAt.toISOString(),
                 emailVerified: listing.rentalUnit.property.owner.emailVerified?.toISOString() || null,
                 birthDate: listing.rentalUnit.property.owner.birthDate?.toISOString() || null,
+                lastActiveAt: (listing.rentalUnit.property.owner as any).lastActiveAt?.toISOString() || null,
+                propertyCount: (listing.rentalUnit.property.owner as any)._count?.properties || 1,
                 tenantProfile: null,
                 wishlists: null,
                 commuteLocations: null,

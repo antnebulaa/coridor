@@ -13,7 +13,7 @@ import ListingCommute from "./ListingCommute";
 import NeighborhoodScore from "./NeighborhoodScore";
 import ListingCardCarousel from "./ListingCardCarousel";
 import Image from "next/image";
-import { Calendar, ChevronDown, ChevronUp, Fence, Eye, Sun, Waves, Flower2, ArrowUpFromLine, Car } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Fence, Eye, Sun, Waves, Flower2, ArrowUpFromLine, Car, MessageCircle, Home, CheckCircle, Globe, Sparkles } from "lucide-react";
 import ListingImageGallery from "./ListingImageGallery";
 import { Button } from "../ui/Button";
 import useLoginModal from "@/hooks/useLoginModal";
@@ -21,6 +21,7 @@ import ApplicationModal from "../modals/ApplicationModal";
 import ListingMobileFooter from "./ListingMobileFooter";
 import IncompleteProfileModal from "../modals/IncompleteProfileModal";
 import PollResults from "./PollResults";
+import LandlordAvatar from "@/components/profile/LandlordAvatar";
 
 
 interface ListingPreviewProps {
@@ -212,6 +213,55 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
         return items;
     }, [listing]);
 
+    // Landlord profile data
+    const landlord = useMemo(() => {
+        const user = listing.user;
+        if (!user) return null;
+        const firstName = user.firstName || user.name?.split(' ')[0] || 'Propriétaire';
+        const lastInitial = user.lastName?.charAt(0) || user.name?.split(' ')[1]?.charAt(0) || '';
+        const responseTime = (user as any).averageResponseTime;
+        const propertyCount = (user as any).propertyCount || (user as any)._count?.properties || 1;
+        const memberSinceDate = new Date(user.createdAt);
+        const now = new Date();
+        const monthsSinceMember = (now.getFullYear() - memberSinceDate.getFullYear()) * 12 + (now.getMonth() - memberSinceDate.getMonth());
+
+        // Ancienneté lisible
+        let memberSinceLabel: string;
+        if (monthsSinceMember < 1) memberSinceLabel = 'Ce mois-ci';
+        else if (monthsSinceMember < 12) memberSinceLabel = `${monthsSinceMember} mois`;
+        else {
+            const years = Math.floor(monthsSinceMember / 12);
+            memberSinceLabel = years === 1 ? '1 an' : `${years} ans`;
+        }
+
+        let responseLabel: string | null = null;
+        if (responseTime != null) {
+            if (responseTime < 60) responseLabel = '< 1h';
+            else if (responseTime < 120) responseLabel = '~1h';
+            else if (responseTime < 1440) responseLabel = `~${Math.round(responseTime / 60)}h`;
+            else if (responseTime < 2880) responseLabel = '~1 jour';
+            else responseLabel = `~${Math.round(responseTime / 1440)} jours`;
+        }
+
+        const languages = ((user as any).languages as string[]) || [];
+
+        return {
+            firstName,
+            lastInitial,
+            avatarUrl: user.image,
+            bio: (user as any).bio as string | null,
+            propertyCount,
+            responseRate: (user as any).responseRate as number | null,
+            responseLabel,
+            memberSinceLabel,
+            languages,
+            isNew: monthsSinceMember < 1 && responseTime == null && (user as any).responseRate == null,
+            isActive: (user as any).lastActiveAt
+                ? Date.now() - new Date((user as any).lastActiveAt).getTime() < 7 * 24 * 60 * 60 * 1000
+                : false,
+        };
+    }, [listing.user]);
+
     // Summary line: "3 pièces · 2 chambres · 1 SdB · 45 m² · 3e/5"
     const summaryParts = useMemo(() => {
         const parts: string[] = [];
@@ -311,7 +361,78 @@ const ListingPreview: React.FC<ListingPreviewProps> = ({
                     </div>
                 )}
 
-               
+                {/* ── Profil propriétaire ── */}
+                {landlord && !isOwner && (
+                    <>
+                        <div className="px-6 py-5">
+                            <p className="text-[11px] uppercase tracking-widest text-neutral-400 dark:text-neutral-500 font-semibold mb-4">Le propriétaire</p>
+
+                            {/* Avatar + Nom */}
+                            <div className="flex items-center gap-4">
+                                <LandlordAvatar
+                                    avatarUrl={landlord.avatarUrl}
+                                    firstName={landlord.firstName}
+                                    lastInitial={landlord.lastInitial}
+                                    size="md"
+                                    isActive={landlord.isActive}
+                                />
+                                <div className="flex flex-col">
+                                    <span className="text-lg font-semibold text-foreground">
+                                        {landlord.firstName} {landlord.lastInitial}.
+                                    </span>
+                                    {landlord.isNew ? (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                                            <Sparkles size={12} />
+                                            Nouveau sur Coridor
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm  text-neutral-700 dark:text-neutral-500 ">
+                                            Membre depuis {landlord.memberSinceLabel}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Stats */}
+                            {!landlord.isNew && (
+                                <div className="flex flex-col gap-2 mt-4">
+                                    {landlord.responseLabel && (
+                                        <div className="flex items-center gap-2.5 text-sm text-neutral-700 dark:text-neutral-500">
+                                            <MessageCircle size={15} className="shrink-0" />
+                                            <span>Répond en général en {landlord.responseLabel}</span>
+                                        </div>
+                                    )}
+                                    {landlord.responseRate != null && (
+                                        <div className="flex items-center gap-2.5 text-sm text-neutral-700 dark:text-neutral-500">
+                                            <CheckCircle size={15} className="shrink-0" />
+                                            <span>Taux de réponse : {landlord.responseRate}%</span>
+                                        </div>
+                                    )}
+                                    {landlord.propertyCount > 1 && (
+                                        <div className="flex items-center gap-2.5 text-sm text-neutral-700 dark:text-neutral-500">
+                                            <Home size={15} className="shrink-0" />
+                                            <span>{landlord.propertyCount} biens sur Coridor</span>
+                                        </div>
+                                    )}
+                                    {landlord.languages.length > 0 && (
+                                        <div className="flex items-center gap-2.5 text-sm text-neutral-700 dark:text-neutral-500">
+                                            <Globe size={15} className="shrink-0" />
+                                            <span>Parle {landlord.languages.join(', ')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Bio */}
+                            {landlord.bio && (
+                                <p className="text-sm text-muted-foreground italic mt-4 leading-relaxed">
+                                    &laquo;&nbsp;{landlord.bio}&nbsp;&raquo;
+                                </p>
+                            )}
+                        </div>
+                        <div className="h-px bg-neutral-100 dark:bg-neutral-800 mx-6" />
+                    </>
+                )}
 
                 {/* ── Loyer ── */}
                 <div className="px-6 py-5">
