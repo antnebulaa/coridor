@@ -70,7 +70,7 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
     ), [currentUser]);
     const isDossierCompleted = useMemo(() => {
         if (!tenantProfile) return false;
-        const hasSelfInfo = !!tenantProfile.netSalary && !!tenantProfile.jobTitle;
+        const hasSelfInfo = !!(tenantProfile.netSalary || tenantProfile.freelanceSmoothedIncome) && !!tenantProfile.jobTitle;
         if (!hasSelfInfo) return false;
         if (rentalProject?.compositionType === 'COUPLE') {
             if (!tenantProfile.partnerNetSalary || !tenantProfile.partnerJobTitle) return false;

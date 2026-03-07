@@ -50,69 +50,19 @@ const DashboardPage = async () => {
         )
     }
 
-    // LANDLORD MODE — run all queries in parallel
+    // LANDLORD MODE — run queries in parallel
     const currentYear = new Date().getFullYear();
 
-    const [financialData, operationalStats, selectionStatsRaw, edlStatsRaw] = await Promise.all([
-        getFinancialAnalytics(undefined, currentYear),
+    const [financialData, operationalStats] = await Promise.all([
+        getFinancialAnalytics(undefined, currentYear).catch(() => null),
         getOperationalStats(),
-        prisma.listing.findMany({
-            where: {
-                rentalUnit: { property: { ownerId: currentUser.id } },
-                applications: { some: { evaluation: { isNot: null } } }
-            },
-            select: {
-                id: true,
-                title: true,
-                applications: {
-                    where: { evaluation: { isNot: null } },
-                    select: { evaluation: { select: { decision: true } } }
-                }
-            }
-        }).catch(() => []),
-        prisma.inspection.findMany({
-            where: {
-                application: { listing: { rentalUnit: { property: { ownerId: currentUser.id } } } },
-                status: { in: ['DRAFT', 'PENDING_SIGNATURE'] }
-            },
-            select: {
-                id: true, status: true, type: true, updatedAt: true,
-                tenant: { select: { name: true } },
-                rooms: { select: { isCompleted: true } },
-                application: { select: { listing: { select: { title: true } } } }
-            },
-            orderBy: { updatedAt: 'desc' },
-            take: 5,
-        }).catch(() => []),
     ]);
-
-    const selectionStats = selectionStatsRaw.map((l) => ({
-        listingId: l.id,
-        listingTitle: l.title,
-        evaluated: l.applications.length,
-        shortlisted: l.applications.filter(
-            (a) => a.evaluation?.decision === 'SHORTLISTED'
-        ).length,
-    }));
-
-    const edlStats = edlStatsRaw.map((i) => ({
-        id: i.id,
-        status: i.status,
-        type: i.type,
-        propertyTitle: i.application.listing.title || 'Logement',
-        tenantName: i.tenant?.name || null,
-        updatedAt: i.updatedAt.toISOString(),
-        totalRooms: i.rooms.length,
-        completedRooms: i.rooms.filter((r: { isCompleted: boolean }) => r.isCompleted).length,
-    }));
 
     return (
         <DashboardClient
             currentUser={currentUser}
             financials={financialData}
             operationalStats={operationalStats}
-            selectionStats={selectionStats}
-            edlStats={edlStats}
         />
     );
 }
