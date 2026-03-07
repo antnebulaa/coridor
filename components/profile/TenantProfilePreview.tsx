@@ -23,6 +23,9 @@ interface TenantProfilePreviewProps {
         badgeLevel?: string | null;
         verifiedMonths?: number;
         punctualityRate?: number | null;
+        freelanceSmoothedIncome?: number | null;
+        freelanceIncomeConfidence?: string | null;
+        freelanceIncomeMonths?: number | null;
     };
     rent?: number;
     charges?: any; // { amount: number, included: boolean }
@@ -76,8 +79,12 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
         return val;
     }
 
-    // Calculate totals
-    const netSalary = tenantProfile.netSalary || 0;
+    // Calculate totals — prioritize verified smoothed income for freelancers
+    const hasVerifiedSmoothed = tenantProfile.freelanceSmoothedIncome != null
+        && tenantProfile.freelanceIncomeConfidence !== 'LOW';
+    const netSalary = hasVerifiedSmoothed
+        ? tenantProfile.freelanceSmoothedIncome!
+        : (tenantProfile.netSalary || 0);
     const partnerNetSalary = tenantProfile.partnerNetSalary || 0;
     const totalAdditionalIncome = tenantProfile.additionalIncomes?.reduce((acc, curr) => acc + curr.amount, 0) || 0;
     const aplAmount = tenantProfile.aplAmount || 0;
@@ -246,8 +253,21 @@ const TenantProfilePreview: React.FC<TenantProfilePreviewProps> = ({
                         <span className="font-medium text-neutral-900">{tenantProfile.jobType || "Non renseigné"}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-neutral-600">Revenus Nets</span>
-                        <span className="font-medium text-neutral-900">{netSalary} € / mois</span>
+                        <span className="text-neutral-600 flex items-center gap-1">
+                            {hasVerifiedSmoothed ? 'Revenu mensuel lissé' : 'Revenus Nets'}
+                        </span>
+                        <span className="font-medium text-neutral-900 flex items-center gap-1.5">
+                            {netSalary.toLocaleString('fr-FR')} € / mois
+                            {hasVerifiedSmoothed ? (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-700">
+                                    <ShieldCheck size={10} /> Vérifié
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-neutral-100 text-neutral-500">
+                                    Déclaré
+                                </span>
+                            )}
+                        </span>
                     </div>
 
                     {/* Partner */}

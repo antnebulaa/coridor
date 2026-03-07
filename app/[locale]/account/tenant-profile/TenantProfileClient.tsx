@@ -147,8 +147,17 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
     const partnerNetSalary = watch('partnerNetSalary');
     const aplAmount = watch('aplAmount');
 
-    // Calculate totals
-    const totalTenantIncome = (parseInt(netSalary || '0') || 0) + (parseInt(partnerNetSalary || '0') || 0);
+    // Freelance smoothed income — locks the salary field when active
+    const hasSmoothedIncome = !!(
+        tenantProfile?.freelanceSmoothedIncome &&
+        tenantProfile?.freelanceIncomeConfidence &&
+        tenantProfile?.freelanceIncomeConfidence !== 'LOW'
+    );
+    const smoothedIncome = tenantProfile?.freelanceSmoothedIncome || 0;
+
+    // Calculate totals — use smoothed income when available
+    const effectiveSalary = hasSmoothedIncome ? smoothedIncome : (parseInt(netSalary || '0') || 0);
+    const totalTenantIncome = effectiveSalary + (parseInt(partnerNetSalary || '0') || 0);
     const totalAdditionalIncome = additionalIncomes.reduce((acc: number, curr: any) => acc + (parseInt(curr.amount || '0') || 0), 0);
     const totalHouseholdIncome = totalTenantIncome + totalAdditionalIncome + (parseInt(aplAmount || '0') || 0);
     const totalGuarantorIncome = guarantors.reduce((acc: number, curr: any) => {
@@ -648,16 +657,44 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                                 errors={errors}
                                 options={contractTypes}
                             />
-                            <SoftInput
-                                id="netSalary"
-                                label={t('job.salary')}
-                                type="number"
-                                formatPrice
-                                disabled={isLoading}
-                                register={register}
-                                errors={errors}
-                                required
-                            />
+                            {hasSmoothedIncome ? (
+                                <div>
+                                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5 block">
+                                        {t('job.salary')}
+                                    </label>
+                                    <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+                                        <Lock size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                                                    {smoothedIncome.toLocaleString('fr-FR')} €/mois
+                                                </span>
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                                    <ShieldCheck size={12} />
+                                                    Vérifié via Powens
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+                                                Lissé sur {tenantProfile?.freelanceIncomeMonths || 12} mois de transactions bancaires
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5">
+                                        Calculé automatiquement à partir de vos virements bancaires. Ce montant remplace la saisie manuelle.
+                                    </p>
+                                </div>
+                            ) : (
+                                <SoftInput
+                                    id="netSalary"
+                                    label={t('job.salary')}
+                                    type="number"
+                                    formatPrice
+                                    disabled={isLoading}
+                                    register={register}
+                                    errors={errors}
+                                    required
+                                />
+                            )}
                         </div>
                     </section>
 
@@ -920,8 +957,11 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-neutral-50 dark:bg-neutral-900 rounded-2xl p-6">
                             <div className="space-y-3">
                                 <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
-                                    <span>{t('summary.tenant')}</span>
-                                    <span className="font-medium">{parseInt(netSalary || '0')} €</span>
+                                    <span className="flex items-center gap-1.5">
+                                        {hasSmoothedIncome ? 'Revenu lissé (Vous)' : t('summary.tenant')}
+                                        {hasSmoothedIncome && <Lock size={12} className="text-emerald-600" />}
+                                    </span>
+                                    <span className="font-medium">{effectiveSalary} €</span>
                                 </div>
                                 <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                                     <span>{t('summary.partner')}</span>
@@ -1008,9 +1048,12 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         tenantProfile={{
                             ...tenantProfile,
                             ...watch(),
-                            netSalary: parseInt(watch('netSalary') || '0'),
+                            netSalary: hasSmoothedIncome ? smoothedIncome : parseInt(watch('netSalary') || '0'),
                             partnerNetSalary: parseInt(watch('partnerNetSalary') || '0'),
                             aplAmount: parseInt(watch('aplAmount') || '0'),
+                            freelanceSmoothedIncome: tenantProfile?.freelanceSmoothedIncome,
+                            freelanceIncomeConfidence: tenantProfile?.freelanceIncomeConfidence,
+                            freelanceIncomeMonths: tenantProfile?.freelanceIncomeMonths,
                             additionalIncomes: watch('additionalIncomes')?.map((i: any) => ({ ...i, amount: parseInt(i.amount || '0') })) || [],
                             guarantors: watch('guarantors')?.map((g: any) => ({
                                 ...g,

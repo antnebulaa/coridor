@@ -190,6 +190,14 @@ export class PassportService {
           }
         : undefined,
 
+      // Revenus freelance lissés (vue simplifiée — pas de détail mensuel)
+      freelanceIncome: passport.freelanceSmoothedIncome
+        ? {
+            smoothedIncome: passport.freelanceSmoothedIncome,
+            months: passport.freelanceIncomeMonths,
+          }
+        : undefined,
+
       // Historique des baux
       rentalHistory: settings.showRentalHistory
         ? passport.rentalHistory.map((rh) => ({

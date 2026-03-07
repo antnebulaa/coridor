@@ -1,11 +1,13 @@
 import { SafeUser } from "@/types";
 import { format } from "date-fns";
+import { getVerifiedIncome } from "@/lib/income";
 
 export const generateDossierHtml = (user: SafeUser, profile: any) => {
     const currentDate = format(new Date(), 'dd/MM/yyyy');
 
-    // Calculate total income
-    const salary = profile?.netSalary || 0;
+    // Calculate total income — use verified smoothed income when available
+    const income = getVerifiedIncome(profile || {});
+    const salary = income.amount;
     const additional = profile?.additionalIncomes?.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0) || 0;
     const totalIncome = salary + additional;
 
@@ -62,8 +64,8 @@ export const generateDossierHtml = (user: SafeUser, profile: any) => {
                 <span class="value">${profile?.jobType || 'Non renseigné'}</span>
             </div>
             <div class="row">
-                <span class="label">Salaire Net Mensuel :</span>
-                <span class="value">${profile?.netSalary} €</span>
+                <span class="label">${income.label} ${income.verified ? '🔒' : ''} :</span>
+                <span class="value">${salary} €</span>
             </div>
             ${profile?.additionalIncomes?.length > 0 ? `
             <div class="row">

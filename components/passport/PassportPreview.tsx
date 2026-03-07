@@ -45,6 +45,10 @@ interface PassportPreviewData {
         verifiedMonths?: number;
         punctualityRate?: number | null;
     };
+    freelanceIncome?: {
+        smoothedIncome: number;
+        months: number | null;
+    };
 }
 
 interface PassportPreviewProps {
@@ -92,7 +96,7 @@ const PassportPreview: React.FC<PassportPreviewProps> = ({ userId, passportData:
         return null;
     }
 
-    const { score, settings, rentalHistory, paymentBadge } = data;
+    const { score, settings, rentalHistory, paymentBadge, freelanceIncome } = data;
 
     const confidenceStyles = {
         HIGH: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -130,6 +134,19 @@ const PassportPreview: React.FC<PassportPreviewProps> = ({ userId, passportData:
                         verifiedMonths={paymentBadge.verifiedMonths}
                         punctualityRate={paymentBadge.punctualityRate}
                     />
+                )}
+
+                {/* Freelance smoothed income */}
+                {freelanceIncome && (
+                    <div className="flex items-center gap-2 text-sm">
+                        <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
+                        <span className="text-neutral-800 font-medium">
+                            {freelanceIncome.smoothedIncome.toLocaleString('fr-FR')} €/mois
+                        </span>
+                        <span className="text-neutral-500">
+                            (lissé {freelanceIncome.months || 12} mois · vérifié)
+                        </span>
+                    </div>
                 )}
 
                 {/* Rental history (brief) */}

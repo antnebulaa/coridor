@@ -82,8 +82,15 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
             birthDate: currentUser?.birthDate ? currentUser.birthDate.split('T')[0] : '',
             birthPlace: currentUser?.birthPlace,
             image: currentUser?.image, // NEW
+            bio: (currentUser as any)?.bio || '',
+            languages: (currentUser as any)?.languages || [],
         }
     });
+
+    const bioValue = watch('bio');
+    const languagesValue: string[] = watch('languages') || [];
+    const [isEditingBio, setIsEditingBio] = useState(false);
+    const [isEditingLanguages, setIsEditingLanguages] = useState(false);
 
     // Check completion status for badges
     const isIdentityComplete = !!(currentUser?.firstName && currentUser?.lastName && currentUser?.birthDate && currentUser?.birthPlace);
@@ -138,6 +145,8 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                 setIsEditingPhone(false);
                 setIsEditingAddress(false);
                 setIsEditingImage(false); // NEW
+                setIsEditingBio(false);
+                setIsEditingLanguages(false);
             })
             .catch(() => {
                 toast.custom((tToast) => (
@@ -251,6 +260,129 @@ const PersonalInfoClient: React.FC<PersonalInfoClientProps> = ({
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* BLOCK BIO: À propos (propriétaires uniquement) */}
+            {currentUser?.userMode === 'LANDLORD' && (
+                <>
+                    <hr />
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-row justify-between items-start">
+                            <div className="flex flex-col gap-1">
+                                <div className="text-lg font-medium dark:text-white">
+                                    À propos de vous
+                                </div>
+                                <div className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                                    {isEditingBio
+                                        ? 'Ce texte est visible par les locataires sur vos annonces.'
+                                        : (bioValue
+                                            ? <span className="italic text-neutral-700 dark:text-neutral-300">&laquo;&nbsp;{bioValue}&nbsp;&raquo;</span>
+                                            : 'Présentez-vous en quelques mots aux futurs locataires.'
+                                        )
+                                    }
+                                </div>
+                            </div>
+                            <div
+                                onClick={() => setIsEditingBio(!isEditingBio)}
+                                className="text-black dark:text-white animated-underline font-medium cursor-pointer"
+                            >
+                                {isEditingBio ? tCommon('cancel') : tCommon('edit')}
+                            </div>
+                        </div>
+
+                        {isEditingBio && (
+                            <div className="flex flex-col gap-3">
+                                <div className="relative">
+                                    <textarea
+                                        {...register('bio', { maxLength: 200 })}
+                                        maxLength={200}
+                                        rows={3}
+                                        placeholder="Présentez-vous en quelques mots aux futurs locataires..."
+                                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 text-sm bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100"
+                                    />
+                                    <span className="absolute bottom-3 right-3 text-xs text-muted-foreground">
+                                        {(bioValue || '').length}/200
+                                    </span>
+                                </div>
+                                <div className="w-full md:w-1/3">
+                                    <Button
+                                        label="Enregistrer"
+                                        onClick={handleSubmit(onSubmit)}
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
+
+            {/* BLOCK LANGUES: Langues parlées (propriétaires uniquement) */}
+            {currentUser?.userMode === 'LANDLORD' && (
+                <>
+                    <hr />
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-row justify-between items-start">
+                            <div className="flex flex-col gap-1">
+                                <div className="text-lg font-medium dark:text-white">
+                                    Langues parlées
+                                </div>
+                                <div className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
+                                    {isEditingLanguages
+                                        ? 'Sélectionnez les langues que vous parlez.'
+                                        : (languagesValue.length > 0
+                                            ? languagesValue.join(', ')
+                                            : 'Aucune langue renseignée.'
+                                        )
+                                    }
+                                </div>
+                            </div>
+                            <div
+                                onClick={() => setIsEditingLanguages(!isEditingLanguages)}
+                                className="text-black dark:text-white animated-underline font-medium cursor-pointer"
+                            >
+                                {isEditingLanguages ? tCommon('cancel') : tCommon('edit')}
+                            </div>
+                        </div>
+
+                        {isEditingLanguages && (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-wrap gap-2">
+                                    {['Français', 'English', 'Español', 'Deutsch', 'Italiano', 'Português', 'العربية', '中文', 'Русский', 'Türkçe'].map((lang) => {
+                                        const isSelected = languagesValue.includes(lang);
+                                        return (
+                                            <button
+                                                key={lang}
+                                                type="button"
+                                                onClick={() => {
+                                                    const current = languagesValue || [];
+                                                    const updated = isSelected
+                                                        ? current.filter((l: string) => l !== lang)
+                                                        : [...current, lang];
+                                                    setValue('languages', updated, { shouldDirty: true });
+                                                }}
+                                                className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
+                                                    isSelected
+                                                        ? 'bg-foreground text-background border-foreground'
+                                                        : 'bg-background text-foreground border-neutral-300 dark:border-neutral-600 hover:border-foreground'
+                                                }`}
+                                            >
+                                                {lang}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div className="w-full md:w-1/3">
+                                    <Button
+                                        label="Enregistrer"
+                                        onClick={handleSubmit(onSubmit)}
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
 
             <hr />

@@ -22,6 +22,7 @@ import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/modals/Modal";
 import { Button } from "@/components/ui/Button";
+import FreelanceIncomeCard from "@/components/passport/FreelanceIncomeCard";
 import { SafeUser } from "@/types";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -339,6 +340,44 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
     const [editingEntry, setEditingEntry] = useState<RentalHistoryEntry | null>(null);
     const [savingSettings, setSavingSettings] = useState(false);
 
+    // Freelance income
+    const [freelanceIncome, setFreelanceIncome] = useState<any>(null);
+    const [freelanceLoading, setFreelanceLoading] = useState(false);
+
+    const fetchFreelanceIncome = useCallback(async () => {
+        try {
+            const res = await fetch('/api/profile/freelance-income');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.freelanceSmoothedIncome) setFreelanceIncome(data);
+            }
+        } catch {
+            // Non-blocking — freelance income is optional
+        }
+    }, []);
+
+    const refreshFreelanceIncome = useCallback(async () => {
+        setFreelanceLoading(true);
+        try {
+            const res = await fetch('/api/profile/freelance-income', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.freelanceSmoothedIncome) {
+                    setFreelanceIncome(data);
+                    toast.success('Revenus mis à jour');
+                } else {
+                    toast.success('Aucun revenu freelance détecté');
+                }
+            } else {
+                toast.error('Erreur lors de l\'actualisation');
+            }
+        } catch {
+            toast.error('Erreur lors de l\'actualisation');
+        } finally {
+            setFreelanceLoading(false);
+        }
+    }, []);
+
     const fetchPassport = useCallback(async () => {
         try {
             const [passportRes, scoreRes] = await Promise.all([
@@ -394,7 +433,8 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
 
     useEffect(() => {
         fetchPassport();
-    }, [fetchPassport]);
+        fetchFreelanceIncome();
+    }, [fetchPassport, fetchFreelanceIncome]);
 
     // ── Settings handlers ──────────────────────────────────────────────────
 
@@ -599,6 +639,15 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
                             />
                         </div>
                     </div>
+
+                    {/* ─── Freelance Income Card ──────────────────────────── */}
+                    {freelanceIncome && (
+                        <FreelanceIncomeCard
+                            data={freelanceIncome}
+                            onRefresh={refreshFreelanceIncome}
+                            loading={freelanceLoading}
+                        />
+                    )}
 
                     {/* ─── Landlord Preview ─────────────────────────────── */}
                     <LandlordPreviewCard
