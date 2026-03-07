@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings, TrendingUp, FolderOpen, Drama } from "lucide-react";
+import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings, TrendingUp, FolderOpen, Drama, BarChart3 } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -97,6 +97,12 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
 
     // Landlord-only routes
     const landlordRoutes: RouteItem[] = isLandlord ? [
+        {
+            label: 'Finances',
+            icon: BarChart3,
+            href: '/finances',
+            active: pathname === '/finances'
+        },
         {
             label: t('fiscalRecap'),
             icon: Wallet,

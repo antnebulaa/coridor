@@ -15,13 +15,13 @@ function formatCents(cents: number): string {
     return euros.toLocaleString('fr-FR');
 }
 
-const cardClass = "bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors";
+const cardClass = "bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors";
 
 const RevenueCard: React.FC<{ received: number; expected: number }> = ({ received, expected }) => {
     const animatedValue = useCountUp(Math.round(received / 100), 800);
 
     return (
-        <Link href="/rentals" className={cardClass}>
+        <Link href="/finances?tab=revenue" className={cardClass}>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Revenus</p>
             <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                 {animatedValue.toLocaleString('fr-FR')} €
@@ -45,7 +45,7 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
     const allPaid = paid === total && total > 0;
 
     return (
-        <Link href="/rentals" className={cardClass}>
+        <Link href="/finances?tab=rent" className={cardClass}>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Loyers</p>
             <div className="flex items-baseline gap-2">
                 <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
@@ -63,7 +63,7 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
                 />
             </div>
             {hasOverdue && (
-                <p className="text-xs bg-orange-100 px-2 py-1 rounded-xl text-red-500 mt-1.5 font-medium">
+                <p className="text-xs bg-[#FE3C10] px-3 py-1 rounded-xl text-white mt-1.5 font-medium w-fit">
                     {total - paid} en retard
                 </p>
             )}
@@ -75,7 +75,7 @@ const ExpensesCard: React.FC<{ amount: number }> = ({ amount }) => {
     const animatedValue = useCountUp(Math.round(amount / 100), 800);
 
     return (
-        <Link href="/dashboard/finances" className={cardClass}>
+        <Link href="/finances?tab=expenses" className={cardClass}>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Dépenses</p>
             <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                 {animatedValue.toLocaleString('fr-FR')} €
