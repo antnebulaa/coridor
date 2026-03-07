@@ -225,7 +225,7 @@
 - [✅] Garants multiples (`Guarantor` : famille, Visale, Garantme, Cautionner, tiers)
 - [✅] Revenus additionnels (`Income`)
 - [✅] Server action `getTenantProfile.ts`
-- [🔧] Lissage salaire freelance — champs existent (netSalary + partnerNetSalary), logique de lissage non visible
+- [✅] Lissage revenus freelance — `FreelanceIncomeService.ts` (détection auto virements pro→perso via Powens, normalisation libellés, match néobanques/formes juridiques/nom, confiance HIGH/MEDIUM/LOW), 7 champs TenantProfile, API `GET/POST /api/profile/freelance-income`, hook Powens analyze, `FreelanceIncomeCard.tsx` (barres 12 mois + badge vérifié + actualiser) dans PassportClient, vue propriétaire simplifiée (TenantProfilePreview + PassportPreview), priorité solvabilité si confiance ≠ LOW
 - [✅] Dossier unique réutilisable — `generateDossierHtml`, TenantProfilePreview auto dans conversations, intégration DossierFacile OAuth
 - [✅] Passeport Locatif V1 — `PassportService.ts` (10+ méthodes : getPassport, computeScore, submitLandlordReview, exportPassport JSON/PDF, onLeaseSigned auto-backfill), 4 modèles Prisma (RentalHistory, LandlordReview, LandlordReviewScore, PassportSettings), 10 routes API (`/api/passport/*`), hook webhook Yousign, score composite 0-100 **privé locataire** (Régularité 40% + Ancienneté 20% + Évaluations 25% + Complétude 15%), confiance LOW/MEDIUM/HIGH, évaluations structurées **4 critères** (PAYMENT_REGULARITY, PROPERTY_CONDITION, COMMUNICATION, WOULD_RECOMMEND — anti-discrimination: pas de texte libre), badge "Payeur vérifié — X mois" avec jauge progressive (pas de médailles Bronze/Silver/Gold), opt-in RGPD, page tenant (`account/passport/PassportClient.tsx` : jauge SVG, timeline historique, toggles partage, export), `PassportPreview.tsx` (vue compacte propriétaire — données factuelles uniquement, jamais le score), `LandlordReviewForm.tsx` (formulaire 4 questions), page review standalone (`/passport/review/[id]`), intégré dans `TenantProfilePreview`, notification in-app au locataire à réception d'une évaluation (type `PASSPORT_REVIEW` avec ville), script backfill baux existants (`scripts/backfill-rental-history.ts` — dry-run + live)
 
@@ -242,6 +242,7 @@
 - [✅] Dernière recherche proposée (`components/listings/ResumeSearch.tsx`)
 - [✅] Composants annonce riches : `ListingCard`, `ListingInfo`, `ListingAmenities`, `ListingEnergy`, `ListingLocation`, `ListingHead`, `ListingImageGallery`
 - [✅] Tri des annonces (`ListingSort.tsx`)
+- [🔧] Filtres avancés SearchModal — vérifier chaque filtre (meublé/nu, type de bail, type de bien, étage, DPE, caractéristiques, chauffage, etc.), bugs signalés à corriger
 
 ### Favoris & Likes
 - [✅] Likes (`Like`, `components/LikeButton.tsx`)
@@ -408,7 +409,7 @@
 - [x] ~~Scoring fiabilité avancé~~ (fait — Passeport Locatif V1)
 - [ ] B2B2C : partenariats (assurance, déménagement)
 - [x] ~~Recommandation d'ancien propriétaire~~ (fait — Passeport Locatif V1, LandlordReview structuré)
-- [ ] Lissage salaire freelance (calcul avancé)
+- [x] ~~Lissage salaire freelance (calcul avancé)~~ (fait — FreelanceIncomeService, analyse Powens auto, confiance 3 niveaux)
 - [ ] Backfill communeCode propriétés existantes — script géocodage via api-adresse.data.gouv.fr pour enrichir les Property existantes (communeCode=null) et passer du fallback département à la donnée commune exacte
 - [ ] Estimateur charges affiné — remplacer le taux fixe (2,5€/m² appart, 1€/m² maison) par des données réelles issues des régularisations de charges des utilisateurs Coridor
 - [ ] App mobile : publication Google Play (compte, fiche store, signature, test interne)
