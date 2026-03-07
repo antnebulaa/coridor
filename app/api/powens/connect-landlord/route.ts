@@ -19,7 +19,8 @@ export async function POST(request: Request) {
 
     try {
         const host = request.headers.get('host');
-        const protocol = host?.includes('localhost') ? 'http' : 'https';
+        const isLocal = host?.includes('localhost') || host?.match(/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/);
+        const protocol = isLocal ? 'http' : 'https';
         const origin = `${protocol}://${host}`;
         // Fixed URI via Bouncer
         const redirectUri = `${origin}/api/powens/callback`;

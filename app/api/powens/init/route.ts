@@ -17,7 +17,8 @@ export async function GET(request: Request) {
 
     // Dynamic Redirect URI based on Host Header (supports localhost & IP)
     const host = request.headers.get('host');
-    const protocol = host?.includes('localhost') ? 'http' : 'https';
+    const isLocal = host?.includes('localhost') || host?.match(/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/);
+    const protocol = isLocal ? 'http' : 'https';
 
     // FORCE usage of Host header to match user's browser/whitelist
     // ignoring NEXTAUTH_URL which might be set to localhost
