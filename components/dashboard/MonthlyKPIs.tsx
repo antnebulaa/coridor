@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import { useCountUp } from '@/hooks/useCountUp';
 import { MonthlyKPIs as MonthlyKPIsType } from '@/app/actions/getOperationalStats';
 import { useEffect, useState } from 'react';
+import { Link } from '@/i18n/navigation';
 
 interface MonthlyKPIsProps {
     data: MonthlyKPIsType;
@@ -14,19 +15,21 @@ function formatCents(cents: number): string {
     return euros.toLocaleString('fr-FR');
 }
 
+const cardClass = "bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors";
+
 const RevenueCard: React.FC<{ received: number; expected: number }> = ({ received, expected }) => {
     const animatedValue = useCountUp(Math.round(received / 100), 800);
 
     return (
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm p-5 snap-center min-w-[200px] shrink-0 md:shrink">
+        <Link href="/rentals" className={cardClass}>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Revenus</p>
-            <p className="text-3xl font-bold text-neutral-900 dark:text-white tabular-nums">
+            <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                 {animatedValue.toLocaleString('fr-FR')} €
             </p>
-            <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
+            <p className="text-sm bg-neutral-100 px-2 py-1 rounded-xl text-neutral-600 dark:text-neutral-500 mt-1">
                 sur {formatCents(expected)} € attendus
             </p>
-        </div>
+        </Link>
     );
 };
 
@@ -42,10 +45,10 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
     const allPaid = paid === total && total > 0;
 
     return (
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm p-5 snap-center min-w-[200px] shrink-0 md:shrink">
+        <Link href="/rentals" className={cardClass}>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Loyers</p>
             <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-bold text-neutral-900 dark:text-white tabular-nums">
+                <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                     {paid}/{total}
                 </p>
                 <span className="text-sm text-neutral-400 dark:text-neutral-500">reçus</span>
@@ -60,11 +63,11 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
                 />
             </div>
             {hasOverdue && (
-                <p className="text-xs text-red-500 mt-1.5 font-medium">
+                <p className="text-xs bg-orange-100 px-2 py-1 rounded-xl text-red-500 mt-1.5 font-medium">
                     {total - paid} en retard
                 </p>
             )}
-        </div>
+        </Link>
     );
 };
 
@@ -72,15 +75,15 @@ const ExpensesCard: React.FC<{ amount: number }> = ({ amount }) => {
     const animatedValue = useCountUp(Math.round(amount / 100), 800);
 
     return (
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm p-5 snap-center min-w-[200px] shrink-0 md:shrink">
+        <Link href="/dashboard/finances" className={cardClass}>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Dépenses</p>
-            <p className="text-3xl font-bold text-neutral-900 dark:text-white tabular-nums">
+            <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                 {animatedValue.toLocaleString('fr-FR')} €
             </p>
             <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
                 ce mois
             </p>
-        </div>
+        </Link>
     );
 };
 

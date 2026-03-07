@@ -254,7 +254,8 @@ export default async function getOperationalStats(): Promise<OperationalStats | 
                         rentStatus = 'PENDING';
                     }
                 } else {
-                    rentStatus = 'PENDING';
+                    // No tracking record exists yet — don't assume pending
+                    rentStatus = 'NO_LEASE';
                 }
             } else if (pendingSigApp) {
                 status = 'PENDING_LEASE';

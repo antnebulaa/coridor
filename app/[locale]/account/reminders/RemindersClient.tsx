@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import PageHeader from "@/components/PageHeader";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import {
     Zap,
     Flame,
@@ -65,13 +65,13 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
     DIAGNOSTICS: 'Diagnostics',
     BAIL: 'Bail',
     CHARGES: 'Charges',
-    FISCALITE: 'Fiscalite',
+    FISCALITE: 'Fiscalité',
 };
 
 const STATUS_LABELS: Record<StatusFilter, string> = {
-    TODO: 'A faire',
+    TODO: 'À faire',
     OVERDUE: 'En retard',
-    COMPLETED: 'Completes',
+    COMPLETED: 'Complétés',
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -122,16 +122,18 @@ function getIconForType(type: string) {
 function getCardStyles(status: string) {
     switch (status) {
         case 'OVERDUE':
-            return 'bg-red-50 border-red-200';
+            return 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800';
         case 'UPCOMING':
         case 'NOTIFIED':
-            return 'bg-orange-50 border-orange-200';
+            return 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800';
         case 'COMPLETED':
-            return 'bg-green-50 border-green-200';
+            return 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800';
         case 'DISMISSED':
-            return 'bg-gray-50 border-gray-200';
+            return 'bg-gray-50 dark:bg-neutral-800/50 border-gray-200 dark:border-neutral-700';
+        case 'PENDING':
+            return 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700';
         default:
-            return 'bg-white border-neutral-200';
+            return 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700';
     }
 }
 
@@ -141,6 +143,20 @@ function formatDate(dateString: string) {
         month: 'long',
         year: 'numeric',
     });
+}
+
+function formatRelative(dateString: string): string {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return `il y a ${Math.abs(diffDays)} jour${Math.abs(diffDays) > 1 ? 's' : ''}`;
+    if (diffDays === 0) return "aujourd'hui";
+    if (diffDays === 1) return 'demain';
+    if (diffDays < 30) return `dans ${diffDays} jours`;
+    const months = Math.round(diffDays / 30);
+    if (months === 1) return 'dans 1 mois';
+    return `dans ${months} mois`;
 }
 
 function sortByUrgency(a: Reminder, b: Reminder): number {
@@ -170,7 +186,8 @@ export default function RemindersClient() {
     const fetchReminders = useCallback(async () => {
         try {
             const res = await axios.get('/api/reminders');
-            setReminders(res.data.reminders || []);
+            const data = res.data;
+            setReminders(Array.isArray(data) ? data : data.reminders || []);
         } catch (error) {
             console.error('Failed to fetch reminders:', error);
             toast.error('Erreur lors du chargement des rappels');
@@ -189,11 +206,11 @@ export default function RemindersClient() {
         setActionLoading(id);
         try {
             await axios.patch(`/api/reminders/${id}/complete`);
-            toast.success('Rappel marque comme fait');
+            toast.success('Rappel marqué comme fait');
             await fetchReminders();
         } catch (error) {
             console.error('Failed to complete reminder:', error);
-            toast.error('Erreur lors de la mise a jour');
+            toast.error('Erreur lors de la mise à jour');
         } finally {
             setActionLoading(null);
         }
@@ -202,12 +219,12 @@ export default function RemindersClient() {
     const handleDismiss = async (id: string) => {
         setActionLoading(id);
         try {
-            await axios.patch(`/api/reminders/${id}/dismiss`, { reason: 'Ignore par le proprietaire' });
-            toast.success('Rappel ignore');
+            await axios.patch(`/api/reminders/${id}/dismiss`, { reason: 'Ignoré par le propriétaire' });
+            toast.success('Rappel ignoré');
             await fetchReminders();
         } catch (error) {
             console.error('Failed to dismiss reminder:', error);
-            toast.error('Erreur lors de la mise a jour');
+            toast.error('Erreur lors de la mise à jour');
         } finally {
             setActionLoading(null);
         }
@@ -216,7 +233,7 @@ export default function RemindersClient() {
     // ---------- Computed ----------
 
     const overdueCount = reminders.filter(r => r.status === 'OVERDUE').length;
-    const upcomingCount = reminders.filter(r => ['UPCOMING', 'NOTIFIED'].includes(r.status)).length;
+    const upcomingCount = reminders.filter(r => ['UPCOMING', 'NOTIFIED', 'PENDING'].includes(r.status)).length;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const completedThisMonth = reminders.filter(r =>
@@ -257,23 +274,23 @@ export default function RemindersClient() {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <PageHeader
-                title="Rappels legaux"
-                subtitle="Echeances et obligations a ne pas oublier"
+                title="Rappels légaux"
+                subtitle="Échéances et obligations à ne pas oublier"
             />
 
             {/* Counters */}
             <div className="grid grid-cols-3 gap-4">
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
-                    <div className="text-2xl font-bold text-red-700">{overdueCount}</div>
-                    <div className="text-sm text-red-600">en retard</div>
+                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-400">{overdueCount}</div>
+                    <div className="text-sm text-red-600 dark:text-red-500">en retard</div>
                 </div>
-                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-700">{upcomingCount}</div>
-                    <div className="text-sm text-orange-600">a venir</div>
+                <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{upcomingCount}</div>
+                    <div className="text-sm text-orange-600 dark:text-orange-500">à venir</div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
-                    <div className="text-2xl font-bold text-green-700">{completedThisMonth}</div>
-                    <div className="text-sm text-green-600">completes ce mois</div>
+                <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-2xl p-4 text-center">
+                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">{completedThisMonth}</div>
+                    <div className="text-sm text-green-600 dark:text-green-500">complétés ce mois</div>
                 </div>
             </div>
 
@@ -286,7 +303,7 @@ export default function RemindersClient() {
                         className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
                             categoryFilter === cat
                                 ? 'bg-neutral-900 text-white'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         }`}
                     >
                         {CATEGORY_LABELS[cat]}
@@ -303,7 +320,7 @@ export default function RemindersClient() {
                         className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
                             statusFilter === st
                                 ? 'bg-neutral-900 text-white'
-                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         }`}
                     >
                         {STATUS_LABELS[st]}
@@ -313,17 +330,17 @@ export default function RemindersClient() {
 
             {/* Reminders list */}
             {filteredReminders.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-neutral-200 p-12 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 flex items-center justify-center">
-                        <Scale className="w-8 h-8 text-neutral-400" />
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                        <Scale className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2 text-neutral-900">Aucun rappel</h3>
-                    <p className="text-neutral-500 max-w-md mx-auto">
+                    <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">Aucun rappel</h3>
+                    <p className="text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
                         {statusFilter === 'COMPLETED'
-                            ? 'Aucun rappel complete pour le moment.'
+                            ? 'Aucun rappel complété pour le moment.'
                             : statusFilter === 'OVERDUE'
                             ? 'Aucun rappel en retard. Tout est en ordre !'
-                            : 'Aucun rappel a afficher avec ces filtres.'}
+                            : 'Aucun rappel à afficher avec ces filtres.'}
                     </p>
                 </div>
             ) : (
@@ -343,28 +360,28 @@ export default function RemindersClient() {
                                     <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${PRIORITY_STYLES[reminder.priority]}`}>
                                         {PRIORITY_LABELS[reminder.priority]}
                                     </span>
-                                    <span className="text-sm text-neutral-500">
-                                        Echeance : {formatDate(reminder.dueDate)}
+                                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                                        Échéance {formatRelative(reminder.dueDate)} · {formatDate(reminder.dueDate)}
                                     </span>
                                 </div>
 
                                 {/* Title + description */}
                                 <div className="flex items-start gap-3 mb-3">
-                                    <div className="p-2 bg-white border border-neutral-200 rounded-xl shrink-0">
-                                        <Icon size={20} className="text-neutral-700" />
+                                    <div className="p-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-xl shrink-0">
+                                        <Icon size={20} className="text-neutral-700 dark:text-neutral-300" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className={`font-semibold text-neutral-900 ${isCompleted ? 'line-through opacity-60' : ''}`}>
+                                        <h3 className={`font-semibold text-neutral-900 dark:text-white ${isCompleted ? 'line-through opacity-60' : ''}`}>
                                             {reminder.title}
                                         </h3>
                                         {reminder.description && (
-                                            <p className={`text-sm text-neutral-600 mt-1 ${isCompleted ? 'line-through opacity-60' : ''}`}>
+                                            <p className={`text-sm text-neutral-600 dark:text-neutral-400 mt-1 ${isCompleted ? 'line-through opacity-60' : ''}`}>
                                                 {reminder.description}
                                             </p>
                                         )}
                                         {reminder.legalReference && (
-                                            <p className="text-xs text-neutral-400 mt-1">
-                                                Ref. : {reminder.legalReference}
+                                            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                                                Réf. : {reminder.legalReference}
                                             </p>
                                         )}
                                     </div>

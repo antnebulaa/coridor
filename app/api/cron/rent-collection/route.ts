@@ -24,11 +24,14 @@ export async function GET(request: Request) {
 
     console.log("[Cron] Starting rent collection tracking...");
 
+    const { searchParams } = new URL(request.url);
+    const forceGenerate = searchParams.get('force') === 'true';
+
     const now = new Date();
     let generationResult = null;
 
-    // 1. Si 1er du mois -> générer les trackings
-    if (now.getDate() === 1) {
+    // 1. Si 1er du mois (ou force) -> générer les trackings
+    if (now.getDate() === 1 || forceGenerate) {
       console.log("[Cron] First day of month — generating monthly trackings...");
       generationResult = await RentCollectionService.generateMonthlyTracking();
       console.log(
