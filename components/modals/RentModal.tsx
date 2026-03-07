@@ -431,8 +431,8 @@ const RentModal = () => {
 
         setIsLoading(true);
 
-        const generatedTitle = t('description.generatedTitle', { category: data.category, city: data.location?.label?.split(',')[0] || data.location?.label || '' });
-        const generatedDescription = t('description.generatedDesc', { category: data.category });
+        const generatedTitle = t('steps.description.generatedTitle', { category: data.category, city: data.location?.label?.split(',')[0] || data.location?.label || '' });
+        const generatedDescription = t('steps.description.generatedDesc', { category: data.category });
 
         const finalData = {
             ...data,

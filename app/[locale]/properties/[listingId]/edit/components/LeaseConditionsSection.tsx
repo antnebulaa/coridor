@@ -33,8 +33,11 @@ const LeaseConditionsSection: React.FC<LeaseConditionsSectionProps> = ({ listing
     const [chargesType, setChargesType] = useState<string>((listing as any).chargesType ?? '');
 
     // --- Dépôt de garantie ---
-    const [securityDeposit, setSecurityDeposit] = useState<number>(listing.securityDeposit ?? 0);
     const rentPrice = listing.price || 0;
+    const defaultDeposit = listing.securityDeposit != null
+        ? listing.securityDeposit
+        : listing.isFurnished ? rentPrice * 2 : rentPrice;
+    const [securityDeposit, setSecurityDeposit] = useState<number>(defaultDeposit);
 
     // --- Travaux recents ---
     const recentWorksCents = (listing as any).recentWorksAmountCents ?? 0;

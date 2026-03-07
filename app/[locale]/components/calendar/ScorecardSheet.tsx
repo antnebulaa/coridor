@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { getVerifiedIncome } from '@/lib/income';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
@@ -50,6 +51,8 @@ interface ScorecardSheetProps {
         aplAmount?: number | null;
         guarantors?: any[];
         additionalIncomes?: any[];
+        freelanceSmoothedIncome?: number | null;
+        freelanceIncomeConfidence?: string | null;
     } | null;
     candidateScope?: {
         targetLeaseType?: string | null;
@@ -299,7 +302,10 @@ const ScorecardSheet: React.FC<ScorecardSheetProps> = ({
     });
 
     // Dossier data (auto-calculated)
-    const incomeData = useMemo(() => computeIncomeRatio(tenantProfile?.netSalary, listing.price), [tenantProfile?.netSalary, listing.price]);
+    const incomeData = useMemo(() => {
+        const income = tenantProfile ? getVerifiedIncome(tenantProfile) : { amount: 0 };
+        return computeIncomeRatio(income.amount || null, listing.price);
+    }, [tenantProfile, listing.price]);
     const completenessData = useMemo(() => computeProfileCompleteness(tenantProfile), [tenantProfile]);
     const guarantorData = useMemo(() => computeGuarantor(tenantProfile?.guarantors), [tenantProfile?.guarantors]);
     const leaseData = useMemo(() => computeLeaseCompat(candidateScope?.targetLeaseType, !!listing.isFurnished, !!listing.acceptsMobilityLease), [candidateScope?.targetLeaseType, listing.isFurnished, listing.acceptsMobilityLease]);

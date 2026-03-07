@@ -211,7 +211,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
             ">
                 {/* Left Column: List + Footer */}
                 <div id="home-scroll-container" className={listColumnClasses}>
-                    <div className="pt-safe-navbar md:pt-4 mt-10 md:mt-10 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
+                    <div className="pt-safe-navbar md:pt-4 mt-10 md:mt-2 px-[10px] md:pl-6 md:pr-3 pb-32 md:pb-6">
 
                         {!isSearchActive && (
                             <ResumeSearch />

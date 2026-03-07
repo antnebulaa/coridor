@@ -4,6 +4,7 @@ import ClientOnly from "@/components/ClientOnly";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
 import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
+import { getVerifiedIncome } from "@/lib/income";
 import SelectionClient from "./SelectionClient";
 
 export const dynamic = 'force-dynamic';
@@ -141,10 +142,10 @@ const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
             ? `${user.firstName || 'Candidat'} ${user.lastName ? user.lastName.charAt(0) + '.' : ''}`
             : (user.pseudonymFull || 'Candidat');
 
-        // Revenue ratio
-        const netSalary = profile?.netSalary || null;
-        const revenueRatio = netSalary && listing.price > 0
-            ? Math.round((netSalary / listing.price) * 10) / 10
+        // Revenue ratio — use verified income (smoothed freelance if available)
+        const { amount: verifiedSalary } = profile ? getVerifiedIncome(profile) : { amount: 0 };
+        const revenueRatio = verifiedSalary && listing.price > 0
+            ? Math.round((verifiedSalary / listing.price) * 10) / 10
             : null;
 
         // File completeness (simple heuristic based on filled fields)
@@ -153,7 +154,7 @@ const SelectionPage = async ({ params }: { params: Promise<IParams> }) => {
         if (profile) {
             if (profile.jobType) filledFields++;
             if (profile.jobTitle) filledFields++;
-            if (profile.netSalary) filledFields++;
+            if (profile.netSalary || profile.freelanceSmoothedIncome) filledFields++;
             if (profile.bio) filledFields++;
             if (profile.guarantors && profile.guarantors.length > 0) filledFields++;
         }

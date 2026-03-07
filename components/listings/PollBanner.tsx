@@ -146,7 +146,7 @@ const PollBanner: React.FC<PollBannerProps> = ({ currentUser, locationContext })
           ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
         `}
       >
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-2xl p-5">
+        <div className="bg-[white] dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-3xl shadow-2xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-600" />
@@ -212,28 +212,28 @@ const PollBanner: React.FC<PollBannerProps> = ({ currentUser, locationContext })
   return (
     <div
       className={`
-        fixed bottom-24 left-4 right-4 md:left-auto md:right-8 md:w-[400px] z-[1000]
+        fixed bottom-28 left-4 right-4 md:left-auto md:right-8 md:w-[400px] z-[1000]
         transition-all duration-300 ease-out
         ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
       `}
     >
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-3xl shadow-2xl p-5">
-        <div className="flex items-center justify-between mb-0">
+      <div className="bg-neutral-800 dark:bg-neutral-900 border border-neutral-300 rounded-3xl shadow-2xl p-5 bg-white/30 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
 
-            <h3 className="text-base font-medium text-neutral-800 dark:text-neutral-200">
-              Avis du quartier
+            <h3 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200 mb-2.5">
+             {poll.title}
             </h3>
           </div>
           <button
             onClick={handleDismiss}
-            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition"
+            className="text-neutral-200 hover:text-neutral-600 dark:hover:text-neutral-300 transition"
           >
             <X size={18} />
           </button>
         </div>
 
-        <p className="text-sm text-neutral-600 dark:text-neutral-200 font-light mb-4">{poll.title}</p>
+        <p className="leading-tight text-neutral-200 dark:text-neutral-200 text-2xl font-bold mb-4"></p>
 
         <div className="flex items-center gap-2">
           {options.map((opt) => (
@@ -241,9 +241,9 @@ const PollBanner: React.FC<PollBannerProps> = ({ currentUser, locationContext })
               key={opt.key}
               onClick={() => handleVote(opt.key)}
               disabled={isVoting}
-              className="flex-1 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300
-                hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:border-blue-400 dark:hover:border-blue-500
+              className="flex-1 px-3 py-5 rounded-3xl text-base font-semibold transition-all
+                bg-neutral-50 dark:bg-neutral-900/20 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300
+                hover:bg-neutral-100 dark:hover:bg-neutral-900/40 hover:border-neutral-400 dark:hover:border-neutral-500
                 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {opt.label}
