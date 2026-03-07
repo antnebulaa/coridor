@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 5 mars 2026
+> Dernière mise à jour : 7 mars 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -20,6 +20,7 @@
 - [✅] Vérification conformité meublé : check-list (model `Furniture` — 13 éléments obligatoires + optionnels)
 - [✅] Adjectif marketing pour l'annonce (`propertyAdjective`) — utilisé dans ListingCard + RentModal
 - [✅] Badge DPE sur les ListingCards — pill en forme de flèche (arrondie à gauche, pointe à droite) avec couleur officielle A→G (vert→rouge), affichée après la pill meublé/non meublé, sur les deux variants (horizontal + vertical)
+- [✅] Profil propriétaire sur les annonces — `LandlordProfileService.ts` (agrégation stats propriétaire : nombre de biens, locataires, taux de réponse, ancienneté, dépôts restitués dans les délais), `LandlordProfileCard.tsx` (carte de confiance avec avatar gradient, stats, badges) intégré dans `ListingClient`, `LandlordProfileMini.tsx` (version compacte dans `ListingCard` + `ListingPreview`), `LandlordAvatar.tsx` (avatar gradient propriétaire), données enrichies dans `getListingById` et `syncListingCardData`, cron `refresh-landlord-stats` (mise à jour périodique), settings propriétaire pour visibilité profil (`app/api/settings/`)
 
 ### Zone Tendue & Encadrement des Loyers
 - [✅] Détection zone tendue officielle — 3 689 communes (décret 22/12/2025), lookup JSON preprocessé depuis CSV data.gouv.fr (`lib/zoneTendue.ts`, `lib/data/zones-tendues.json`), désambiguïsation par nom de ville pour codes postaux mixtes (`lib/data/postal-insee-mapping.json`)
@@ -128,7 +129,7 @@
 - [✅] Intégration locataire — cards inspection dans `MyRentalClient.tsx` (statut, lien signature, téléchargement PDF)
 - [✅] Section EDL dans l'édition de propriété — `EdlSection.tsx` dans `EditPropertyClient`, lien vers inspection en cours ou création
 - [✅] Broadcast temps réel — `broadcastNewMessage` via Supabase sur `send-sign-link`, refresh automatique côté locataire
-- [❌] EDL de sortie — diff avec EDL d'entrée (`entryInspectionId`), comparaison pièce par pièce
+- [✅] EDL de sortie — type `EXIT` sur Inspection, champ `entryInspectionId` (FK vers EDL d'entrée), flow création avec sélection EDL d'entrée, comparaison pièce par pièce (diff côte à côte entrée/sortie dans le hub pièces et l'inspection par pièce), pré-remplissage des pièces/éléments/compteurs depuis l'EDL d'entrée, badge "Sortie" vs "Entrée" dans l'UI, section EDL sortie dans `EdlSection.tsx` (bouton "Créer l'EDL de sortie" si EDL d'entrée SIGNED), intégré dans le calendrier et la conversation
 
 ### Dépôt de Garantie
 - [✅] SecurityDeposit + DepositEvent — modèles Prisma lifecycle complet (status machine AWAITING_PAYMENT → PAID → HELD → EXIT_INSPECTION → RETENTIONS_PROPOSED → FULLY_RELEASED/PARTIALLY_RELEASED/DISPUTED → RESOLVED), DepositEventType enum (22 types), relations RentalApplication + DepositResolution (FK direct `depositResolutionId`), champs User (`depositsTotal`, `depositsReturnedOnTime`)
@@ -185,6 +186,7 @@
 - [✅] Statut "Bail en signature" dans les cards propriétés — `PropertyStandardCard` + `PropertyColocationCard` affichent le statut `PENDING_SIGNATURE` (point bleu + label) en plus de Occupé/Vacant
 - [✅] Refonte dashboard locataire — header personnalisé "Bonjour [Prénom]", stats rapides (candidatures + prochain RDV), Passeport Locatif card, accès rapides (Mon dossier, Quittances), Application Journey
 - [✅] Card logement actuel dans le dashboard locataire — affichage du logement actif si bail signé
+- [✅] Refonte dashboard propriétaire — action-first, mobile-first layout : `DashboardHeader` ("Bonjour [Prénom]" + message contextuel dynamique basé sur les actions prioritaires + stats inline + bouton ajouter), `ActionCards` (cards URGENT/ACTION/INFO conditionnelles avec resend EDL, max 5 visibles, stagger animation), `MonthlyKPIs` (3 cards animées : revenus count-up, loyers X/Y avec barre de progression, dépenses — scroll horizontal snap mobile, grid-cols-3 desktop), `PropertyStatusList` (cards compactes par bien avec thumbnail, statut occupation pastille colorée, statut loyer, prochaine action, 2 colonnes si >4 biens), `FinanceSection` (wrapper dépliable fermé par défaut pour KPICards + CashflowChart existants + operations summary), `getOperationalStats` enrichi (10 queries parallèles : MonthlyKPIs + PropertyStatusItem[] + ActionItem[] agrégés depuis loyers, rappels légaux, dépôts, EDL, candidatures, baux, visites), widgets existants conservés (DepositAlertWidget, LegalRemindersWidget, RentCollectionWidget, FiscalWidget), skeleton adapté
 
 ### Admin
 - [✅] Dashboard admin (`app/[locale]/admin/`, `app/api/admin/`)
@@ -420,7 +422,7 @@
 
 ## ⚠️ Notes déploiement
 
-- **Cron jobs activés** : 7 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h), `inspection-reminders` (7h).
+- **Cron jobs activés** : 8 crons configurés dans `vercel.json` (tous daily — contrainte Vercel Hobby) : `check-alerts` (8h), `visit-reminders` (9h), `check-subscriptions` (3h), `generate-receipts` (4h le 5), `legal-reminders` (5h), `rent-collection` (6h), `inspection-reminders` (7h), `refresh-landlord-stats` (2h).
 - **Données encadrement des loyers** : fichiers JSON statiques dans `lib/data/rent-control/`. Mise à jour annuelle recommandée (arrêtés préfectoraux publiés entre juin et août). Relancer `npx ts-node scripts/preprocess-zones-tendues.ts` si le décret zone tendue est modifié. Données Lille et Montpellier à vérifier quand les API officielles redeviennent disponibles.
 - **Capacitor (app mobile)** : Remote URL mode (WebView → `coridor.fr`). Projets `android/` et `ios/` versionnés. 10 plugins. Firebase push : 3 env vars requises (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`). Deep links : remplir SHA256 dans `assetlinks.json` + TEAM_ID dans `apple-app-site-association` avant publication. Assets source dans `assets/` — relancer `npx capacitor-assets generate` si les icônes/splash changent. Dev local : `CAPACITOR_SERVER_URL=http://IP:3000 npm run cap:dev:android`.
 
@@ -449,3 +451,5 @@
 - [x] ~~HomeClient : `listing.rentalUnit.images` toujours vide après dénormalisation~~ (corrigé — les images sont pré-agrégées dans `listing.images` via cardData, les stubs relation sont vides par design → changé en `listing.images?.[0]?.url`)
 - [x] ~~6 routes API sans sync cardData après modification~~ (corrigé — ajout `syncListingCardData`/`syncPropertyListings` sur PATCH listing status, admin reject/archive, rooms create/delete, transit update)
 - [x] ~~Google OAuth `TypeError: Invalid URL, input: '[object Object]'`~~ (corrigé — `onClick={loginModal.onOpen}` passait le `MouseEvent` comme `callbackUrl` au store Zustand → NextAuth recevait `[object Object]` comme URL. Fix : filtrage des arguments non-string dans `useLoginModal.ts` et `useRegisterModal.ts`)
+- [x] ~~Powens redirect_uri toujours en http en production~~ (corrigé — `powens.ts` utilisait `http://` au lieu de détecter HTTPS via `x-forwarded-proto` ou `NEXTAUTH_URL`. Fix : helper `getBaseUrl()` avec détection proto + fallback NEXTAUTH_URL)
+- [x] ~~Powens redirect_uri échoue sur IP privées (preview Vercel)~~ (corrigé — détection élargie des ranges IP privées `10.x`, `172.16-31.x`, `192.168.x` en plus de `localhost`/`127.0.0.1` pour forcer http en local uniquement)
