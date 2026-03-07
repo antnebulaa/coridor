@@ -3,6 +3,7 @@ import { getPowensToken, getPowensTransactions } from "@/app/lib/powens";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { PaymentVerificationService } from "@/services/PaymentVerificationService";
+import { FreelanceIncomeService } from "@/services/FreelanceIncomeService";
 
 export async function POST(request: Request) {
     const currentUser = await getCurrentUser();
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     try {
         // Construct redirect URI to match init (Fixed Bouncer URI)
         const host = request.headers.get('host');
-        const protocol = host?.includes('localhost') ? 'http' : 'http';
+        const protocol = host?.includes('localhost') ? 'http' : 'https';
         const origin = `${protocol}://${host}`; // Force Host header
         const redirectUri = `${origin}/api/powens/callback`;
 
@@ -147,7 +148,15 @@ export async function POST(request: Request) {
                 await PaymentVerificationService.updateBadge(currentUser.id);
             } catch (badgeError) {
                 console.error("[Badge] Auto-analysis failed:", badgeError);
-                // Non-blocking: badge failure should not prevent the response
+            }
+
+            // Freelance income smoothing (non-blocking)
+            try {
+                if (FreelanceIncomeService.isFreelanceProfile(tenantProfile?.jobType)) {
+                    await FreelanceIncomeService.analyzeAndSave(currentUser.id, transactions);
+                }
+            } catch (freelanceError) {
+                console.error("[Freelance] Auto-analysis failed:", freelanceError);
             }
 
             return NextResponse.json({
