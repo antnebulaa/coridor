@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { PropertyImage } from "@prisma/client";
-import { Check, Trash } from "lucide-react";
+import { Check, GripVertical } from "lucide-react";
 
 interface SortablePhotoProps {
     image: PropertyImage;
@@ -44,16 +44,12 @@ export const SortablePhoto = ({
             ref={setNodeRef}
             style={style}
             {...attributes}
-            {...listeners}
             className={`
-                relative 
-                aspect-square 
-                rounded-2xl 
-                overflow-hidden 
+                relative
+                aspect-square
+                rounded-2xl
+                overflow-hidden
                 group
-                cursor-grab
-                active:cursor-grabbing
-                touch-none
             `}
             onClick={() => selectable && onSelect && onSelect(image.id)}
         >
@@ -72,19 +68,29 @@ export const SortablePhoto = ({
                 </div>
             )}
 
-            {/* Selection Overlay */}
+            {/* Drag handle — visible when not selecting */}
+            {!selectable && (
+                <div
+                    {...listeners}
+                    className="absolute top-2 left-2 w-9 h-9 rounded-xl bg-black/40 backdrop-blur-sm flex items-center justify-center cursor-grab active:cursor-grabbing z-20 touch-none"
+                >
+                    <GripVertical size={16} className="text-white" />
+                </div>
+            )}
+
+            {/* Selection checkbox */}
             {selectable && (
                 <div className={`
-                    absolute 
-                    top-2 
-                    right-2 
-                    w-6 
-                    h-6 
-                    rounded-full 
-                    border-2 
-                    border-white 
-                    flex 
-                    items-center 
+                    absolute
+                    top-2
+                    right-2
+                    w-6
+                    h-6
+                    rounded-full
+                    border-2
+                    border-white
+                    flex
+                    items-center
                     justify-center
                     transition
                     z-20
@@ -92,34 +98,6 @@ export const SortablePhoto = ({
                 `}>
                     {selected && <Check size={14} className="text-white" />}
                 </div>
-            )}
-
-            {/* Delete Button */}
-            {!selectable && onDelete && (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(image.id);
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()} // Prevent drag start on button click
-                    className="
-                        absolute 
-                        top-2 
-                        right-2 
-                        bg-white 
-                        p-1 
-                        rounded-full 
-                        opacity-0 
-                        group-hover:opacity-100 
-                        transition
-                        hover:bg-primary
-                        hover:text-white
-                        z-20
-                        cursor-pointer
-                    "
-                >
-                    <Trash size={16} />
-                </button>
             )}
         </div>
     );

@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { PropertyImage, Room } from "@prisma/client";
-import { Plus, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/Button";
-import MultiImageUpload from "@/components/inputs/MultiImageUpload";
 import PillButton from "@/components/ui/PillButton";
 import CircleButton from "@/components/ui/CircleButton";
 import RoomCard from "./RoomCard";
@@ -49,73 +48,59 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
     setActiveRoomId
 }) => {
     const router = useRouter();
-    const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
-    // Local state removed in favor of props
-    // const [activeView, setActiveView] = useState<'global' | 'unassigned' | 'room'>('global');
-    // const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+    // Toggle selection of a room
+    const toggleSelect = (roomId: string) => {
+        setSelectedRoomIds(prev =>
+            prev.includes(roomId)
+                ? prev.filter(id => id !== roomId)
+                : [...prev, roomId]
+        );
+    };
 
-    // Initial sync (optional, or just rely on handlers)
+    // Exit selection mode
+    const exitSelecting = () => {
+        setIsSelecting(false);
+        setSelectedRoomIds([]);
+        setConfirmDelete(false);
+    };
 
-    // Room Deletion
-    const handleDeleteRoom = (roomId: string) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette pièce ? Cela supprimera toutes les photos associées.")) {
-            setIsLoading(true);
-            axios.delete(`/api/rooms/${roomId}`)
-                .then(() => {
-                    toast.custom((t) => (
-                        <CustomToast
-                            t={t}
-                            message="Pièce supprimée"
-                            type="success"
-                        />
-                    ));
-                    router.refresh();
-                })
-                .catch(() => {
-                    toast.custom((t) => (
-                        <CustomToast
-                            t={t}
-                            message="Erreur lors de la suppression"
-                            type="error"
-                        />
-                    ));
-                })
-                .finally(() => setIsLoading(false));
+    // Delete selected rooms
+    const handleDeleteSelected = async () => {
+        if (selectedRoomIds.length === 0) return;
+        setIsLoading(true);
+        try {
+            await Promise.all(
+                selectedRoomIds.map(id => axios.delete(`/api/rooms/${id}`))
+            );
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message={selectedRoomIds.length > 1 ? `${selectedRoomIds.length} pièces supprimées` : 'Pièce supprimée'}
+                    type="success"
+                />
+            ));
+            router.refresh();
+            exitSelecting();
+        } catch {
+            toast.custom((t) => (
+                <CustomToast
+                    t={t}
+                    message="Erreur lors de la suppression"
+                    type="error"
+                />
+            ));
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    // Image Upload (to unassigned)
-    const handleUpload = (urls: string[]) => {
-        setIsUploading(true);
-        axios.post(`/api/listings/${listingId}/images`, {
-            images: urls
-        })
-            .then(() => {
-                toast.custom((t) => (
-                    <CustomToast
-                        t={t}
-                        message="Photos ajoutées"
-                        type="success"
-                    />
-                ));
-                router.refresh();
-            })
-            .catch(() => {
-                toast.custom((t) => (
-                    <CustomToast
-                        t={t}
-                        message="Erreur lors de l'ajout"
-                        type="error"
-                    />
-                ));
-            })
-            .finally(() => setIsUploading(false));
-    };
-
     return (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-8 pb-20">
             {/* Header / Actions */}
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
@@ -157,6 +142,7 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                         <div
                             className="flex flex-col gap-3 cursor-pointer group"
                             onClick={() => {
+                                if (isSelecting) return;
                                 setActiveView('unassigned');
                                 setActiveRoomId(null);
                                 setIsAllPhotosOpen(true);
@@ -164,8 +150,8 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                         >
                             <div className="aspect-square relative rounded-3xl overflow-hidden bg-neutral-100 border-[1px] border-neutral-200">
                                 {/* Collage of up to 4 images */}
-                                <div className="grid grid-cols-2 gap-[1px] w-full h-full">
-                                    {unassignedImages.slice(0, 4).map((img, index) => (
+                                <div className="grid grid-cols-2 gap-[3px] w-full h-full">
+                                    {unassignedImages.slice(0, 4).map((img) => (
                                         <div key={img.id} className={`relative w-full h-full overflow-hidden ${unassignedImages.length === 1 ? 'col-span-2 row-span-2' : ''}`}>
                                             <img src={img.url} className="object-cover w-full h-full" alt="" />
                                         </div>
@@ -188,9 +174,85 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                                 setActiveRoomId(room.id);
                                 setIsAllPhotosOpen(true);
                             }}
-                            onDelete={() => handleDeleteRoom(room.id)}
+                            isSelecting={isSelecting}
+                            isSelected={selectedRoomIds.includes(room.id)}
+                            onSelect={() => toggleSelect(room.id)}
                         />
                     ))}
+                </div>
+            )}
+
+            {/* Floating action button */}
+            {rooms.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                    <AnimatePresence mode="popLayout">
+                        {isSelecting ? (
+                            <motion.div
+                                key="selection-bar"
+                                initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="flex gap-3"
+                            >
+                                {/* Cancel */}
+                                <motion.button
+                                    onClick={exitSelecting}
+                                    whileTap={{ scale: 0.93 }}
+                                    className="h-12 px-5 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                                >
+                                    <X size={16} />
+                                    Annuler
+                                </motion.button>
+
+                                {/* Delete / count */}
+                                <motion.button
+                                    onClick={() => {
+                                        if (selectedRoomIds.length > 0) setConfirmDelete(true);
+                                    }}
+                                    disabled={selectedRoomIds.length === 0}
+                                    whileTap={selectedRoomIds.length > 0 ? { scale: 0.93 } : undefined}
+                                    animate={selectedRoomIds.length > 0
+                                        ? { backgroundColor: 'rgb(239 68 68)', color: '#fff' }
+                                        : { backgroundColor: 'rgb(245 245 245)', color: 'rgb(163 163 163)' }
+                                    }
+                                    transition={{ duration: 0.15 }}
+                                    className="h-12 px-6 rounded-full shadow-lg flex items-center gap-3 text-sm font-medium whitespace-nowrap"
+                                >
+                                    <Trash2 size={18} />
+                                    {selectedRoomIds.length > 0
+                                        ? <>
+                                            Supprimer
+                                            <motion.span
+                                                key={selectedRoomIds.length}
+                                                initial={{ scale: 0.6 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ duration: 0.1 }}
+                                                className="bg-white text-neutral-900 font-medium text-sm min-w-[28px] h-7 rounded-full flex items-center justify-center px-2"
+                                            >
+                                                {selectedRoomIds.length}
+                                            </motion.span>
+                                        </>
+                                        : 'Sélectionnez'
+                                    }
+                                </motion.button>
+                            </motion.div>
+                        ) : (
+                            <motion.button
+                                key="edit-btn"
+                                initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                whileTap={{ scale: 0.93 }}
+                                onClick={() => setIsSelecting(true)}
+                                className="h-12 px-6 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                <Pencil size={16} />
+                                Modifier
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
             )}
 
@@ -213,6 +275,33 @@ const PhotoTour: React.FC<PhotoTourProps> = ({
                 listingId={listingId}
                 unassignedImages={unassignedImages}
             />
+
+            {/* Delete confirmation overlay */}
+            {confirmDelete && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-6">
+                    <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 max-w-sm w-full shadow-xl">
+                        <h3 className="text-lg font-semibold mb-2">
+                            Supprimer {selectedRoomIds.length > 1 ? `${selectedRoomIds.length} pièces` : 'cette pièce'} ?
+                        </h3>
+                        <p className="text-sm text-neutral-500 mb-6">Toutes les photos associées seront également supprimées.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmDelete(false)}
+                                className="flex-1 px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleDeleteSelected}
+                                disabled={isLoading}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition disabled:opacity-50"
+                            >
+                                {isLoading ? 'Suppression...' : 'Supprimer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

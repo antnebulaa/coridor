@@ -84,11 +84,13 @@ export async function syncListingCardData(listingId: string) {
 
     const allImages = [...unitImages, ...targetRoomImages, ...propertyImages, ...roomsImages];
     const uniqueUrls = new Set<string>();
-    const aggregatedImages = allImages.filter((img: any) => {
-        if (uniqueUrls.has(img.url)) return false;
-        uniqueUrls.add(img.url);
-        return true;
-    });
+    const aggregatedImages = allImages
+        .filter((img: any) => {
+            if (uniqueUrls.has(img.url)) return false;
+            uniqueUrls.add(img.url);
+            return true;
+        })
+        .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
 
     // --- Build cardData ---
     const cardData = {

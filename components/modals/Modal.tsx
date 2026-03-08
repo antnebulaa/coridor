@@ -87,14 +87,14 @@ const Modal: React.FC<ModalProps> = ({
             });
         } else {
             setShowModal(false);
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
             // Reset drag state on close
             setTranslateY(0);
             setIsDragging(false);
         }
 
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.overflow = '';
         }
     }, [isOpen]);
 

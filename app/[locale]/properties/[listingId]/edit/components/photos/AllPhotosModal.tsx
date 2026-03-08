@@ -1,26 +1,24 @@
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Room, PropertyImage } from "@prisma/client";
-import { X, Plus, ChevronLeft, Image as ImageIcon, Upload, Move, Trash } from "lucide-react";
+import { X, Plus, ChevronLeft, Image as ImageIcon, Upload, Move, Trash2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     DndContext,
     closestCenter,
     KeyboardSensor,
-    PointerSensor,
+    TouchSensor,
     useSensor,
     useSensors,
     DragEndEvent,
-    TouchSensor,
     MouseSensor
 } from '@dnd-kit/core';
 import {
     arrayMove,
     sortableKeyboardCoordinates
 } from '@dnd-kit/sortable';
-import { Button } from "@/components/ui/Button";
 import PageBody from "@/components/ui/PageBody";
 import PhotoGrid from "./PhotoGrid";
 import MovePhotoModal from "./MovePhotoModal";
@@ -55,6 +53,9 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
 }) => {
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     // Modal states
@@ -87,12 +88,19 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
         setOptimisticGlobalImages(initialGlobalImages);
     }, [initialGlobalImages]);
 
-    // Clear selection when view changes
+    // Clear selection when view changes or modal closes
     useEffect(() => {
         if (isOpen) {
-            setSelectedIds([]);
+            exitSelecting();
         }
     }, [isOpen, activeView, activeRoomId]);
+
+    // Exit selection mode
+    const exitSelecting = () => {
+        setIsSelecting(false);
+        setSelectedIds([]);
+        setConfirmDelete(false);
+    };
 
     // Helpers
     const handleSelect = (id: string) => {
@@ -103,24 +111,21 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
         }
     };
 
-    const handleClearSelection = () => {
-        setSelectedIds([]);
-    };
-
     const handleDeleteSelected = async () => {
-        const promises = selectedIds.map(id => axios.delete(`/api/images/${id}`));
+        if (selectedIds.length === 0) return;
+        setIsDeleting(true);
         try {
-            await Promise.all(promises);
+            await Promise.all(selectedIds.map(id => axios.delete(`/api/images/${id}`)));
             toast.custom((t) => (
                 <CustomToast
                     t={t}
-                    message="Photos supprimées"
+                    message={selectedIds.length > 1 ? `${selectedIds.length} photos supprimées` : 'Photo supprimée'}
                     type="success"
                 />
             ));
-            setSelectedIds([]);
             router.refresh();
-        } catch (error) {
+            exitSelecting();
+        } catch {
             toast.custom((t) => (
                 <CustomToast
                     t={t}
@@ -128,6 +133,8 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                     type="error"
                 />
             ));
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -147,8 +154,8 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 250,
-                tolerance: 5,
+                delay: 200,
+                tolerance: 8,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -297,10 +304,9 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                                 <PhotoGrid
                                     id="global"
                                     images={optimisticGlobalImages}
-                                    selectable
+                                    selectable={isSelecting}
                                     selectedIds={selectedIds}
                                     onSelect={handleSelect}
-
                                     getItemBadge={getImageBadge}
                                     onReorder={(newOrder) => handleReorder(newOrder, 'global')}
                                 />
@@ -320,7 +326,7 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                                 <PhotoGrid
                                     id="unassigned"
                                     images={optimisticUnassigned}
-                                    selectable
+                                    selectable={isSelecting}
                                     selectedIds={selectedIds}
                                     onSelect={handleSelect}
                                     emptyContent={
@@ -406,7 +412,7 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                                         <PhotoGrid
                                             id={room.id}
                                             images={room.images}
-                                            selectable
+                                            selectable={isSelecting}
                                             selectedIds={selectedIds}
                                             onSelect={handleSelect}
                                             onReorder={(newOrder) => handleReorder(newOrder, 'room', room.id)}
@@ -426,97 +432,125 @@ const AllPhotosModal: React.FC<AllPhotosModalProps> = ({
                 </div>
             </PageBody>
 
-            {/* Selection Footer - Floating Pill */}
-            <AnimatePresence>
-                {
-                    selectedIds.length > 0 && (
+            {/* Floating action buttons */}
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-70">
+                <AnimatePresence mode="popLayout">
+                    {isSelecting ? (
                         <motion.div
-                            layout
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 50 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 30,
-                                mass: 1
-                            }}
-                            className="
-                            fixed 
-                            z-[70]
-                            bg-white 
-                            shadow-2xl 
-                            border border-neutral-200 
-                            overflow-hidden
-                            
-                            /* Mobile Styles: Stacked, full width minus padding, bottom anchored */
-                            bottom-4 
-                            left-4 
-                            right-4 
-                            w-auto 
-                            rounded-2xl 
-                            flex 
-                            flex-col 
-                            p-4 
-                            gap-3
-
-                            /* Desktop Styles: Centered pill, horizontal */
-                            md:bottom-10 
-                            md:left-1/2 
-                            md:right-auto 
-                            md:w-auto 
-                            md:-translate-x-1/2 
-                            md:rounded-full 
-                            md:flex-row 
-                            md:px-6 
-                            md:py-3 
-                            md:gap-6
-                        "
+                            key="selection-bar"
+                            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex gap-3"
                         >
+                            {/* Cancel */}
+                            <motion.button
+                                onClick={exitSelecting}
+                                whileTap={{ scale: 0.93 }}
+                                className="h-12 px-5 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                <X size={16} />
+                                Annuler
+                            </motion.button>
 
-                            <motion.div layout className="font-medium text-sm whitespace-nowrap order-1 text-center md:text-left">
-                                {selectedIds.length} <span className="hidden sm:inline">photo{selectedIds.length > 1 ? 's' : ''}</span> sélectionnée{selectedIds.length > 1 ? 's' : ''}
-                            </motion.div>
+                            {/* Move — icon only + count */}
+                            <motion.button
+                                onClick={() => {
+                                    if (selectedIds.length > 0) setIsMoveModalOpen(true);
+                                }}
+                                disabled={selectedIds.length === 0}
+                                whileTap={selectedIds.length > 0 ? { scale: 0.93 } : undefined}
+                                animate={selectedIds.length > 0
+                                    ? { backgroundColor: 'rgb(51 65 85)', color: '#fff' }
+                                    : { backgroundColor: 'rgb(245 245 245)', color: 'rgb(163 163 163)' }
+                                }
+                                transition={{ duration: 0.15 }}
+                                className="h-12 px-4 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium"
+                            >
+                                <Move size={18} />
+                            </motion.button>
 
-                            <motion.div layout className="hidden md:block h-5 w-px bg-neutral-200 shrink-0 order-2"></motion.div>
-
-                            <motion.div layout className="flex items-center gap-2 w-full md:w-auto justify-center order-3">
-                                <button
-                                    onClick={() => setIsMoveModalOpen(true)}
-                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-sm font-medium transition whitespace-nowrap"
-                                >
-                                    <Move size={16} />
-                                    Déplacer
-                                </button>
-
-                                <button
-                                    onClick={handleDeleteSelected}
-                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-500 hover:bg-red-50 rounded-lg text-sm font-medium transition whitespace-nowrap"
-                                >
-                                    <Trash size={16} />
-                                    Supprimer
-                                </button>
-
-                                <button
-                                    onClick={handleClearSelection}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-500 transition ml-2 shrink-0"
-                                    title="Annuler la sélection"
-                                >
-                                    <X size={18} />
-                                </button>
-                            </motion.div>
+                            {/* Delete — icon only + count */}
+                            <motion.button
+                                onClick={() => {
+                                    if (selectedIds.length > 0) setConfirmDelete(true);
+                                }}
+                                disabled={selectedIds.length === 0}
+                                whileTap={selectedIds.length > 0 ? { scale: 0.93 } : undefined}
+                                animate={selectedIds.length > 0
+                                    ? { backgroundColor: 'rgb(239 68 68)', color: '#fff' }
+                                    : { backgroundColor: 'rgb(245 245 245)', color: 'rgb(163 163 163)' }
+                                }
+                                transition={{ duration: 0.15 }}
+                                className="h-12 px-4 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium"
+                            >
+                                <Trash2 size={18} />
+                                {selectedIds.length > 0 && (
+                                    <motion.span
+                                        key={selectedIds.length}
+                                        initial={{ scale: 0.6 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ duration: 0.1 }}
+                                        className="bg-white text-neutral-900 font-medium text-sm min-w-[28px] h-7 rounded-full flex items-center justify-center px-2"
+                                    >
+                                        {selectedIds.length}
+                                    </motion.span>
+                                )}
+                            </motion.button>
                         </motion.div>
-                    )
-                }
-            </AnimatePresence >
+                    ) : (
+                        <motion.button
+                            key="edit-btn"
+                            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            whileTap={{ scale: 0.93 }}
+                            onClick={() => setIsSelecting(true)}
+                            className="h-12 px-6 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center gap-2 text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                            <Pencil size={16} />
+                            Modifier
+                        </motion.button>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Delete confirmation overlay */}
+            {confirmDelete && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-6">
+                    <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 max-w-sm w-full shadow-xl">
+                        <h3 className="text-lg font-semibold mb-2">
+                            Supprimer {selectedIds.length > 1 ? `${selectedIds.length} photos` : 'cette photo'} ?
+                        </h3>
+                        <p className="text-sm text-neutral-500 mb-6">Cette action est irréversible.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmDelete(false)}
+                                className="flex-1 px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleDeleteSelected}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition disabled:opacity-50"
+                            >
+                                {isDeleting ? 'Suppression...' : 'Supprimer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modals */}
-            < MovePhotoModal
+            <MovePhotoModal
                 isOpen={isMoveModalOpen}
                 onClose={() => setIsMoveModalOpen(false)}
                 selectedPhotoIds={selectedIds}
                 rooms={rooms}
-                onSuccess={handleClearSelection}
+                onSuccess={exitSelecting}
             />
 
             <AddRoomModal

@@ -236,7 +236,7 @@ const EditPropertyClient: React.FC<EditPropertyClientProps> = ({
     return (
         <div className="md:fixed md:top-[73px] md:bottom-0 md:left-0 md:right-0">
             <div className="max-w-[2520px] mx-auto px-4 sm:px-2 md:pl-10 md:pr-0 xl:pl-20 xl:pr-0 md:h-full">
-            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] md:h-full">
+            <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] md:grid-rows-[1fr] md:h-full">
                 {/* Sidebar - Hidden on mobile if content is shown */}
                 <div className={`col-span-1 ${showContent ? 'hidden md:block' : 'block'} md:overflow-y-auto md:pr-10 md:pt-10`}>
                     <div className="flex items-center gap-4 mb-6">
