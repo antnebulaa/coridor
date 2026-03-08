@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 7 mars 2026
+> Dernière mise à jour : 8 mars 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -14,6 +14,7 @@
 - [✅] Types de bail (LONG_TERM, STUDENT, COLOCATION)
 - [✅] Baux spéciaux — opt-in par annonce : bail étudiant 9 mois (`acceptsStudentLease`, meublé uniquement) + bail mobilité 1-10 mois (`acceptsMobilityLease`, meublé uniquement, motif obligatoire), validation candidature côté API, refonte `LeaseTypeSection` (3 cards : nue/meublée/coloc + toggles spéciaux), `ApplicationModal` enrichi (choix type bail + motif mobilité), validation pré-génération bail dans `LeaseService`
 - [✅] Gestion des photos par pièces (`Room` + `PropertyImage` avec liens Property/RentalUnit/Room)
+- [✅] Gestion avancée des photos — iOS Photos-style : mode sélection "Modifier" avec checkboxes animées (framer-motion), suppression multi-albums (PhotoTour) et multi-photos (AllPhotosModal) avec confirmation overlay, déplacement de photos entre pièces (MovePhotoModal bottom sheet fintech avec thumbnails), drag handle (GripVertical) pour réordonnancement mobile sans bloquer le scroll iOS Safari, fix `syncListingCardData` tri par `order` pour couverture annonce, fix `Modal.tsx` overflow iOS
 - [✅] Colocation : chaque chambre = RentalUnit louable individuellement
 - [✅] Caractéristiques du bien (DPE, GES, équipements, étage, orientation...)
 - [✅] Google Maps / Mapbox : autocomplete adresse, coordonnées, quartier, transports
@@ -453,3 +454,6 @@
 - [x] ~~Google OAuth `TypeError: Invalid URL, input: '[object Object]'`~~ (corrigé — `onClick={loginModal.onOpen}` passait le `MouseEvent` comme `callbackUrl` au store Zustand → NextAuth recevait `[object Object]` comme URL. Fix : filtrage des arguments non-string dans `useLoginModal.ts` et `useRegisterModal.ts`)
 - [x] ~~Powens redirect_uri toujours en http en production~~ (corrigé — `powens.ts` utilisait `http://` au lieu de détecter HTTPS via `x-forwarded-proto` ou `NEXTAUTH_URL`. Fix : helper `getBaseUrl()` avec détection proto + fallback NEXTAUTH_URL)
 - [x] ~~Powens redirect_uri échoue sur IP privées (preview Vercel)~~ (corrigé — détection élargie des ranges IP privées `10.x`, `172.16-31.x`, `192.168.x` en plus de `localhost`/`127.0.0.1` pour forcer http en local uniquement)
+- [x] ~~iOS Safari : scroll bloqué dans la gestion des photos (4 causes)~~ (corrigé — 1. `touch-none` sur SortablePhoto bloquait le scroll tactile → retiré, 2. TouchSensor dnd-kit interceptait les events au document level → remplacé par drag handle, 3. `window.confirm()` natif cassait la restauration touch iOS → remplacé par overlay React, 4. `Modal.tsx` `overflow: 'unset'` interférait avec les conteneurs scroll → changé en `''`)
+- [x] ~~Couverture annonce ne change pas après réordonnancement des photos~~ (corrigé — `syncListingCardData` concaténait les images par source sans tri final → ajout `.sort((a, b) => a.order - b.order)` après déduplication)
+- [x] ~~Page édition propriété : scroll desktop bloqué~~ (corrigé — grid CSS implicit `auto` row sizing empêchait `overflow-y-auto` → ajout `md:grid-rows-[1fr]`)
