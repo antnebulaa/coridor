@@ -47,7 +47,7 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
 
     return (
         <Container>
-            <div className="pb-20 space-y-6 md:space-y-8 max-w-5xl mx-auto">
+            <div className="pt-6 pb-20 space-y-6 md:space-y-8 max-w-5xl mx-auto">
                 {/* 1. Header */}
                 <DashboardHeader
                     currentUser={currentUser}

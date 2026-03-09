@@ -28,7 +28,6 @@ const getConversations = async () => {
                             include: {
                                 applications: {
                                     take: 3,
-                                    orderBy: { createdAt: 'desc' },
                                 }
                             }
                         }

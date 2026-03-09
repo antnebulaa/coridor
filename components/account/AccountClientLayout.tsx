@@ -78,7 +78,7 @@ const AccountClientLayout: React.FC<AccountClientLayoutProps> = ({
                         col-span-3 
                         ${!isMainPage ? 'hidden md:block' : 'block'}
                     `}>
-                        <div className="md:sticky md:top-[88px] md:px-2 md:max-h-[calc(100vh-88px)] md:overflow-y-auto md:scrollbar-none">
+                        <div className="md:sticky md:top-0 md:px-2 md:max-h-[calc(100dvh-5rem)] md:overflow-y-auto md:scrollbar-none">
                             {sidebar}
                         </div>
                     </div>
