@@ -295,40 +295,45 @@ export default async function getListings(
             orderBy = { price: 'desc' };
         }
 
-        // Exclude Rented Listings (Active Signed Lease)
-        const excludeRentedCondition = {
-            applications: {
-                none: {
-                    leaseStatus: 'SIGNED',
-                    financials: {
-                        some: {
-                            OR: [
-                                { endDate: null },
-                                { endDate: { gt: new Date() } }
-                            ]
+        // Exclude Rented Listings — pre-query for IDs (simpler than 4-level nested WHERE)
+        const rentedListings = await prisma.listing.findMany({
+            where: {
+                applications: {
+                    some: {
+                        leaseStatus: 'SIGNED',
+                        financials: {
+                            some: {
+                                OR: [
+                                    { endDate: null },
+                                    { endDate: { gt: new Date() } }
+                                ]
+                            }
                         }
                     }
                 }
-            }
-        };
+            },
+            select: { id: true },
+        });
+        const rentedIds = rentedListings.map(l => l.id);
 
-        if (query.AND) {
-            if (Array.isArray(query.AND)) {
-                query.AND.push(excludeRentedCondition);
+        if (rentedIds.length > 0) {
+            if (query.id?.in) {
+                // If commute filter already set `id: { in: [...] }`, intersect
+                query.id.in = query.id.in.filter((id: string) => !rentedIds.includes(id));
             } else {
-                query.AND = [query.AND, excludeRentedCondition];
+                query.id = { ...query.id, notIn: rentedIds };
             }
-        } else {
-            query.AND = [excludeRentedCondition];
         }
 
         // ========================================================
         // QUERY: No deep includes! cardData has all display data.
         // Only join RentalUnit for isActive filter (1 level).
+        // Paginated: fetch only what the UI needs (24 items).
         // ========================================================
         const listings = await prisma.listing.findMany({
             where: query,
-            orderBy: orderBy
+            orderBy: orderBy,
+            take: 24,
         });
 
         // Map to SafeListing-compatible shape using denormalized + cardData

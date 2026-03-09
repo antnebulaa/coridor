@@ -110,14 +110,15 @@ const ListingCardCarousel: React.FC<ListingCardCarouselProps> = ({
                         <Image
                             fill
                             alt={`Instance ${index + 1}`}
-                            src={getCloudinaryThumbnail(image.url, 800)}
+                            src={getCloudinaryThumbnail(image.url, 400)}
                             className="
                                 object-cover
                                 h-full
                                 w-full
                             "
-                            sizes="(max-width: 768px) 100vw, 240px"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             priority={priority && index === 0}
+                            loading={index === 0 ? undefined : 'lazy'}
                             draggable={false}
                         />
 

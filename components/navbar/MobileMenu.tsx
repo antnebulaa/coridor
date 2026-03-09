@@ -8,6 +8,7 @@ import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
 import { motion } from "framer-motion";
 import useConversation from "@/hooks/useConversation";
+import { hapticLight } from "@/lib/haptics";
 
 import useUserCounters from "@/hooks/useUserCounters";
 import { useTranslations } from "next-intl";
@@ -84,7 +85,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             loginModal.onOpen();
             return;
         }
-        import('@/lib/haptics').then(({ hapticLight }) => hapticLight());
+        hapticLight();
     }
 
     return (
@@ -108,7 +109,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                     {route.active && (
                                         <motion.div
                                             layoutId="active-bubble"
-                                            className="absolute inset-0 bg-[#854020] rounded-[20px]"
+                                            className="absolute inset-0 bg-[#262624] rounded-[20px]"
                                             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                         />
                                     )}

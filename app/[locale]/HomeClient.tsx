@@ -25,6 +25,7 @@ import { useSearchParams } from "next/navigation";
 import { getIsochrone } from "@/app/libs/mapbox"; // Import utility
 import SearchAlertModal from "@/components/modals/SearchAlertModal";
 import PollBanner from "@/components/listings/PollBanner";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface HomeClientProps {
     listings: any[]; // SafeListing + relation
@@ -46,6 +47,9 @@ const HomeClient: React.FC<HomeClientProps> = ({
     const rentModal = useRentModal();
     const t = useTranslations('home');
     const tCommon = useTranslations('common');
+    const isDesktop = useMediaQuery('(min-width: 768px)');
+    // Only mount the map when it would be visible (desktop, or mobile with active search)
+    const shouldRenderMap = isDesktop || isSearchActive;
 
     const currentSearch = useMemo(() => ({
         locationValue: searchParams?.get('locationValue') || undefined,
@@ -287,18 +291,18 @@ const HomeClient: React.FC<HomeClientProps> = ({
                     <Footer />
                 </div>
 
-                {/* Right Column: Map */}
+                {/* Right Column: Map — only mounted when visible (saves Leaflet init + tile fetches on mobile) */}
                 <div className={mapColumnClasses}>
                     <div className="h-full w-full relative">
-                        <MapMain
-                            // key removed to prevent "undefined reading appendChild" crash on layout change. 
-                            // ResizeHandler within MapMain handles the size update.
-                            listings={listings}
-                            selectedListingId={selectedListingId}
-                            onSelect={(id) => setSelectedListingId(id)}
-                            currentUser={currentUser}
-                            isochrones={isochrones} // Pass isochrones array
-                        />
+                        {shouldRenderMap && (
+                            <MapMain
+                                listings={listings}
+                                selectedListingId={selectedListingId}
+                                onSelect={(id) => setSelectedListingId(id)}
+                                currentUser={currentUser}
+                                isochrones={isochrones}
+                            />
+                        )}
 
 
 
@@ -454,7 +458,7 @@ const HomeClient: React.FC<HomeClientProps> = ({
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 className="md:hidden fixed bottom-28 z-50
-                           bg-[#854020] dark:bg-white text-white dark:text-neutral-900
+                           bg-[#FE3C10] dark:bg-white text-white dark:text-neutral-900
                            rounded-full shadow-lg flex items-center justify-center
                            font-medium text-sm overflow-hidden"
                 style={{

@@ -36,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
         if (isSearchModalOpen) setHideNav(false);
     }, [isSearchModalOpen]);
 
-    // Hide-on-scroll-down / show-on-scroll-up for mobile home
+    // Hide-on-scroll-down / show-on-scroll-up for mobile home (rAF-throttled)
     useEffect(() => {
         if (!isHomePage) {
             setHideNav(false);
@@ -49,23 +49,31 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
             const scrollEl = document.getElementById('home-scroll-container');
             if (!scrollEl) return;
 
+            let rafId = 0;
             const handleScroll = () => {
-                if (modalOpenRef.current) return;
+                if (rafId) return; // skip if a frame is already scheduled
+                rafId = requestAnimationFrame(() => {
+                    rafId = 0;
+                    if (modalOpenRef.current) return;
 
-                const currentY = scrollEl.scrollTop;
-                const delta = currentY - lastScrollY.current;
+                    const currentY = scrollEl.scrollTop;
+                    const delta = currentY - lastScrollY.current;
 
-                if (delta > 8 && currentY > 50) {
-                    setHideNav(true);
-                } else if (delta < -8) {
-                    setHideNav(false);
-                }
+                    if (delta > 8 && currentY > 50) {
+                        setHideNav(true);
+                    } else if (delta < -8) {
+                        setHideNav(false);
+                    }
 
-                lastScrollY.current = currentY;
+                    lastScrollY.current = currentY;
+                });
             };
 
             scrollEl.addEventListener('scroll', handleScroll, { passive: true });
-            scrollCleanup = () => scrollEl.removeEventListener('scroll', handleScroll);
+            scrollCleanup = () => {
+                scrollEl.removeEventListener('scroll', handleScroll);
+                if (rafId) cancelAnimationFrame(rafId);
+            };
         }, 100);
 
         return () => {

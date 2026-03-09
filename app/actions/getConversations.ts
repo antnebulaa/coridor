@@ -10,6 +10,7 @@ const getConversations = async () => {
 
     try {
         const conversations = await prisma.conversation.findMany({
+            take: 30,
             orderBy: {
                 lastMessageAt: 'desc'
             },
@@ -25,7 +26,10 @@ const getConversations = async () => {
                     include: {
                         createdScopes: {
                             include: {
-                                applications: true
+                                applications: {
+                                    take: 3,
+                                    orderBy: { createdAt: 'desc' },
+                                }
                             }
                         }
                     }
@@ -62,8 +66,9 @@ const getConversations = async () => {
                     }
                 },
                 messages: {
+                    take: 30,
                     orderBy: {
-                        createdAt: 'asc'
+                        createdAt: 'desc'
                     },
                     select: {
                         id: true,
@@ -79,9 +84,23 @@ const getConversations = async () => {
                             select: { id: true, email: true }
                         }
                     }
+                },
+                _count: {
+                    select: {
+                        messages: {
+                            where: {
+                                NOT: { seen: { some: { id: currentUser.id } } }
+                            }
+                        }
+                    }
                 }
             }
         });
+
+        // Reverse messages back to chronological order (fetched desc for take: 30)
+        for (const conv of conversations) {
+            (conv as any).messages.reverse();
+        }
 
         const safeConversations = conversations.map((conversation: any) => {
             const listing = conversation.listing;
@@ -130,6 +149,7 @@ const getConversations = async () => {
         // Fallback: Fetch conversations without deep listing relations to avoid crash on data integrity issues
         try {
             const conversations = await prisma.conversation.findMany({
+                take: 30,
                 orderBy: {
                     lastMessageAt: 'desc'
                 },
@@ -145,15 +165,16 @@ const getConversations = async () => {
                         include: {
                             createdScopes: {
                                 include: {
-                                    applications: true
+                                    applications: { take: 3, orderBy: { createdAt: 'desc' } }
                                 }
                             }
                         }
                     },
                     listing: true, // Shallow fetch
                     messages: {
+                        take: 30,
                         orderBy: {
-                            createdAt: 'asc'
+                            createdAt: 'desc'
                         },
                         select: {
                             id: true,
@@ -172,6 +193,10 @@ const getConversations = async () => {
                     }
                 }
             });
+            // Reverse messages back to chronological order
+            for (const conv of conversations) {
+                (conv as any).messages.reverse();
+            }
             return conversations as any;
         } catch (fallbackError) {
             return [];

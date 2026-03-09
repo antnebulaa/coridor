@@ -31,12 +31,16 @@ const ConversationList: React.FC<ConversationListProps> = ({
         setItems(initialItems);
     }, [initialItems]);
 
-    // Realtime subscription for new messages - refresh list to update order and unread counts
+    // Realtime subscription for new messages - debounced refresh (max 1 per 2s)
+    const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     useRealtimeNotifications({
         userId: currentUser?.id,
-        onNewMessage: (payload) => {
-            console.log("ConversationList: New message received, refreshing router...");
-            router.refresh();
+        onNewMessage: () => {
+            if (refreshTimer.current) return; // already scheduled
+            refreshTimer.current = setTimeout(() => {
+                refreshTimer.current = null;
+                router.refresh();
+            }, 2000);
         }
     });
 
