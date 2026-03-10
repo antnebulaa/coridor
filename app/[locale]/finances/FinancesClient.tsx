@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePathname } from '@/i18n/navigation';
 import { Download } from 'lucide-react';
 import useSWR from 'swr';
@@ -9,14 +9,11 @@ import axios from 'axios';
 
 import { FinancialOverview } from '@/app/actions/getFinancialOverview';
 import MonthSelector from '@/components/finances/MonthSelector';
-import CashflowSummary from '@/components/finances/CashflowSummary';
+import KPICard from '@/components/finances/CashflowSummary';
 import RevenueTab from '@/components/finances/RevenueTab';
 import RentTrackingTab from '@/components/finances/RentTrackingTab';
 import ExpensesTab from '@/components/finances/ExpensesTab';
 import AnnualView from '@/components/finances/AnnualView';
-import QuickAddExpense from '@/components/finances/QuickAddExpense';
-import { useCountUp } from '@/hooks/useCountUp';
-import { Check } from 'lucide-react';
 
 interface FinancesClientProps {
     initialData: FinancialOverview | null;
@@ -27,86 +24,6 @@ interface FinancesClientProps {
 }
 
 const fetcher = (url: string) => axios.get(url).then(r => r.data);
-
-function formatCents(cents: number): string {
-    return Math.round(cents / 100).toLocaleString('fr-FR');
-}
-
-// ─── KPI Summary Cards (reuses dashboard style) ───────────────
-
-const RevenueKPI: React.FC<{ received: number; expected: number }> = ({ received, expected }) => {
-    const animated = useCountUp(Math.round(received / 100), 800);
-    const progress = expected > 0 ? (received / expected) * 100 : 0;
-
-    return (
-        <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Revenus</p>
-            <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
-                {animated.toLocaleString('fr-FR')} €
-            </p>
-            <div className="mt-2 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                <div
-                    className="h-full rounded-full bg-emerald-500 transition-all duration-500 ease-out"
-                    style={{ width: `${Math.min(progress, 100)}%` }}
-                />
-            </div>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                sur {formatCents(expected)} € attendus
-            </p>
-        </div>
-    );
-};
-
-const RentKPI: React.FC<{ paid: number; total: number; overdue: number }> = ({ paid, total, overdue }) => {
-    const progress = total > 0 ? (paid / total) * 100 : 0;
-    const allPaid = paid === total && total > 0;
-
-    return (
-        <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Loyers</p>
-            <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
-                    {paid}/{total}
-                </p>
-                <span className="text-sm text-neutral-400 dark:text-neutral-500">reçus</span>
-                {allPaid && <Check size={18} className="text-emerald-500" />}
-            </div>
-            <div className="mt-2 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                <div
-                    className={`h-full rounded-full transition-all duration-500 ease-out ${
-                        overdue > 0 ? 'bg-red-500' : 'bg-emerald-500'
-                    }`}
-                    style={{ width: `${progress}%` }}
-                />
-            </div>
-            {overdue > 0 && (
-                <p className="text-xs bg-[#FE3C10] px-3 py-1 rounded-xl text-white mt-1.5 font-medium w-fit">
-                    {overdue} en retard
-                </p>
-            )}
-        </div>
-    );
-};
-
-const ExpenseKPI: React.FC<{ amount: number; onAdd: () => void }> = ({ amount, onAdd }) => {
-    const animated = useCountUp(Math.round(amount / 100), 800);
-
-    return (
-        <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Dépenses</p>
-            <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
-                {animated.toLocaleString('fr-FR')} €
-            </p>
-            <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">ce mois</p>
-            <button
-                onClick={onAdd}
-                className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white mt-1 transition"
-            >
-                + Ajouter
-            </button>
-        </div>
-    );
-};
 
 // ─── Tab bar ──────────────────────────────────────────────────
 
@@ -123,13 +40,11 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
 }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
 
     const [month, setMonth] = useState(initialMonth);
     const [year, setYear] = useState(initialYear);
     const [mode, setMode] = useState<'month' | 'year'>(initialMode);
     const [activeTab, setActiveTab] = useState<'revenue' | 'rent' | 'expenses'>(initialTab);
-    const [showAddExpense, setShowAddExpense] = useState(false);
 
     // Fetch data when month/year changes
     const { data, mutate } = useSWR<FinancialOverview>(
@@ -171,17 +86,32 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
         updateParams(month, year, mode, tab);
     };
 
-    const handleExport = async (format: 'pdf' | 'csv') => {
+    const handleAddExpense = useCallback((listingId?: string) => {
+        const properties = data?.properties || [];
+        const target = listingId || properties.find(p => p.listingId)?.listingId;
+        if (target) {
+            router.push(`/properties/${target}/expenses`);
+        }
+    }, [data?.properties, router]);
+
+    const handleExport = (format: 'pdf' | 'csv') => {
         const url = `/api/accounting/export?format=${format}&year=${year}${mode === 'month' ? `&month=${month}` : ''}`;
         window.open(url, '_blank');
     };
 
     const monthly = data?.monthly;
 
+    // Compute recoverable and deductible totals for KPI card
+    const recoverableAmount = (data?.expenses || [])
+        .filter(e => e.isRecoverable)
+        .reduce((s, e) => s + Math.round(e.amount * e.recoverableRatio), 0);
+    const deductibleAmount = (data?.expenses || [])
+        .reduce((s, e) => s + (e.amountDeductibleCents || 0), 0);
+
     return (
         <div className="max-w-5xl mx-auto px-4 md:px-0 pb-20 pt-6 md:pt-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="space-y-4 mb-6">
                 <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
                     Finances
                 </h1>
@@ -196,22 +126,22 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
 
             {mode === 'month' ? (
                 <>
-                    {/* Monthly KPI cards */}
+                    {/* Dark KPI Card */}
                     {monthly && (
-                        <>
-                            <div className="flex gap-4 overflow-x-auto snap-x snap-proximity pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:overflow-visible no-scrollbar mb-2">
-                                <RevenueKPI received={monthly.receivedRent} expected={monthly.expectedRent} />
-                                <RentKPI paid={monthly.paidCount} total={monthly.totalCount} overdue={monthly.overdueCount} />
-                                <ExpenseKPI amount={monthly.expenses} onAdd={() => setShowAddExpense(true)} />
-                            </div>
-
-                            <CashflowSummary cashflow={monthly.cashflow} />
-                        </>
+                        <div className="mb-6">
+                            <KPICard
+                                cashflow={monthly.cashflow}
+                                revenue={monthly.receivedRent}
+                                expenses={monthly.expenses}
+                                recoverableAmount={recoverableAmount}
+                                deductibleAmount={deductibleAmount}
+                            />
+                        </div>
                     )}
 
                     {/* Tabs */}
-                    <div className="border-b border-neutral-200 dark:border-neutral-700 mt-4 mb-6">
-                        <div className="flex gap-6">
+                    <div className="border-b border-neutral-200 dark:border-neutral-700 mb-6">
+                        <div className="flex gap-8">
                             {TABS.map(tab => {
                                 const isActive = activeTab === tab.key;
                                 let count: number | undefined;
@@ -222,15 +152,15 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
                                     <button
                                         key={tab.key}
                                         onClick={() => handleTabChange(tab.key)}
-                                        className={`pb-3 text-sm font-medium transition relative ${
+                                        className={`pb-3 text-sm font-medium transition-colors relative ${
                                             isActive
-                                                ? 'text-neutral-900 dark:text-white'
-                                                : 'text-neutral-400 dark:text-neutral-500 hover:text-neutral-600'
+                                                ? 'text-neutral-900 dark:text-white font-semibold'
+                                                : 'text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300'
                                         }`}
                                     >
                                         {tab.label}
                                         {count !== undefined && (
-                                            <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
+                                            <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
                                                 tab.key === 'rent'
                                                     ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                                                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
@@ -247,8 +177,8 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
                         </div>
                     </div>
 
-                    {/* Tab content */}
-                    <div>
+                    {/* Tab content with fade */}
+                    <div key={`${activeTab}-${month}-${year}`} className="animate-in fade-in duration-150">
                         {activeTab === 'revenue' && data && (
                             <RevenueTab data={data.revenueByProperty} />
                         )}
@@ -259,7 +189,11 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
                             <ExpensesTab
                                 data={data.expenses}
                                 properties={data.properties}
-                                onAddExpense={() => setShowAddExpense(true)}
+                                onAddExpense={handleAddExpense}
+                                year={year}
+                                categoryBreakdown={data.categoryBreakdown}
+                                upcomingExpenses={data.upcomingExpenses}
+                                onMutate={() => mutate()}
                             />
                         )}
                     </div>
@@ -273,33 +207,24 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
                 )
             )}
 
-            {/* Export buttons */}
-            <div className="flex gap-3 mt-8 justify-center">
+            {/* Export */}
+            <div className="flex gap-3 mt-10 justify-center">
                 <button
                     onClick={() => handleExport('pdf')}
-                    className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                    className="inline-flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-xl text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 >
-                    <Download size={16} />
-                    Exporter PDF
+                    <Download size={14} />
+                    Export PDF
                 </button>
                 <button
                     onClick={() => handleExport('csv')}
-                    className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                    className="inline-flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-xl text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 >
-                    <Download size={16} />
-                    Exporter CSV
+                    <Download size={14} />
+                    Export CSV
                 </button>
             </div>
 
-            {/* Quick add expense modal */}
-            {data && (
-                <QuickAddExpense
-                    properties={data.properties}
-                    isOpen={showAddExpense}
-                    onClose={() => setShowAddExpense(false)}
-                    onExpenseAdded={() => mutate()}
-                />
-            )}
         </div>
     );
 };

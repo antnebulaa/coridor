@@ -372,43 +372,44 @@ const TenantDashboardClient: React.FC<TenantDashboardClientProps> = ({
                     {/* === ACCES RAPIDE === */}
                     <div>
                         
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 gap-1.5">
                             <Link
                                 href="/account/tenant-profile"
-                                className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900  rounded-2xl p-3 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
-                                <div className="p-2 bg-blue-600 dark:bg-blue-900/30 rounded-full">
+                                <div className="p-2 bg-blue-600 dark:bg-blue-900/30 rounded-lg">
                                     <FileText size={14} className="text-white dark:text-blue-400" />
                                 </div>
-                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-leftr">Dossier</span>
+                                <span className="text-sm md:text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Dossier candidat</span>
+                            </Link>
+                             <Link
+                                href="/account/project"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-3 flex flex-col items-start gap-2 hover:shadow-md transition"
+                            >
+                                <div className="p-2 bg-green-600 dark:bg-green-900/30 rounded-lg">
+                                    <Compass size={14} className="text-white dark:text-green-400" />
+                                </div>
+                                <span className="text-sm md:text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Projet de location</span>
                             </Link>
                             <Link
                                 href="/account/receipts"
-                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-3 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
-                                <div className="p-2 bg-amber-600 dark:bg-amber-900/30 rounded-full">
+                                <div className="p-2 bg-amber-600 dark:bg-amber-900/30 rounded-lg">
                                     <Receipt size={14} className="text-white dark:text-amber-400" />
                                 </div>
-                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Quittances</span>
+                                <span className="text-sm md:text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Quittances</span>
                             </Link>
                             <Link
                                 href="/account/alerts"
-                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
+                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-3 flex flex-col items-start gap-2 hover:shadow-md transition"
                             >
-                                <div className="p-2 bg-purple-600 dark:bg-purple-900/30 rounded-full">
+                                <div className="p-2 bg-purple-600 dark:bg-purple-900/30 rounded-lg">
                                     <BellRing size={14} className="text-white dark:text-purple-400" />
                                 </div>
-                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Alertes</span>
+                                <span className="text-sm md:text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Alertes de recherche</span>
                             </Link>
-                            <Link
-                                href="/account/project"
-                                className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-4 flex flex-col items-start gap-2 hover:shadow-md transition"
-                            >
-                                <div className="p-2 bg-green-600 dark:bg-green-900/30 rounded-full">
-                                    <Compass size={14} className="text-white dark:text-green-400" />
-                                </div>
-                                <span className="text-base font-medium text-neutral-700 dark:text-neutral-300 text-left">Projet</span>
-                            </Link>
+                           
                         </div>
                     </div>
 

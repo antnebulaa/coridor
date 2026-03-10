@@ -18,10 +18,10 @@ const PRIORITY_STYLES = {
         link: 'text-red-700 dark:text-red-400',
     },
     ACTION: {
-        bg: 'bg-amber-50 dark:bg-amber-950/30',
-        border: 'border-amber-200 dark:border-amber-800',
-        dot: 'bg-amber-500',
-        link: 'text-amber-700 dark:text-amber-400',
+        bg: 'bg-neutral-100 dark:bg-neutral-950/30',
+        border: 'border-neutral-100 dark:border-neutral-800',
+        dot: 'bg-neutral-500',
+        link: 'text-neutral-700 dark:text-neutral-400',
     },
     INFO: {
         bg: 'bg-blue-50 dark:bg-blue-950/30',
@@ -36,12 +36,12 @@ const MAX_VISIBLE = 5;
 const ActionCardContent: React.FC<{ item: ActionItem; styles: typeof PRIORITY_STYLES.URGENT; resendButton?: React.ReactNode }> = ({ item, styles, resendButton }) => (
     <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-            <span className={`w-2 h-2 rounded-full ${styles.dot} mt-2 shrink-0`} />
+            <span className={`w-4 h-4 animate-pulse rounded-full ${styles.dot} mt-1 shrink-0`} />
             <div className="min-w-0">
-                <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                <p className="text-lg font-medium text-neutral-900 dark:text-white">
                     {item.title}
                 </p>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5 truncate">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0 truncate">
                     {item.subtitle}
                 </p>
             </div>
@@ -95,7 +95,7 @@ const ActionCards: React.FC<ActionCardsProps> = ({ actionItems }) => {
                 const isResent = item.edlId ? resentIds.has(item.edlId) : false;
                 const isResending = item.edlId ? resendingId === item.edlId : false;
 
-                const cardClass = `block ${styles.bg} border ${styles.border} rounded-2xl p-5 hover:shadow-sm transition group cursor-pointer`;
+                const cardClass = `block ${styles.bg} border ${styles.border} rounded-2xl p-3 hover:shadow-sm transition group cursor-pointer`;
 
                 const resendButton = isEdlPending ? (
                     <button

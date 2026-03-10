@@ -60,7 +60,7 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                 <ActionCards actionItems={stats.actionItems} />
 
                 {/* 3. Monthly KPIs */}
-                <MonthlyKPIs data={stats.monthlyKPIs} />
+                <MonthlyKPIs data={stats.monthlyKPIs} firstListingId={stats.propertyStatuses[0]?.listingId} />
 
                 {/* 4. Property Status List */}
                 <PropertyStatusList properties={stats.propertyStatuses} />

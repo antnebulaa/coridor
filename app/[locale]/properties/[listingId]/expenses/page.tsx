@@ -83,8 +83,46 @@ const ExpensesPage = async ({ params }: { params: Promise<IParams> }) => {
             ...expense,
             dateOccurred: expense.dateOccurred.toISOString()
         })),
-        // Ensure other fields match SafeProperty if needed, usually simple spread is enough for non-date fields
     };
+
+    // Load other properties for the switcher dropdown (all expenses, client filters by year)
+    const allListings = await prisma.listing.findMany({
+        where: {
+            rentalUnit: { property: { ownerId: currentUser.id } },
+        },
+        select: {
+            id: true,
+            title: true,
+            rentalUnit: {
+                select: {
+                    property: {
+                        select: {
+                            id: true,
+                            addressLine1: true,
+                            address: true,
+                            city: true,
+                            images: { select: { url: true }, orderBy: { order: 'asc' }, take: 1 },
+                            expenses: {
+                                select: { amountTotalCents: true, dateOccurred: true }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const switcherProperties = allListings.map(l => ({
+        listingId: l.id,
+        title: l.title,
+        address: l.rentalUnit.property.addressLine1 || l.rentalUnit.property.address || '',
+        city: l.rentalUnit.property.city || '',
+        imageUrl: l.rentalUnit.property.images[0]?.url || null,
+        expenses: l.rentalUnit.property.expenses.map(e => ({
+            amountTotalCents: e.amountTotalCents,
+            year: e.dateOccurred.getFullYear(),
+        })),
+    }));
 
     return (
         <ClientOnly>
@@ -93,6 +131,7 @@ const ExpensesPage = async ({ params }: { params: Promise<IParams> }) => {
                 currentUser={currentUser}
                 title={listing.title}
                 listingId={listing.id}
+                switcherProperties={switcherProperties}
             />
         </ClientOnly>
     );

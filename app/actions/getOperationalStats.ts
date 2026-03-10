@@ -404,7 +404,7 @@ export default async function getOperationalStats(): Promise<OperationalStats | 
                 id: `edl-${edl.id}`,
                 type: 'PENDING_EDL',
                 priority: 'ACTION',
-                title: isDraft ? 'EDL en cours' : 'EDL en attente de signature',
+                title: isDraft ? 'Reprendre EDL en cours' : 'EDL en attente de signature',
                 subtitle: `${edl.application?.listing?.title || 'Logement'}${isDraft && totalRooms > 0 ? ` · ${completedRooms}/${totalRooms} pièces` : ''}`,
                 href: `/inspection/${edl.id}`,
                 propertyName: edl.application?.listing?.title,

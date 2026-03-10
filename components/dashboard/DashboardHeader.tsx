@@ -76,7 +76,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <Link
                 href="/properties/create"
                 aria-label="Ajouter un bien"
-                className="shrink-0 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full p-2.5 md:px-4 md:py-2.5 md:rounded-xl hover:opacity-90 transition flex items-center gap-2"
+                className="shrink-0 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full p-2.5 md:px-4 md:py-2.5 md:rounded-full hover:opacity-90 transition flex items-center gap-2"
             >
                 <Plus size={18} />
                 <span className="hidden md:inline text-sm font-medium">Ajouter un bien</span>

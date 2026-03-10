@@ -295,7 +295,7 @@ const Modal: React.FC<ModalProps> = ({
                                 </div>
                             )}
 
-                            {/* BODY with Scroll Ref */}
+                            {/* BODY with Scroll Ref — footer buttons are sticky inside */}
                             <div
                                 ref={scrollRef}
                                 onTouchStart={onTouchStart}
@@ -304,61 +304,63 @@ const Modal: React.FC<ModalProps> = ({
                                 className={`relative w-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden ${noBodyPadding ? 'p-0' : 'p-2.5'}`}
                             >
                                 {body}
-                            </div>
 
-                            {/* FOOTER */}
-                            <div className={`flex flex-col gap-2 p-6 pb-8 md:p-6 md:mb-0 ${bgClassName || (bgColor ? '' : 'bg-white dark:bg-neutral-900')} border-t border-neutral-100 dark:border-neutral-800 md:border-t-0`} style={bgColor ? { backgroundColor: bgColor } : undefined}>
-                                {/* Progress Bar (Moved above buttons) */}
-                                {currentStep && totalSteps && (
-                                    <div className="hidden md:flex w-full justify-center mb-2">
-                                        <div className="h-[6px] w-[120px] shrink-0 bg-neutral-100 rounded-full overflow-hidden relative">
-                                            <div
-                                                className="absolute top-0 left-0 h-full bg-neutral-800 transition-all duration-300"
-                                                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                                            />
+                                {/* FOOTER — sticky at bottom, inside scroll */}
+                                {(actionLabel || (secondaryAction && secondaryActionLabel) || footer || (currentStep && totalSteps)) && (
+                                    <div className="sticky bottom-0 left-0 right-0 z-10 px-4 pt-3 pb-safe bg-linear-to-t from-white via-white to-white/0 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900/0" style={bgColor ? { background: `linear-gradient(to top, ${bgColor} 70%, transparent)` } : undefined}>
+                                        {/* Progress Bar */}
+                                        {currentStep && totalSteps && (
+                                            <div className="hidden md:flex w-full justify-center mb-2">
+                                                <div className="h-1.5 w-[120px] shrink-0 bg-neutral-100 rounded-full overflow-hidden relative">
+                                                    <div
+                                                        className="absolute top-0 left-0 h-full bg-neutral-800 transition-all duration-300"
+                                                        style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="flex flex-row items-center gap-4 w-full justify-between">
+                                            {secondaryAction && secondaryActionLabel && (
+                                                <Button
+                                                    variant="outline"
+                                                    disabled={isLoading}
+                                                    onClick={handleSecondaryAction}
+                                                    className="w-auto flex-1 rounded-full h-[50px] text-[16px] border-neutral-200! border! hover:border-black!"
+                                                >
+                                                    {secondaryActionLabel}
+                                                </Button>
+                                            )}
+
+                                            {actionLabel && (
+                                                ActionButtonComponent ? (
+                                                    <ActionButtonComponent
+                                                        disabled={disabled || isLoading}
+                                                        loading={isLoading}
+                                                        onClick={handleSubmit}
+                                                        className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
+                                                        fullWidth
+                                                    >
+                                                        {actionLabel}
+                                                    </ActionButtonComponent>
+                                                ) : (
+                                                    <Button
+                                                        disabled={disabled || isLoading}
+                                                        onClick={handleSubmit}
+                                                        className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
+                                                    >
+                                                        {actionLabel}
+                                                    </Button>
+                                                )
+                                            )}
                                         </div>
+                                        {footer}
                                     </div>
                                 )}
-                                <div className="flex flex-row items-center gap-4 w-full justify-between">
-                                    {secondaryAction && secondaryActionLabel && (
-                                        <Button
-                                            variant="outline"
-                                            disabled={isLoading} // Only disable back if loading
-                                            onClick={handleSecondaryAction}
-                                            className="w-auto flex-1 rounded-full h-[50px] text-[16px] border-neutral-200! border! hover:border-black!"
-                                        >
-                                            {secondaryActionLabel}
-                                        </Button>
-                                    )}
-
-                                    {actionLabel && (
-                                        ActionButtonComponent ? (
-                                            <ActionButtonComponent
-                                                disabled={disabled || isLoading}
-                                                loading={isLoading}
-                                                onClick={handleSubmit}
-                                                className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
-                                                fullWidth // Pass fullWidth if the component supports it, or let flex-1 handle width
-                                            >
-                                                {actionLabel}
-                                            </ActionButtonComponent>
-                                        ) : (
-                                            <Button
-                                                disabled={disabled || isLoading}
-                                                onClick={handleSubmit}
-                                                className="w-auto flex-1 rounded-full h-[50px] text-[16px]"
-                                            >
-                                                {actionLabel}
-                                            </Button>
-                                        )
-                                    )}
-                                </div>
-                                {footer}
                             </div>
                         </div>
                     </div>
                 </div>
-            </div >
+            </div>
         </>
     );
 

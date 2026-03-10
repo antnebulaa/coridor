@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 
 interface MonthlyKPIsProps {
     data: MonthlyKPIsType;
+    firstListingId?: string;
 }
 
 function formatCents(cents: number): string {
@@ -15,14 +16,14 @@ function formatCents(cents: number): string {
     return euros.toLocaleString('fr-FR');
 }
 
-const cardClass = "bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-4 snap-center min-w-[200px] shrink-0 md:shrink hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors";
+const cardClass = "bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-300 dark:border-neutral-800 p-3 snap-center min-w-[200px] shrink-0 md:shrink hover:border-neutral-400 dark:hover:border-neutral-600 transition-all active:scale-[0.97]";
 
 const RevenueCard: React.FC<{ received: number; expected: number }> = ({ received, expected }) => {
     const animatedValue = useCountUp(Math.round(received / 100), 800);
 
     return (
         <Link href="/finances?tab=revenue" className={cardClass}>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Revenus</p>
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">Revenus</p>
             <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                 {animatedValue.toLocaleString('fr-FR')} €
             </p>
@@ -46,7 +47,7 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
 
     return (
         <Link href="/finances?tab=rent" className={cardClass}>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Loyers</p>
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">Loyers</p>
             <div className="flex items-baseline gap-2">
                 <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                     {paid}/{total}
@@ -71,12 +72,13 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
     );
 };
 
-const ExpensesCard: React.FC<{ amount: number }> = ({ amount }) => {
+const ExpensesCard: React.FC<{ amount: number; listingId?: string }> = ({ amount, listingId }) => {
     const animatedValue = useCountUp(Math.round(amount / 100), 800);
+    const href = listingId ? `/properties/${listingId}/expenses` : '/finances?tab=expenses';
 
     return (
-        <Link href="/finances?tab=expenses" className={cardClass}>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Dépenses</p>
+        <Link href={href} className={cardClass}>
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">Dépenses</p>
             <p className="text-3xl font-semibold text-neutral-900 dark:text-white tabular-nums">
                 {animatedValue.toLocaleString('fr-FR')} €
             </p>
@@ -87,14 +89,14 @@ const ExpensesCard: React.FC<{ amount: number }> = ({ amount }) => {
     );
 };
 
-const MonthlyKPIs: React.FC<MonthlyKPIsProps> = ({ data }) => {
+const MonthlyKPIs: React.FC<MonthlyKPIsProps> = ({ data, firstListingId }) => {
     const hasOverdue = data.paidCount < data.totalCount && data.totalCount > 0;
 
     return (
         <div className="flex gap-4 overflow-x-auto snap-x snap-proximity pb-1 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:overflow-visible no-scrollbar">
             <RevenueCard received={data.receivedRent} expected={data.expectedRent} />
             <RentsCard paid={data.paidCount} total={data.totalCount} hasOverdue={hasOverdue} />
-            <ExpensesCard amount={data.monthlyExpenses} />
+            <ExpensesCard amount={data.monthlyExpenses} listingId={firstListingId} />
         </div>
     );
 };

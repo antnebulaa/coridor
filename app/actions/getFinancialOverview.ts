@@ -1,6 +1,28 @@
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "./getCurrentUser";
 
+// ─── Category metadata ──────────────────────────────────────
+
+export const CATEGORY_META: Record<string, { label: string; color: string; icon: string }> = {
+    // Matches Prisma ExpenseCategory enum exactly
+    COLD_WATER: { label: 'Eau froide', color: '#3b82f6', icon: '💧' },
+    HOT_WATER: { label: 'Eau chaude', color: '#ef4444', icon: '🔥' },
+    ELECTRICITY_COMMON: { label: 'Électricité (commun)', color: '#f59e0b', icon: '⚡' },
+    ELECTRICITY_PRIVATE: { label: 'Électricité (privé)', color: '#ca8a04', icon: '⚡' },
+    HEATING_COLLECTIVE: { label: 'Chauffage collectif', color: '#ea580c', icon: '🌡️' },
+    TAX_PROPERTY: { label: 'Taxe foncière', color: '#dc2626', icon: '🏛️' },
+    ELEVATOR: { label: 'Ascenseur', color: '#8b5cf6', icon: '🛗' },
+    INSURANCE: { label: 'Assurance', color: '#06b6d4', icon: '🛡️' },
+    MAINTENANCE: { label: 'Entretien / Réparations', color: '#22c55e', icon: '🔧' },
+    CARETAKER: { label: 'Gardiennage', color: '#a855f7', icon: '🧹' },
+    METERS: { label: 'Compteurs', color: '#64748b', icon: '📊' },
+    GENERAL_CHARGES: { label: 'Charges générales', color: '#78716c', icon: '📋' },
+    BUILDING_CHARGES: { label: 'Charges copropriété', color: '#4f46e5', icon: '🏢' },
+    PARKING: { label: 'Parking', color: '#0ea5e9', icon: '🅿️' },
+    INSURANCE_GLI: { label: 'Assurance GLI', color: '#7c3aed', icon: '🛡️' },
+    OTHER: { label: 'Autre', color: '#94a3b8', icon: '📦' },
+};
+
 // ─── Interfaces ──────────────────────────────────────────────
 
 export interface FinancialOverviewParams {
@@ -44,6 +66,25 @@ export interface ExpenseItem {
     isRecoverable: boolean;
     recoverableRatio: number;
     isDeductible: boolean;
+    frequency: string;
+    amountDeductibleCents: number;
+}
+
+export interface CategoryBreakdown {
+    category: string;
+    label: string;
+    amount: number;         // cents
+    percentage: number;     // 0-100
+    color: string;
+    icon: string;
+}
+
+export interface UpcomingExpense {
+    icon: string;
+    label: string;
+    amount: number;         // cents
+    date: string;           // ISO
+    frequency: string;
 }
 
 export interface MonthlyBreakdown {
@@ -75,7 +116,9 @@ export interface FinancialOverview {
         totalExpenses: number;
         totalCashflow: number;
     };
-    properties: { id: string; title: string }[];
+    categoryBreakdown: CategoryBreakdown[];
+    upcomingExpenses: UpcomingExpense[];
+    properties: { id: string; title: string; listingId?: string }[];
 }
 
 // ─── Main Function ───────────────────────────────────────────
@@ -98,6 +141,7 @@ export default async function getFinancialOverview(
             rentTrackings,
             expensesData,
             propertiesList,
+            recurringExpenses,
         ] = await Promise.all([
             // Properties with active leases for this month
             prisma.property.findMany({
@@ -208,6 +252,7 @@ export default async function getFinancialOverview(
                     isRecoverable: true,
                     recoverableRatio: true,
                     amountDeductibleCents: true,
+                    frequency: true,
                     property: { select: { id: true } },
                 },
                 orderBy: { dateOccurred: 'desc' },
@@ -232,6 +277,22 @@ export default async function getFinancialOverview(
                     }
                 },
                 orderBy: { createdAt: 'asc' },
+            }),
+
+            // Recurring expenses (for "À venir" widget)
+            prisma.expense.findMany({
+                where: {
+                    property: ownerFilter,
+                    frequency: { not: 'ONCE' },
+                },
+                select: {
+                    category: true,
+                    label: true,
+                    amountTotalCents: true,
+                    dateOccurred: true,
+                    frequency: true,
+                },
+                orderBy: { dateOccurred: 'desc' },
             }),
         ]);
 
@@ -368,12 +429,77 @@ export default async function getFinancialOverview(
             isRecoverable: e.isRecoverable,
             recoverableRatio: e.recoverableRatio,
             isDeductible: (e.amountDeductibleCents || 0) > 0,
+            frequency: e.frequency,
+            amountDeductibleCents: e.amountDeductibleCents || 0,
         }));
+
+        // ── Category breakdown ───────────────────────────────────
+        const categoryTotals = new Map<string, number>();
+        expensesData.forEach(e => {
+            categoryTotals.set(e.category, (categoryTotals.get(e.category) || 0) + e.amountTotalCents);
+        });
+        const categoryBreakdown: CategoryBreakdown[] = Array.from(categoryTotals.entries())
+            .map(([cat, amount]) => {
+                const meta = CATEGORY_META[cat] || CATEGORY_META.OTHER;
+                return {
+                    category: cat,
+                    label: meta.label,
+                    amount,
+                    percentage: totalExpensesCents > 0 ? Math.round((amount / totalExpensesCents) * 100) : 0,
+                    color: meta.color,
+                    icon: meta.icon,
+                };
+            })
+            .sort((a, b) => b.amount - a.amount);
+
+        // ── Upcoming expenses (from recurring) ───────────────────
+        const getNextOccurrence = (lastDate: Date, freq: string): Date => {
+            const y = lastDate.getFullYear();
+            const m = lastDate.getMonth();
+            const day = lastDate.getDate();
+            if (freq === 'MONTHLY') {
+                const target = new Date(y, m + 1, 1);
+                const maxDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+                return new Date(target.getFullYear(), target.getMonth(), Math.min(day, maxDay));
+            } else if (freq === 'QUARTERLY') {
+                const target = new Date(y, m + 3, 1);
+                const maxDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+                return new Date(target.getFullYear(), target.getMonth(), Math.min(day, maxDay));
+            } else if (freq === 'YEARLY') {
+                const maxDay = new Date(y + 1, m + 1, 0).getDate();
+                return new Date(y + 1, m, Math.min(day, maxDay));
+            }
+            return new Date(lastDate);
+        };
+
+        // Deduplicate recurring by category+label (keep most recent)
+        const seen = new Set<string>();
+        const upcomingExpenses: UpcomingExpense[] = recurringExpenses
+            .filter(e => {
+                const key = `${e.category}:${e.label || ''}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            })
+            .map(e => {
+                const meta = CATEGORY_META[e.category] || CATEGORY_META.OTHER;
+                const next = getNextOccurrence(e.dateOccurred, e.frequency);
+                return {
+                    icon: meta.icon,
+                    label: e.label || meta.label,
+                    amount: e.amountTotalCents,
+                    date: next.toISOString(),
+                    frequency: e.frequency,
+                };
+            })
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .slice(0, 10);
 
         // ── Build properties list ──────────────────────────────
         const properties = propertiesList.map(p => ({
             id: p.id,
             title: propertyTitleMap.get(p.id) || p.address || 'Logement',
+            listingId: propertyListingMap.get(p.id) || undefined,
         }));
 
         // ── Monthly summary ────────────────────────────────────
@@ -393,6 +519,8 @@ export default async function getFinancialOverview(
             revenueByProperty,
             rentTracking,
             expenses,
+            categoryBreakdown,
+            upcomingExpenses,
             properties,
         };
 

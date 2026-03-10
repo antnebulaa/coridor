@@ -27,10 +27,10 @@ const PropertyStatusList: React.FC<PropertyStatusListProps> = ({ properties }) =
 
     return (
         <section>
-            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
                 Mes biens
             </h2>
-            <div className={`grid grid-cols-1 gap-3 ${properties.length > 4 ? 'md:grid-cols-2' : ''}`}>
+            <div className={`grid grid-cols-1 gap-2 ${properties.length > 4 ? 'md:grid-cols-2' : ''}`}>
                 {properties.map(property => {
                     const statusConfig = STATUS_CONFIG[property.status];
                     const rentConfig = RENT_STATUS_CONFIG[property.rentStatus];
@@ -39,10 +39,10 @@ const PropertyStatusList: React.FC<PropertyStatusListProps> = ({ properties }) =
                         <Link
                             key={property.id}
                             href={property.listingId ? `/properties/${property.listingId}/edit` : '/properties'}
-                            className="flex items-center gap-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm p-4 hover:shadow-md transition group"
+                            className="flex items-center gap-3 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-3 hover:shadow-md transition group"
                         >
                             {/* Thumbnail */}
-                            <div className="w-12 h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden shrink-0">
+                            <div className="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 overflow-hidden shrink-0">
                                 {property.imageUrl ? (
                                     <Image
                                         src={property.imageUrl}
@@ -63,10 +63,10 @@ const PropertyStatusList: React.FC<PropertyStatusListProps> = ({ properties }) =
                                 <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
                                     {property.title}
                                 </p>
-                                <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate mt-0.5">
+                                <p className="text-xs text-neutral-400 dark:text-neutral-500 truncate mt-0">
                                     {property.address}
                                 </p>
-                                <div className="flex items-center gap-3 mt-1.5">
+                                <div className="flex items-center gap-3 mt-0">
                                     {/* Occupation status */}
                                     <div className="flex items-center gap-1.5">
                                         <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />

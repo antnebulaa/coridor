@@ -3,7 +3,13 @@
 import { useState, useEffect, Fragment } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { Check, Loader2, Home, Zap } from 'lucide-react';
+import {
+  Check, Loader2, Home,
+  ShieldCheck, MessageSquareDot, Cloud, Calendar, RefreshCw, FileText,
+  Camera, TrendingUp, Bell, CreditCard, Receipt, Landmark,
+  AlertCircle, Calculator, Download, Headphones, PieChart, BarChart3,
+  Users, Code, UserCheck, Shield, Layers,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Container from '@/components/Container';
 import { SafeUser } from '@/types';
@@ -29,6 +35,31 @@ interface Plan {
 interface PricingClientProps {
   currentUser?: SafeUser | null;
 }
+
+const FEATURE_ICONS: Record<string, React.ElementType> = {
+  VERIFIED_CANDIDATES: ShieldCheck,
+  SECURE_MESSAGING: MessageSquareDot,
+  CLOUD_BACKUP: Cloud,
+  VISIT_MANAGEMENT: Calendar,
+  AUTO_REPUBLISH: RefreshCw,
+  LEASE_GENERATION: FileText,
+  DIGITAL_INSPECTION: Camera,
+  RENT_REVISION: TrendingUp,
+  LEGAL_REMINDERS: Bell,
+  RENT_TRACKING: CreditCard,
+  AUTO_RECEIPTS: Receipt,
+  BANK_CONNECTION: Landmark,
+  LATE_PAYMENT_REMINDER: AlertCircle,
+  CHARGE_REGULARIZATION: Calculator,
+  ACCOUNTING_EXPORT: Download,
+  PRIORITY_SUPPORT: Headphones,
+  FISCAL_RECAP: PieChart,
+  TAX_SIMULATOR: BarChart3,
+  MULTI_USERS: Users,
+  API_ACCESS: Code,
+  DEDICATED_MANAGER: UserCheck,
+  TEAM_ROLES: Shield,
+};
 
 const PricingClient: React.FC<PricingClientProps> = ({ currentUser }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
@@ -88,6 +119,26 @@ const PricingClient: React.FC<PricingClientProps> = ({ currentUser }) => {
     if (plan.maxProperties === 1) return '1 bien immobilier';
     if (plan.maxProperties >= 999) return 'Biens illimit\u00E9s';
     return `Jusqu\u0027\u00E0 ${plan.maxProperties} biens`;
+  };
+
+  // Compute exclusive features per plan (features not in the previous tier)
+  const planOrder = ['FREE', 'ESSENTIAL', 'PRO'];
+  const featureKeysByPlan = new Map<string, Set<string>>();
+  plans.forEach(plan => {
+    featureKeysByPlan.set(plan.name, new Set(plan.features.map(f => f.key)));
+  });
+
+  const getExclusiveFeatures = (plan: Plan) => {
+    const idx = planOrder.indexOf(plan.name);
+    if (idx <= 0) return plan.features;
+    const prevKeys = featureKeysByPlan.get(planOrder[idx - 1]) || new Set();
+    return plan.features.filter(f => !prevKeys.has(f.key));
+  };
+
+  const getPreviousPlanDisplayName = (plan: Plan): string | null => {
+    const idx = planOrder.indexOf(plan.name);
+    if (idx <= 0) return null;
+    return plans.find(p => p.name === planOrder[idx - 1])?.displayName || null;
   };
 
   if (loading) {
@@ -185,23 +236,33 @@ const PricingClient: React.FC<PricingClientProps> = ({ currentUser }) => {
                   <p className={`text-xs font-semibold uppercase tracking-wide mb-4 ${isPro ? 'text-neutral-400' : 'text-neutral-900'}`}>
                     Fonctionnalit&eacute;s :
                   </p>
-                  <ul className="space-y-3">
-                    <li className={`flex items-start gap-3 text-normal ${isPro ? 'text-neutral-300' : 'text-neutral-600'}`}>
-                      <Home size={18} className={`${isPro ? 'text-white' : 'text-neutral-900'} shrink-0`} />
-                      <span>{getPropertiesLabel(plan)}</span>
-                    </li>
-                    {plan.features.slice(0, 8).map((feature) => (
-                      <li key={feature.key} className={`flex items-start gap-3 text-normal ${isPro ? 'text-neutral-300' : 'text-neutral-600'}`}>
-                        <Check size={18} className={`${isPro ? 'text-white' : 'text-neutral-900'} shrink-0`} />
-                        <span>{feature.label}</span>
-                      </li>
-                    ))}
-                    {plan.features.length > 8 && (
-                      <li className={`text-sm ${isPro ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                        + {plan.features.length - 8} autres fonctionnalit&eacute;s
-                      </li>
-                    )}
-                  </ul>
+                  {(() => {
+                    const exclusiveFeatures = getExclusiveFeatures(plan);
+                    const prevName = getPreviousPlanDisplayName(plan);
+                    return (
+                      <ul className="space-y-3">
+                        <li className={`flex items-start gap-3 text-normal ${isPro ? 'text-neutral-300' : 'text-neutral-600'}`}>
+                          <Home size={18} className={`${isPro ? 'text-white' : 'text-neutral-900'} shrink-0`} />
+                          <span>{getPropertiesLabel(plan)}</span>
+                        </li>
+                        {prevName && (
+                          <li className={`flex items-start gap-3 text-normal ${isPro ? 'text-neutral-300' : 'text-neutral-600'}`}>
+                            <Layers size={18} className={`${isPro ? 'text-white' : 'text-neutral-900'} shrink-0`} />
+                            <span>Tout ce qui est dans <strong>{prevName}</strong></span>
+                          </li>
+                        )}
+                        {exclusiveFeatures.map((feature) => {
+                          const Icon = FEATURE_ICONS[feature.key] || Check;
+                          return (
+                            <li key={feature.key} className={`flex items-start gap-3 text-normal ${isPro ? 'text-neutral-300' : 'text-neutral-600'}`}>
+                              <Icon size={18} className={`${isPro ? 'text-white' : 'text-neutral-900'} shrink-0`} />
+                              <span>{feature.label}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    );
+                  })()}
                 </div>
               </div>
             );
