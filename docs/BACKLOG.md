@@ -156,6 +156,8 @@
 - [✅] Filtres dépenses client-side (année, mois, catégorie multi-select, récupérable/non-récupérable)
 - [✅] Édition d'une dépense existante (tap → modale pré-remplie, PATCH API)
 - [✅] Indicateurs résumé au-dessus de la liste (total, récupérable, non-récupérable, barre de progression)
+- [✅] Refonte page dépenses & charges — filtres cumulables checkbox (Set<string>), KPIs dynamiques par période (mois+année), icônes Lucide monochrome, fréquences par défaut par catégorie, garde-fous récupérable verrouillé (taxe foncière, assurance), pré-remplissage montant récupérable, pills radio récupérable/non récupérable, répartition des charges filtrée par mois, widget "À venir" collapsed par défaut, FAB "Ajouter une dépense" avec texte
+- [✅] Property Switcher Glass Morphism — dropdown verre dépoli pour naviguer entre biens depuis la page dépenses, cover photo par bien, montants filtrés par année sélectionnée, scroll interne max-height 60vh, z-index au-dessus navbar, animation stagger items, lien "Ajouter un bien", données chargées server-side (images + expenses par bien)
 - [✅] Catégories de charges (eau froide/chaude, électricité, ascenseur, assurance, etc.) — enum ExpenseCategory complet
 - [✅] Charges récupérables vs non-récupérables avec ratio (`isRecoverable` + `recoverableRatio`)
 - [✅] Régularisation annuelle (`ReconciliationHistory`, `services/RegularizationService.ts`, `components/documents/RegularizationDocument.tsx`)
