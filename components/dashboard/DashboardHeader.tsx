@@ -1,9 +1,9 @@
 'use client';
 
-import { Plus } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { SafeUser } from '@/types';
 import { ActionItem } from '@/app/actions/getOperationalStats';
+import Avatar from '@/components/Avatar';
 
 interface DashboardHeaderProps {
     currentUser: SafeUser;
@@ -74,12 +74,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 </p>
             </div>
             <Link
-                href="/properties/create"
-                aria-label="Ajouter un bien"
-                className="shrink-0 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full p-2.5 md:px-4 md:py-2.5 md:rounded-full hover:opacity-90 transition flex items-center gap-2"
+                href="/account"
+                aria-label="Mon compte"
+                className="shrink-0"
             >
-                <Plus size={18} />
-                <span className="hidden md:inline text-sm font-medium">Ajouter un bien</span>
+                <Avatar src={currentUser.image} seed={currentUser.email || currentUser.name} size={40} />
             </Link>
         </div>
     );

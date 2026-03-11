@@ -7,11 +7,11 @@ import { AnalyticData } from "@/app/actions/analytics";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import ActionCards from "@/components/dashboard/ActionCards";
 import MonthlyKPIs from "@/components/dashboard/MonthlyKPIs";
-import PropertyStatusList from "@/components/dashboard/PropertyStatusList";
 import FinanceSection from "@/components/dashboard/FinanceSection";
-import LegalRemindersWidget from "@/components/dashboard/LegalRemindersWidget";
+import UpcomingDeadlinesWidget from "@/components/dashboard/UpcomingDeadlinesWidget";
 import RentCollectionWidget from "@/components/dashboard/RentCollectionWidget";
 import FiscalWidget from "@/components/dashboard/FiscalWidget";
+import PowensCTAWidget from "@/components/dashboard/PowensCTAWidget";
 import DepositAlertWidget from "@/components/deposit/DepositAlertWidget";
 
 interface DashboardClientProps {
@@ -62,16 +62,16 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
                 {/* 3. Monthly KPIs */}
                 <MonthlyKPIs data={stats.monthlyKPIs} firstListingId={stats.propertyStatuses[0]?.listingId} />
 
-                {/* 4. Property Status List */}
-                <PropertyStatusList properties={stats.propertyStatuses} />
+                {/* 3.5 Powens CTA */}
+                <PowensCTAWidget />
 
-                {/* 5. Existing widgets (SWR-based, self-contained) */}
+                {/* 4. Existing widgets (SWR-based, self-contained) */}
                 <DepositAlertWidget />
-                <LegalRemindersWidget />
+                <UpcomingDeadlinesWidget />
                 <RentCollectionWidget />
                 <FiscalWidget />
 
-                {/* 6. Finance Section (collapsible, contains existing KPIs + chart) */}
+                {/* 5. Finance Section (collapsible, contains existing KPIs + chart) */}
                 <FinanceSection
                     financials={financials}
                     operationalStats={stats}

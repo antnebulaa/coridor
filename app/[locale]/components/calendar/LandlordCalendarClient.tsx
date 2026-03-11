@@ -57,12 +57,35 @@ interface InspectionEventData {
     completedRooms: number;
 }
 
+interface RentTrackingEventData {
+    id: string;
+    month: number;
+    year: number;
+    status: string;
+    amountCents: number;
+    dueDate: string | null;
+    propertyTitle: string;
+    tenantName: string | null;
+}
+
+interface ReminderEventData {
+    id: string;
+    type: string;
+    title: string;
+    priority: string;
+    status: string;
+    dueDate: string | null;
+    propertyTitle: string | null;
+}
+
 interface LandlordCalendarClientProps {
     data: {
         slots: SlotData[];
         properties: any[];
         visits: VisitData[];
         inspections?: InspectionEventData[];
+        rentTracking?: RentTrackingEventData[];
+        reminders?: ReminderEventData[];
     };
     currentUser?: any;
 }
@@ -80,6 +103,8 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     const headerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const isDesktop = useMediaQuery('(min-width: 768px)');
+
+    const [eventFilter, setEventFilter] = useState<'all' | 'visits' | 'payments' | 'reminders'>('all');
 
     // Inspection action menu
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
@@ -146,7 +171,50 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
     }, [view, data, headerHeight]);
 
     // Common Event Formatting
-    const formatEvent = (item: any, type: 'VISIT' | 'SLOT' | 'INSPECTION') => {
+    const formatEvent = (item: any, type: 'VISIT' | 'SLOT' | 'INSPECTION' | 'PAYMENT' | 'REMINDER') => {
+        if (type === 'PAYMENT') {
+            const statusLabel = item.status === 'PAID' ? 'Payé' : item.status === 'OVERDUE' || item.status === 'LATE' || item.status === 'CRITICAL' ? 'En retard' : 'En attente';
+            const statusColor = item.status === 'PAID' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : item.status === 'OVERDUE' || item.status === 'LATE' || item.status === 'CRITICAL' ? 'bg-red-50 border-red-300 text-red-800' : 'bg-blue-50 border-blue-300 text-blue-800';
+            return {
+                type: 'PAYMENT' as const,
+                id: item.id,
+                propertyId: null,
+                title: `Loyer — ${item.propertyTitle}`,
+                subtitle: item.tenantName ? `${item.tenantName} · ${(item.amountCents / 100).toLocaleString('fr-FR')} €` : `${(item.amountCents / 100).toLocaleString('fr-FR')} €`,
+                startTime: '00:00',
+                endTime: '23:59',
+                date: item.dueDate || `${item.year}-${String(item.month).padStart(2, '0')}-05`,
+                status: statusLabel,
+                image: null,
+                candidate: null,
+                listing: null,
+                applicationId: null,
+                evaluation: null,
+                color: statusColor,
+                paymentStatus: item.status,
+            };
+        }
+        if (type === 'REMINDER') {
+            const priorityColor = item.status === 'OVERDUE' || item.priority === 'CRITICAL' ? 'bg-red-50 border-red-300 text-red-800' : 'bg-amber-50 border-amber-300 text-amber-800';
+            return {
+                type: 'REMINDER' as const,
+                id: item.id,
+                propertyId: null,
+                title: item.title,
+                subtitle: item.propertyTitle || 'Global',
+                startTime: '00:00',
+                endTime: '23:59',
+                date: item.dueDate || new Date().toISOString(),
+                status: item.status,
+                image: null,
+                candidate: null,
+                listing: null,
+                applicationId: null,
+                evaluation: null,
+                color: priorityColor,
+                reminderPriority: item.priority,
+            };
+        }
         if (type === 'INSPECTION') {
             const typeLabel = item.type === 'ENTRY' ? "EDL d'entrée" : 'EDL de sortie';
             return {
@@ -198,7 +266,9 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         const slots = (data.slots || []).map(s => formatEvent(s, 'SLOT'));
         const visits = (data.visits || []).map(v => formatEvent(v, 'VISIT'));
         const inspections = (data.inspections || []).map(i => formatEvent(i, 'INSPECTION'));
-        return [...slots, ...visits, ...inspections]
+        const payments = (data.rentTracking || []).map(p => formatEvent(p, 'PAYMENT'));
+        const reminders = (data.reminders || []).map(r => formatEvent(r, 'REMINDER'));
+        return [...slots, ...visits, ...inspections, ...payments, ...reminders]
             .filter(event => isSameDay(parseISO(event.date), currentDate))
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
     }, [data, currentDate]);
@@ -208,6 +278,8 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         const rawSlots = (data.slots || []).map(s => formatEvent(s, 'SLOT'));
         const rawVisits = (data.visits || []).map(v => formatEvent(v, 'VISIT'));
         const rawInspections = (data.inspections || []).map(i => formatEvent(i, 'INSPECTION'));
+        const rawPayments = (data.rentTracking || []).map(p => formatEvent(p, 'PAYMENT'));
+        const rawReminders = (data.reminders || []).map(r => formatEvent(r, 'REMINDER'));
 
         const mergeSlots = (slots: any[]) => {
             if (slots.length === 0) return [];
@@ -240,6 +312,18 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
             groupedByDate[i.date].push(i);
         });
 
+        rawPayments.forEach(p => {
+            const dateKey = p.date.slice(0, 10);
+            if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+            groupedByDate[dateKey].push(p);
+        });
+
+        rawReminders.forEach(r => {
+            const dateKey = r.date.slice(0, 10);
+            if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+            groupedByDate[dateKey].push(r);
+        });
+
         const slotsByDate: Record<string, any[]> = {};
         rawSlots.forEach(s => {
             if (!slotsByDate[s.date]) slotsByDate[s.date] = [];
@@ -252,6 +336,19 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
             groupedByDate[date].push(...merged);
         });
 
+        // Apply event type filter
+        if (eventFilter !== 'all') {
+            Object.keys(groupedByDate).forEach(date => {
+                groupedByDate[date] = groupedByDate[date].filter((e: any) => {
+                    if (eventFilter === 'visits') return e.type === 'VISIT' || e.type === 'SLOT' || e.type === 'INSPECTION';
+                    if (eventFilter === 'payments') return e.type === 'PAYMENT';
+                    if (eventFilter === 'reminders') return e.type === 'REMINDER';
+                    return true;
+                });
+                if (groupedByDate[date].length === 0) delete groupedByDate[date];
+            });
+        }
+
         const sortedDates = Object.keys(groupedByDate).sort();
         const final: Record<string, any[]> = {};
 
@@ -260,7 +357,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
         });
 
         return final;
-    }, [data]);
+    }, [data, eventFilter]);
 
     // Hours Grid (8:00 to 20:00)
     const hours = Array.from({ length: 13 }).map((_, i) => i + 8);
@@ -529,6 +626,29 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                 </div>
                             </div>
                         )}
+
+                        {/* Event Type Filters */}
+                        <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                            {([
+                                { key: 'all' as const, label: 'Tous' },
+                                { key: 'visits' as const, label: 'Visites' },
+                                { key: 'payments' as const, label: 'Échéances' },
+                                { key: 'reminders' as const, label: 'Rappels' },
+                            ]).map(filter => (
+                                <button
+                                    key={filter.key}
+                                    onClick={() => setEventFilter(filter.key)}
+                                    className={clsx(
+                                        "px-3.5 py-1.5 rounded-full text-sm font-medium transition whitespace-nowrap",
+                                        eventFilter === filter.key
+                                            ? "bg-foreground text-background"
+                                            : "bg-secondary text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    {filter.label}
+                                </button>
+                            ))}
+                        </div>
                       </div>
                     </div>
 
@@ -605,7 +725,7 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                 </div>
                                                 <div className="space-y-2 pt-4 pb-6 px-3">
                                                     {events.sort((a: any, b: any) => {
-                                                        const priority: Record<string, number> = { INSPECTION: 0, VISIT: 1, SLOT: 2 };
+                                                        const priority: Record<string, number> = { INSPECTION: 0, VISIT: 1, PAYMENT: 2, REMINDER: 3, SLOT: 4 };
                                                         const diff = (priority[a.type] ?? 1) - (priority[b.type] ?? 1);
                                                         if (diff !== 0) return diff;
                                                         return a.startTime.localeCompare(b.startTime);
@@ -739,6 +859,82 @@ const LandlordCalendarClient: React.FC<LandlordCalendarClientProps> = ({
                                                                         )}
                                                                         <div className={`hidden sm:flex items-center transition ${isPastEvent ? 'text-muted-foreground/30' : 'text-amber-400 group-hover:text-amber-700'}`}>
                                                                             <ChevronRight size={20} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        if (event.type === 'PAYMENT') {
+                                                            const isPaid = event.paymentStatus === 'PAID';
+                                                            const isLate = event.paymentStatus === 'OVERDUE' || event.paymentStatus === 'LATE' || event.paymentStatus === 'CRITICAL';
+                                                            return (
+                                                                <div
+                                                                    key={`${event.type}-${event.id}`}
+                                                                    className={clsx(
+                                                                        "border rounded-2xl p-3 transition flex flex-row items-center gap-0",
+                                                                        isPastEvent
+                                                                            ? 'bg-secondary opacity-80'
+                                                                            : isPaid
+                                                                                ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800'
+                                                                                : isLate
+                                                                                    ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+                                                                                    : 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800'
+                                                                    )}
+                                                                >
+                                                                    <div className={clsx("flex items-center justify-center min-w-[70px] border-r pr-4", isPastEvent ? 'border-border' : isLate ? 'border-red-200' : isPaid ? 'border-emerald-200' : 'border-blue-200')}>
+                                                                        <span className="text-2xl">💰</span>
+                                                                    </div>
+                                                                    <div className="flex-1 pl-3">
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <h4 className={clsx("font-medium", isPastEvent ? 'text-muted-foreground' : isLate ? 'text-red-800 dark:text-red-300' : isPaid ? 'text-emerald-800 dark:text-emerald-300' : 'text-blue-800 dark:text-blue-300')}>
+                                                                                {event.title}
+                                                                            </h4>
+                                                                            <span className={clsx("px-2 py-0.5 rounded-full text-[10px] font-medium uppercase shrink-0",
+                                                                                isPaid ? 'bg-emerald-100 text-emerald-800' : isLate ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                                                                            )}>
+                                                                                {event.status}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className={clsx("text-sm mt-0.5", 'text-muted-foreground')}>
+                                                                            {event.subtitle}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        if (event.type === 'REMINDER') {
+                                                            const isOverdue = event.status === 'OVERDUE';
+                                                            const isCritical = event.reminderPriority === 'CRITICAL';
+                                                            return (
+                                                                <div
+                                                                    key={`${event.type}-${event.id}`}
+                                                                    className={clsx(
+                                                                        "border rounded-2xl p-3 transition flex flex-row items-center gap-0",
+                                                                        isPastEvent
+                                                                            ? 'bg-secondary opacity-80'
+                                                                            : isOverdue || isCritical
+                                                                                ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+                                                                                : 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800'
+                                                                    )}
+                                                                >
+                                                                    <div className={clsx("flex items-center justify-center min-w-[70px] border-r pr-4", isPastEvent ? 'border-border' : isOverdue ? 'border-red-200' : 'border-amber-200')}>
+                                                                        <span className="text-2xl">{isOverdue || isCritical ? '⚠️' : '📋'}</span>
+                                                                    </div>
+                                                                    <div className="flex-1 pl-3">
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <h4 className={clsx("font-medium", isPastEvent ? 'text-muted-foreground' : isOverdue ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300')}>
+                                                                                {event.title}
+                                                                            </h4>
+                                                                            <span className={clsx("px-2 py-0.5 rounded-full text-[10px] font-medium uppercase shrink-0",
+                                                                                isOverdue ? 'bg-red-100 text-red-800' : isCritical ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                                                                            )}>
+                                                                                {isOverdue ? 'En retard' : isCritical ? 'Critique' : 'Important'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className={clsx("text-sm mt-0.5", 'text-muted-foreground')}>
+                                                                            {event.subtitle}
                                                                         </div>
                                                                     </div>
                                                                 </div>

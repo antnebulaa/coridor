@@ -8,7 +8,7 @@ import SoftSelect from "@/components/inputs/SoftSelect";
 import SoftInput from "@/components/inputs/SoftInput";
 import Heading from "@/components/Heading";
 import PageHeader from "@/components/PageHeader";
-import Container from "@/components/Container";
+
 import Counter from "@/components/inputs/Counter";
 import { useTranslations } from 'next-intl';
 
@@ -83,8 +83,7 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
     ];
 
     return (
-        <Container>
-            <div className="max-w-5xl mx-auto">
+        <div>
                 <div className="flex flex-col">
                     <PageHeader
                         title={t('title')}
@@ -161,8 +160,7 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
                         </div>
                     </div>
                 </div>
-            </div>
-        </Container>
+        </div>
     );
 }
 

@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
 import { SafeUser } from "@/types";
-import Container from "@/components/Container";
 import FeatureGate from "@/components/subscription/FeatureGate";
 import {
     Calculator,
@@ -650,8 +649,7 @@ const TaxSimulatorClient: React.FC<TaxSimulatorClientProps> = ({ currentUser }) 
     // ── Main render ──────────────────────────────────────────────────────────
 
     return (
-        <Container>
-            <div className="pb-20 space-y-6">
+        <div className="pb-20 space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-purple-100 rounded-xl">
@@ -671,8 +669,7 @@ const TaxSimulatorClient: React.FC<TaxSimulatorClientProps> = ({ currentUser }) 
                 <FeatureGate featureKey="TAX_SIMULATOR">
                     {view === 'INPUT' ? renderInputView() : renderResultView()}
                 </FeatureGate>
-            </div>
-        </Container>
+        </div>
     );
 };
 

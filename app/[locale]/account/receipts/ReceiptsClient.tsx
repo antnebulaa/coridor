@@ -39,11 +39,12 @@ interface SerializedApplication {
 
 interface ReceiptsClientProps {
     applications: SerializedApplication[];
+    isLandlord?: boolean;
 }
 
 const MONTHS_FR = [
-    'Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
 ];
 
 function formatCents(cents: number): string {
@@ -68,7 +69,7 @@ function getPropertyAddress(app: SerializedApplication): string {
     return parts.length > 0 ? parts.join(', ') : app.listing.title;
 }
 
-export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
+export default function ReceiptsClient({ applications, isLandlord = false }: ReceiptsClientProps) {
     const [selectedAppIndex, setSelectedAppIndex] = useState(0);
     const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -99,13 +100,13 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${isPartial ? 'Recu' : 'Quittance'}_${monthLabel.replace(' ', '_')}.pdf`;
+            a.download = `${isPartial ? 'Reçu' : 'Quittance'}_${monthLabel.replace(' ', '_')}.pdf`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch {
-            toast.error("Erreur lors du telechargement");
+            toast.error("Erreur lors du téléchargement");
         } finally {
             setDownloadingId(null);
         }
@@ -116,8 +117,11 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
         return (
             <div className="max-w-4xl mx-auto space-y-6">
                 <PageHeader
-                    title="Mes quittances"
-                    subtitle="Retrouvez toutes vos quittances de loyer"
+                    title={isLandlord ? "Quittances" : "Mes quittances"}
+                    subtitle={isLandlord
+                        ? "Quittances générées pour vos locataires"
+                        : "Retrouvez toutes vos quittances de loyer"
+                    }
                 />
                 <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
@@ -127,7 +131,10 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
                         Aucune quittance disponible
                     </h3>
                     <p className="text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
-                        Les quittances de loyer apparaitront ici une fois que votre bail sera signe et que votre proprietaire les aura generees.
+                        {isLandlord
+                            ? "Les quittances apparaîtront ici une fois qu'un bail sera signé et que les quittances auront été générées."
+                            : "Les quittances de loyer apparaîtront ici une fois que votre bail sera signé et que votre propriétaire les aura générées."
+                        }
                     </p>
                 </div>
             </div>
@@ -137,8 +144,11 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <PageHeader
-                title="Mes quittances"
-                subtitle="Retrouvez toutes vos quittances de loyer"
+                title={isLandlord ? "Quittances" : "Mes quittances"}
+                subtitle={isLandlord
+                    ? "Quittances générées pour vos locataires"
+                    : "Retrouvez toutes vos quittances de loyer"
+                }
             />
 
             {/* Lease selector if multiple leases */}
@@ -230,8 +240,10 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
                     </h3>
                     <p className="text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
                         {selectedYear
-                            ? `Aucune quittance pour l'annee ${selectedYear}.`
-                            : 'Votre proprietaire n\'a pas encore genere de quittance pour ce bail.'
+                            ? `Aucune quittance pour l'année ${selectedYear}.`
+                            : isLandlord
+                                ? 'Aucune quittance générée pour ce bail.'
+                                : 'Votre propriétaire n\'a pas encore généré de quittance pour ce bail.'
                         }
                     </p>
                 </div>
@@ -273,11 +285,11 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
                                                     : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                                                 }
                                             `}>
-                                                {receipt.isPartialPayment ? 'Recu partiel' : 'Quittance'}
+                                                {receipt.isPartialPayment ? 'Reçu partiel' : 'Quittance'}
                                             </span>
                                             {receipt.sentAt && (
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                                    Envoyee
+                                                    Envoyée
                                                 </span>
                                             )}
                                         </div>
@@ -307,7 +319,7 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
                                             disabled:opacity-50
                                             transition
                                         "
-                                        title="Telecharger le PDF"
+                                        title="Télécharger le PDF"
                                     >
                                         {downloadingId === receipt.id ? (
                                             <div className="w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
@@ -326,7 +338,7 @@ export default function ReceiptsClient({ applications }: ReceiptsClientProps) {
             {filteredReceipts.length > 0 && (
                 <div className="sm:hidden bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4">
                     <div className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
-                        Total des quittances affichees
+                        Total des quittances affichées
                     </div>
                     <div className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                         {formatCents(filteredReceipts.reduce((sum, r) => sum + r.totalAmountCents, 0))}

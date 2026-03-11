@@ -5,10 +5,10 @@ import Logo from './Logo';
 import Search from './Search';
 import UserMenu from './UserMenu';
 import NotificationCenter from './NotificationCenter';
+import Avatar from '@/components/Avatar';
 import { Search as SearchIcon } from 'lucide-react';
 import useSearchModal from '@/hooks/useSearchModal';
-
-import { usePathname } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 
 import useUserCounters from '@/hooks/useUserCounters';
 
@@ -101,7 +101,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                     {/* ═══ Mobile Home Header ═══ */}
                     {isHomePage && (
                         <div className="flex md:hidden flex-col gap-2.5">
-                            {/* Row 1: Logo + Notifications */}
+                            {/* Row 1: Logo + Notifications + Avatar */}
                             <div className="flex items-center justify-between">
                                 <div
                                     className="cursor-pointer text-[18px] dark:text-white"
@@ -109,9 +109,16 @@ const Navbar: React.FC<NavbarProps> = ({ currentUser }) => {
                                 >
                                     CORIDOR
                                 </div>
-                                {currentUser && (
-                                    <NotificationCenter currentUser={currentUser} redirectToPage />
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {currentUser && (
+                                        <NotificationCenter currentUser={currentUser} redirectToPage />
+                                    )}
+                                    {currentUser && (
+                                        <Link href="/account" aria-label="Mon compte" className="shrink-0">
+                                            <Avatar src={currentUser.image} seed={currentUser.email || currentUser.name} size={32} />
+                                        </Link>
+                                    )}
+                                </div>
                             </div>
                             {/* Row 2: Search button */}
                             {currentUser?.userMode !== 'LANDLORD' && (

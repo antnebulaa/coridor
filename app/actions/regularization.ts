@@ -8,21 +8,20 @@ import { revalidatePath } from "next/cache";
 /**
  * Get all signed leases for a property to populate the selection dropdown.
  */
-export async function getEligibleLeases(propertyId: string) {
+export async function getEligibleLeases(propertyId?: string) {
     const currentUser = await getCurrentUser();
     if (!currentUser) throw new Error("Unauthorized");
 
-    // Fetch leases linked to this property (via Listing -> RentalUnit -> Property)
-    // We need to trace back from Property to RentalApplications.
-    // Path: Property -> RentalUnit -> Listing -> Application
-
-    // Easier query: Find applications where listing.rentalUnit.propertyId = propertyId
+    // If propertyId provided, filter by that property
+    // Otherwise, fetch all signed leases for the current user's properties
     const leases = await prisma.rentalApplication.findMany({
         where: {
             leaseStatus: 'SIGNED',
             listing: {
                 rentalUnit: {
-                    propertyId: propertyId
+                    property: propertyId
+                        ? { id: propertyId }
+                        : { ownerId: currentUser.id }
                 }
             }
         },
@@ -47,6 +46,7 @@ export async function getEligibleLeases(propertyId: string) {
 
     return leases.map(lease => ({
         id: lease.id,
+        propertyId: lease.listing.rentalUnit.property.id,
         tenantName: lease.candidateScope.creatorUser.name || "Locataire inconnu",
         unitName: lease.listing.rentalUnit.name,
         propertyAddress: lease.listing.rentalUnit.property.address || "Adresse non renseignée",

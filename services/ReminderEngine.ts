@@ -2,6 +2,7 @@ import { DiagnosticReminders } from './reminders/DiagnosticReminders';
 import { LeaseReminders } from './reminders/LeaseReminders';
 import { TaxReminders } from './reminders/TaxReminders';
 import { AdminReminders } from './reminders/AdminReminders';
+import { TaxAndPropertyReminderSync } from './reminders/TaxAndPropertyReminderSync';
 import prisma from '@/libs/prismadb';
 import { createNotification } from '@/libs/notifications';
 import { sendEmail } from '@/lib/email';
@@ -208,7 +209,10 @@ export class ReminderEngine {
     // 5. Sync les rappels fiscaux pour tous les proprietaires
     await TaxReminders.syncAll();
 
-    // 6. Sync les rappels admin (ANIL, encadrement loyers)
+    // 6. Sync les rappels taxes & obligations propriétaire (11 types)
+    await TaxAndPropertyReminderSync.syncAll();
+
+    // 7. Sync les rappels admin (ANIL, encadrement loyers)
     await AdminReminders.syncAll();
 
     return { updated, notified, overdue };

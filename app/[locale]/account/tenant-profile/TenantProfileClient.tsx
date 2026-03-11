@@ -12,7 +12,6 @@ import Image from "next/image";
 import { Info, ShieldCheck, CheckCircle, Eye, Sparkles, Lock, CreditCard, ArrowRight, Plus, Trash2, Download } from "lucide-react";
 import Modal from "@/components/modals/Modal";
 
-import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import SoftInput from "@/components/inputs/SoftInput";
 import SoftSelect from "@/components/inputs/SoftSelect";
@@ -315,8 +314,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
     ];
 
     return (
-        <Container>
-            <div className="max-w-5xl mx-auto pb-20">
+        <div className="pb-20">
                 {/* Header avec Download */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <div>
@@ -1033,7 +1031,6 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                         </button>
                     </div>
                 </div>
-            </div>
 
             {/* Preview Modal */}
             <Modal
@@ -1064,7 +1061,7 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
                     />
                 }
             />
-        </Container>
+        </div>
     );
 }
 

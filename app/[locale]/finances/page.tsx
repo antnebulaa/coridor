@@ -1,32 +1,25 @@
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import getFinancialOverview from "@/app/actions/getFinancialOverview";
+import getFinancialReport from "@/app/actions/getFinancialReport";
 import FinancesClient from "./FinancesClient";
 import { redirect } from "next/navigation";
 
 export default async function FinancesPage({
     searchParams,
 }: {
-    searchParams: Promise<{ tab?: string; month?: string; year?: string; mode?: string }>;
+    searchParams: Promise<{ year?: string }>;
 }) {
     const currentUser = await getCurrentUser();
     if (!currentUser) redirect("/");
 
     const params = await searchParams;
-    const now = new Date();
-    const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
-    const year = params.year ? parseInt(params.year) : now.getFullYear();
-    const tab = (params.tab as 'revenue' | 'rent' | 'expenses') || 'revenue';
-    const mode = (params.mode as 'month' | 'year') || 'month';
+    const year = params.year ? parseInt(params.year) : new Date().getFullYear();
 
-    const data = await getFinancialOverview({ month, year });
+    const report = await getFinancialReport(year);
 
     return (
         <FinancesClient
-            initialData={data}
-            initialMonth={month}
+            initialReport={report}
             initialYear={year}
-            initialTab={tab}
-            initialMode={mode}
         />
     );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { SafeUser } from "@/types";
-import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/Button";
 import CommutePreferences from "@/components/profile/CommutePreferences";
@@ -44,8 +43,7 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
     }
 
     return (
-        <Container>
-            <div className="max-w-2xl mx-auto pb-10">
+        <div className="pb-10">
                 <PageHeader
                     title={t('title')}
                     subtitle={t('subtitle')}
@@ -168,8 +166,7 @@ const PreferencesClient: React.FC<PreferencesClientProps> = ({
                         />
                     </div>
                 </div>
-            </div>
-        </Container>
+        </div>
     );
 }
 

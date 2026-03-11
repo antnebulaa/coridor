@@ -48,11 +48,11 @@ const LegalRemindersWidget = () => {
 
     if (loading) {
         return (
-            <div className="bg-white p-5 rounded-xl border border-neutral-200 animate-pulse">
-                <div className="h-6 w-48 bg-neutral-100 rounded mb-4" />
+            <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 animate-pulse">
+                <div className="h-6 w-48 bg-neutral-100 dark:bg-neutral-800 rounded mb-4" />
                 <div className="space-y-3">
-                    <div className="h-4 w-full bg-neutral-100 rounded" />
-                    <div className="h-4 w-3/4 bg-neutral-100 rounded" />
+                    <div className="h-4 w-full bg-neutral-100 dark:bg-neutral-800 rounded" />
+                    <div className="h-4 w-3/4 bg-neutral-100 dark:bg-neutral-800 rounded" />
                 </div>
             </div>
         );
@@ -64,16 +64,16 @@ const LegalRemindersWidget = () => {
     const displayReminders = reminders.slice(0, 5);
 
     return (
-        <div className={`bg-white p-5 rounded-xl border ${hasOverdue ? 'border-red-300' : 'border-neutral-200'} transition`}>
+        <div className={`bg-white dark:bg-neutral-900 p-5 rounded-xl border ${hasOverdue ? 'border-red-300 dark:border-red-800' : 'border-neutral-200 dark:border-neutral-800'} transition`}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-neutral-800 flex items-center gap-2">
+                <h3 className="font-medium text-neutral-800 dark:text-neutral-100 flex items-center gap-2">
                     <Scale className="w-5 h-5" />
-                    Rappels legaux
+                    Rappels légaux
                 </h3>
                 <Link
                     href="/account/reminders"
-                    className="text-sm text-neutral-500 hover:text-neutral-900 flex items-center gap-1 transition"
+                    className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 flex items-center gap-1 transition"
                 >
                     Voir
                     <ArrowRight size={14} />
@@ -93,13 +93,13 @@ const LegalRemindersWidget = () => {
                         {overdueCount > 0 && (
                             <span className="flex items-center gap-1.5">
                                 <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                                <span className="text-red-700 font-medium">{overdueCount} en retard</span>
+                                <span className="text-red-700 dark:text-red-400 font-medium">{overdueCount} en retard</span>
                             </span>
                         )}
                         {upcomingCount > 0 && (
                             <span className="flex items-center gap-1.5">
                                 <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                                <span className="text-orange-700 font-medium">{upcomingCount} a venir</span>
+                                <span className="text-orange-700 dark:text-orange-400 font-medium">{upcomingCount} à venir</span>
                             </span>
                         )}
                     </div>
@@ -117,13 +117,13 @@ const LegalRemindersWidget = () => {
                                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                             reminder.status === 'OVERDUE' ? 'bg-red-500' : 'bg-orange-400'
                                         }`} />
-                                        <span className="text-sm text-neutral-700 truncate">
+                                        <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate">
                                             {reminder.title.length > 35
                                                 ? reminder.title.substring(0, 35) + '...'
                                                 : reminder.title}
                                         </span>
                                     </div>
-                                    <span className={`text-xs shrink-0 ml-2 ${badge.style}`}>
+                                    <span className={`text-sm shrink-0 ml-2 ${badge.style}`}>
                                         {badge.label}
                                     </span>
                                 </div>
@@ -133,10 +133,10 @@ const LegalRemindersWidget = () => {
 
                     {/* See all link */}
                     {reminders.length > 5 && (
-                        <div className="mt-3 pt-3 border-t border-neutral-100">
+                        <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
                             <Link
                                 href="/account/reminders"
-                                className="text-sm text-neutral-500 hover:text-neutral-900 flex items-center gap-1 transition"
+                                className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 flex items-center gap-1 transition"
                             >
                                 Voir tous les rappels
                                 <ArrowRight size={14} />

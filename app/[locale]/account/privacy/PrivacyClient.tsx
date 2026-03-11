@@ -1,6 +1,5 @@
 'use client';
 
-import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import { Lock, Eye, Download, Trash2 } from "lucide-react";
 import { SafeUser } from "@/types";
@@ -12,8 +11,7 @@ interface PrivacyClientProps {
 
 const PrivacyClient: React.FC<PrivacyClientProps> = ({ currentUser }) => {
     return (
-        <Container>
-            <div className="max-w-4xl mx-auto">
+        <div>
                 <div className="mb-0">
                     <PageHeader
                         title="Confidentialité"
@@ -73,8 +71,7 @@ const PrivacyClient: React.FC<PrivacyClientProps> = ({ currentUser }) => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </Container>
+        </div>
     );
 }
 

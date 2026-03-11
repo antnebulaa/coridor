@@ -422,6 +422,18 @@ model Property {
   noiseDiagnosticDate   DateTime? @db.Date
   noiseDiagnosticResult String?
 
+  // ---- TAXES ----
+  propertyTaxAmountCents  Int?              // Montant taxe foncière en centimes
+  teomAmountCents         Int?              // Montant TEOM en centimes
+  vacantSince             DateTime? @db.Date // Date depuis laquelle le bien est vacant
+
+  // ---- OBLIGATIONS ----
+  pnoInsuranceExpiryDate    DateTime? @db.Date // Date expiration assurance PNO
+  pnoInsuranceProvider      String?            // Nom assureur PNO
+  lastBoilerMaintenanceDate DateTime? @db.Date // Dernière date entretien chaudière
+  smokeDetectorInstalledAt  DateTime? @db.Date // Date installation DAAF
+  smokeDetectorCheckedAt    DateTime? @db.Date // Dernière vérification DAAF
+
   // Relations
   owner       User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   rentalUnits RentalUnit[]
@@ -1507,6 +1519,21 @@ enum LegalReminderType {
   ANIL_DATA_UPDATE
   RENT_CONTROL_DATA_UPDATE
   CUSTOM
+
+  // Taxes & impôts
+  PROPERTY_TAX_DEADLINE
+  TEOM_RECOVERY
+  VACANT_PROPERTY_TAX
+  SECONDARY_RESIDENCE_TAX
+  CFE_DEADLINE
+  SOCIAL_CONTRIBUTIONS_INFO
+
+  // Obligations administratives
+  OCCUPANCY_DECLARATION
+  PNO_INSURANCE_RENEWAL
+  BOILER_MAINTENANCE_CHECK
+  ENERGY_BAN_DEADLINE
+  SMOKE_DETECTOR_CHECK
 }
 
 enum LegalReminderStatus {

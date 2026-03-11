@@ -261,7 +261,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                     {currentUser.userMode === 'LANDLORD' ? (
                                         <>
                                             <div
-                                                onClick={() => router.push('/dashboard/finances')}
+                                                onClick={() => router.push('/finances')}
                                                 className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
                                             >
                                                 <Wallet size={24} className="text-neutral-700" />

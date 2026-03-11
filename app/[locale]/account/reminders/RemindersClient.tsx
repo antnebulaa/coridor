@@ -23,6 +23,16 @@ import {
     Loader2,
     Scale,
     Thermometer,
+    Building2,
+    BadgePercent,
+    Home,
+    Landmark,
+    Briefcase,
+    ClipboardList,
+    ShieldCheck,
+    Wrench,
+    BatteryWarning,
+    Bell,
 } from 'lucide-react';
 
 // ---------- Types ----------
@@ -48,16 +58,17 @@ interface Reminder {
     createdAt: string;
 }
 
-type CategoryFilter = 'ALL' | 'DIAGNOSTICS' | 'BAIL' | 'CHARGES' | 'FISCALITE';
+type CategoryFilter = 'ALL' | 'DIAGNOSTICS' | 'BAIL' | 'CHARGES' | 'FISCALITE' | 'OBLIGATIONS';
 type StatusFilter = 'TODO' | 'OVERDUE' | 'COMPLETED';
 
 // ---------- Constants ----------
 
 const CATEGORY_TYPES: Record<string, string[]> = {
-    DIAGNOSTICS: ['DPE_EXPIRY', 'ELECTRICAL_DIAGNOSTIC_EXPIRY', 'GAS_DIAGNOSTIC_EXPIRY', 'ERP_EXPIRY', 'RENT_FREEZE_DPE_FG'],
+    DIAGNOSTICS: ['DPE_EXPIRY', 'ELECTRICAL_DIAGNOSTIC_EXPIRY', 'GAS_DIAGNOSTIC_EXPIRY', 'ERP_EXPIRY', 'RENT_FREEZE_DPE_FG', 'ENERGY_BAN_DEADLINE'],
     BAIL: ['LEASE_END_NOTICE_LANDLORD', 'DEPOSIT_RETURN_DEADLINE', 'TENANT_INSURANCE_CHECK'],
-    CHARGES: ['CHARGES_REGULARIZATION', 'RENT_REVISION_IRL'],
-    FISCALITE: ['TAX_DECLARATION_DEADLINE'],
+    CHARGES: ['CHARGES_REGULARIZATION', 'RENT_REVISION_IRL', 'TEOM_RECOVERY'],
+    FISCALITE: ['TAX_DECLARATION_DEADLINE', 'PROPERTY_TAX_DEADLINE', 'VACANT_PROPERTY_TAX', 'SECONDARY_RESIDENCE_TAX', 'CFE_DEADLINE', 'SOCIAL_CONTRIBUTIONS_INFO'],
+    OBLIGATIONS: ['OCCUPANCY_DECLARATION', 'PNO_INSURANCE_RENEWAL', 'BOILER_MAINTENANCE_CHECK', 'SMOKE_DETECTOR_CHECK'],
 };
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
@@ -66,6 +77,7 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
     BAIL: 'Bail',
     CHARGES: 'Charges',
     FISCALITE: 'Fiscalité',
+    OBLIGATIONS: 'Obligations',
 };
 
 const STATUS_LABELS: Record<StatusFilter, string> = {
@@ -114,6 +126,28 @@ function getIconForType(type: string) {
             return Shield;
         case 'TAX_DECLARATION_DEADLINE':
             return FileText;
+        case 'PROPERTY_TAX_DEADLINE':
+            return Landmark;
+        case 'TEOM_RECOVERY':
+            return BadgePercent;
+        case 'VACANT_PROPERTY_TAX':
+            return Home;
+        case 'SECONDARY_RESIDENCE_TAX':
+            return Building2;
+        case 'CFE_DEADLINE':
+            return Briefcase;
+        case 'SOCIAL_CONTRIBUTIONS_INFO':
+            return Receipt;
+        case 'OCCUPANCY_DECLARATION':
+            return ClipboardList;
+        case 'PNO_INSURANCE_RENEWAL':
+            return ShieldCheck;
+        case 'BOILER_MAINTENANCE_CHECK':
+            return Wrench;
+        case 'ENERGY_BAN_DEADLINE':
+            return BatteryWarning;
+        case 'SMOKE_DETECTOR_CHECK':
+            return Bell;
         default:
             return Scale;
     }

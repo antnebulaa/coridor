@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { MessageSquare, CalendarCheck, FileText, Heart, Scale, Moon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { SafeUser } from "@/types";
@@ -86,22 +85,20 @@ export default function NotificationsClient({ currentUser }: { currentUser: Safe
 
     if (loading) {
         return (
-            <Container>
-                <div className="max-w-2xl mx-auto pb-10">
+            <div className="pb-10">
                     <PageHeader title={t('title')} subtitle={t('subtitle')} />
                     <div className="mt-10 flex flex-col gap-6">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="h-20 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
                         ))}
                     </div>
-                </div>
-            </Container>
+            </div>
         );
     }
 
     return (
         <Container>
-            <div className="max-w-2xl mx-auto pb-10">
+            <div className="max-w-4xl mx-auto pb-10">
                 <PageHeader
                     title={t('title')}
                     subtitle={t('subtitle')}

@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import Link from "next/link";
-import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Wallet, Scale, Calculator, Receipt, Search, Settings, TrendingUp, FolderOpen, Drama, BarChart3 } from "lucide-react";
+import { Shield, Lock, Bell, FileText, Globe, ChevronRight, Repeat, Sparkles, HelpCircle, LucideIcon, Search, Settings, Drama } from "lucide-react";
 import { SafeUser } from "@/types";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -94,52 +94,6 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
     ];
 
     const isLandlord = currentUser?.userMode === 'LANDLORD';
-
-    // Landlord-only routes
-    const landlordRoutes: RouteItem[] = isLandlord ? [
-        {
-            label: 'Finances',
-            icon: BarChart3,
-            href: '/finances',
-            active: pathname === '/finances'
-        },
-        {
-            label: t('fiscalRecap'),
-            icon: Wallet,
-            href: '/account/fiscal',
-            active: pathname === '/account/fiscal'
-        },
-        {
-            label: t('receipts'),
-            icon: Receipt,
-            href: '/account/receipts',
-            active: pathname === '/account/receipts'
-        },
-        {
-            label: t('reminders'),
-            icon: Scale,
-            href: '/account/reminders',
-            active: pathname === '/account/reminders'
-        },
-        {
-            label: t('taxSimulator'),
-            icon: Calculator,
-            href: '/account/tax-simulator',
-            active: pathname === '/account/tax-simulator'
-        },
-        {
-            label: t('investmentSimulator'),
-            icon: TrendingUp,
-            href: '/simulateur',
-            active: pathname === '/simulateur'
-        },
-        {
-            label: t('mySimulations'),
-            icon: FolderOpen,
-            href: '/account/simulations',
-            active: pathname === '/account/simulations'
-        },
-    ] : [];
 
     // Tenant-only routes
     const tenantRoutes: RouteItem[] = !isLandlord ? [
@@ -240,18 +194,6 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                         {accountRoutes.map(renderRoute)}
                     </div>
                 </div>
-
-                {/* Mode-specific: Landlord */}
-                {landlordRoutes.length > 0 && (
-                    <div className="mb-4">
-                        <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">
-                            {t('sectionLandlord')}
-                        </h3>
-                        <div className="flex flex-col gap-0.5">
-                            {landlordRoutes.map(renderRoute)}
-                        </div>
-                    </div>
-                )}
 
                 {/* Mode-specific: Tenant */}
                 {tenantRoutes.length > 0 && (

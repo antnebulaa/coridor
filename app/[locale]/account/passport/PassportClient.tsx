@@ -18,7 +18,6 @@ import {
     UserCheck,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import Modal from "@/components/modals/Modal";
 import { Button } from "@/components/ui/Button";
@@ -549,16 +548,14 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
 
     if (loading) {
         return (
-            <Container>
-                <div className="max-w-2xl mx-auto pb-10">
+            <div className="pb-10">
                     <PageHeader title={t('title')} subtitle={t('subtitle')} />
                     <div className="mt-10 flex flex-col gap-6">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="h-32 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
                         ))}
                     </div>
-                </div>
-            </Container>
+            </div>
         );
     }
 
@@ -572,8 +569,7 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
     // ── Render ─────────────────────────────────────────────────────────────
 
     return (
-        <Container>
-            <div className="max-w-2xl mx-auto pb-10">
+        <div className="pb-10">
                 <PageHeader
                     title={t('title')}
                     subtitle={t('subtitle')}
@@ -888,8 +884,7 @@ export default function PassportClient({ currentUser }: PassportClientProps) {
                     </div>
 
                 </div>
-            </div>
-        </Container>
+        </div>
     );
 }
 

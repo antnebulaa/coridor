@@ -11,16 +11,21 @@ const ReceiptsPage = async () => {
         redirect('/');
     }
 
-    // Fetch all signed leases where the current user is a tenant
+    const isLandlord = currentUser.userMode === 'LANDLORD';
+
+    // Fetch signed leases — different query for landlord vs tenant
     const applications = await prisma.rentalApplication.findMany({
         where: {
             leaseStatus: 'SIGNED',
-            candidateScope: {
-                OR: [
-                    { creatorUserId: currentUser.id },
-                    { membersIds: { has: currentUser.id } }
-                ]
-            }
+            ...(isLandlord
+                ? { listing: { rentalUnit: { property: { ownerId: currentUser.id } } } }
+                : { candidateScope: {
+                    OR: [
+                        { creatorUserId: currentUser.id },
+                        { membersIds: { has: currentUser.id } }
+                    ]
+                } }
+            )
         },
         include: {
             listing: {
@@ -69,7 +74,7 @@ const ReceiptsPage = async () => {
 
     return (
         <ClientOnly>
-            <ReceiptsClient applications={serializedApplications} />
+            <ReceiptsClient applications={serializedApplications} isLandlord={isLandlord} />
         </ClientOnly>
     );
 }

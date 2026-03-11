@@ -45,7 +45,7 @@ enum STEPS {
 interface RegularizationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    propertyId: string;
+    propertyId?: string;
 }
 
 const RegularizationModal: React.FC<RegularizationModalProps> = ({
@@ -105,7 +105,8 @@ const RegularizationModal: React.FC<RegularizationModalProps> = ({
         if (step === STEPS.SELECT) {
             setIsLoading(true);
             try {
-                const data = await previewRegularization(selectedLeaseId, propertyId, selectedYear);
+                const leasePropertyId = selectedLease?.propertyId || propertyId || '';
+                const data = await previewRegularization(selectedLeaseId, leasePropertyId, selectedYear);
                 setPreviewData(data);
                 setStep(STEPS.PREVIEW);
             } catch (error) {
@@ -116,9 +117,10 @@ const RegularizationModal: React.FC<RegularizationModalProps> = ({
         } else if (step === STEPS.PREVIEW) {
             setIsLoading(true);
             try {
+                const commitPropertyId = selectedLease?.propertyId || propertyId || '';
                 await commitRegularization(
                     selectedLeaseId,
-                    propertyId,
+                    commitPropertyId,
                     selectedYear,
                     previewData.balanceCents,
                     previewData.totalRecoverableExpensesCents,

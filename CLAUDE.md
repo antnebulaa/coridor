@@ -166,6 +166,8 @@ Voir `prisma/schema.prisma` pour le schéma complet.
 - i18n : toutes les chaînes dans `messages/fr.json` et `messages/en.json`
 - Images : upload via Cloudinary, compression côté client avec `imageCompression.ts`
 - Toujours gérer les états : loading, error, empty, success
+- **Layout pages `/account/*`** : `AccountClientLayout` gère la largeur (sidebar 3 cols + content 5 cols, `max-w-5xl`). Les pages enfants ne doivent JAMAIS wrapper dans `Container` ni ajouter `max-w-*` — elles rendent leur contenu directement dans la zone content du grid
+- **Textes français** : toujours avec les accents corrects (é, è, ê, î, ô, ù, ç, à) — jamais de "generees", "proprietaire", "telechargement" sans accents
 
 ## Contexte métier
 

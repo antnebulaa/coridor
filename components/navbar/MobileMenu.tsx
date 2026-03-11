@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Heart, LayoutDashboard, Settings, Home, Building2, MessageSquare, Calendar } from "lucide-react";
+import { Heart, LayoutDashboard, Settings, Wallet, Home, Building2, MessageSquare, Calendar } from "lucide-react";
 import { SafeUser } from "@/types";
 import useLoginModal from "@/hooks/useLoginModal";
 import { motion } from "framer-motion";
@@ -42,9 +42,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     }
 
     const routes = [
-        {
-            label: currentUser?.userMode === 'LANDLORD' ? t('agenda') : t('home'),
-            icon: currentUser?.userMode === 'LANDLORD' ? Calendar : Home,
+        currentUser?.userMode === 'LANDLORD' ? {
+            label: t('agenda'),
+            icon: Calendar,
+            href: '/calendar' as const,
+            active: pathname === '/calendar'
+        } : {
+            label: t('home'),
+            icon: Home,
             href: '/' as const,
             active: pathname === '/'
         },
@@ -71,7 +76,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             href: '/inbox' as const,
             active: pathname === '/inbox'
         },
-        {
+        currentUser?.userMode === 'LANDLORD' ? {
+            label: t('finances'),
+            icon: Wallet,
+            href: '/finances' as const,
+            active: pathname?.startsWith('/finances')
+        } : {
             label: t('settings'),
             icon: Settings,
             href: '/account' as const,

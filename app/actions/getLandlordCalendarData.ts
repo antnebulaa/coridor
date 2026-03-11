@@ -225,11 +225,97 @@ export default async function getLandlordCalendarData() {
             } : null
         }));
 
+        // 5. Fetch Rent Payment Tracking
+        const rentTracking = await prisma.rentPaymentTracking.findMany({
+            where: {
+                rentalApplication: {
+                    listing: {
+                        rentalUnit: {
+                            property: { ownerId: currentUser.id }
+                        }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                periodMonth: true,
+                periodYear: true,
+                status: true,
+                expectedAmountCents: true,
+                expectedDate: true,
+                rentalApplication: {
+                    select: {
+                        listing: { select: { title: true } },
+                        candidateScope: {
+                            select: {
+                                creatorUser: { select: { name: true } }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { expectedDate: 'asc' }
+        });
+
+        // 6. Fetch Legal Reminders (CRITICAL + HIGH priority only)
+        const reminders = await prisma.legalReminder.findMany({
+            where: {
+                userId: currentUser.id,
+                priority: { in: ['CRITICAL', 'HIGH'] },
+                status: { not: 'COMPLETED' }
+            },
+            select: {
+                id: true,
+                type: true,
+                title: true,
+                priority: true,
+                status: true,
+                dueDate: true,
+                property: {
+                    select: {
+                        rentalUnits: {
+                            take: 1,
+                            select: {
+                                listings: {
+                                    take: 1,
+                                    select: { title: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { dueDate: 'asc' }
+        });
+
+        const safeRentTracking = rentTracking.map((rt: any) => ({
+            id: rt.id,
+            month: rt.periodMonth,
+            year: rt.periodYear,
+            status: rt.status,
+            amountCents: rt.expectedAmountCents,
+            dueDate: rt.expectedDate?.toISOString() || null,
+            propertyTitle: rt.rentalApplication?.listing?.title || 'Logement',
+            tenantName: rt.rentalApplication?.candidateScope?.creatorUser?.name || null,
+        }));
+
+        const safeReminders = reminders.map((r: any) => ({
+            id: r.id,
+            type: r.type,
+            title: r.title,
+            priority: r.priority,
+            status: r.status,
+            dueDate: r.dueDate?.toISOString() || null,
+            propertyTitle: r.property?.rentalUnits?.[0]?.listings?.[0]?.title || null,
+        }));
+
         return {
             slots: safeSlots,
             properties: safeProperties,
             visits: safeVisits,
             inspections: safeInspections,
+            rentTracking: safeRentTracking,
+            reminders: safeReminders,
         };
 
     } catch (error: any) {

@@ -2,7 +2,6 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import Container from "../Container";
 import Heading from "../Heading";
 import { Monitor, Moon, Sun } from "lucide-react";
 
@@ -19,12 +18,12 @@ const SettingsClient = () => {
     }
 
     return (
-        <Container>
+        <div>
             <Heading
                 title="Préférences d'affichage"
                 subtitle="Choisissez l'apparence de l'application"
             />
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Light Mode */}
                 <div
                     onClick={() => setTheme('light')}
@@ -88,7 +87,7 @@ const SettingsClient = () => {
                     <span className="font-semibold">Système</span>
                 </div>
             </div>
-        </Container>
+        </div>
     );
 }
 

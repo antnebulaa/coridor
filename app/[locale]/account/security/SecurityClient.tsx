@@ -1,6 +1,5 @@
 'use client';
 
-import Container from "@/components/Container";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { signOut } from "next-auth/react";
@@ -14,8 +13,7 @@ const SecurityClient: React.FC<SecurityClientProps> = () => {
     const t = useTranslations('account.security');
 
     return (
-        <Container>
-            <div className="max-w-4xl mx-auto">
+        <div>
                 <div className="mb-0">
                     <PageHeader
                         title={t('title')}
@@ -42,8 +40,7 @@ const SecurityClient: React.FC<SecurityClientProps> = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </Container>
+        </div>
     );
 }
 

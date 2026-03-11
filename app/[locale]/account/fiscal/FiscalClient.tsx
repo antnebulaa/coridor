@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { SafeUser } from "@/types";
-import Container from "@/components/Container";
 import { Calculator, AlertTriangle, Building, Loader2, FileDown, FileSpreadsheet } from "lucide-react";
 import { toast } from "react-hot-toast";
 import CustomToast from "@/components/ui/CustomToast";
@@ -96,8 +95,7 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
     const yearOptions = [currentYear - 1, currentYear - 2, currentYear - 3];
 
     return (
-        <Container>
-            <div className="pb-20 space-y-6">
+        <div className="pb-20 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -202,30 +200,30 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
                 {data && !isLoading && !error && (
                     <>
                         {/* Summary Card */}
-                        <div className="bg-white rounded-2xl border border-neutral-200 p-6">
-                            <h2 className="font-semibold text-neutral-900 mb-4">Synthese</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="p-4 bg-green-50 rounded-xl">
-                                    <p className="text-xs font-medium text-green-600 mb-1">Revenus fonciers bruts</p>
-                                    <p className="text-xl font-bold text-green-700">
+                        <div className="">
+                            <h2 className="font-medium text-xl text-neutral-900 mb-2">Synthèse</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <div className="p-4 bg-neutral-100 rounded-2xl">
+                                    <p className="text-sm font-medium leading-tight text-purple-600 mb-1">Revenus fonciers bruts</p>
+                                    <p className="text-xl font-medium text-neutral-900">
                                         {formatEuro(data.grossRevenueCents)}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-red-50 rounded-xl">
-                                    <p className="text-xs font-medium text-red-600 mb-1">Total charges deductibles</p>
-                                    <p className="text-xl font-bold text-red-700">
+                                <div className="p-4 bg-neutral-100 rounded-2xl">
+                                    <p className="text-sm font-medium leading-tight text-purple-600mb-1">Total charges deductibles</p>
+                                    <p className="text-xl font-medium text-purple-700">
                                         {formatEuro(data.totalDeductibleCents)}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-amber-50 rounded-xl">
-                                    <p className="text-xs font-medium text-amber-600 mb-1">Frais de gestion (forfait)</p>
-                                    <p className="text-xl font-bold text-amber-700">
+                                <div className="p-4 bg-neutral-100 rounded-2xl">
+                                    <p className="text-sm font-medium leading-tight text-purple-600 mb-1">Frais de gestion (forfait)</p>
+                                    <p className="text-xl font-medium text-neutral-900">
                                         {formatEuro(data.managementFeesCents)}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-purple-50 rounded-xl">
-                                    <p className="text-xs font-medium text-purple-600 mb-1">Revenu foncier net imposable</p>
-                                    <p className="text-xl font-bold text-purple-700">
+                                <div className="p-4 bg-neutral-100 rounded-2xl">
+                                    <p className="text-sm font-medium leading-tight text-neutral-900 mb-1">Revenu foncier net imposable</p>
+                                    <p className="text-xl font-medium text-purple-700">
                                         {formatEuro(data.netTaxableIncomeCents)}
                                     </p>
                                 </div>
@@ -234,7 +232,7 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
 
                         {/* Category Breakdown */}
                         {data.byCategory && data.byCategory.length > 0 && (
-                            <div className="bg-white rounded-2xl border border-neutral-200 p-6">
+                            <div className="bg-neutral-50 rounded-2xl p-6">
                                 <h2 className="font-semibold text-neutral-900 mb-4">Detail par categorie</h2>
                                 <div className="space-y-3">
                                     {data.byCategory.map((cat, i) => {
@@ -246,18 +244,20 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
                                             : 0;
 
                                         return (
-                                            <div key={cat.category || i} className="flex items-center gap-4">
-                                                <div className="w-40 text-sm text-neutral-700 font-medium truncate shrink-0">
-                                                    {cat.label}
+                                            <div key={cat.category || i} className="space-y-1.5">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-sm text-neutral-700 font-medium truncate">
+                                                        {cat.label}
+                                                    </div>
+                                                    <div className="text-sm font-semibold text-neutral-900 shrink-0 ml-3">
+                                                        {formatEuro(cat.totalCents)}
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 bg-neutral-100 rounded-full h-6 overflow-hidden">
+                                                <div className="bg-neutral-200 rounded-full h-5 overflow-hidden">
                                                     <div
                                                         className="h-full bg-purple-500 rounded-full transition-all duration-500"
                                                         style={{ width: `${widthPercent}%` }}
                                                     />
-                                                </div>
-                                                <div className="w-28 text-sm font-semibold text-neutral-900 text-right shrink-0">
-                                                    {formatEuro(cat.totalCents)}
                                                 </div>
                                             </div>
                                         );
@@ -268,30 +268,33 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
 
                         {/* Declaration 2044 Table */}
                         {data.declaration2044 && data.declaration2044.length > 0 && (
-                            <div className="bg-white rounded-2xl border border-neutral-200 p-6">
-                                <h2 className="font-semibold text-neutral-900 mb-4">Declaration 2044</h2>
+                            <div className="bg-neutral-50 rounded-2xl p-6">
+                                <h2 className="font-semibold text-neutral-900">Formulaire n°2044</h2>
+                                <div className="text-base text-neutral-700 font-medium truncate mb-4">
+                                                        Déclaration des revenus fonciers
+                                                    </div>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b border-neutral-200">
-                                                <th className="text-left py-3 px-4 font-semibold text-neutral-600 w-20">Ligne</th>
-                                                <th className="text-left py-3 px-4 font-semibold text-neutral-600">Description</th>
-                                                <th className="text-right py-3 px-4 font-semibold text-neutral-600 w-32">Montant</th>
+                                                <th className="text-left py-3  font-semibold text-neutral-600 w-20">Ligne</th>
+                                                <th className="text-left py-3  font-semibold text-neutral-600">Description</th>
+                                                <th className="text-right py-3  font-semibold text-neutral-600 w-32">Montant</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {data.declaration2044.map((row, i) => (
                                                 <tr
                                                     key={row.line}
-                                                    className={`border-b border-neutral-100 ${i % 2 === 0 ? 'bg-neutral-50' : 'bg-white'}
-                                                        ${row.line === '420' ? 'font-bold bg-purple-50' : ''}`}
+                                                    className={`border-b border-neutral-100 ${i % 2 === 0 ? 'bg-neutral-50' : 'bg-neutral-50'}
+                                                        ${row.line === '420' ? 'font-medium bg-neutral-50' : ''}`}
                                                 >
-                                                    <td className="py-3 px-4 font-mono text-neutral-500">{row.line}</td>
-                                                    <td className="py-3 px-4 text-neutral-800">{row.description}</td>
-                                                    <td className={`py-3 px-4 text-right font-semibold
-                                                        ${row.line === '211' ? 'text-green-700' : ''}
+                                                    <td className="py-3  font-mono text-neutral-500">{row.line}</td>
+                                                    <td className="py-3  text-neutral-800">{row.description}</td>
+                                                    <td className={`py-3  text-right font-medium
+                                                        ${row.line === '211' ? 'text-neutral-700' : ''}
                                                         ${row.line === '420' ? 'text-purple-700' : ''}
-                                                        ${!['211', '420'].includes(row.line) ? 'text-red-600' : ''}`}
+                                                        ${!['211', '420'].includes(row.line) ? 'text-neutral-700' : ''}`}
                                                     >
                                                         {formatEuro(row.amountCents)}
                                                     </td>
@@ -316,8 +319,7 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
                         </div>
                     </>
                 )}
-            </div>
-        </Container>
+        </div>
     );
 };
 

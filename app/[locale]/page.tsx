@@ -1,7 +1,6 @@
+import { redirect } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
 import HomeClient from "./HomeClient";
-import LandlordCalendarClient from "./components/calendar/LandlordCalendarClient";
-import getLandlordCalendarData from "@/app/actions/getLandlordCalendarData";
 
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import getListings, { IListingsParams } from "@/app/actions/getListings";
@@ -13,23 +12,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<ILi
     getCurrentUser(),
   ]);
 
+  // Landlord Mode: redirect to dashboard
+  if (currentUser?.userMode === 'LANDLORD') {
+    redirect('/dashboard');
+  }
+
   if (listings.length === 0) {
     return (
       <EmptyState showReset />
     )
-  }
-
-  // Landlord Mode: Show Calendar
-  if (currentUser?.userMode === 'LANDLORD') {
-    const calendarData = await getLandlordCalendarData();
-    if (calendarData) {
-      return (
-        <LandlordCalendarClient
-          data={calendarData}
-          currentUser={currentUser}
-        />
-      );
-    }
   }
 
   const isSearchActive = Object.keys(resolvedParams).filter(k => !['error', 'code', 'state'].includes(k)).length > 0;

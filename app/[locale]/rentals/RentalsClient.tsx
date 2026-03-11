@@ -6,7 +6,6 @@ import { ChevronDown, ChevronUp, FileText, MapPin } from "lucide-react";
 
 import { SafeUser } from "@/types";
 
-import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import RentTrackingSection from "@/components/rentals/RentTrackingSection";
 
@@ -29,12 +28,12 @@ const RentalsClient: React.FC<RentalsClientProps> = ({
     };
 
     return (
-        <Container>
+        <div className="max-w-3xl mx-auto px-4 pb-28 pt-6 md:pt-8">
             <Heading
                 title="Mes locations"
-                subtitle="Vos baux signes et le suivi des loyers"
+                subtitle="Vos baux signés et le suivi des loyers"
             />
-            <div className="mt-10 space-y-4">
+            <div className="mt-6 space-y-4">
                 {leases.map((lease) => {
                     const listing = lease.listing;
                     const isExpanded = expandedLeaseId === lease.id;
@@ -50,19 +49,19 @@ const RentalsClient: React.FC<RentalsClientProps> = ({
                     return (
                         <div
                             key={lease.id}
-                            className="bg-white rounded-2xl border border-neutral-200 overflow-hidden"
+                            className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden"
                         >
                             {/* Lease Summary Row */}
                             <button
                                 onClick={() => toggleExpanded(lease.id)}
-                                className="w-full flex items-center justify-between p-5 hover:bg-neutral-50/50 transition text-left"
+                                className="w-full flex items-center justify-between p-5 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 transition text-left"
                             >
                                 <div className="flex items-center gap-4 min-w-0">
-                                    <div className="p-2.5 bg-neutral-100 rounded-xl shrink-0">
-                                        <FileText size={20} className="text-neutral-600" />
+                                    <div className="p-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-xl shrink-0">
+                                        <FileText size={20} className="text-neutral-600 dark:text-neutral-400" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="font-medium text-neutral-900 truncate">
+                                        <p className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
                                             {title}
                                         </p>
                                         {address && (
@@ -74,8 +73,8 @@ const RentalsClient: React.FC<RentalsClientProps> = ({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0 ml-4">
-                                    <span className="text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-                                        Bail signe
+                                    <span className="text-sm font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-950/30 px-2.5 py-1 rounded-full">
+                                        Bail signé
                                     </span>
                                     {isExpanded ? (
                                         <ChevronUp size={18} className="text-neutral-400" />
@@ -87,7 +86,7 @@ const RentalsClient: React.FC<RentalsClientProps> = ({
 
                             {/* Expanded Detail: Rent Tracking */}
                             {isExpanded && (
-                                <div className="px-5 pb-5 border-t border-neutral-100">
+                                <div className="px-5 pb-5 border-t border-neutral-100 dark:border-neutral-800">
                                     <div className="pt-4">
                                         <RentTrackingSection
                                             applicationId={lease.id}
@@ -100,7 +99,7 @@ const RentalsClient: React.FC<RentalsClientProps> = ({
                     );
                 })}
             </div>
-        </Container>
+        </div>
     );
 }
 
