@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 11 mars 2026
+> Dernière mise à jour : 12 mars 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -358,6 +358,10 @@
 - [✅] Régularisation des charges depuis la page finances — `RegularizationModal` rendu optionnel (`propertyId?`), `getEligibleLeases` étendu pour charger tous les baux signés du propriétaire quand pas de propertyId, `propertyId` injecté depuis le bail sélectionné, bouton "Régularisations de charges" dans QuickLinks ouvre la modale directement
 - [✅] Calendrier agenda enrichi — `getLandlordCalendarData` étendu avec suivi loyers (RentPaymentTracking), échéances fiscales (taxe foncière, déclaration revenus, CFE, TEOM), fix champs Prisma (rentalApplication, periodMonth/periodYear, expectedAmountCents, expectedDate)
 - [✅] Récap fiscal mobile — layout catégories empilé (label + montant en ligne, barre de progression en dessous) pour visibilité sur petit écran
+- [✅] Données patrimoine & calculs financiers V1 — champs investissement/emprunt sur Property (`purchasePrice`, `purchaseDate`, `estimatedCurrentValue`, `estimatedValueDate`, `loanAmount`, `loanRate`, `loanStartDate`, `loanEndDate`, `loanMonthlyPayment`, `loanBank`, `acquisitionMode`), collecte progressive via DataInviteCard sur /finances (4 priorités : prix → valeur estimée → date → crédit), PropertyDataSheet (bottom sheet responsive : drawer mobile / modale desktop), API PATCH `/api/properties/[propertyId]/investment`, mapping dépenses → lignes 2044 (`expenseTo2044Mapping.ts`), calcul plus-value avec abattements IR/PS via `InvestmentSimulatorService`, calcul capital restant dû, intérêts d'emprunt (ligne 250), rendement net
+- [✅] Données patrimoine V2 — refonte collecte progressive : flow acquisition 2 étapes (Étape 1 : Achat/Héritage/Donation en 3 boutons, Étape 2 : labels adaptatifs par mode — "Prix d'achat" vs "Valeur déclarée dans la succession/donation" avec texte explicatif), P2 valeur estimée, P3 crédit avec option "Non, pas de crédit" (`hasNoLoan` flag sur Property), `CollectableField` simplifié (`acquisition` | `estimatedValue` | `loan`), fallback `loanStartDate` → `purchaseDate` pour calculs amortissement
+- [✅] Page suivi loyers — `/finances/suivi-loyers/` avec `getRentTracking` server action, `RentTrackingClient`, composants : `RentSummaryCard`, `PropertyGroup`, `TenantLine`, `StatusPill`, `MonthNav`, `ViewToggle`, `FlatListView`, `RentDetailSheet`, `PowensUpsellCard`
+- [✅] Refonte account layout — `AccountClientLayout` refonte avec `useAccountHeader` hook, `PageHeader` unifié, récap fiscal (FiscalClient) refonte avec catégories empilées mobile amélioré
 
 ### Signalements
 - [✅] Report annonce ou utilisateur (`Report`, `components/reports/ReportButton.tsx`) — modal avec raison/détails
