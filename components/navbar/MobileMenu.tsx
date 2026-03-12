@@ -70,17 +70,22 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             href: '/dashboard' as const,
             active: pathname === '/dashboard'
         },
-        {
+        currentUser?.userMode === 'LANDLORD' ? {
+            label: t('finances'),
+            icon: Wallet,
+            href: '/finances' as const,
+            active: pathname?.startsWith('/finances')
+        } : {
             label: t('messages'),
             icon: MessageSquare,
             href: '/inbox' as const,
             active: pathname === '/inbox'
         },
         currentUser?.userMode === 'LANDLORD' ? {
-            label: t('finances'),
-            icon: Wallet,
-            href: '/finances' as const,
-            active: pathname?.startsWith('/finances')
+            label: t('messages'),
+            icon: MessageSquare,
+            href: '/inbox' as const,
+            active: pathname === '/inbox'
         } : {
             label: t('settings'),
             icon: Settings,
@@ -137,7 +142,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                     `}>
                                         <div className="relative">
                                             <route.icon size={20} />
-                                            {route.label === 'Messages' && !!unreadCount && (
+                                            {route.href === '/inbox' && !!unreadCount && (
                                                 <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
                                                     {unreadCount > 99 ? '99+' : unreadCount}
                                                 </div>

@@ -95,7 +95,6 @@ const Recenter = ({ center, useOffset }: { center: number[], useOffset: boolean 
                 const size = map.getSize();
                 if (size.x > 0 && size.y > 0) {
                     try {
-                        // Use setView instead of flyTo to avoid curve calculation crashes with NaNs
                         map.setView([finalLat, finalLng], targetZoom, { animate: false });
                     } catch (viewError) {
                         console.error("Map setView failed", viewError);

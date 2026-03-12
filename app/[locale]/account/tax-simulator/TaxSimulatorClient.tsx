@@ -17,6 +17,7 @@ import {
     Info,
     Download,
 } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 // Mirrors the interfaces from TaxSimulatorService (backend).
@@ -649,26 +650,17 @@ const TaxSimulatorClient: React.FC<TaxSimulatorClientProps> = ({ currentUser }) 
     // ── Main render ──────────────────────────────────────────────────────────
 
     return (
-        <div className="pb-20 space-y-6">
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-purple-100 rounded-xl">
-                        <Calculator className="w-6 h-6 text-purple-700" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-neutral-900">
-                            Simulateur fiscal
-                        </h1>
-                        <p className="text-sm text-neutral-500">
-                            Comparez les regimes fiscaux pour vos revenus locatifs
-                        </p>
-                    </div>
-                </div>
+        <div className="pb-20">
+                <PageHeader
+                    title="Simulateur fiscal"
+                    subtitle="Comparez les régimes fiscaux pour vos revenus locatifs"
+                />
 
-                {/* Feature Gate */}
+                <div className="mt-10">
                 <FeatureGate featureKey="TAX_SIMULATOR">
                     {view === 'INPUT' ? renderInputView() : renderResultView()}
                 </FeatureGate>
+                </div>
         </div>
     );
 };

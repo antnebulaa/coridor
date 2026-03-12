@@ -26,7 +26,7 @@ const QuickLinks: React.FC<QuickLinksProps> = ({ firstListingId, onRegularizatio
     },
     {
       label: 'Suivi des Loyers',
-      href: '/rentals',
+      href: '/finances/suivi-loyers',
       icon: BarChart3,
       iconBg: 'bg-purple-500',
       iconColor: 'text-white',
@@ -87,8 +87,8 @@ const QuickLinks: React.FC<QuickLinksProps> = ({ firstListingId, onRegularizatio
         <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
           <Scale className="w-4 h-4" />
           Régularisations de charges
-          <span className="text-[12px] py-1.5 font-normal tracking-wide bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 px-2.5 rounded-full inline-flex items-center h-[20px]">
-            Plus
+          <span className="text-[12px] py-1.5 font-normal tracking-wide bg-neutral-800 dark:bg-neutral-100 px-2.5 rounded-full inline-flex items-center h-[20px]">
+            <span className="animate-shimmer">Plus</span>
           </span>
         </span>
         <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors" />

@@ -180,7 +180,10 @@ export class FiscalService {
   static async generateAllPropertiesSummary(userId: string, year: number) {
     const properties = await prisma.property.findMany({
       where: { ownerId: userId },
-      select: { id: true, addressLine1: true, city: true, zipCode: true },
+      select: {
+        id: true, addressLine1: true, city: true, zipCode: true,
+        images: { select: { url: true }, orderBy: { order: 'asc' }, take: 1 },
+      },
     });
 
     const summaries = [];

@@ -97,8 +97,7 @@ export default function NotificationsClient({ currentUser }: { currentUser: Safe
     }
 
     return (
-        <Container>
-            <div className="max-w-4xl mx-auto pb-10">
+        <div className="pb-10">
                 <PageHeader
                     title={t('title')}
                     subtitle={t('subtitle')}
@@ -231,8 +230,7 @@ export default function NotificationsClient({ currentUser }: { currentUser: Safe
                         />
                     </div>
                 </div>
-            </div>
-        </Container>
+        </div>
     );
 }
 

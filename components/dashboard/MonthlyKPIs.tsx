@@ -30,10 +30,10 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
     const allPaid = paid === total && total > 0;
 
     return (
-        <Link href="/rentals" className={cardClass}>
+        <Link href="/finances/suivi-loyers" className={cardClass}>
             <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">Loyers</p>
             <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-medium text-neutral-900 dark:text-white tabular-nums">
+                <p className="text-3xl font-mono font-medium text-neutral-900 dark:text-white tabular-nums">
                     {paid}/{total}
                 </p>
                 <span className="text-sm text-neutral-400 dark:text-neutral-500">reçus</span>
@@ -41,9 +41,7 @@ const RentsCard: React.FC<{ paid: number; total: number; hasOverdue: boolean }> 
             </div>
             <div className="mt-3 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                 <div
-                    className={`h-full rounded-full transition-all duration-500 ease-out ${
-                        hasOverdue ? 'bg-red-500' : 'bg-emerald-500'
-                    }`}
+                    className="h-full rounded-full transition-all duration-500 ease-out bg-emerald-500"
                     style={{ width: `${barWidth}%` }}
                 />
             </div>
@@ -63,8 +61,8 @@ const ExpensesCard: React.FC<{ amount: number; listingId?: string }> = ({ amount
     return (
         <Link href={href} className={cardClass}>
             <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">Dépenses</p>
-            <p className="text-3xl font-medium text-neutral-900 dark:text-white tabular-nums">
-                {animatedValue.toLocaleString('fr-FR')} €
+            <p className="text-3xl font-mono font-medium text-neutral-900 dark:text-white tabular-nums">
+                {animatedValue.toLocaleString('fr-FR')}€
             </p>
             <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
                 ce mois
@@ -83,11 +81,11 @@ const MonthlyKPIs: React.FC<MonthlyKPIsProps> = ({ data, firstListingId }) => {
         <div className="space-y-4">
             {/* Revenue — big number above cards */}
             <div className='ml-3'>
-                <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-400 uppercase tracking-wide">
                     Revenus {monthLabel}
                 </p>
-                <p className="text-5xl font-normal text-neutral-900 dark:text-white tabular-nums mt-1">
-                    {animatedRevenue.toLocaleString('fr-FR')} €
+                <p className="text-5xl font-mono font-normal text-neutral-900 dark:text-white tabular-nums mt-1">
+                    {animatedRevenue.toLocaleString('fr-FR')}€
                 </p>
                 <p className="text-sm text-neutral-600 dark:text-neutral-500 mt-0.5">
                     sur {formatCents(data.expectedRent)} € attendus

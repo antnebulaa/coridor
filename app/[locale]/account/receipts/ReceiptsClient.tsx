@@ -115,7 +115,7 @@ export default function ReceiptsClient({ applications, isLandlord = false }: Rec
     // No signed leases at all
     if (applications.length === 0) {
         return (
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="pb-10">
                 <PageHeader
                     title={isLandlord ? "Quittances" : "Mes quittances"}
                     subtitle={isLandlord
@@ -123,7 +123,7 @@ export default function ReceiptsClient({ applications, isLandlord = false }: Rec
                         : "Retrouvez toutes vos quittances de loyer"
                     }
                 />
-                <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
+                <div className="mt-10 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
                         <Receipt className="w-8 h-8 text-neutral-400" />
                     </div>
@@ -142,7 +142,7 @@ export default function ReceiptsClient({ applications, isLandlord = false }: Rec
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="pb-10">
             <PageHeader
                 title={isLandlord ? "Quittances" : "Mes quittances"}
                 subtitle={isLandlord
@@ -151,6 +151,7 @@ export default function ReceiptsClient({ applications, isLandlord = false }: Rec
                 }
             />
 
+            <div className="mt-10 flex flex-col gap-6">
             {/* Lease selector if multiple leases */}
             {applications.length > 1 && (
                 <div className="flex flex-col gap-2">
@@ -345,6 +346,7 @@ export default function ReceiptsClient({ applications, isLandlord = false }: Rec
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 }

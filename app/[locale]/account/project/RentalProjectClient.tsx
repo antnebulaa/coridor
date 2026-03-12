@@ -83,14 +83,13 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
     ];
 
     return (
-        <div>
-                <div className="flex flex-col">
+        <div className="pb-10">
                     <PageHeader
                         title={t('title')}
                         subtitle={t('subtitle')}
                     />
 
-                    <div className="flex flex-col gap-4">
+                    <div className="mt-10 flex flex-col gap-8">
                         <SoftSelect
                             id="compositionType"
                             label={t('composition.label')}
@@ -159,7 +158,6 @@ const RentalProjectClient: React.FC<RentalProjectClientProps> = ({ existingScope
                             {isLoading ? t('saving') : t('save')}
                         </div>
                     </div>
-                </div>
         </div>
     );
 }

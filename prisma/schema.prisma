@@ -434,6 +434,21 @@ model Property {
   smokeDetectorInstalledAt  DateTime? @db.Date // Date installation DAAF
   smokeDetectorCheckedAt    DateTime? @db.Date // Dernière vérification DAAF
 
+  // ===== INVESTISSEMENT =====
+  purchaseDate          DateTime? @db.Date    // Date d'achat du bien
+  acquisitionMode       String?               // "ACHAT" | "DONATION" | "HERITAGE"
+  estimatedCurrentValue Int?                  // Valeur estimée actuelle en euros
+  estimatedValueDate    DateTime?             // Date de la dernière estimation
+
+  // ===== EMPRUNT =====
+  loanAmount         Int?                     // Capital emprunté en euros
+  loanRate           Float?                   // Taux d'intérêt annuel (ex: 1.5 pour 1.5%)
+  loanStartDate      DateTime? @db.Date      // Date de début du prêt
+  loanEndDate        DateTime? @db.Date      // Date de fin du prêt
+  loanMonthlyPayment Int?                     // Mensualité en euros
+  loanBank           String?                  // Nom de la banque
+  hasNoLoan          Boolean         @default(false)  // User explicitly said "no loan"
+
   // Relations
   owner       User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   rentalUnits RentalUnit[]

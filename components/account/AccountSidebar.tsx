@@ -144,8 +144,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
             `}
         >
             <div className="flex items-center gap-3.5">
-                <route.icon size={20} className="text-neutral-600" />
-                <span className="text-[15px] text-neutral-700">{route.label}</span>
+                <route.icon size={22} className="text-neutral-800" />
+                <span className="text-[17px] text-neutral-800">{route.label}</span>
             </div>
             <ChevronRight size={18} className="text-neutral-400 md:hidden" />
         </Link>
@@ -186,8 +186,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                 </Link>
 
                 {/* Mon compte */}
-                <div className="mb-4">
-                    <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">
+                <div className="mb-4 mt-4">
+                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider px-3 mb-1.5">
                         {t('sectionAccount')}
                     </h3>
                     <div className="flex flex-col gap-0.5">
@@ -195,10 +195,12 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                     </div>
                 </div>
 
+                <br />
+
                 {/* Mode-specific: Tenant */}
                 {tenantRoutes.length > 0 && (
-                    <div className="mb-4">
-                        <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">
+                    <div className="mb-4 mt-4">
+                        <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider px-3 mb-1.5">
                             {t('sectionTenant')}
                         </h3>
                         <div className="flex flex-col gap-0.5">
@@ -214,8 +216,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                                 className="flex items-center justify-between gap-4 py-2.5 px-3 hover:bg-secondary transition rounded-2xl w-full cursor-pointer"
                             >
                                 <div className="flex items-center gap-3.5">
-                                    <Drama size={20} className="text-neutral-600" />
-                                    <span className="text-[15px] text-neutral-700">{t('pseudonym')}</span>
+                                    <Drama size={22} className="text-neutral-600" />
+                                    <span className="text-[17px] text-neutral-800">{t('pseudonym')}</span>
                                 </div>
                                 <ChevronRight size={18} className="text-neutral-400 md:hidden" />
                             </button>
@@ -225,8 +227,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                 )}
 
                 {/* Préférences */}
-                <div className="mb-4">
-                    <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-3 mb-1.5">
+                <div className="mb-4 mt-4">
+                    <h3 className="text-sm font-medium text-neutral-900 uppercase tracking-wider px-3 mb-1.5">
                         {t('sectionPreferences')}
                     </h3>
                     <div className="flex flex-col gap-0.5">
@@ -246,8 +248,8 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                         `}
                     >
                         <div className="flex items-center gap-3.5">
-                            <HelpCircle size={20} className="text-neutral-600" />
-                            <span className="text-[15px] text-neutral-700">{t('helpContact')}</span>
+                            <HelpCircle size={22} className="text-neutral-600" />
+                            <span className="text-[17px] text-neutral-800">{t('helpContact')}</span>
                         </div>
                         <ChevronRight size={18} className="text-neutral-400 md:hidden" />
                     </Link>

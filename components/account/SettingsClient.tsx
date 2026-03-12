@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import Heading from "../Heading";
+import PageHeader from "../PageHeader";
 import { Monitor, Moon, Sun } from "lucide-react";
 
 const SettingsClient = () => {
@@ -18,12 +18,12 @@ const SettingsClient = () => {
     }
 
     return (
-        <div>
-            <Heading
+        <div className="pb-10">
+            <PageHeader
                 title="Préférences d'affichage"
                 subtitle="Choisissez l'apparence de l'application"
             />
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Light Mode */}
                 <div
                     onClick={() => setTheme('light')}

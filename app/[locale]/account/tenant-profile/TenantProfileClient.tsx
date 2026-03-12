@@ -315,22 +315,21 @@ const TenantProfileClient: React.FC<TenantProfileClientProps> = ({
 
     return (
         <div className="pb-20">
-                {/* Header avec Download */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">{t('title')}</h1>
-                        <p className="text-neutral-600 dark:text-neutral-400 mt-1">{t('subtitle')}</p>
-                    </div>
-                    <button
-                        onClick={handleDownloadDossier}
-                        className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg font-medium transition"
-                    >
-                        <Download size={18} />
-                        {t('download')}
-                    </button>
-                </div>
+                <PageHeader
+                    title={t('title')}
+                    subtitle={t('subtitle')}
+                    actionControls={
+                        <button
+                            onClick={handleDownloadDossier}
+                            className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg font-medium transition"
+                        >
+                            <Download size={18} />
+                            {t('download')}
+                        </button>
+                    }
+                />
 
-                <div className="space-y-12">
+                <div className="mt-10 space-y-12">
                     {/* Bio Section */}
                     <section>
                         <div className="mb-4">

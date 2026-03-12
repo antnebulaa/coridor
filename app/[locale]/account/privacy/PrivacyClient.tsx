@@ -11,15 +11,13 @@ interface PrivacyClientProps {
 
 const PrivacyClient: React.FC<PrivacyClientProps> = ({ currentUser }) => {
     return (
-        <div>
-                <div className="mb-0">
-                    <PageHeader
-                        title="Confidentialité"
-                        subtitle="Gérez vos données personnelles et vos préférences de confidentialité"
-                    />
-                </div>
+        <div className="pb-10">
+                <PageHeader
+                    title="Confidentialité"
+                    subtitle="Gérez vos données personnelles et vos préférences de confidentialité"
+                />
 
-                <div className="flex flex-col gap-8">
+                <div className="mt-10 flex flex-col gap-8">
                     {/* Data visibility */}
                     <div className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-card">
                         <div className="flex items-center gap-4 text-foreground">

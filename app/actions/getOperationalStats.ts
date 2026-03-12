@@ -272,7 +272,7 @@ export default async function getOperationalStats(): Promise<OperationalStats | 
 
             if (rentStatus === 'OVERDUE') {
                 nextAction = 'Loyer en retard';
-                nextActionHref = '/rentals';
+                nextActionHref = '/finances/suivi-loyers';
             } else if (pendingApps > 0) {
                 nextAction = `${pendingApps} candidature${pendingApps > 1 ? 's' : ''}`;
                 nextActionHref = '/dashboard/applications';
@@ -349,7 +349,7 @@ export default async function getOperationalStats(): Promise<OperationalStats | 
                     priority: 'URGENT',
                     title: 'Loyer en retard',
                     subtitle: ps.tenantName ? `${ps.title} · ${ps.tenantName}` : ps.title,
-                    href: '/rentals',
+                    href: '/finances/suivi-loyers',
                     propertyName: ps.title,
                 });
             }

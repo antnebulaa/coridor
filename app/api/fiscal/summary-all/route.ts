@@ -55,7 +55,9 @@ export async function GET(request: Request) {
             year,
             properties: raw.properties.map((p: any) => ({
                 id: p.property.id,
-                title: [p.property.addressLine1, p.property.city].filter(Boolean).join(', ') || 'Bien sans adresse',
+                title: p.property.addressLine1 || 'Bien sans adresse',
+                address: [p.property.zipCode, p.property.city].filter(Boolean).join(' '),
+                imageUrl: p.property.images?.[0]?.url || null,
             })),
             grossRevenueCents: raw.totalGrossIncomeCents || 0,
             totalDeductibleCents: raw.totalDeductibleCents || 0,

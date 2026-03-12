@@ -3,12 +3,35 @@
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { FiscalService } from "@/services/FiscalService";
+import { InvestmentSimulatorService } from "@/services/InvestmentSimulatorService";
 import {
   FinancialReport,
   PropertyOccupation,
   PropertyMonthData,
   Declaration2044Line,
+  DataInvite,
 } from "@/lib/finances/types";
+import {
+  calculateYearlyLoanInterest,
+  calculateRemainingDebt,
+} from "@/lib/finances/expenseTo2044Mapping";
+
+/**
+ * Build a human-readable property label like "Appartement T2" or "Maison Studio".
+ * Mirrors the i18n key `properties.card.category`.
+ */
+function getPropertyLabel(
+  prop: { category: string; city: string | null; rentalUnits: { type: string; roomCount: number | null; listings: { roomCount: number | null }[] }[] }
+): string {
+  // For colocation, pick the ENTIRE_PLACE unit (the physical property), not a private room
+  const entireUnit = prop.rentalUnits.find(u => u.type === 'ENTIRE_PLACE');
+  const unit = entireUnit || prop.rentalUnits[0];
+  const listing = unit?.listings[0];
+  // Prefer the listing roomCount (may override), then the unit roomCount
+  const rooms = listing?.roomCount || unit?.roomCount || 1;
+  const type = rooms <= 1 ? 'Studio' : `T${rooms}`;
+  return `${prop.category} ${type}`;
+}
 
 export default async function getFinancialReport(
   year: number
@@ -30,24 +53,38 @@ export default async function getFinancialReport(
     prevYearExpenses,
     leases,
   ] = await Promise.all([
-    // 1. Properties with latest listing
+    // 1. Properties with latest listing + investment/loan data
     prisma.property.findMany({
       where: { ownerId: currentUser.id },
       select: {
         id: true,
         purchasePrice: true,
+        purchaseDate: true,
+        estimatedCurrentValue: true,
+        estimatedValueDate: true,
+        loanAmount: true,
+        loanRate: true,
+        loanStartDate: true,
+        loanEndDate: true,
+        loanMonthlyPayment: true,
+        loanBank: true,
+        hasNoLoan: true,
+        category: true,
         city: true,
         address: true,
         addressLine1: true,
         createdAt: true,
         rentalUnits: {
           select: {
+            type: true,
+            roomCount: true,
             listings: {
               take: 1,
               orderBy: { createdAt: 'desc' as const },
               select: {
                 id: true,
                 title: true,
+                roomCount: true,
               },
             },
           },
@@ -213,18 +250,110 @@ export default async function getFinancialReport(
   const totalPurchasePrice =
     totalPurchasePriceEuros > 0 ? totalPurchasePriceEuros * 100 : null;
 
-  const netYield = totalPurchasePrice
-    ? (netResult / totalPurchasePrice) * 100
-    : null;
+  // Use estimated value if available, otherwise purchase price
+  const totalEstimatedValueEuros = properties.reduce(
+    (sum, p) => sum + (p.estimatedCurrentValue || p.purchasePrice || 0),
+    0
+  );
+  const estimatedValue =
+    totalEstimatedValueEuros > 0 ? totalEstimatedValueEuros * 100 : null;
+
+  const netYield = estimatedValue
+    ? (netResult / estimatedValue) * 100
+    : totalPurchasePrice
+      ? (netResult / totalPurchasePrice) * 100
+      : null;
 
   const prevNetResult = prevRevenue - prevExpenses;
-  const prevYield = totalPurchasePrice
-    ? (prevNetResult / totalPurchasePrice) * 100
+  const prevYield = (estimatedValue || totalPurchasePrice)
+    ? (prevNetResult / (estimatedValue || totalPurchasePrice!)) * 100
     : null;
   const netYieldTrend =
     netYield !== null && prevYield !== null && prevYield !== 0
       ? netYield - prevYield
       : null;
+
+  // ── Capital gain (uses InvestmentSimulatorService) ────────
+  let grossCapitalGain: number | null = null;
+  let netCapitalGain: number | null = null;
+  let capitalGainTax: number | null = null;
+
+  if (totalPurchasePrice && estimatedValue && estimatedValue > totalPurchasePrice) {
+    grossCapitalGain = estimatedValue - totalPurchasePrice;
+
+    // For net capital gain, we need per-property calculation with holding years
+    let totalNetGain = 0;
+    let totalTax = 0;
+    let hasValidCalc = false;
+
+    for (const prop of properties) {
+      if (!prop.purchasePrice || !prop.purchaseDate) continue;
+      const value = prop.estimatedCurrentValue || prop.purchasePrice;
+      if (value <= prop.purchasePrice) continue;
+
+      const holdingYears = Math.max(0, Math.floor(
+        (now.getTime() - new Date(prop.purchaseDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+      ));
+
+      // Works expenses for this property (MAINTENANCE category)
+      const propWorks = expenses
+        .filter(e => e.propertyId === prop.id && ['MAINTENANCE'].includes(e.category))
+        .reduce((s, e) => s + e.amountTotalCents, 0) / 100;
+
+      // Forfait travaux 15% si détention > 5 ans, prendre le plus avantageux
+      const worksCost = holdingYears >= 5
+        ? Math.max(propWorks, Math.round(prop.purchasePrice * 0.15))
+        : propWorks;
+
+      const result = InvestmentSimulatorService.calculateCapitalGainTax({
+        purchasePrice: prop.purchasePrice,
+        notaryFees: Math.round(prop.purchasePrice * 0.075),
+        renovationCost: worksCost,
+        resalePrice: value,
+        holdingYears,
+      });
+
+      totalNetGain += result.netGain;
+      totalTax += result.total;
+      hasValidCalc = true;
+    }
+
+    if (hasValidCalc) {
+      netCapitalGain = Math.round(totalNetGain * 100); // euros → cents
+      capitalGainTax = Math.round(totalTax * 100);
+    }
+  }
+
+  // ── Debt & Equity ────────────────────────────────────────
+  let totalDebt: number | null = null;
+  const debtParts: string[] = [];
+
+  for (const prop of properties) {
+    // Fallback: use purchaseDate as loan start if loanStartDate is missing
+    const loanStart = prop.loanStartDate || prop.purchaseDate;
+    const remaining = calculateRemainingDebt(
+      prop.loanAmount, prop.loanRate, loanStart, prop.loanEndDate
+    );
+    if (remaining !== null && remaining > 0) {
+      totalDebt = (totalDebt || 0) + remaining * 100; // euros → cents
+      const title = getPropertyLabel(prop);
+      debtParts.push(`${title}: ${new Intl.NumberFormat('fr-FR').format(remaining)} €`);
+    }
+  }
+
+  const debtDetails = debtParts.length > 0 ? debtParts.join(' · ') : null;
+  const netEquity = estimatedValue && totalDebt !== null
+    ? estimatedValue - totalDebt
+    : estimatedValue;
+
+  // ── Loan interest for 2044 (line 250) ────────────────────
+  let totalYearlyInterest = 0;
+  for (const prop of properties) {
+    const loanStart = prop.loanStartDate || prop.purchaseDate;
+    totalYearlyInterest += calculateYearlyLoanInterest(
+      prop.loanAmount, prop.loanRate, loanStart, prop.loanEndDate, year
+    );
+  }
 
   // ── Monthly cashflow for sparkline ─────────────────────────
   const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
@@ -347,7 +476,7 @@ export default async function getFinancialReport(
     return {
       id: prop.id,
       listingId: listing?.id || null,
-      title: listing?.title || addr || 'Bien',
+      title: getPropertyLabel(prop),
       address: addr,
       tenantName,
       monthlyRent: currentActiveLease
@@ -455,6 +584,17 @@ export default async function getFinancialReport(
       },
     ];
 
+    // Loan interest (ligne 250) — calculated from Property loan data
+    if (totalYearlyInterest > 0) {
+      declaration2044.push({
+        ligne: '250',
+        description: "Intérêts d'emprunt",
+        montant: totalYearlyInterest,
+        type: 'charge',
+        autoCategories: false,
+      });
+    }
+
     const totalCharges = declaration2044
       .filter(l => l.type === 'charge')
       .reduce((s, l) => s + l.montant, 0);
@@ -517,6 +657,75 @@ export default async function getFinancialReport(
     availableYears.push(y);
   }
 
+  // ── Data invites — progressive collection (V2) ────────────
+  const dataInvites: DataInvite[] = [];
+
+  // P1: acquisition (purchasePrice + purchaseDate + acquisitionMode combined)
+  // Missing = no purchasePrice (which means mode + value + date haven't been filled)
+  const missingAcquisition = properties.filter(p => !p.purchasePrice);
+  if (missingAcquisition.length > 0) {
+    const first = missingAcquisition[0];
+    dataInvites.push({
+      field: 'acquisition',
+      priority: 1,
+      title: "D'où vient ce bien ?",
+      description: "Achat, héritage ou donation — renseignez l'origine pour découvrir votre rendement réel et comparer avec le Livret A",
+      unlocks: 'Rendement net · Comparatif placements',
+      doodleName: 'sitting-reading',
+      color: 'blue',
+      propertyId: first.id,
+      propertyTitle: getPropertyLabel(first),
+      propertyAddress: first.address || first.addressLine1 || first.city || '',
+      extraCount: missingAcquisition.length - 1,
+    });
+  }
+
+  // P2: estimatedValue (only if at least 1 property has acquisition data)
+  const hasAcquisition = properties.some(p => p.purchasePrice);
+  const missingEstimated = properties.filter(p => !p.estimatedCurrentValue);
+  if (hasAcquisition && missingEstimated.length > 0) {
+    const first = missingEstimated[0];
+    dataInvites.push({
+      field: 'estimatedValue',
+      priority: 2,
+      title: 'Combien vaut votre bien aujourd\'hui ?',
+      description: 'Découvrez votre plus-value et votre patrimoine net',
+      unlocks: 'Patrimoine total · Plus-value · Equity',
+      doodleName: 'meditating',
+      color: 'purple',
+      propertyId: first.id,
+      propertyTitle: getPropertyLabel(first),
+      propertyAddress: first.address || first.addressLine1 || first.city || '',
+      extraCount: missingEstimated.length - 1,
+    });
+  }
+
+  // P3: loan (only if at least 1 property has estimatedCurrentValue)
+  // Skip properties that already have loan data OR explicitly said "no loan"
+  const hasEstimated = properties.some(p => p.estimatedCurrentValue);
+  const missingLoan = properties.filter(p =>
+    !p.loanAmount && !p.hasNoLoan && p.purchasePrice
+  );
+  if (hasEstimated && missingLoan.length > 0) {
+    const first = missingLoan[0];
+    dataInvites.push({
+      field: 'loan',
+      priority: 3,
+      title: 'Avez-vous un crédit sur ce bien ?',
+      description: 'Renseignez votre emprunt pour voir votre equity nette et vos intérêts déductibles',
+      unlocks: 'Equity nette · Capital restant dû · Intérêts déductibles',
+      doodleName: 'float',
+      color: 'emerald',
+      propertyId: first.id,
+      propertyTitle: getPropertyLabel(first),
+      propertyAddress: first.address || first.addressLine1 || first.city || '',
+      extraCount: missingLoan.length - 1,
+    });
+  }
+
+  // Only show ONE invite at a time (the highest priority missing data)
+  const activeInvites = dataInvites.slice(0, 1);
+
   // ── Return ─────────────────────────────────────────────────
   return {
     year,
@@ -530,14 +739,15 @@ export default async function getFinancialReport(
       netYieldTrend !== null ? Math.round(netYieldTrend * 10) / 10 : null,
     livretARate: 3.0,
     scpiRate: 4.5,
-    estimatedValue: null, // No estimation model yet
+    estimatedValue,
     totalPurchasePrice,
-    grossCapitalGain: null,
-    netCapitalGain: null,
-    totalDebt: null,
-    debtDetails: null,
-    netEquity: null,
-    equityTrend: null,
+    grossCapitalGain,
+    netCapitalGain,
+    capitalGainTax,
+    totalDebt,
+    debtDetails,
+    netEquity: netEquity ?? null,
+    equityTrend: null, // Would need previous year estimated values to compute
     occupancyRate: Math.round(occupancyRate),
     occupiedMonths: totalOccMonths,
     totalMonths: totalPossibleMonths,
@@ -546,5 +756,6 @@ export default async function getFinancialReport(
     declaration2044,
     hasPowensConnection: !!bankConnection,
     availableYears,
+    dataInvites: activeInvites,
   };
 }

@@ -14,16 +14,17 @@ export interface FinancialReport {
   livretARate: number;        // constant 3.0
   scpiRate: number;           // constant 4.5
 
-  // Patrimoine (all nullable - only if purchasePrice is set)
-  estimatedValue: number | null;     // cents - for now = purchasePrice (no estimation model)
+  // Patrimoine (nullable — populated when purchasePrice / estimatedCurrentValue are set)
+  estimatedValue: number | null;     // cents
   totalPurchasePrice: number | null; // cents
-  grossCapitalGain: number | null;
-  netCapitalGain: number | null;
+  grossCapitalGain: number | null;   // cents
+  netCapitalGain: number | null;     // cents (after IR+PS+surtax abatements)
+  capitalGainTax: number | null;     // cents — total tax on capital gain
 
-  // No loan model exists, so these are always null for now
-  totalDebt: number | null;
+  // Debt (populated when loan data is set on Property)
+  totalDebt: number | null;          // cents — capital restant dû
   debtDetails: string | null;
-  netEquity: number | null;
+  netEquity: number | null;          // cents — estimatedValue - totalDebt
   equityTrend: number | null;
 
   // Occupation
@@ -43,6 +44,9 @@ export interface FinancialReport {
 
   // Available years for selector
   availableYears: number[];
+
+  // Data invites — which fields are missing for progressive collection
+  dataInvites: DataInvite[];
 }
 
 export interface PropertyMonthData {
@@ -86,4 +90,20 @@ export interface FinancialInsight {
   description: string;
   actionLabel: string;
   actionHref: string;
+}
+
+export interface DataInvite {
+  field: 'acquisition' | 'estimatedValue' | 'loan';
+  priority: number;
+  title: string;
+  description: string;
+  unlocks: string;
+  doodleName: string;
+  color: 'blue' | 'purple' | 'amber' | 'emerald';
+  /** First property missing this data */
+  propertyId: string;
+  propertyTitle: string;
+  propertyAddress: string;
+  /** How many other properties also miss this data */
+  extraCount: number;
 }

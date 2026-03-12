@@ -13,11 +13,18 @@ import FinancesHeader from '@/components/finances/FinancesHeader';
 import QuickLinks from '@/components/finances/QuickLinks';
 import NetResultCard from '@/components/finances/NetResultCard';
 import InsightCard from '@/components/finances/InsightCard';
+import DataInviteCard from '@/components/finances/DataInviteCard';
 import PropertyCostSection from '@/components/finances/PropertyCostSection';
 import FiscalSection from '@/components/finances/FiscalSection';
+import type { CollectableField } from '@/components/finances/PropertyDataSheet';
 
 const RegularizationModal = dynamic(
     () => import('@/app/[locale]/properties/components/RegularizationModal'),
+    { ssr: false }
+);
+
+const PropertyDataSheet = dynamic(
+    () => import('@/components/finances/PropertyDataSheet'),
     { ssr: false }
 );
 
@@ -38,8 +45,15 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
     const [insightsExpanded, setInsightsExpanded] = useState(false);
     const [regularizationOpen, setRegularizationOpen] = useState(false);
 
+    // Data sheet state for progressive collection
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [sheetField, setSheetField] = useState<CollectableField>('acquisition');
+    const [sheetPropertyId, setSheetPropertyId] = useState('');
+    const [sheetPropertyTitle, setSheetPropertyTitle] = useState('');
+    const [sheetPropertyAddress, setSheetPropertyAddress] = useState('');
+
     // Fetch report when year changes (SWR for client-side navigation)
-    const { data: report } = useSWR<FinancialReport>(
+    const { data: report, mutate } = useSWR<FinancialReport>(
         `/api/finances/report?year=${year}`,
         fetcher,
         { fallbackData: initialReport || undefined, revalidateOnFocus: false }
@@ -54,12 +68,34 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
         window.open(`/api/accounting/export?format=${format}&year=${year}`, '_blank');
     }, [year]);
 
+    // Open data collection sheet
+    const openDataSheet = useCallback((
+        field: CollectableField,
+        propertyId: string,
+        propertyTitle: string,
+        propertyAddress: string
+    ) => {
+        setSheetField(field);
+        setSheetPropertyId(propertyId);
+        setSheetPropertyTitle(propertyTitle);
+        setSheetPropertyAddress(propertyAddress);
+        setSheetOpen(true);
+    }, []);
+
+    // After data sheet validation, revalidate the report
+    const handleDataComplete = useCallback(() => {
+        mutate();
+    }, [mutate]);
+
     // Generate insights
     const insights = report ? generateInsights(report) : [];
     const visibleInsights = insightsExpanded ? insights : insights.slice(0, 4);
 
     // First listing for quick links
     const firstListingId = report?.properties.find(p => p.listingId)?.listingId || undefined;
+
+    // Data invites
+    const dataInvites = report?.dataInvites || [];
 
     // Stagger animation state
     const [mounted, setMounted] = useState(false);
@@ -104,13 +140,34 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
                 <NetResultCard report={report} />
             </div>
 
-            {/* Insights */}
-            {insights.length > 0 && (
+            {/* Insights + Data Invites */}
+            {(insights.length > 0 || dataInvites.length > 0) && (
                 <div className={`mt-8 ${sectionClass()}`} style={{ transitionDelay: '250ms' }}>
                     <p className="text-sm text-neutral-400 uppercase tracking-wider font-medium mb-4">
                         Recommandations
                     </p>
                     <div className="space-y-2.5">
+                        {/* Data invite card (one at a time) */}
+                        {dataInvites.map(invite => (
+                            <DataInviteCard
+                                key={invite.field}
+                                title={invite.title}
+                                description={invite.description}
+                                unlocks={invite.unlocks}
+                                doodleName={invite.doodleName}
+                                color={invite.color}
+                                propertyName={invite.propertyTitle}
+                                extraCount={invite.extraCount}
+                                onAction={() => openDataSheet(
+                                    invite.field,
+                                    invite.propertyId,
+                                    invite.propertyTitle,
+                                    invite.propertyAddress
+                                )}
+                            />
+                        ))}
+
+                        {/* Regular insights */}
                         {visibleInsights.map(insight => (
                             <InsightCard key={insight.id} insight={insight} />
                         ))}
@@ -159,6 +216,17 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
             <RegularizationModal
                 isOpen={regularizationOpen}
                 onClose={() => setRegularizationOpen(false)}
+            />
+
+            {/* Property Data Sheet — progressive data collection */}
+            <PropertyDataSheet
+                isOpen={sheetOpen}
+                onClose={() => setSheetOpen(false)}
+                propertyId={sheetPropertyId}
+                propertyTitle={sheetPropertyTitle}
+                propertyAddress={sheetPropertyAddress}
+                field={sheetField}
+                onComplete={handleDataComplete}
             />
         </div>
     );

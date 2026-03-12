@@ -13,15 +13,13 @@ const SecurityClient: React.FC<SecurityClientProps> = () => {
     const t = useTranslations('account.security');
 
     return (
-        <div>
-                <div className="mb-0">
-                    <PageHeader
-                        title={t('title')}
-                        subtitle={t('subtitle')}
-                    />
-                </div>
+        <div className="pb-10">
+                <PageHeader
+                    title={t('title')}
+                    subtitle={t('subtitle')}
+                />
 
-                <div className="flex flex-col gap-8">
+                <div className="mt-10 flex flex-col gap-8">
                     <div className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-card">
                         <div className="flex items-center gap-4 text-foreground">
                             <Shield size={24} />

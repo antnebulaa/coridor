@@ -1,9 +1,11 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { BiChevronLeft } from "react-icons/bi";
+import { useAccountHeader } from "@/hooks/useAccountHeader";
 
 interface PageHeaderProps {
     title: React.ReactNode;
@@ -35,9 +37,29 @@ const PageHeader: React.FC<PageHeaderProps> = ({
     backHref
 }) => {
     const router = useRouter();
+    const titleRef = useRef<HTMLDivElement>(null);
+    const { setTitleVisibility, scrollRef } = useAccountHeader();
+
+    useEffect(() => {
+        const el = titleRef.current;
+        const container = scrollRef.current;
+        if (!el || !container) return;
+
+        // Distance from scroll container top to the bottom of the title at scrollTop=0
+        const threshold = el.offsetTop - container.offsetTop + el.offsetHeight;
+
+        const check = () => {
+            // Binary: title hidden (0) or visible (1) — CSS transition handles the animation
+            setTitleVisibility(container.scrollTop >= threshold ? 0 : 1);
+        };
+
+        check();
+        container.addEventListener('scroll', check, { passive: true });
+        return () => container.removeEventListener('scroll', check);
+    }, [setTitleVisibility, scrollRef]);
 
     return (
-        <div className="flex flex-col gap-4 pt-4">
+        <div className="flex flex-col gap-4 pt-0 md:pt-4">
             {showBack && (
                 <div
                     onClick={() => backHref ? router.push(backHref) : router.back()}
@@ -53,11 +75,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             )}
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="text-start">
-                    <div className={cn("text-4xl font-medium tracking-tight", titleClassName)}>
+                    <div ref={titleRef} className={cn("text-4xl font-medium tracking-tight", titleClassName)}>
                         {title}
                     </div>
                     {subtitle && (
-                        <div className="font-normal text-neutral-500 mt-2">
+                        <div className="font-normal text-base text-neutral-500 mt-1">
                             {subtitle}
                         </div>
                     )}

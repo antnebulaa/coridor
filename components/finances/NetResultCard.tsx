@@ -74,14 +74,14 @@ const NetResultCard: React.FC<NetResultCardProps> = ({ report }) => {
             Résultat net {report.year}
           </p>
           <p
-            className={`text-[38px] font-medium tabular-nums tracking-tight leading-none ${
+            className={`text-[38px] font-mono font-medium tabular-nums tracking-tight leading-none ${
               isPositive
                 ? 'text-neutral-600 dark:text-neutral-100'
                 : 'text-red-500 dark:text-red-400'
             }`}
           >
             {isPositive ? '' : '−'}
-            {new Intl.NumberFormat('fr-FR').format(animatedNet)}&nbsp;€
+            {new Intl.NumberFormat('fr-FR').format(animatedNet)}€
           </p>
         </div>
         <div className="flex-shrink-0 ml-4 mt-2">

@@ -11,7 +11,6 @@ import FinanceSection from "@/components/dashboard/FinanceSection";
 import UpcomingDeadlinesWidget from "@/components/dashboard/UpcomingDeadlinesWidget";
 import RentCollectionWidget from "@/components/dashboard/RentCollectionWidget";
 import FiscalWidget from "@/components/dashboard/FiscalWidget";
-import PowensCTAWidget from "@/components/dashboard/PowensCTAWidget";
 import DepositAlertWidget from "@/components/deposit/DepositAlertWidget";
 
 interface DashboardClientProps {
@@ -61,9 +60,6 @@ const DashboardClient: React.FC<DashboardClientProps> = ({
 
                 {/* 3. Monthly KPIs */}
                 <MonthlyKPIs data={stats.monthlyKPIs} firstListingId={stats.propertyStatuses[0]?.listingId} />
-
-                {/* 3.5 Powens CTA */}
-                <PowensCTAWidget />
 
                 {/* 4. Existing widgets (SWR-based, self-contained) */}
                 <DepositAlertWidget />

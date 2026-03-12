@@ -13,6 +13,7 @@ import {
   Copy,
   ExternalLink,
 } from 'lucide-react';
+import PageHeader from "@/components/PageHeader";
 
 interface SimulationSummary {
   id: string;
@@ -100,24 +101,29 @@ export default function SimulationsClient() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-neutral-500">
-        Chargement...
+      <div className="pb-10">
+        <PageHeader title="Mes simulations" subtitle="Retrouvez et gérez vos simulations d'investissement" />
+        <div className="mt-10 text-neutral-500">Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Mes simulations</h1>
-        <button
-          onClick={() => router.push('/simulateur')}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:opacity-90 transition"
-        >
-          <Plus size={16} />
-          Nouvelle
-        </button>
-      </div>
+    <div className="pb-10">
+      <PageHeader
+        title="Mes simulations"
+        subtitle="Retrouvez et gérez vos simulations d'investissement"
+        actionControls={
+          <button
+            onClick={() => router.push('/simulateur')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:opacity-90 transition"
+          >
+            <Plus size={16} />
+            Nouvelle
+          </button>
+        }
+      />
+      <div className="mt-10">
 
       {simulations.length === 0 ? (
         <div className="text-center py-16">
@@ -226,6 +232,7 @@ export default function SimulationsClient() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
