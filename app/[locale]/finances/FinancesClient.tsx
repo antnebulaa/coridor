@@ -16,6 +16,7 @@ import InsightCard from '@/components/finances/InsightCard';
 import DataInviteCard from '@/components/finances/DataInviteCard';
 import PropertyCostSection from '@/components/finances/PropertyCostSection';
 import FiscalSection from '@/components/finances/FiscalSection';
+import RegularizationHistorySection from '@/components/regularization/RegularizationHistorySection';
 import type { CollectableField } from '@/components/finances/PropertyDataSheet';
 
 const RegularizationModal = dynamic(
@@ -210,6 +211,11 @@ const FinancesClient: React.FC<FinancesClientProps> = ({
                         address: p.address,
                     }))}
                 />
+            </div>
+
+            {/* Regularization History */}
+            <div className={`mt-8 ${sectionClass()}`} style={{ transitionDelay: '550ms' }}>
+                <RegularizationHistorySection />
             </div>
 
             {/* Regularization Modal — no propertyId = all owner's properties */}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
 import { FiscalService } from "@/services/FiscalService";
+import { enforceRecoverability } from "@/lib/expenses/categoryRules";
 
 interface IParams {
     propertyId: string;
@@ -54,6 +55,9 @@ export async function POST(
         return NextResponse.json({ error: "Forbidden: Not owner" }, { status: 403 });
     }
 
+    // Enforce server-side recoverability rules
+    const enforcedRecoverable = enforceRecoverability(category, isRecoverable);
+
     try {
         const expense = await prisma.expense.create({
             data: {
@@ -64,7 +68,7 @@ export async function POST(
                 amountTotalCents,
                 dateOccurred: new Date(dateOccurred),
                 frequency,
-                isRecoverable,
+                isRecoverable: enforcedRecoverable,
                 recoverableRatio,
                 proofUrl,
                 isFinalized,
@@ -74,7 +78,7 @@ export async function POST(
                     amountTotalCents: Math.round(parseFloat(String(amountTotalCents))),
                     amountRecoverableCents,
                     recoverableRatio,
-                    isRecoverable,
+                    isRecoverable: enforcedRecoverable,
                 })
             }
         });

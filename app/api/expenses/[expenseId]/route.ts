@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
 import { FiscalService } from "@/services/FiscalService";
+import { enforceRecoverability } from "@/lib/expenses/categoryRules";
 
 interface IParams {
     expenseId: string;
@@ -35,6 +36,13 @@ export async function DELETE(
 
     if (!expense || expense.property.ownerId !== currentUser.id) {
         return NextResponse.error();
+    }
+
+    if (expense.isFinalized) {
+        return NextResponse.json(
+            { error: 'Cette dépense est verrouillée (régularisée) et ne peut pas être supprimée.' },
+            { status: 403 }
+        );
     }
 
     const deletedExpense = await prisma.expense.delete({
@@ -81,13 +89,17 @@ export async function PATCH(
     const body = await request.json();
 
     // Auto-calculate deductible if category or amounts change and deductible not explicitly provided
-    if (body.amountDeductibleCents === undefined && (body.category !== undefined || body.amountTotalCents !== undefined || body.amountRecoverableCents !== undefined)) {
+    if (body.amountDeductibleCents === undefined && (body.category !== undefined || body.amountTotalCents !== undefined || body.amountRecoverableCents !== undefined || body.isRecoverable !== undefined)) {
+        const effectiveCategory = body.category ?? expense.category;
+        const effectiveRecoverable = body.isRecoverable !== undefined ? body.isRecoverable : expense.isRecoverable;
+        body.isRecoverable = enforceRecoverability(effectiveCategory, effectiveRecoverable);
+
         const mergedExpense = {
-            category: body.category ?? expense.category,
+            category: effectiveCategory,
             amountTotalCents: body.amountTotalCents ?? expense.amountTotalCents,
             amountRecoverableCents: body.amountRecoverableCents ?? expense.amountRecoverableCents,
             recoverableRatio: body.recoverableRatio ?? expense.recoverableRatio,
-            isRecoverable: body.isRecoverable ?? expense.isRecoverable,
+            isRecoverable: body.isRecoverable,
         };
         body.amountDeductibleCents = FiscalService.calculateDeductible(mergedExpense);
     }

@@ -12,6 +12,9 @@ export interface RegularizationStatement {
 
     expenses: any[]; // List of expenses included
     provisionsBreakdown: any[]; // Debug/Display info about provisions calculation
+
+    shareRatio: number; // 1 = single lease, 1/N = colocation
+    totalLeases: number; // Number of active leases on the property for this period
 }
 
 export class RegularizationService {
@@ -27,12 +30,29 @@ export class RegularizationService {
         const { total: totalProvisions, breakdown } = await this.calculateProvisions(applicationId, startOfYear, endOfYear);
 
         // 2. Calculate Recoverable Expenses (Debits)
-        const { total: totalRecoverable, expenses } = await this.calculateRecoverable(propertyId, startOfYear, endOfYear);
+        const { total: totalRecoverableAll, expenses } = await this.calculateRecoverable(propertyId, startOfYear, endOfYear);
 
-        // 3. Balance
-        // Balance = Expenses - Provisions
-        // If Expenses (1000) > Provisions (800) => Balance = 200 (Tenant owes 200)
-        // If Expenses (800) < Provisions (1000) => Balance = -200 (Landlord owes 200)
+        // 3. Colocation: count active leases on the property for the period and divide charges
+        const activeLeasesCount = await prisma.rentalApplication.count({
+            where: {
+                listing: { rentalUnit: { propertyId } },
+                leaseStatus: 'SIGNED',
+                financials: {
+                    some: {
+                        startDate: { lte: endOfYear },
+                        OR: [{ endDate: null }, { endDate: { gte: startOfYear } }],
+                    },
+                },
+            },
+        });
+        const shareRatio = activeLeasesCount > 1 ? 1 / activeLeasesCount : 1;
+        const totalRecoverable = Math.round(totalRecoverableAll * shareRatio);
+
+        // 4. Balance
+        // Both sides must use the same share ratio in colocation:
+        // - Provisions are already per-tenant (from one tenant's LeaseFinancials)
+        // - Expenses are property-wide, so we apply shareRatio
+        // Balance = Tenant's share of expenses - Tenant's provisions
         const balance = totalRecoverable - totalProvisions;
 
         return {
@@ -43,7 +63,9 @@ export class RegularizationService {
             totalRecoverableExpensesCents: totalRecoverable,
             balanceCents: balance,
             expenses,
-            provisionsBreakdown: breakdown
+            provisionsBreakdown: breakdown,
+            shareRatio,
+            totalLeases: activeLeasesCount,
         };
     }
 
@@ -94,9 +116,11 @@ export class RegularizationService {
             if (durationDays <= 0) continue;
 
             // Monthly Charge -> Daily Charge
-            // Method: (Monthly * 12) / 365
+            // Method: (Monthly * 12) / daysInYear
             const yearlyCharge = record.serviceChargesCents * 12;
-            const dailyCharge = yearlyCharge / 365; // Approx
+            const yearForCalc = overlapStart.getFullYear();
+            const daysInYear = (yearForCalc % 4 === 0 && (yearForCalc % 100 !== 0 || yearForCalc % 400 === 0)) ? 366 : 365;
+            const dailyCharge = yearlyCharge / daysInYear;
 
             const totalForPeriod = Math.round(dailyCharge * durationDays);
 
@@ -134,6 +158,7 @@ export class RegularizationService {
             where: {
                 propertyId: propertyId,
                 isRecoverable: true,
+                isFinalized: false,
                 dateOccurred: {
                     gte: periodStart,
                     lte: periodEnd

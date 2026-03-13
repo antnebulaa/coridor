@@ -1,6 +1,6 @@
 # Backlog Coridor — État d'avancement
 
-> Dernière mise à jour : 12 mars 2026
+> Dernière mise à jour : 13 mars 2026
 > Légende : ✅ = done, 🔧 = en cours / partiel, ❌ = à faire / pas commencé
 
 ---
@@ -162,7 +162,8 @@
 - [✅] Catégories de charges (eau froide/chaude, électricité, ascenseur, assurance, etc.) — enum ExpenseCategory complet
 - [✅] Charges récupérables vs non-récupérables avec ratio (`isRecoverable` + `recoverableRatio`)
 - [✅] Régularisation annuelle (`ReconciliationHistory`, `services/RegularizationService.ts`, `components/documents/RegularizationDocument.tsx`)
-- [✅] Server action `regularization.ts` (preview + commit + eligible leases)
+- [✅] Refonte régularisation des charges — flow pédagogique 7 étapes (WELCOME → GUIDE → SELECT → BALANCE → EXPENSES → SEND → DONE), modale plein écran mobile / centrée desktop, guide 5 slides explicatifs, sélection bail+année avec cards, revue dépenses avec toggles checkbox et recalcul temps réel, envoi avec génération PDF + upload Cloudinary + notification in-app/push/email, historique des régularisations dans /finances, annulation régularisation (unlock dépenses + delete history), gardes serveur : `isFinalized` empêche suppression/double comptage, `enforceRecoverability` serveur par catégorie (`categoryRules.ts`), duplicate guard `commitRegularization`, ownership verification, colocation shareRatio 1/N, année bissextile
+- [✅] Server action `regularization.ts` (preview + commit + eligible leases + cancel + history + sendMessage enrichi + updateReportUrl)
 - [✅] Révision IRL automatique (`RentIndex`, `calculateRevision.ts` — formule Loyer × NouvelIndice/AncienIndice)
 - [✅] Historique financier du bail (`LeaseFinancials` : loyer + charges par période)
 - [✅] Montants déductibles des impôts (`amountDeductibleCents`) — `FiscalService.ts` (calculateDeductible + generateFiscalSummary + generateAllPropertiesSummary), auto-calcul à la création/modification d'une dépense, DEDUCTIBILITY_RULES par catégorie (FULL/PARTIAL/NONE/MANUAL), API fiscal (`/api/fiscal/summary`, `/api/fiscal/summary-all`), page récap fiscal (`account/fiscal/FiscalClient.tsx`) avec sélecteur année/bien + tableau déclaration 2044, FiscalWidget dashboard (avril-juin), lien TaxReminders → `/account/fiscal`, indicateur déductible dans ExpensesClient

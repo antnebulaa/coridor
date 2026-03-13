@@ -13,7 +13,11 @@
             "intro": {
                 "title": "Tell us about your property",
                 "subtitle": "Let's start with the main characteristics.",
-                "description": "In this first part, we will define the type of property, its location, its surface area, and technical characteristics."
+                "description": "In this first part, we will define the type of property, its location, its surface area, and technical characteristics.",
+                "createNewTitle": "Create a new listing",
+                "createNewSubtitle": "Fill in the form step by step",
+                "importTitle": "I already have a listing online",
+                "importSubtitle": "Pre-fill from LeBonCoin, SeLoger, PAP or Bien'ici"
             },
             "category": {
                 "title": "Which of these best describes your property?",
@@ -1429,6 +1433,90 @@
     "regularization": {
         "title": "Charges Regularization",
         "subtitle": "Select the tenant and the fiscal year.",
+        "welcome": {
+            "title": "Charges\nRegularization",
+            "description": "Compare actual charges with your tenant's provisions.",
+            "guideTitle": "First time?",
+            "guideSubtitle": "Follow the guide, we'll explain everything in 30 sec.",
+            "startButton": "Start regularization"
+        },
+        "guide": {
+            "eyebrow": "Quick guide",
+            "skip": "Skip",
+            "back": "Back",
+            "next": "Next",
+            "letsGo": "Let's go!",
+            "slide1": {
+                "title": "Charges regularization",
+                "body": "When signing the lease, you set an estimated monthly charge: these are the provisions. At the end of the year, you must compare this estimate with the actual cost of these charges.",
+                "real": "Actual",
+                "estimated": "Estimated"
+            },
+            "slide2": {
+                "title": "Two possible outcomes",
+                "overspend": "Charges > Provisions — Your tenant owes you a supplement",
+                "underspend": "Charges < Provisions — You reimburse the overpayment"
+            },
+            "slide3": {
+                "title": "Once a year, at the beginning of the year",
+                "body": "You regularize the past year when you have received all invoices. Example: regularize 2025 in early 2026."
+            },
+            "slide4": {
+                "title": "Your expenses must be up to date",
+                "body": "Throughout the year, record each charge expense in Coridor: water, electricity, cleaning, maintenance..."
+            },
+            "slide5": {
+                "title": "Coridor takes care of the rest",
+                "body": "We automatically compare your actual charges with the provisions, and generate a statement to send to your tenant."
+            }
+        },
+        "select": {
+            "leaseTitle": "Select a lease",
+            "leaseSubtitle": "Choose the tenant and property concerned.",
+            "since": "Since",
+            "yearTitle": "Year to regularize",
+            "provisionInfo": "Monthly provisions will be calculated automatically from the lease data.",
+            "calculate": "Calculate",
+            "noLeases": "No signed lease found. You need an active lease to perform a regularization."
+        },
+        "balance": {
+            "title": "Regularization balance",
+            "tenantOwes": "Supplement owed by the tenant",
+            "landlordOwes": "Overpayment to reimburse",
+            "tenantOwesDetail": "{name} owes you this amount",
+            "landlordOwesDetail": "You must reimburse {name}",
+            "realCharges": "Actual charges",
+            "provisions": "Provisions paid",
+            "expenseCount": "Expenses included",
+            "period": "Period",
+            "colocationInfo": "Property charges: {total} · {count} co-tenants · {name}'s share: {share}",
+            "reviewExpenses": "Review expenses"
+        },
+        "expenses": {
+            "title": "Expense review",
+            "subtitle": "Uncheck expenses to exclude from the regularization.",
+            "empty": "No recoverable charges found for this period.",
+            "missingInfo": "Missing expenses? Add them in Expenses & Charges.",
+            "includedCount": "{count} expenses included",
+            "newBalance": "Regularization balance",
+            "continue": "Continue"
+        },
+        "send": {
+            "title": "Summary",
+            "tenant": "Tenant",
+            "property": "Property",
+            "year": "Year",
+            "balance": "Balance",
+            "warning": "Expenses will be locked. A PDF statement will be sent to {name}.",
+            "sendButton": "Send to {name}"
+        },
+        "done": {
+            "title": "Statement sent",
+            "description": "{name} received the statement in the messaging.",
+            "downloadPdf": "Download PDF",
+            "generating": "Generating PDF...",
+            "close": "Close"
+        },
         "steps": {
             "select": "Tenant / Lease",
             "year": "Fiscal Year",
@@ -1469,7 +1557,7 @@
         "errors": {
             "loadLeases": "Error loading tenants",
             "calculate": "Error calculating regularization",
-            "save": "Error saving"
+            "save": "Error sending. Please check your configuration."
         }
     },
     "myRental": {
@@ -1719,6 +1807,21 @@
                 "title": "When your identity is revealed",
                 "description": "When a landlord selects you or you sign a lease, your real name and photo become visible."
             }
+        }
+    },
+    "inspection": {
+        "sync": {
+            "uploading": "Syncing photos {current}/{total}...",
+            "offline": "Offline",
+            "offlineDetail": "{photos} photo(s) + {mutations} change(s) pending",
+            "savedLocally": "Saved locally",
+            "failed": "{count} photo(s) could not be sent",
+            "retry": "Retry",
+            "synced": "Everything is synced",
+            "signatureBlocked": "Syncing in progress...",
+            "signatureBlockedDetail": "Connect to Wi-Fi to speed up.",
+            "photoPending": "{count} photo(s) pending upload",
+            "mutationPending": "{count} change(s) pending"
         }
     }
 }

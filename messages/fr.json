@@ -13,7 +13,11 @@
             "intro": {
                 "title": "Parlez-nous de votre logement",
                 "subtitle": "Commençons par les caractéristiques principales.",
-                "description": "Dans cette première partie, nous allons définir le type de logement, sa localisation, sa surface et ses caractéristiques techniques."
+                "description": "Dans cette première partie, nous allons définir le type de logement, sa localisation, sa surface et ses caractéristiques techniques.",
+                "createNewTitle": "Créer une nouvelle annonce",
+                "createNewSubtitle": "Remplir le formulaire étape par étape",
+                "importTitle": "J'ai déjà une annonce en ligne",
+                "importSubtitle": "Pré-remplir depuis LeBonCoin, SeLoger, PAP ou Bien'ici"
             },
             "category": {
                 "title": "Parmi les propositions suivantes, laquelle décrit le mieux votre logement ?",
@@ -1469,6 +1473,90 @@
     "regularization": {
         "title": "Régularisation des charges",
         "subtitle": "Sélectionnez le locataire et l'année concernée.",
+        "welcome": {
+            "title": "Régularisation\ndes charges",
+            "description": "Comparez les charges réelles avec les provisions de votre locataire.",
+            "guideTitle": "Première fois ?",
+            "guideSubtitle": "Suivez le guide, on vous explique tout en 30 sec.",
+            "startButton": "Commencer la régularisation"
+        },
+        "guide": {
+            "eyebrow": "Guide rapide",
+            "skip": "Passer",
+            "back": "Retour",
+            "next": "Suivant",
+            "letsGo": "C'est parti !",
+            "slide1": {
+                "title": "La régularisation des charges",
+                "body": "À la signature du bail, vous avez fixé une estimation des charges mensuelles : ce sont les provisions sur charges. À la fin de l'année, vous devez comparer cette estimation avec le coût réel de ces charges.",
+                "real": "Réel",
+                "estimated": "Estimé"
+            },
+            "slide2": {
+                "title": "Deux issues possibles",
+                "overspend": "Charges > Provisions — Votre locataire vous doit un complément",
+                "underspend": "Charges < Provisions — Vous lui remboursez le trop-perçu"
+            },
+            "slide3": {
+                "title": "Une fois par an, en début d'année",
+                "body": "Vous régularisez l'année écoulée quand vous avez reçu toutes les factures. Exemple : régularisez 2025 en début 2026."
+            },
+            "slide4": {
+                "title": "Vos dépenses doivent être à jour",
+                "body": "Tout au long de l'année, enregistrez chaque dépense de charges dans Coridor : eau, électricité, ménage, entretien…"
+            },
+            "slide5": {
+                "title": "Coridor s'occupe du reste",
+                "body": "On compare automatiquement vos charges réelles avec les provisions, et on génère un décompte à envoyer à votre locataire."
+            }
+        },
+        "select": {
+            "leaseTitle": "Sélectionnez un bail",
+            "leaseSubtitle": "Choisissez le locataire et le logement concernés.",
+            "since": "Depuis",
+            "yearTitle": "Année à régulariser",
+            "provisionInfo": "Les provisions mensuelles seront calculées automatiquement à partir des données du bail.",
+            "calculate": "Calculer",
+            "noLeases": "Aucun bail signé trouvé. Vous devez avoir un bail actif pour effectuer une régularisation."
+        },
+        "balance": {
+            "title": "Bilan de la régularisation",
+            "tenantOwes": "Complément dû par le locataire",
+            "landlordOwes": "Trop-perçu à rembourser",
+            "tenantOwesDetail": "{name} vous doit ce montant",
+            "landlordOwesDetail": "Vous devez rembourser {name}",
+            "realCharges": "Charges réelles",
+            "provisions": "Provisions versées",
+            "expenseCount": "Dépenses incluses",
+            "period": "Période",
+            "colocationInfo": "Charges du bien : {total} · {count} colocataires · Part de {name} : {share}",
+            "reviewExpenses": "Vérifier les dépenses"
+        },
+        "expenses": {
+            "title": "Vérification des dépenses",
+            "subtitle": "Décochez les dépenses à exclure de la régularisation.",
+            "empty": "Aucune charge récupérable trouvée sur la période.",
+            "missingInfo": "Il manque des dépenses ? Ajoutez-les dans Dépenses & Charges.",
+            "includedCount": "{count} dépenses incluses",
+            "newBalance": "Solde de régularisation",
+            "continue": "Continuer"
+        },
+        "send": {
+            "title": "Récapitulatif",
+            "tenant": "Locataire",
+            "property": "Logement",
+            "year": "Année",
+            "balance": "Solde",
+            "warning": "Les dépenses seront verrouillées. Un décompte PDF sera envoyé à {name}.",
+            "sendButton": "Envoyer à {name}"
+        },
+        "done": {
+            "title": "Décompte envoyé",
+            "description": "{name} a reçu le décompte dans la messagerie.",
+            "downloadPdf": "Télécharger le PDF",
+            "generating": "Génération du PDF…",
+            "close": "Fermer"
+        },
         "steps": {
             "select": "Locataire / Bail",
             "year": "Année Fiscale",
@@ -1509,7 +1597,7 @@
         "errors": {
             "loadLeases": "Erreur chargement locataires",
             "calculate": "Erreur calcul régularisation",
-            "save": "Erreur sauvegarde"
+            "save": "Erreur lors de l'envoi. Vérifiez votre configuration."
         }
     },
     "myRental": {
@@ -1759,6 +1847,21 @@
                 "title": "Quand votre identité est révélée",
                 "description": "Lorsqu'un propriétaire vous sélectionne ou que vous signez un bail, votre vrai nom et votre photo deviennent visibles."
             }
+        }
+    },
+    "inspection": {
+        "sync": {
+            "uploading": "Synchronisation photos {current}/{total}...",
+            "offline": "Hors ligne",
+            "offlineDetail": "{photos} photo(s) + {mutations} modification(s) en attente",
+            "savedLocally": "Sauvegardé localement",
+            "failed": "{count} photo(s) n'ont pas pu être envoyées",
+            "retry": "Réessayer",
+            "synced": "Tout est synchronisé",
+            "signatureBlocked": "Synchronisation en cours...",
+            "signatureBlockedDetail": "Connectez-vous au Wi-Fi pour accélérer.",
+            "photoPending": "{count} photo(s) en attente d'envoi",
+            "mutationPending": "{count} modification(s) en attente"
         }
     }
 }
