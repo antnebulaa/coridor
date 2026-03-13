@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { SafeUser } from "@/types";
-import { AlertTriangle, Loader2, FileDown, FileSpreadsheet, ChevronDown, Home, Building } from "lucide-react";
+import { AlertTriangle, Loader2, FileDown, FileSpreadsheet, ChevronDown, Home, Building, ChevronRight } from "lucide-react";
+import BottomSheet from "@/components/ui/BottomSheet";
 import PageHeader from "@/components/PageHeader";
 import { toast } from "react-hot-toast";
 import CustomToast from "@/components/ui/CustomToast";
@@ -32,6 +33,7 @@ interface FiscalSummary {
         line: string;
         description: string;
         amountCents: number;
+        details: { label: string; amountCents: number; sublabel?: string }[];
     }[];
 }
 
@@ -48,6 +50,7 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
     const [error, setError] = useState<string | null>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);
+    const [selectedLine, setSelectedLine] = useState<FiscalSummary['declaration2044'][0] | null>(null);
     const switcherRef = useRef<HTMLDivElement>(null);
 
     // Close switcher on click outside
@@ -367,27 +370,27 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
                         <div>
                             <h2 className="font-medium text-xl text-neutral-900 dark:text-white mb-2">Synthèse</h2>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
+                                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl">
                                     <p className="text-sm font-medium leading-tight text-purple-600 dark:text-purple-400 mb-1">Revenus fonciers bruts</p>
                                     <p className="text-xl font-medium text-neutral-900 dark:text-white">
                                         {formatEuro(data.grossRevenueCents)}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
+                                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl">
                                     <p className="text-sm font-medium leading-tight text-purple-600 dark:text-purple-400 mb-1">Total charges déductibles</p>
-                                    <p className="text-xl font-medium text-purple-700 dark:text-purple-400">
+                                    <p className="text-xl font-medium text-neutral-900 dark:text-purple-400">
                                         {formatEuro(data.totalDeductibleCents)}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
+                                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl">
                                     <p className="text-sm font-medium leading-tight text-purple-600 dark:text-purple-400 mb-1">Frais de gestion (forfait)</p>
                                     <p className="text-xl font-medium text-neutral-900 dark:text-white">
                                         {formatEuro(data.managementFeesCents)}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-2xl">
-                                    <p className="text-sm font-medium leading-tight text-neutral-900 dark:text-white mb-1">Revenu foncier net imposable</p>
-                                    <p className="text-xl font-medium text-purple-700 dark:text-purple-400">
+                                <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl">
+                                    <p className="text-sm font-medium leading-tight text-purple-600 dark:text-white mb-1">Revenu foncier net imposable</p>
+                                    <p className="text-xl font-medium text-neutral-900 dark:text-purple-400">
                                         {formatEuro(data.netTaxableIncomeCents)}
                                     </p>
                                 </div>
@@ -447,26 +450,93 @@ const FiscalClient: React.FC<FiscalClientProps> = ({ currentUser }) => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data.declaration2044.map((row) => (
-                                                <tr
-                                                    key={row.line}
-                                                    className={`border-b border-neutral-100 dark:border-neutral-700/50
-                                                        ${row.line === '420' ? 'font-medium' : ''}`}
-                                                >
-                                                    <td className="py-3 font-mono text-neutral-500 dark:text-neutral-400">{row.line}</td>
-                                                    <td className="py-3 text-neutral-800 dark:text-neutral-200">{row.description}</td>
-                                                    <td className={`py-3 text-right font-medium
-                                                        ${row.line === '420' ? 'text-purple-700 dark:text-purple-400' : 'text-neutral-700 dark:text-neutral-300'}`}
+                                            {data.declaration2044.map((row) => {
+                                                const hasDetails = row.details && row.details.length > 0;
+                                                return (
+                                                    <tr
+                                                        key={row.line}
+                                                        onClick={() => hasDetails && setSelectedLine(row)}
+                                                        className={`border-b border-neutral-100 dark:border-neutral-700/50
+                                                            ${row.line === '420' ? 'font-medium' : ''}
+                                                            ${hasDetails ? 'cursor-pointer hover:bg-neutral-100/60 dark:hover:bg-neutral-700/30 active:bg-neutral-100 dark:active:bg-neutral-700/50 transition-colors' : ''}`}
                                                     >
-                                                        {formatEuro(row.amountCents)}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                        <td className="py-3 font-mono text-neutral-500 dark:text-neutral-400">{row.line}</td>
+                                                        <td className="py-3 text-neutral-800 dark:text-neutral-200">
+                                                            <span className="flex items-center gap-1.5">
+                                                                {row.description}
+                                                                {hasDetails && <ChevronRight size={14} className="text-neutral-400 shrink-0" />}
+                                                            </span>
+                                                        </td>
+                                                        <td className={`py-3 text-right font-medium
+                                                            ${row.line === '420' ? 'text-purple-700 dark:text-purple-400' : 'text-neutral-700 dark:text-neutral-300'}`}
+                                                        >
+                                                            {formatEuro(row.amountCents)}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         )}
+
+                        {/* Line Detail BottomSheet */}
+                        <BottomSheet
+                            isOpen={!!selectedLine}
+                            onClose={() => setSelectedLine(null)}
+                            title={selectedLine ? `Ligne ${selectedLine.line}` : ''}
+                        >
+                            {selectedLine && (
+                                <div className="px-6 pb-10">
+                                    {/* Header — line number + description + total */}
+                                    <div className="mb-5">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-sm font-mono font-medium text-purple-600 dark:text-purple-400">
+                                                Ligne {selectedLine.line}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white leading-snug">
+                                            {selectedLine.description}
+                                        </h3>
+                                        <p className="text-2xl font-semibold text-neutral-900 dark:text-white tabular-nums mt-2">
+                                            {formatEuro(selectedLine.amountCents)}
+                                        </p>
+                                    </div>
+
+                                    {/* Detail items */}
+                                    {selectedLine.details.length > 0 ? (
+                                        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                                            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-3">
+                                                Détail ({selectedLine.details.length} {selectedLine.details.length > 1 ? 'éléments' : 'élément'})
+                                            </p>
+                                            <div className="space-y-0">
+                                                {selectedLine.details.map((item, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className={`flex items-center justify-between gap-4 py-3 ${i < selectedLine.details.length - 1 ? 'border-b border-neutral-100 dark:border-neutral-800' : ''}`}
+                                                    >
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{item.label}</p>
+                                                            {item.sublabel && (
+                                                                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{item.sublabel}</p>
+                                                            )}
+                                                        </div>
+                                                        <span className={`text-sm font-semibold tabular-nums shrink-0 ${item.amountCents < 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-white'}`}>
+                                                            {formatEuro(item.amountCents)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                                            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">Aucun détail disponible pour cette ligne.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </BottomSheet>
 
                         {/* Disclaimer */}
                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-5 flex items-start gap-3">

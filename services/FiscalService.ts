@@ -1,5 +1,17 @@
 import prisma from "@/libs/prismadb";
 
+export interface LineDetailItem {
+  label: string;
+  amountCents: number;
+  sublabel?: string; // e.g. "Jan-Déc 2025" or "Assurance PNO"
+}
+
+export interface LineInfo {
+  label: string;
+  amount: number;
+  details: LineDetailItem[];
+}
+
 // Deductibility rules per category (French regime reel - declaration 2044)
 const DEDUCTIBILITY_RULES: Record<string, 'FULL' | 'PARTIAL' | 'NONE' | 'MANUAL'> = {
   TAX_PROPERTY: 'FULL',        // 100% deductible (simplified — TEOM part is recoverable but we treat total as deductible)
@@ -61,7 +73,7 @@ export class FiscalService {
       orderBy: { dateOccurred: 'asc' },
     });
 
-    // 2. Calculate deductible amounts per fiscal category
+    // 2. Calculate deductible amounts per fiscal category + track detail items
     const categories = {
       insurance: { label: "Primes d'assurance", amount: 0, line: '223' },
       taxProperty: { label: 'Taxe foncière', amount: 0, line: '227' },
@@ -70,7 +82,28 @@ export class FiscalService {
       other: { label: 'Autres charges déductibles', amount: 0, line: '221' },
     };
 
+    // Track expense details per 2044 line
+    const lineDetails: Record<string, LineDetailItem[]> = {
+      '221': [], '223': [], '224': [], '227': [],
+    };
+
     let totalDeductible = 0;
+
+    const CATEGORY_LABELS: Record<string, string> = {
+      INSURANCE: 'Assurance PNO',
+      INSURANCE_GLI: 'Assurance GLI',
+      TAX_PROPERTY: 'Taxe foncière',
+      MAINTENANCE: 'Travaux d\'entretien',
+      GENERAL_CHARGES: 'Charges générales',
+      BUILDING_CHARGES: 'Charges d\'immeuble',
+      ELEVATOR: 'Ascenseur',
+      CARETAKER: 'Gardiennage',
+      ELECTRICITY_COMMON: 'Électricité parties communes',
+      HEATING_COLLECTIVE: 'Chauffage collectif',
+      OTHER: 'Autres charges',
+    };
+
+    const formatDate = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 
     for (const exp of expenses) {
       const deductible = exp.amountDeductibleCents ?? this.calculateDeductible(exp) ?? 0;
@@ -79,31 +112,42 @@ export class FiscalService {
 
       totalDeductible += deductible;
 
+      const detailItem: LineDetailItem = {
+        label: exp.label || CATEGORY_LABELS[exp.category] || exp.category,
+        amountCents: deductible,
+        sublabel: exp.dateOccurred ? formatDate(exp.dateOccurred) : undefined,
+      };
+
       switch (exp.category) {
         case 'INSURANCE':
         case 'INSURANCE_GLI':
           categories.insurance.amount += deductible;
+          lineDetails['223'].push(detailItem);
           break;
         case 'TAX_PROPERTY':
           categories.taxProperty.amount += deductible;
+          lineDetails['227'].push(detailItem);
           break;
         case 'MAINTENANCE':
           categories.maintenance.amount += deductible;
+          lineDetails['224'].push(detailItem);
           break;
         case 'GENERAL_CHARGES':
         case 'BUILDING_CHARGES':
         case 'ELEVATOR':
         case 'CARETAKER':
           categories.copro.amount += deductible;
+          lineDetails['221'].push(detailItem);
           break;
         default:
           categories.other.amount += deductible;
+          lineDetails['221'].push(detailItem);
           break;
       }
     }
 
     // 3. Calculate gross rental income from RentReceipts
-    // Find all leases for this property
+    // Find all leases for this property with tenant name
     const leases = await prisma.rentalApplication.findMany({
       where: {
         leaseStatus: 'SIGNED',
@@ -111,10 +155,17 @@ export class FiscalService {
           rentalUnit: { propertyId },
         },
       },
-      select: { id: true },
+      include: {
+        candidateScope: {
+          select: {
+            creatorUser: { select: { name: true } },
+          },
+        },
+      },
     });
 
     const leaseIds = leases.map(l => l.id);
+    const revenueDetails: LineDetailItem[] = [];
 
     let grossIncomeCents = 0;
     if (leaseIds.length > 0) {
@@ -124,8 +175,31 @@ export class FiscalService {
           periodStart: { gte: startOfYear },
           periodEnd: { lte: endOfYear },
         },
+        orderBy: { periodStart: 'asc' },
       });
+
+      // Group receipts by lease for detail
+      const receiptsByLease: Record<string, { total: number; count: number }> = {};
+      for (const r of receipts) {
+        if (!receiptsByLease[r.rentalApplicationId]) {
+          receiptsByLease[r.rentalApplicationId] = { total: 0, count: 0 };
+        }
+        receiptsByLease[r.rentalApplicationId].total += r.totalAmountCents;
+        receiptsByLease[r.rentalApplicationId].count += 1;
+      }
       grossIncomeCents = receipts.reduce((sum, r) => sum + r.totalAmountCents, 0);
+
+      // Build detail items per lease
+      for (const lease of leases) {
+        const data = receiptsByLease[lease.id];
+        if (!data) continue;
+        const tenantName = lease.candidateScope?.creatorUser?.name || 'Locataire';
+        revenueDetails.push({
+          label: tenantName,
+          amountCents: data.total,
+          sublabel: `${data.count} quittance${data.count > 1 ? 's' : ''}`,
+        });
+      }
     }
 
     // If no receipts, try to estimate from LeaseFinancials
@@ -145,11 +219,34 @@ export class FiscalService {
       for (const f of financials) {
         const monthlyTotal = f.baseRentCents + f.serviceChargesCents;
         grossIncomeCents += monthlyTotal * 12;
+
+        const lease = leases.find(l => l.id === f.rentalApplicationId);
+        const tenantName = lease?.candidateScope?.creatorUser?.name || 'Locataire';
+        revenueDetails.push({
+          label: tenantName,
+          amountCents: monthlyTotal * 12,
+          sublabel: 'Estimation (loyer × 12)',
+        });
       }
     }
 
     const managementFeesCents = 2000; // Forfait 20€ (ligne 222)
     const netIncomeCents = grossIncomeCents - totalDeductible - managementFeesCents;
+
+    // Build line 230 details (sum of all charge lines)
+    const line230Details: LineDetailItem[] = [
+      { label: "Frais d'administration et de gestion (l.221)", amountCents: categories.copro.amount + categories.other.amount },
+      { label: 'Forfait de gestion (l.222)', amountCents: managementFeesCents },
+      { label: "Primes d'assurance (l.223)", amountCents: categories.insurance.amount },
+      { label: "Réparation, entretien (l.224)", amountCents: categories.maintenance.amount },
+      { label: 'Taxes foncières (l.227)', amountCents: categories.taxProperty.amount },
+    ].filter(d => d.amountCents > 0);
+
+    // Build line 420 details (revenue - charges)
+    const line420Details: LineDetailItem[] = [
+      { label: 'Loyers bruts encaissés (l.211)', amountCents: grossIncomeCents },
+      { label: 'Total des charges (l.230)', amountCents: -(totalDeductible + managementFeesCents) },
+    ];
 
     return {
       year,
@@ -160,16 +257,16 @@ export class FiscalService {
       netIncomeCents,
       categories,
       expenseCount: expenses.length,
-      // Declaration 2044 lines
+      // Declaration 2044 lines with details
       lines: {
-        '211': { label: 'Loyers bruts encaissés', amount: grossIncomeCents },
-        '221': { label: "Frais d'administration et de gestion", amount: categories.copro.amount + categories.other.amount },
-        '222': { label: 'Autres frais de gestion (forfait)', amount: managementFeesCents },
-        '223': { label: "Primes d'assurance", amount: categories.insurance.amount },
-        '224': { label: "Dépenses de réparation, d'entretien", amount: categories.maintenance.amount },
-        '227': { label: 'Taxes foncières', amount: categories.taxProperty.amount },
-        '230': { label: 'Total des charges', amount: totalDeductible + managementFeesCents },
-        '420': { label: 'Résultat foncier', amount: netIncomeCents },
+        '211': { label: 'Loyers bruts encaissés', amount: grossIncomeCents, details: revenueDetails } as LineInfo,
+        '221': { label: "Frais d'administration et de gestion", amount: categories.copro.amount + categories.other.amount, details: lineDetails['221'] } as LineInfo,
+        '222': { label: 'Autres frais de gestion (forfait)', amount: managementFeesCents, details: [{ label: 'Forfait fixe prévu par l\'administration fiscale', amountCents: managementFeesCents, sublabel: '20 € par bien' }] } as LineInfo,
+        '223': { label: "Primes d'assurance", amount: categories.insurance.amount, details: lineDetails['223'] } as LineInfo,
+        '224': { label: "Dépenses de réparation, d'entretien", amount: categories.maintenance.amount, details: lineDetails['224'] } as LineInfo,
+        '227': { label: 'Taxes foncières', amount: categories.taxProperty.amount, details: lineDetails['227'] } as LineInfo,
+        '230': { label: 'Total des charges', amount: totalDeductible + managementFeesCents, details: line230Details } as LineInfo,
+        '420': { label: 'Résultat foncier', amount: netIncomeCents, details: line420Details } as LineInfo,
       },
     };
   }

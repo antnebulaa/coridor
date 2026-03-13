@@ -45,12 +45,13 @@ export async function GET(request: Request) {
                 totalCents: v.amount,
             }));
 
-        const declaration2044 = Object.entries(raw.lines as Record<string, { label: string; amount: number }>)
+        const declaration2044 = Object.entries(raw.lines as Record<string, { label: string; amount: number; details?: any[] }>)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([line, v]) => ({
                 line,
                 description: v.label,
                 amountCents: v.amount,
+                details: v.details || [],
             }));
 
         return NextResponse.json({

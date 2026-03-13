@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
         // Aggregate categories across all properties
         const categoryTotals: Record<string, { label: string; totalCents: number }> = {};
-        const lineTotals: Record<string, { description: string; amountCents: number }> = {};
+        const lineTotals: Record<string, { description: string; amountCents: number; details: any[] }> = {};
         let totalManagementFees = 0;
 
         for (const propSummary of raw.properties) {
@@ -39,13 +39,16 @@ export async function GET(request: Request) {
                 }
             }
 
-            // Aggregate declaration 2044 lines
+            // Aggregate declaration 2044 lines + details
             if (propSummary.lines) {
-                for (const [lineNum, lineData] of Object.entries(propSummary.lines as Record<string, { label: string; amount: number }>)) {
+                for (const [lineNum, lineData] of Object.entries(propSummary.lines as Record<string, { label: string; amount: number; details?: any[] }>)) {
                     if (!lineTotals[lineNum]) {
-                        lineTotals[lineNum] = { description: lineData.label, amountCents: 0 };
+                        lineTotals[lineNum] = { description: lineData.label, amountCents: 0, details: [] };
                     }
                     lineTotals[lineNum].amountCents += lineData.amount || 0;
+                    if (lineData.details?.length) {
+                        lineTotals[lineNum].details.push(...lineData.details);
+                    }
                 }
             }
         }
@@ -76,6 +79,7 @@ export async function GET(request: Request) {
                     line,
                     description: v.description,
                     amountCents: v.amountCents,
+                    details: v.details,
                 })),
         });
     } catch (error) {

@@ -42,7 +42,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
                         {title || "Menu"}
                     </Drawer.Title>
 
-                    {children}
+                    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                        {children}
+                    </div>
                 </Drawer.Content>
             </Drawer.Portal>
         </Drawer.Root>
