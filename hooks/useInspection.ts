@@ -15,6 +15,12 @@ import type {
   InspectionRoomType,
   PhotoType,
 } from '@prisma/client';
+import {
+  saveInspectionLocal,
+  getInspectionLocal,
+  saveMutation,
+  updateMutationStatus,
+} from '@/lib/edl/offlineStorage';
 
 // ─── Types ───
 
@@ -105,7 +111,7 @@ export function getEntryRoomPhoto(
   return entryRoom.photos.find((p) => p.type === photoType) || null;
 }
 
-// ─── Session Storage helpers ───
+// ─── Session Storage helpers (L1 cache — synchronous, kept for perf) ───
 
 const SESSION_KEY_PREFIX = 'edl_';
 
@@ -155,11 +161,12 @@ export function useInspection(inspectionId: string | undefined) {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [pendingMutationsCount, setPendingMutationsCount] = useState(0);
   const pendingChangesRef = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const sessionSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // ─── Fetch inspection (with sessionStorage fallback) ───
+  // ─── Fetch inspection (API → IndexedDB → sessionStorage fallback) ───
 
   const fetchInspection = useCallback(async () => {
     if (!inspectionId) {
@@ -168,21 +175,35 @@ export function useInspection(inspectionId: string | undefined) {
     }
 
     try {
+      // 1. Try API first
       const res = await fetch(`/api/inspection/${inspectionId}`);
       if (!res.ok) throw new Error('Failed to fetch inspection');
       const data = await res.json();
       setInspection(data);
       setIsOffline(false);
-      // Cache to sessionStorage
+      // Save to both IndexedDB (source of truth) and sessionStorage (L1 cache)
+      saveInspectionLocal(inspectionId, data).catch(() => {});
       saveToSession(inspectionId, data);
     } catch (err: unknown) {
-      // Try to restore from sessionStorage
+      // 2. Try IndexedDB
+      try {
+        const local = await getInspectionLocal(inspectionId);
+        if (local) {
+          setInspection(local);
+          setIsOffline(true);
+          return;
+        }
+      } catch {
+        // IndexedDB unavailable — continue to sessionStorage
+      }
+
+      // 3. Fallback to sessionStorage (legacy)
       const cached = loadFromSession(inspectionId);
       if (cached) {
         setInspection(cached);
         setIsOffline(true);
       } else {
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : 'Impossible de charger l\'EDL';
         setError(message);
       }
     } finally {
@@ -194,7 +215,7 @@ export function useInspection(inspectionId: string | undefined) {
     fetchInspection();
   }, [fetchInspection]);
 
-  // ─── Debounced sessionStorage persistence ───
+  // ─── Debounced sessionStorage persistence (L1 cache) ───
 
   useEffect(() => {
     if (!inspection || !inspectionId) return;
@@ -286,6 +307,53 @@ export function useInspection(inspectionId: string | undefined) {
     return res.json();
   }, []);
 
+  // ─── IndexedDB mutation queue helper ───
+
+  const queueAndSync = useCallback(async (
+    mutationType: string,
+    endpoint: string,
+    method: 'POST' | 'PATCH' | 'DELETE',
+    payload: any,
+    updatedData: FullInspection | null,
+    apiCallFn: () => Promise<any>
+  ): Promise<any> => {
+    if (!inspectionId) return;
+
+    // Save to IndexedDB (source of truth) — fire-and-forget
+    if (updatedData) {
+      saveInspectionLocal(inspectionId, updatedData).catch(() => {});
+    }
+
+    // Register mutation in queue
+    const mutationId = crypto.randomUUID();
+    saveMutation({
+      id: mutationId,
+      inspectionId,
+      type: mutationType,
+      endpoint,
+      method,
+      payload,
+      status: 'PENDING',
+      retryCount: 0,
+      createdAt: Date.now(),
+    }).catch(() => {});
+
+    setPendingMutationsCount(c => c + 1);
+
+    // Try API call immediately
+    try {
+      const result = await apiCallFn();
+      // Mark as synced
+      updateMutationStatus(mutationId, 'SYNCED').catch(() => {});
+      setPendingMutationsCount(c => Math.max(0, c - 1));
+      return result;
+    } catch {
+      // Leave in queue for later sync — no rollback needed, data is in IndexedDB
+      console.log(`[EDL offline] Mutation queued: ${mutationType}`);
+      return undefined;
+    }
+  }, [inspectionId]);
+
   // ─── Meters (optimistic) ───
 
   const updateMeter = useCallback(async (
@@ -293,6 +361,8 @@ export function useInspection(inspectionId: string | undefined) {
     data: { meterNumber?: string; indexValue?: string; photoUrl?: string; photoThumbnailUrl?: string; noGas?: boolean }
   ) => {
     if (!inspectionId) return;
+
+    let updatedInspection: FullInspection | null = null;
 
     // Optimistic update
     setInspection(prev => {
@@ -305,15 +375,24 @@ export function useInspection(inspectionId: string | undefined) {
         // Temporary entry — will be reconciled with server result
         meters.push({ id: `temp_${Date.now()}`, inspectionId, type, ...data } as InspectionMeter);
       }
-      return { ...prev, meters };
+      updatedInspection = { ...prev, meters };
+      return updatedInspection;
     });
 
-    // Fire API in background
-    try {
-      const result = await apiCall(`/api/inspection/${inspectionId}/meters`, {
+    // Queue mutation and try API sync
+    const result = await queueAndSync(
+      'UPDATE_METER',
+      `/api/inspection/${inspectionId}/meters`,
+      'POST',
+      { type, ...data },
+      updatedInspection,
+      () => apiCall(`/api/inspection/${inspectionId}/meters`, {
         method: 'POST',
         body: JSON.stringify({ type, ...data }),
-      });
+      })
+    );
+
+    if (result) {
       // Reconcile with server result
       setInspection(prev => {
         if (!prev) return prev;
@@ -323,16 +402,17 @@ export function useInspection(inspectionId: string | undefined) {
         return { ...prev, meters };
       });
       scheduleAutoSave();
-      return result;
-    } catch {
-      fetchInspection(); // rollback
     }
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
+    return result;
+  }, [inspectionId, apiCall, scheduleAutoSave, queueAndSync]);
 
   // ─── Keys (optimistic) ───
 
   const updateKey = useCallback(async (type: string, quantity: number) => {
     if (!inspectionId) return;
+
+    let updatedInspection: FullInspection | null = null;
 
     // Optimistic update
     setInspection(prev => {
@@ -344,15 +424,24 @@ export function useInspection(inspectionId: string | undefined) {
       } else {
         keys.push({ id: `temp_${Date.now()}`, inspectionId, type, quantity } as InspectionKey);
       }
-      return { ...prev, keys };
+      updatedInspection = { ...prev, keys };
+      return updatedInspection;
     });
 
-    // Fire API in background
-    try {
-      const result = await apiCall(`/api/inspection/${inspectionId}/keys`, {
+    // Queue mutation and try API sync
+    const result = await queueAndSync(
+      'UPDATE_KEY',
+      `/api/inspection/${inspectionId}/keys`,
+      'POST',
+      { type, quantity },
+      updatedInspection,
+      () => apiCall(`/api/inspection/${inspectionId}/keys`, {
         method: 'POST',
         body: JSON.stringify({ type, quantity }),
-      });
+      })
+    );
+
+    if (result) {
       setInspection(prev => {
         if (!prev) return prev;
         const idx = prev.keys.findIndex(k => k.type === type);
@@ -361,71 +450,115 @@ export function useInspection(inspectionId: string | undefined) {
         return { ...prev, keys };
       });
       scheduleAutoSave();
-      return result;
-    } catch {
-      fetchInspection();
     }
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
+    return result;
+  }, [inspectionId, apiCall, scheduleAutoSave, queueAndSync]);
 
   // ─── Rooms ───
 
   const addRoom = useCallback(async (roomType: InspectionRoomType, name: string) => {
     if (!inspectionId) return;
-    // NOT optimistic — needs server-generated ID
-    const result = await apiCall(`/api/inspection/${inspectionId}/rooms`, {
+
+    // Register mutation in queue (not optimistic — needs server ID)
+    const mutationId = crypto.randomUUID();
+    saveMutation({
+      id: mutationId,
+      inspectionId,
+      type: 'ADD_ROOM',
+      endpoint: `/api/inspection/${inspectionId}/rooms`,
       method: 'POST',
-      body: JSON.stringify({ roomType, name }),
-    });
+      payload: { roomType, name },
+      status: 'PENDING',
+      retryCount: 0,
+      createdAt: Date.now(),
+    }).catch(() => {});
 
-    setInspection(prev => {
-      if (!prev) return prev;
-      return { ...prev, rooms: [...prev.rooms, { ...result, elements: [], photos: [] }] };
-    });
+    try {
+      const result = await apiCall(`/api/inspection/${inspectionId}/rooms`, {
+        method: 'POST',
+        body: JSON.stringify({ roomType, name }),
+      });
 
-    return result;
+      setInspection(prev => {
+        if (!prev) return prev;
+        const updated = { ...prev, rooms: [...prev.rooms, { ...result, elements: [], photos: [] }] };
+        // Save to IndexedDB
+        saveInspectionLocal(inspectionId, updated).catch(() => {});
+        return updated;
+      });
+
+      updateMutationStatus(mutationId, 'SYNCED').catch(() => {});
+      return result;
+    } catch {
+      updateMutationStatus(mutationId, 'FAILED').catch(() => {});
+      throw new Error('Impossible d\'ajouter la pièce');
+    }
   }, [inspectionId, apiCall]);
 
   const deleteRoom = useCallback(async (roomId: string) => {
     if (!inspectionId) return;
 
+    let updatedInspection: FullInspection | null = null;
+
     // Optimistic update — remove room immediately
     setInspection(prev => {
       if (!prev) return prev;
-      return {
+      updatedInspection = {
         ...prev,
         rooms: prev.rooms.filter(r => r.id !== roomId),
       };
+      return updatedInspection;
     });
 
-    // Fire API in background
-    try {
-      await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
+    // Queue mutation and try API sync
+    const result = await queueAndSync(
+      'DELETE_ROOM',
+      `/api/inspection/${inspectionId}/rooms/${roomId}`,
+      'DELETE',
+      { roomId },
+      updatedInspection,
+      () => apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
         method: 'DELETE',
-      });
+      })
+    );
+
+    if (result) {
       scheduleAutoSave();
-    } catch {
-      fetchInspection(); // rollback on error
+    } else {
+      // API failed but data is in IndexedDB — don't rollback
     }
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+  }, [inspectionId, apiCall, scheduleAutoSave, queueAndSync]);
 
   const updateRoom = useCallback(async (roomId: string, data: { isCompleted?: boolean; observations?: string }) => {
     if (!inspectionId) return;
 
+    let updatedInspection: FullInspection | null = null;
+
     // Optimistic update
     setInspection(prev => {
       if (!prev) return prev;
-      return {
+      updatedInspection = {
         ...prev,
         rooms: prev.rooms.map(r => r.id === roomId ? { ...r, ...data } : r),
       };
+      return updatedInspection;
     });
 
-    // Fire API in background
-    try {
-      const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
+    // Queue mutation and try API sync
+    const result = await queueAndSync(
+      'UPDATE_ROOM',
+      `/api/inspection/${inspectionId}/rooms/${roomId}`,
+      'PATCH',
+      data,
+      updatedInspection,
+      () => apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
-      });
+      })
+    );
+
+    if (result) {
       // Reconcile
       setInspection(prev => {
         if (!prev) return prev;
@@ -435,11 +568,10 @@ export function useInspection(inspectionId: string | undefined) {
         };
       });
       scheduleAutoSave();
-      return result;
-    } catch {
-      fetchInspection();
     }
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+
+    return result;
+  }, [inspectionId, apiCall, scheduleAutoSave, queueAndSync]);
 
   // ─── Elements ───
 
@@ -448,25 +580,48 @@ export function useInspection(inspectionId: string | undefined) {
     data: { category: string; name: string; nature?: string[] }
   ) => {
     if (!inspectionId) return;
-    // NOT optimistic — needs server-generated ID
-    const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}/elements`, {
+
+    // Register mutation in queue (not optimistic — needs server ID)
+    const mutationId = crypto.randomUUID();
+    saveMutation({
+      id: mutationId,
+      inspectionId,
+      type: 'ADD_ELEMENT',
+      endpoint: `/api/inspection/${inspectionId}/rooms/${roomId}/elements`,
       method: 'POST',
-      body: JSON.stringify(data),
-    });
+      payload: data,
+      status: 'PENDING',
+      retryCount: 0,
+      createdAt: Date.now(),
+    }).catch(() => {});
 
-    setInspection(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        rooms: prev.rooms.map(r =>
-          r.id === roomId
-            ? { ...r, elements: [...r.elements, { ...result, photos: [] }] }
-            : r
-        ),
-      };
-    });
+    try {
+      const result = await apiCall(`/api/inspection/${inspectionId}/rooms/${roomId}/elements`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
 
-    return result;
+      setInspection(prev => {
+        if (!prev) return prev;
+        const updated = {
+          ...prev,
+          rooms: prev.rooms.map(r =>
+            r.id === roomId
+              ? { ...r, elements: [...r.elements, { ...result, photos: [] }] }
+              : r
+          ),
+        };
+        // Save to IndexedDB
+        saveInspectionLocal(inspectionId, updated).catch(() => {});
+        return updated;
+      });
+
+      updateMutationStatus(mutationId, 'SYNCED').catch(() => {});
+      return result;
+    } catch {
+      updateMutationStatus(mutationId, 'FAILED').catch(() => {});
+      throw new Error('Impossible d\'ajouter l\'élément');
+    }
   }, [inspectionId, apiCall]);
 
   const updateElement = useCallback(async (
@@ -483,10 +638,12 @@ export function useInspection(inspectionId: string | undefined) {
   ) => {
     if (!inspectionId) return;
 
+    let updatedInspection: FullInspection | null = null;
+
     // Optimistic update — apply immediately
     setInspection(prev => {
       if (!prev) return prev;
-      return {
+      updatedInspection = {
         ...prev,
         rooms: prev.rooms.map(r => ({
           ...r,
@@ -495,20 +652,24 @@ export function useInspection(inspectionId: string | undefined) {
           ),
         })),
       };
+      return updatedInspection;
     });
 
-    // Fire API in background
-    try {
-      apiCall(`/api/inspection/${inspectionId}/elements/${elementId}`, {
+    // Queue mutation and try API sync
+    await queueAndSync(
+      'UPDATE_ELEMENT',
+      `/api/inspection/${inspectionId}/elements/${elementId}`,
+      'PATCH',
+      data,
+      updatedInspection,
+      () => apiCall(`/api/inspection/${inspectionId}/elements/${elementId}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
-      }).catch(() => fetchInspection());
-    } catch {
-      fetchInspection();
-    }
+      })
+    );
 
     scheduleAutoSave();
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+  }, [inspectionId, apiCall, scheduleAutoSave, queueAndSync]);
 
   // ─── Photos (optimistic with temp ID) ───
 
@@ -542,6 +703,8 @@ export function useInspection(inspectionId: string | undefined) {
       createdAt: new Date(),
     } as InspectionPhoto;
 
+    let updatedInspection: FullInspection | null = null;
+
     // Optimistic — add to state immediately
     setInspection(prev => {
       if (!prev) return prev;
@@ -564,8 +727,28 @@ export function useInspection(inspectionId: string | undefined) {
         });
       }
 
+      updatedInspection = updated;
       return updated;
     });
+
+    // Save to IndexedDB
+    if (updatedInspection) {
+      saveInspectionLocal(inspectionId, updatedInspection).catch(() => {});
+    }
+
+    // Register mutation in queue
+    const mutationId = crypto.randomUUID();
+    saveMutation({
+      id: mutationId,
+      inspectionId,
+      type: 'ADD_PHOTO',
+      endpoint: `/api/inspection/${inspectionId}/photos`,
+      method: 'POST',
+      payload: data,
+      status: 'PENDING',
+      retryCount: 0,
+      createdAt: Date.now(),
+    }).catch(() => {});
 
     // Background — persist to DB and reconcile ID
     try {
@@ -580,7 +763,7 @@ export function useInspection(inspectionId: string | undefined) {
 
       setInspection(prev => {
         if (!prev) return prev;
-        return {
+        const reconciled = {
           ...prev,
           photos: prev.photos.map(replaceTemp),
           rooms: prev.rooms.map(r => ({
@@ -592,14 +775,19 @@ export function useInspection(inspectionId: string | undefined) {
             })),
           })),
         };
+        // Update IndexedDB with reconciled data
+        saveInspectionLocal(inspectionId, reconciled).catch(() => {});
+        return reconciled;
       });
 
+      updateMutationStatus(mutationId, 'SYNCED').catch(() => {});
       scheduleAutoSave();
       return result;
     } catch {
-      fetchInspection(); // rollback
+      // Photo data is saved in IndexedDB — will be retried later
+      console.log('[EDL offline] Photo mutation queued');
     }
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+  }, [inspectionId, apiCall, scheduleAutoSave]);
 
   // ─── Signature (NOT optimistic — critical operation) ───
 
@@ -620,7 +808,7 @@ export function useInspection(inspectionId: string | undefined) {
       return { ...prev, ...result };
     });
 
-    // Clear session cache once signed
+    // Clear caches once signed
     if (inspectionId && (result.status === 'SIGNED' || result.status === 'LOCKED')) {
       clearSession(inspectionId);
     }
@@ -641,24 +829,30 @@ export function useInspection(inspectionId: string | undefined) {
   const updateInspection = useCallback(async (data: Partial<Pick<Inspection, 'tenantPresent' | 'representativeName' | 'representativeMandate' | 'generalObservations' | 'tenantReserves'>>) => {
     if (!inspectionId) return;
 
+    let updatedInspection: FullInspection | null = null;
+
     // Optimistic update
     setInspection(prev => {
       if (!prev) return prev;
-      return { ...prev, ...data };
+      updatedInspection = { ...prev, ...data };
+      return updatedInspection;
     });
 
-    // Fire API in background
-    try {
-      apiCall(`/api/inspection/${inspectionId}`, {
+    // Queue mutation and try API sync
+    await queueAndSync(
+      'UPDATE_INSPECTION',
+      `/api/inspection/${inspectionId}`,
+      'PATCH',
+      data,
+      updatedInspection,
+      () => apiCall(`/api/inspection/${inspectionId}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
-      }).catch(() => fetchInspection());
-    } catch {
-      fetchInspection();
-    }
+      })
+    );
 
     scheduleAutoSave();
-  }, [inspectionId, apiCall, scheduleAutoSave, fetchInspection]);
+  }, [inspectionId, apiCall, scheduleAutoSave, queueAndSync]);
 
   // ─── Generate PDF (NOT optimistic — server-only operation) ───
 
@@ -683,6 +877,7 @@ export function useInspection(inspectionId: string | undefined) {
     error,
     isSaving,
     isOffline,
+    pendingMutationsCount,
     refetch: fetchInspection,
     updateInspection,
     updateMeter,

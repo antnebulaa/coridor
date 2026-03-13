@@ -5,12 +5,20 @@ import { Camera, RotateCcw, ArrowRight, Check, X } from 'lucide-react';
 import { compressImage, type CompressionOptions } from '@/lib/imageCompression';
 import axios from 'axios';
 import { EDL_THEME as t } from '@/lib/inspection-theme';
+import { photoQueue, type PhotoMetadata } from '@/lib/edl/photoQueue';
 
 interface CameraCaptureProps {
   label: string;
   title?: string;
   instruction?: string;
-  onCapture: (url: string, thumbnailUrl: string, sha256: string) => void;
+  /**
+   * Callback appelé après capture.
+   * - url : blob URL local (affichage immédiat) ou URL Cloudinary (mode legacy)
+   * - thumbnailUrl : idem
+   * - sha256 : hash du fichier compressé
+   * - localId : ID temporaire IndexedDB (présent en mode offline-first)
+   */
+  onCapture: (url: string, thumbnailUrl: string, sha256: string, localId?: string) => void;
   onCancel?: () => void;
   onDone?: () => void;
   onExit?: () => void;
@@ -19,6 +27,12 @@ interface CameraCaptureProps {
   allowMultiple?: boolean;
   compressionOptions?: CompressionOptions;
   initialThumbnails?: string[];
+  /**
+   * Quand fourni, active le mode offline-first :
+   * la photo est stockée en IndexedDB et uploadée en background.
+   * Le callback onCapture reçoit un blob URL au lieu d'une URL Cloudinary.
+   */
+  queueMetadata?: Omit<PhotoMetadata, 'sha256' | 'capturedAt'>;
 }
 
 async function computeSHA256(file: File): Promise<string> {
@@ -75,6 +89,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   accentColor = t.accent,
   allowMultiple = false,
   initialThumbnails,
+  queueMetadata,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isProcessingRef = useRef(false);
@@ -104,30 +119,47 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       // Step 1: Compress (uses custom options if provided)
       const compressed = await compressImage(capturedFile, compressionOptions);
 
-      // Step 2: SHA-256 + Cloudinary upload IN PARALLEL
-      const formData = new FormData();
-      formData.append('file', compressed);
-      formData.append('upload_preset', 'airbnb-clone');
+      // Step 2: Compute SHA-256
+      const sha256 = await computeSHA256(compressed);
 
-      const [sha256, response] = await Promise.all([
-        computeSHA256(compressed),
-        axios.post(
+      if (queueMetadata) {
+        // ─── Mode offline-first : stocker en local, upload en background ───
+        const { localId, blobUrl } = await photoQueue.queuePhoto({
+          blob: compressed,
+          metadata: {
+            ...queueMetadata,
+            sha256,
+            capturedAt: new Date().toISOString(),
+          },
+        });
+
+        // Retourner le blob URL pour affichage immédiat (pas d'attente réseau)
+        await onCapture(blobUrl, blobUrl, sha256, localId);
+      } else {
+        // ─── Mode legacy : upload direct vers Cloudinary (DegradationFlow, etc.) ───
+        const formData = new FormData();
+        formData.append('file', compressed);
+        formData.append('upload_preset', 'airbnb-clone');
+
+        const response = await axios.post(
           `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
           formData
-        ),
-      ]);
+        );
 
-      const url = response.data.secure_url;
-      const thumbnailUrl = url.replace('/upload/', '/upload/w_400,c_fill/');
+        const url = response.data.secure_url;
+        const thumbnailUrl = url.replace('/upload/', '/upload/w_400,c_fill/');
 
-      await onCapture(url, thumbnailUrl, sha256);
+        await onCapture(url, thumbnailUrl, sha256);
+      }
 
-      // Show "Validé ✓" feedback briefly
+      // Show "Validé" feedback briefly
       setIsUploading(false);
       setIsValidated(true);
 
       if (allowMultiple) {
-        setThumbnails((prev) => [...prev, thumbnailUrl]);
+        // En mode queue, le thumbnail est le blob URL ; en legacy, c'est le thumbnail Cloudinary
+        const thumbForCarousel = preview || '';
+        setThumbnails((prev) => [...prev, thumbForCarousel]);
         setTimeout(() => {
           setIsValidated(false);
           setPreview(null);
@@ -142,11 +174,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         }, 500);
       }
     } catch (err) {
-      console.error('Photo upload failed:', err);
+      console.error('Photo processing failed:', err);
       setIsUploading(false);
       isProcessingRef.current = false;
     }
-  }, [capturedFile, onCapture, allowMultiple, compressionOptions]);
+  }, [capturedFile, onCapture, allowMultiple, compressionOptions, queueMetadata, preview]);
 
   const handleRetake = () => {
     setPreview(null);
@@ -224,7 +256,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         <div className="text-center mb-16 px-8 pointer-events-none">
           {title ? (
             <>
-              
+
               <div className="text-[24px] font-base mb-4 text-white">
                 {label}
               </div>

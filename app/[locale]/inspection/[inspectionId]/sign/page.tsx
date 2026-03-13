@@ -3,18 +3,22 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { useInspection } from '@/hooks/useInspection';
+import { useEdlSync } from '@/hooks/useEdlSync';
 import InspectionTopBar from '@/components/inspection/InspectionTopBar';
 import InspectionBtn from '@/components/inspection/InspectionBtn';
 import SignatureCanvas from '@/components/inspection/SignatureCanvas';
 import { EDL_THEME as t } from '@/lib/inspection-theme';
-import { Send, CheckCircle2, Clock, Loader2, Share2, LayoutDashboard } from 'lucide-react';
+import { Send, CheckCircle2, Clock, Loader2, Share2, LayoutDashboard, Wifi } from 'lucide-react';
 
 export default function SignLandlordPage() {
   const params = useParams();
   const inspectionId = params.inspectionId as string;
   const router = useRouter();
   const { inspection, sign } = useInspection(inspectionId);
+  const { isSynced, photoStats, pendingMutations } = useEdlSync(inspectionId);
+  const syncT = useTranslations('inspection.sync');
   const [landlordSigned, setLandlordSigned] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
@@ -150,6 +154,30 @@ export default function SignLandlordPage() {
               <div className="text-[18px] font-bold" style={{ color: t.green }}>
                 Signé
               </div>
+            </div>
+          ) : !isSynced ? (
+            <div className="rounded-2xl p-5 border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Wifi size={18} className="text-amber-600 dark:text-amber-400" />
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                  {syncT('signatureBlocked')}
+                </p>
+              </div>
+              <div className="space-y-1">
+                {(photoStats.pending + photoStats.uploading > 0) && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    {syncT('photoPending', { count: photoStats.pending + photoStats.uploading })}
+                  </p>
+                )}
+                {pendingMutations > 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    {syncT('mutationPending', { count: pendingMutations })}
+                  </p>
+                )}
+              </div>
+              <p className="text-sm text-amber-500 dark:text-amber-500 mt-2">
+                {syncT('signatureBlockedDetail')}
+              </p>
             </div>
           ) : (
             <SignatureCanvas onSign={handleLandlordSign} label="Signez ci-dessous" />
