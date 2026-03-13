@@ -8,7 +8,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    optimizePackageImports: ['react-icons'],
+    optimizePackageImports: ['react-icons', 'lucide-react', 'recharts'],
+    staleTimes: {
+      dynamic: 30,
+      static: 300,
+    },
   },
   webpack: (config, { isServer }) => {
     // react-pdf (client-side) needs canvas alias disabled in browser builds

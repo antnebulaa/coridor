@@ -9,116 +9,221 @@ export default async function getLandlordCalendarData() {
             return null;
         }
 
-        // 1. Fetch Availability Slots (User Centric)
-        const visitSlots = await prisma.visitSlot.findMany({
-            where: {
-                userId: currentUser.id
-            }
-        });
+        // All 6 queries are independent — run them in parallel
+        const [visitSlots, properties, visits, inspections, rentTracking, reminders] = await Promise.all([
+            // 1. Fetch Availability Slots (User Centric)
+            prisma.visitSlot.findMany({
+                where: {
+                    userId: currentUser.id
+                }
+            }),
 
-        // 2. Fetch Properties (Context for bookings)
-        const properties = await prisma.property.findMany({
-            where: {
-                ownerId: currentUser.id
-            },
-            include: {
-                rentalUnits: {
-                    include: {
-                        listings: {
-                            select: {
-                                id: true,
-                                title: true,
-                                propertyAdjective: true,
-                                rentalUnit: {
-                                    select: {
-                                        name: true
+            // 2. Fetch Properties (Context for bookings)
+            prisma.property.findMany({
+                where: {
+                    ownerId: currentUser.id
+                },
+                include: {
+                    rentalUnits: {
+                        include: {
+                            listings: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                    propertyAdjective: true,
+                                    rentalUnit: {
+                                        select: {
+                                            name: true
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-        });
+            }),
 
-        // 3. Fetch Scheduled Visits (Bookings)
-        // Visits are linked to Listings, which are linked to Properties owned by CurrentUser
-        const visits = await prisma.visit.findMany({
-            where: {
-                listing: {
-                    rentalUnit: {
-                        property: {
-                            ownerId: currentUser.id
-                        }
-                    }
-                }
-            },
-            include: {
-                listing: {
-                    select: {
-                        id: true,
-                        title: true,
-                        price: true,
-                        charges: true,
-                        propertyAdjective: true,
-                        leaseType: true,
-                        availableFrom: true,
+            // 3. Fetch Scheduled Visits (Bookings)
+            prisma.visit.findMany({
+                where: {
+                    listing: {
                         rentalUnit: {
-                            select: {
-                                property: {
-                                    select: {
-                                        category: true,
-                                        city: true,
-                                        address: true,
-                                        addressLine1: true
-                                    }
-                                }
+                            property: {
+                                ownerId: currentUser.id
                             }
                         }
                     }
                 },
-                candidate: {
-                    select: {
-                        id: true,
-                        name: true,
-                        image: true,
-                        email: true,
-                        createdScopes: {
-                            take: 1,
-                            orderBy: { createdAt: 'desc' }
-                        },
-                        tenantProfile: {
-                            include: {
-                                guarantors: {
-                                    include: {
-                                        additionalIncomes: true
+                include: {
+                    listing: {
+                        select: {
+                            id: true,
+                            title: true,
+                            price: true,
+                            charges: true,
+                            propertyAdjective: true,
+                            leaseType: true,
+                            availableFrom: true,
+                            rentalUnit: {
+                                select: {
+                                    property: {
+                                        select: {
+                                            category: true,
+                                            city: true,
+                                            address: true,
+                                            addressLine1: true
+                                        }
                                     }
-                                },
-                                additionalIncomes: true
+                                }
                             }
-                        },
-                        conversations: {
-                            where: {
-                                users: {
-                                    some: {
-                                        id: currentUser.id
-                                    }
+                        }
+                    },
+                    candidate: {
+                        select: {
+                            id: true,
+                            name: true,
+                            image: true,
+                            email: true,
+                            createdScopes: {
+                                take: 1,
+                                orderBy: { createdAt: 'desc' }
+                            },
+                            tenantProfile: {
+                                include: {
+                                    guarantors: {
+                                        include: {
+                                            additionalIncomes: true
+                                        }
+                                    },
+                                    additionalIncomes: true
                                 }
                             },
-                            take: 1,
-                            select: {
-                                id: true
+                            conversations: {
+                                where: {
+                                    users: {
+                                        some: {
+                                            id: currentUser.id
+                                        }
+                                    }
+                                },
+                                take: 1,
+                                select: {
+                                    id: true
+                                }
+                            }
+                        }
+                    },
+                    evaluation: {
+                        include: {
+                            scores: true
+                        }
+                    }
+                }
+            }),
+
+            // 4. Fetch Inspections (EDL events)
+            prisma.inspection.findMany({
+                where: {
+                    landlordId: currentUser.id,
+                    status: { in: ['DRAFT', 'PENDING_SIGNATURE', 'SIGNED'] },
+                },
+                select: {
+                    id: true,
+                    type: true,
+                    status: true,
+                    scheduledAt: true,
+                    startedAt: true,
+                    completedAt: true,
+                    createdAt: true,
+                    tenant: { select: { name: true } },
+                    application: {
+                        select: {
+                            listing: {
+                                select: {
+                                    title: true,
+                                    rentalUnit: {
+                                        select: {
+                                            property: {
+                                                select: {
+                                                    city: true,
+                                                    address: true,
+                                                    addressLine1: true,
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    rooms: { select: { isCompleted: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+            }),
+
+            // 5. Fetch Rent Payment Tracking
+            prisma.rentPaymentTracking.findMany({
+                where: {
+                    rentalApplication: {
+                        listing: {
+                            rentalUnit: {
+                                property: { ownerId: currentUser.id }
                             }
                         }
                     }
                 },
-                evaluation: {
-                    include: {
-                        scores: true
+                select: {
+                    id: true,
+                    periodMonth: true,
+                    periodYear: true,
+                    status: true,
+                    expectedAmountCents: true,
+                    expectedDate: true,
+                    rentalApplication: {
+                        select: {
+                            listing: { select: { title: true } },
+                            candidateScope: {
+                                select: {
+                                    creatorUser: { select: { name: true } }
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        });
+                },
+                orderBy: { expectedDate: 'asc' }
+            }),
+
+            // 6. Fetch Legal Reminders (CRITICAL + HIGH priority only)
+            prisma.legalReminder.findMany({
+                where: {
+                    userId: currentUser.id,
+                    priority: { in: ['CRITICAL', 'HIGH'] },
+                    status: { not: 'COMPLETED' }
+                },
+                select: {
+                    id: true,
+                    type: true,
+                    title: true,
+                    priority: true,
+                    status: true,
+                    dueDate: true,
+                    property: {
+                        select: {
+                            rentalUnits: {
+                                take: 1,
+                                select: {
+                                    listings: {
+                                        take: 1,
+                                        select: { title: true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: { dueDate: 'asc' }
+            }),
+        ]);
 
         // Serialization
         const safeSlots = visitSlots.map((slot: any) => ({
@@ -131,46 +236,6 @@ export default async function getLandlordCalendarData() {
             createdAt: prop.createdAt.toISOString(),
             updatedAt: prop.updatedAt.toISOString(),
         }));
-
-        // 4. Fetch Inspections (EDL events)
-        const inspections = await prisma.inspection.findMany({
-            where: {
-                landlordId: currentUser.id,
-                status: { in: ['DRAFT', 'PENDING_SIGNATURE', 'SIGNED'] },
-            },
-            select: {
-                id: true,
-                type: true,
-                status: true,
-                scheduledAt: true,
-                startedAt: true,
-                completedAt: true,
-                createdAt: true,
-                tenant: { select: { name: true } },
-                application: {
-                    select: {
-                        listing: {
-                            select: {
-                                title: true,
-                                rentalUnit: {
-                                    select: {
-                                        property: {
-                                            select: {
-                                                city: true,
-                                                address: true,
-                                                addressLine1: true,
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                rooms: { select: { isCompleted: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-        });
 
         const safeInspections = inspections.map((insp: any) => {
             const eventDate = insp.scheduledAt || insp.startedAt || insp.createdAt;
@@ -224,69 +289,6 @@ export default async function getLandlordCalendarData() {
                 scores: visit.evaluation.scores || []
             } : null
         }));
-
-        // 5. Fetch Rent Payment Tracking
-        const rentTracking = await prisma.rentPaymentTracking.findMany({
-            where: {
-                rentalApplication: {
-                    listing: {
-                        rentalUnit: {
-                            property: { ownerId: currentUser.id }
-                        }
-                    }
-                }
-            },
-            select: {
-                id: true,
-                periodMonth: true,
-                periodYear: true,
-                status: true,
-                expectedAmountCents: true,
-                expectedDate: true,
-                rentalApplication: {
-                    select: {
-                        listing: { select: { title: true } },
-                        candidateScope: {
-                            select: {
-                                creatorUser: { select: { name: true } }
-                            }
-                        }
-                    }
-                }
-            },
-            orderBy: { expectedDate: 'asc' }
-        });
-
-        // 6. Fetch Legal Reminders (CRITICAL + HIGH priority only)
-        const reminders = await prisma.legalReminder.findMany({
-            where: {
-                userId: currentUser.id,
-                priority: { in: ['CRITICAL', 'HIGH'] },
-                status: { not: 'COMPLETED' }
-            },
-            select: {
-                id: true,
-                type: true,
-                title: true,
-                priority: true,
-                status: true,
-                dueDate: true,
-                property: {
-                    select: {
-                        rentalUnits: {
-                            take: 1,
-                            select: {
-                                listings: {
-                                    take: 1,
-                                    select: { title: true }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            orderBy: { dueDate: 'asc' }
-        });
 
         const safeRentTracking = rentTracking.map((rt: any) => ({
             id: rt.id,

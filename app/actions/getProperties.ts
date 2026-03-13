@@ -19,12 +19,13 @@ export default async function getProperties() {
                 createdAt: 'desc'
             },
             include: {
-                owner: true,
-                images: true,
-                rooms: {
-                    include: {
-                        images: true
-                    }
+                images: {
+                    take: 5,
+                    orderBy: { order: 'asc' },
+                    select: { id: true, url: true, order: true }
+                },
+                _count: {
+                    select: { rooms: true }
                 },
                 rentalUnits: {
                     where: {
@@ -34,15 +35,23 @@ export default async function getProperties() {
                         ]
                     },
                     include: {
-                        images: true,
+                        images: {
+                            take: 5,
+                            orderBy: { order: 'asc' },
+                            select: { id: true, url: true, order: true }
+                        },
                         targetRoom: {
-                            include: {
-                                images: true
+                            select: {
+                                id: true,
+                                images: {
+                                    take: 3,
+                                    orderBy: { order: 'asc' },
+                                    select: { id: true, url: true, order: true }
+                                }
                             }
                         },
                         listings: {
                             include: {
-
                                 applications: {
                                     where: {
                                         leaseStatus: { in: ['SIGNED', 'PENDING_SIGNATURE'] }
@@ -63,13 +72,18 @@ export default async function getProperties() {
             ...property,
             createdAt: property.createdAt?.toISOString(),
             updatedAt: property.updatedAt?.toISOString(),
+            // Synthesize rooms array from _count for PropertyColocationCard compatibility
+            rooms: Array.from({ length: property._count?.rooms || 0 }),
             owner: {
-                ...property.owner,
-                createdAt: property.owner.createdAt?.toISOString(),
-                updatedAt: property.owner.updatedAt?.toISOString(),
-                emailVerified: property.owner.emailVerified?.toISOString() || null,
-                birthDate: property.owner.birthDate?.toISOString() || null,
-                tenantProfile: null, // Minimal safe user
+                id: currentUser.id,
+                name: currentUser.name,
+                image: currentUser.image,
+                email: currentUser.email,
+                createdAt: currentUser.createdAt,
+                updatedAt: currentUser.updatedAt,
+                emailVerified: currentUser.emailVerified || null,
+                birthDate: null,
+                tenantProfile: null,
                 wishlists: null,
                 commuteLocations: null
             },
@@ -142,11 +156,14 @@ export default async function getProperties() {
                     ...property,
                     createdAt: property.createdAt?.toISOString(),
                     updatedAt: property.updatedAt?.toISOString(),
+                    rooms: Array.from({ length: property._count?.rooms || 0 }),
                     owner: {
-                        ...property.owner,
-                        createdAt: property.owner.createdAt?.toISOString(),
-                        updatedAt: property.owner.updatedAt?.toISOString(),
-                        emailVerified: property.owner.emailVerified?.toISOString() || null
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        image: currentUser.image,
+                        createdAt: currentUser.createdAt,
+                        updatedAt: currentUser.updatedAt,
+                        emailVerified: currentUser.emailVerified || null
                     }
                 }
             }))
