@@ -18,11 +18,12 @@ interface MobileMenuProps {
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
-    const { unreadCount, hasPendingAlert, notificationCount } = useUserCounters(currentUser);
+    const { unreadCount, hasPendingAlert } = useUserCounters(currentUser);
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const loginModal = useLoginModal();
     const [isMounted, setIsMounted] = useState(false);
+    const [optimisticHref, setOptimisticHref] = useState<string | null>(null);
 
     const { isOpen } = useConversation();
     const isContentMode = searchParams?.get('view') === 'content';
@@ -32,6 +33,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    // Reset optimistic state when pathname catches up
+    useEffect(() => {
+        setOptimisticHref(null);
+    }, [pathname]);
 
     const t = useTranslations('nav');
 
@@ -100,6 +106,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
             loginModal.onOpen();
             return;
         }
+        setOptimisticHref(href);
         hapticLight();
     }
 
@@ -114,14 +121,16 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                     {/* Main Menu Pill */}
                     <div className="flex-1 bg-card/70 backdrop-blur-md rounded-3xl shadow-2xl pointer-events-auto border border-border">
                         <div className="flex flex-row items-center justify-between p-1">
-                            {routes.map((route) => (
+                            {routes.map((route) => {
+                                const isActive = optimisticHref ? route.href === optimisticHref : route.active;
+                                return (
                                 <Link
                                     key={route.label}
                                     href={route.href}
                                     onClick={(e) => handleClick(e, route.href)}
                                     className="relative flex-1 flex items-center justify-center cursor-pointer py-2 px-1"
                                 >
-                                    {route.active && (
+                                    {isActive && (
                                         <motion.div
                                             layoutId="active-bubble"
                                             className="absolute inset-0 bg-[#262624] rounded-[20px]"
@@ -138,7 +147,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                         gap-1
                                         transition-colors
                                         duration-200
-                                        ${route.active ? 'text-primary-foreground' : 'text-foreground hover:text-foreground'}
+                                        ${isActive ? 'text-primary-foreground' : 'text-foreground hover:text-foreground'}
                                     `}>
                                         <div className="relative">
                                             <route.icon size={20} />
@@ -147,12 +156,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                                     {unreadCount > 99 ? '99+' : unreadCount}
                                                 </div>
                                             )}
-                                            {route.label === 'Notifs' && !!notificationCount && (
-                                                <div className="absolute top-0 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-background">
-                                                    {notificationCount > 99 ? '99+' : notificationCount}
-                                                </div>
-                                            )}
-                                            {route.label === 'Dashboard' && hasPendingAlert && (
+                                            {route.href === '/dashboard' && hasPendingAlert && (
                                                 <div className="absolute top-0 -right-1 bg-red-500 w-2.5 h-2.5 rounded-full border border-background" />
                                             )}
                                         </div>
@@ -161,7 +165,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ currentUser }) => {
                                         </div>
                                     </div>
                                 </Link>
-                            ))}
+                            );})}
                         </div>
                     </div>
                 </div>

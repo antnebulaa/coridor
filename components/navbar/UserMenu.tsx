@@ -24,7 +24,7 @@ import useMyCodeModal from "@/hooks/useMyCodeModal";
 import CustomToast from "../ui/CustomToast";
 import { SafeUser } from "@/types";
 import { signOut } from "next-auth/react";
-import { useRouter, usePathname } from "@/i18n/navigation";
+import { useRouter, usePathname, Link } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 
 interface UserMenuProps {
@@ -198,38 +198,43 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                 <div className="p-4 flex flex-col gap-1">
                                     <div className="font-semibold text-lg">{formattedName}</div>
                                     <div className="text-muted-foreground text-sm mb-3">{currentUser.email}</div>
-                                    <button
-                                        onClick={() => router.push('/account/personal-info')}
+                                    <Link
+                                        href="/account/personal-info"
+                                        onClick={() => setIsOpen(false)}
                                         className="
-                      w-full 
-                      py-2 
-                      rounded-full 
-                      bg-secondary 
-                      hover:bg-secondary/80 
-                      transition 
-                      text-sm 
+                      w-full
+                      py-2
+                      rounded-full
+                      bg-secondary
+                      hover:bg-secondary/80
+                      transition
+                      text-sm
                       font-medium
+                      block
+                      text-center
                     "
                                     >
                                         {t('editProfile')}
-                                    </button>
+                                    </Link>
                                 </div>
 
                                 <hr className="border-border w-full" />
 
                                 {/* Menu Items */}
                                 <div className="flex flex-col p-2 font-medium gap-1">
-                                    <div
-                                        onClick={() => router.push('/dashboard')}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/dashboard"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <CircleGauge size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">{t('dashboard')}</span>
-                                    </div>
+                                    </Link>
 
-                                    <div
-                                        onClick={() => router.push('/inbox')}
-                                        className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/inbox"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <div className="flex items-center gap-4">
                                             <MessageSquare size={24} className="text-neutral-700" />
@@ -240,75 +245,82 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                                 {unreadCount}
                                             </div>
                                         ) : null}
-                                    </div>
+                                    </Link>
 
-                                    <div
-                                        onClick={() => router.push('/favorites')}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/favorites"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <Heart size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">{t('favorites')}</span>
-                                    </div>
+                                    </Link>
 
-                                    <div
-                                        onClick={() => router.push('/calendar')}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/calendar"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <Calendar size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">{t('agenda')}</span>
-                                    </div>
+                                    </Link>
 
                                     {currentUser.userMode === 'LANDLORD' ? (
                                         <>
-                                            <div
-                                                onClick={() => router.push('/finances')}
-                                                className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                            <Link
+                                                href="/finances"
+                                                onClick={() => setIsOpen(false)}
+                                                className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                             >
                                                 <Wallet size={24} className="text-neutral-700" />
                                                 <span className="font-medium text-neutral-700">{t('finances')}</span>
-                                            </div>
-                                            <div
-                                                onClick={() => router.push('/properties')}
-                                                className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                            </Link>
+                                            <Link
+                                                href="/properties"
+                                                onClick={() => setIsOpen(false)}
+                                                className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                             >
                                                 <Key size={24} className="text-neutral-700" />
                                                 <span className="font-medium text-neutral-700">{t('properties')}</span>
-                                            </div>
+                                            </Link>
                                         </>
                                     ) : (
-                                        <div
-                                            onClick={() => router.push('/rentals')}
-                                            className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                        <Link
+                                            href="/rentals"
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                         >
                                             <Key size={24} className="text-neutral-700" />
                                             <span className="font-medium text-neutral-700">{t('myRental')}</span>
-                                        </div>
+                                        </Link>
                                     )}
 
-                                    <div
-                                        onClick={() => router.push('/contacts')}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/contacts"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <Users size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">{t('contacts')}</span>
-                                    </div>
+                                    </Link>
 
-
-                                    <div
-                                        onClick={() => router.push('/pricing')}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/pricing"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <Sparkles size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">{t('subscription')}</span>
-                                    </div>
+                                    </Link>
 
-                                    <div
-                                        onClick={() => router.push('/account/settings')}
-                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl cursor-pointer transition"
+                                    <Link
+                                        href="/account/settings"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-4 p-2 hover:bg-secondary rounded-xl transition"
                                     >
                                         <Settings size={24} className="text-neutral-700" />
                                         <span className="font-medium text-neutral-700">{t('settings')}</span>
-                                    </div>
+                                    </Link>
 
                                     <div className="flex items-center justify-between p-2 hover:bg-secondary rounded-xl cursor-pointer transition">
                                         <span className="font-medium text-neutral-700">{t('mode')}</span>

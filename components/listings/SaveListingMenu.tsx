@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { Plus, Check, Heart, Bookmark } from 'lucide-react';
@@ -33,7 +32,6 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     withBorder,
     glass
 }) => {
-    const router = useRouter();
     const loginModal = useLoginModal();
     const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -118,16 +116,21 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 
         setIsLoading(true);
         try {
-            await axios.post('/api/wishlists', {
+            const response = await axios.post('/api/wishlists', {
                 name: newListName,
                 listingId // Ensure this is passed
             });
 
+            const newWishlist = response.data;
             toast.success('Collection créée !');
 
+            // Optimistic: add the new wishlist to local state
+            setLocalWishlists(current => [...current, {
+                ...newWishlist,
+                listings: [{ id: listingId }]
+            }]);
             setNewListName('');
             setIsCreating(false);
-            router.refresh();
         } catch (error) {
             console.error(error);
             toast.error('Erreur lors de la création de la collection');
@@ -137,8 +140,21 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
     };
 
     const toggleWishlist = async (wishlistId: string, hasListing: boolean) => {
-        // Optimistic UI toggle could be added here if needed, but for now let's ensure stability
-        // triggering a loading state on the specific item would be ideal, but we'll use a toast
+        // Optimistic snapshot
+        const previousWishlists = JSON.parse(JSON.stringify(localWishlists));
+
+        // Optimistic update
+        setLocalWishlists(current =>
+            current.map(list => {
+                if (list.id !== wishlistId) return list;
+                return {
+                    ...list,
+                    listings: hasListing
+                        ? list.listings.filter((l: any) => l.id !== listingId)
+                        : [...list.listings, { id: listingId }]
+                };
+            })
+        );
 
         try {
             if (hasListing) {
@@ -150,8 +166,9 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                 });
                 toast.success("Ajouté à la collection");
             }
-            router.refresh();
         } catch (error) {
+            // Rollback on error
+            setLocalWishlists(previousWishlists);
             console.error(error);
             toast.error("Une erreur est survenue");
         }
@@ -202,14 +219,16 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         t={t}
                         message="Retiré de tous les favoris"
                         onUndo={async () => {
-                            // Undo logic needs to be careful about state syncing
+                            // Restore local state immediately
+                            setLocalFavoriteIds(previousFavoriteIds);
+                            setLocalWishlists(previousWishlists);
+                            // Then sync with server
                             if (previousFavoriteIds.includes(listingId)) {
                                 await axios.post(`/api/favorites/${listingId}`);
                             }
                             if (listsToRemove.length > 0) {
                                 await Promise.all(listsToRemove.map((w: any) => axios.post(`/api/wishlists/${w.id}`, { listingId })));
                             }
-                            router.refresh();
                         }}
                     />
                 ));
@@ -221,13 +240,14 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                         t={t}
                         message="Ajouté aux favoris"
                         onUndo={async () => {
+                            // Restore local state immediately
+                            setLocalFavoriteIds(previousFavoriteIds);
+                            setLocalWishlists(previousWishlists);
                             await axios.delete(`/api/favorites/${listingId}`);
-                            router.refresh();
                         }}
                     />
                 ));
             }
-            router.refresh();
         } catch (error) {
             // Revert
             setLocalFavoriteIds(previousFavoriteIds);

@@ -195,7 +195,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ currentUser }) => {
                     </div>
                 </div>
 
-                <br />
+            
 
                 {/* Mode-specific: Tenant */}
                 {tenantRoutes.length > 0 && (

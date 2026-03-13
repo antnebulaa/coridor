@@ -22,7 +22,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair, Briefcase, Fence, Snowflake, Car, Warehouse, Archive } from "lucide-react";
+import { Info, AlertTriangle, AlertCircle, CheckCircle, Home, X, Check, ChevronDown, Images, Sun, ArrowRightLeft, Landmark, Star, Zap, Sparkles, Paintbrush, Leaf, Flame, Users, Gem, Utensils, Shirt, Package, PawPrint, Bike, KeyRound, Phone, ShieldCheck, TrainFront, GraduationCap, TreePine, Stethoscope, Moon, DoorOpen, Wand2, Armchair, Briefcase, Fence, Snowflake, Car, Warehouse, Archive, ClipboardPaste } from "lucide-react";
 import { lookupRentControl } from "@/lib/rentControl";
 import { useRentEstimate } from "@/hooks/useRentEstimate";
 import RentEstimator from "../rent/RentEstimator";
@@ -32,8 +32,19 @@ import PriceAssistantModal from "@/app/[locale]/properties/[listingId]/edit/comp
 import { SafeListing } from "@/types";
 import CustomToast from "../ui/CustomToast";
 import DarkActionButtonFlex from "../ui/DarkActionButtonFlex";
+import ListingImportSheet from "../listing/ListingImportSheet";
+import type { ImportedListingResult } from "../listing/ListingImportSheet";
 
 import { LeaseType } from "@prisma/client";
+
+/** Small badge shown next to imported field labels */
+function ImportedBadge() {
+    return (
+        <span className="text-sm font-medium text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300 px-2 py-0.5 rounded-full ml-1.5">
+            importé
+        </span>
+    );
+}
 
 enum STEPS {
     // PART 1: CHARACTERISTICS
@@ -89,6 +100,10 @@ const RentModal = () => {
 
     // Price Assistant State
     const [isPriceAssistantOpen, setIsPriceAssistantOpen] = useState(false);
+
+    // Import Sheet State
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [importedFields, setImportedFields] = useState<Set<string>>(new Set());
 
     const {
         register,
@@ -238,6 +253,7 @@ const RentModal = () => {
             });
             setStep(STEPS.INTRO_CHARACTERISTICS);
             setCreatedListing(null);
+            setImportedFields(new Set());
         }
     }, [rentModal.editingListing, rentModal.propertyContext, reset]);
 
@@ -348,8 +364,49 @@ const RentModal = () => {
             shouldDirty: true,
             shouldTouch: true,
             shouldValidate: true
-        })
+        });
+        // Clear "importé" badge when user manually changes a field
+        if (importedFields.has(id)) {
+            setImportedFields(prev => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+        }
     }
+
+    // Handle imported listing data — pre-fill the form and advance to CATEGORY step
+    const handleImported = (result: ImportedListingResult) => {
+        const { data, importedFields: fields } = result;
+        setImportedFields(new Set(fields));
+
+        // Pre-fill form values
+        if (data.category) setCustomValue('category', data.category);
+        if (data.title) setCustomValue('title', data.title);
+        if (data.description) setCustomValue('description', data.description);
+        if (data.price) setCustomValue('price', data.price);
+        if (data.charges) setCustomValue('charges', data.charges);
+        if (data.securityDeposit) setCustomValue('securityDeposit', data.securityDeposit);
+        if (data.surface) setCustomValue('surface', data.surface);
+        if (data.roomCount) setCustomValue('roomCount', data.roomCount);
+        if (data.bedroomCount) setCustomValue('bedroomCount', data.bedroomCount);
+        if (data.bathroomCount) setCustomValue('bathroomCount', data.bathroomCount);
+        if (data.floor) setCustomValue('floor', data.floor);
+        if (data.totalFloors) setCustomValue('totalFloors', data.totalFloors);
+        if (data.isFurnished !== undefined) setCustomValue('isFurnished', data.isFurnished);
+        if (data.dpe) setCustomValue('dpe', data.dpe);
+        if (data.ges) setCustomValue('ges', data.ges);
+        if (data.constructionPeriod) setCustomValue('constructionPeriod', data.constructionPeriod);
+        if (data.amenities?.length) setCustomValue('amenities', data.amenities);
+
+        // Store imported data in zustand for reference
+        rentModal.setImportedData({ values: data, importedFields: fields, source: result.source });
+
+        // Advance to CATEGORY step (user verifies/adjusts from there)
+        setStep(STEPS.CATEGORY);
+
+        toast.success(`Annonce importée depuis ${result.source || 'le texte'}`, { duration: 3000 });
+    };
 
     const onBack = () => {
         if (step === STEPS.ROOM_DETAILS && currentRoomIndex > 0) {
@@ -506,7 +563,10 @@ const RentModal = () => {
         if (step === STEPS.AVAILABILITY) {
             return t('actions.finish');
         }
-        if (step === STEPS.INTRO_CHARACTERISTICS || step === STEPS.INTRO_ASSETS || step === STEPS.INTRO_RENTAL) {
+        if (step === STEPS.INTRO_CHARACTERISTICS) {
+            return undefined; // Actions are in the body (two option cards)
+        }
+        if (step === STEPS.INTRO_ASSETS || step === STEPS.INTRO_RENTAL) {
             return t('actions.start');
         }
         if (step === STEPS.PRICE || step === STEPS.ROOM_PRICE || rentModal.mode === 'ROOM_CONFIG') {
@@ -541,19 +601,51 @@ const RentModal = () => {
 
     if (step === STEPS.INTRO_CHARACTERISTICS) {
         bodyContent = (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6">
                 <Heading
                     title={t('steps.intro.title')}
                     subtitle={t('steps.intro.subtitle')}
                 />
-                <div className="flex flex-col items-center justify-center py-8">
-                    <div className="w-[200px] h-[200px] bg-neutral-100 rounded-full flex items-center justify-center mb-6">
-                        <Home size={80} className="text-neutral-400" strokeWidth={1} />
-                    </div>
-                    <div className="text-center text-neutral-500 max-w-md">
-                        {t('steps.intro.description')}
-                    </div>
+
+                <div className="flex flex-col gap-3">
+                    {/* Option 1: Create from scratch */}
+                    <button
+                        onClick={onNext}
+                        className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all w-full group"
+                    >
+                        <Home size={20} className="text-neutral-500 group-hover:text-foreground shrink-0 transition-colors" />
+                        <div className="text-left flex-1">
+                            <p className="text-sm font-semibold text-foreground">
+                                {t('steps.intro.createNewTitle')}
+                            </p>
+                            <p className="text-sm text-neutral-400">
+                                {t('steps.intro.createNewSubtitle')}
+                            </p>
+                        </div>
+                    </button>
+
+                    {/* Option 2: Import existing listing */}
+                    <button
+                        onClick={() => setIsImportOpen(true)}
+                        className="flex items-center gap-4 px-5 py-4 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all w-full group"
+                    >
+                        <ClipboardPaste size={20} className="text-neutral-500 group-hover:text-foreground shrink-0 transition-colors" />
+                        <div className="text-left flex-1">
+                            <p className="text-sm font-semibold text-foreground">
+                                {t('steps.intro.importTitle')}
+                            </p>
+                            <p className="text-sm text-neutral-400">
+                                {t('steps.intro.importSubtitle')}
+                            </p>
+                        </div>
+                    </button>
                 </div>
+
+                <ListingImportSheet
+                    isOpen={isImportOpen}
+                    onClose={() => setIsImportOpen(false)}
+                    onImported={handleImported}
+                />
             </div>
         )
     }
@@ -562,7 +654,7 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title={t('steps.category.title')}
+                    title={<>{t('steps.category.title')}{importedFields.has('category') && <ImportedBadge />}</>}
                     subtitle={t('steps.category.subtitle')}
                 />
                 <div
@@ -681,7 +773,7 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title={t('steps.surface.title')}
+                    title={<>{t('steps.surface.title')}{importedFields.has('surface') && <ImportedBadge />}</>}
                     subtitle={t('steps.surface.subtitle')}
                 />
                 <div className="flex items-center justify-center py-10">
@@ -1062,7 +1154,7 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title={t('steps.energy.title')}
+                    title={<>{t('steps.energy.title')}{(importedFields.has('dpe') || importedFields.has('ges')) && <ImportedBadge />}</>}
                     subtitle={t('steps.energy.subtitle')}
                 />
 
@@ -1230,7 +1322,7 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title={t('steps.description.title')}
+                    title={<>{t('steps.description.title')}{importedFields.has('description') && <ImportedBadge />}</>}
                     subtitle={t('steps.description.subtitle')}
                 />
                 <div className="flex flex-wrap gap-3 items-center justify-center">
@@ -1589,7 +1681,7 @@ const RentModal = () => {
         bodyContent = (
             <div className="flex flex-col gap-8">
                 <Heading
-                    title={t('steps.price.title')}
+                    title={<>{t('steps.price.title')}{importedFields.has('price') && <ImportedBadge />}</>}
                     subtitle={t('steps.price.subtitle')}
                 />
 
