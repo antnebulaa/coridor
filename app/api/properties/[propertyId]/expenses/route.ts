@@ -82,7 +82,17 @@ export async function POST(
                 })
             }
         });
-        return NextResponse.json(expense);
+        // Check if this year was already regularized for this property
+        const expenseYear = new Date(dateOccurred).getFullYear();
+        const existingRegularization = await prisma.reconciliationHistory.findFirst({
+            where: { propertyId, year: expenseYear },
+            select: { id: true },
+        });
+
+        return NextResponse.json({
+            ...expense,
+            ...(existingRegularization && { warning: 'YEAR_ALREADY_REGULARIZED' }),
+        });
     } catch (error) {
         console.error("Prisma Create Error:", error);
         return NextResponse.json(null, { status: 500 });

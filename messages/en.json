@@ -1447,27 +1447,40 @@
             "next": "Next",
             "letsGo": "Let's go!",
             "slide1": {
-                "title": "Charges regularization",
-                "body": "When signing the lease, you set an estimated monthly charge: these are the provisions. At the end of the year, you must compare this estimate with the actual cost of these charges.",
+                "title": "Charges\nregularization",
+                "body1": "When signing the lease, you set an estimated monthly charge: these are the provisions.",
+                "body2": "At the end of the year, you compare this estimate with the actual cost.",
                 "real": "Actual",
                 "estimated": "Estimated"
             },
             "slide2": {
-                "title": "Two possible outcomes",
-                "overspend": "Charges > Provisions — Your tenant owes you a supplement",
-                "underspend": "Charges < Provisions — You reimburse the overpayment"
+                "title": "Two possible\noutcomes",
+                "overspendTitle": "Charges > Provisions",
+                "overspendBody": "Your tenant owes you a supplement.",
+                "underspendTitle": "Charges < Provisions",
+                "underspendBody": "You reimburse the overpayment."
             },
             "slide3": {
-                "title": "Once a year, at the beginning of the year",
-                "body": "You regularize the past year when you have received all invoices. Example: regularize 2025 in early 2026."
+                "eyebrow": "Timing",
+                "title": "Once a year,\nat the start",
+                "body1": "You regularize the past year when you have received all invoices.",
+                "body2": "Example: regularize 2025 in early 2026.",
+                "visual": "Regularize in early 2026"
             },
             "slide4": {
-                "title": "Your expenses must be up to date",
-                "body": "Throughout the year, record each charge expense in Coridor: water, electricity, cleaning, maintenance..."
+                "eyebrow": "Prerequisites",
+                "title": "Your expenses\nmust be up to date",
+                "body": "Throughout the year, record each charge expense in Coridor: water, electricity, cleaning, maintenance...",
+                "link": "Go to Expenses & Charges",
+                "item1": "Cold water",
+                "item2": "Common electricity",
+                "item3": "Hall cleaning",
+                "item4": "Boiler maintenance"
             },
             "slide5": {
-                "title": "Coridor takes care of the rest",
-                "body": "We automatically compare your actual charges with the provisions, and generate a statement to send to your tenant."
+                "title": "Coridor takes care\nof the rest",
+                "body1": "We automatically compare your actual charges with the provisions.",
+                "body2": "We generate a statement to send to your tenant."
             }
         },
         "select": {

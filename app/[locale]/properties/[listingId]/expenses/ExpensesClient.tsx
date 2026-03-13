@@ -664,8 +664,13 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
             : axios.post(`/api/properties/${property.id}/expenses`, { ...payload, propertyId: property.id });
 
         request
-            .then(() => {
+            .then((res) => {
                 toast.custom((t) => <CustomToast t={t} message={editingExpense ? 'Dépense modifiée' : 'Dépense ajoutée'} type="success" />);
+                if (res.data?.warning === 'YEAR_ALREADY_REGULARIZED') {
+                    setTimeout(() => {
+                        toast.custom((t) => <CustomToast t={t} message="Cette année a déjà été régularisée. Cette dépense ne sera pas incluse dans la régularisation existante." type="warning" />, { duration: 6000 });
+                    }, 500);
+                }
                 onClose();
                 router.refresh();
             })

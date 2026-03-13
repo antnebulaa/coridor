@@ -1487,27 +1487,40 @@
             "next": "Suivant",
             "letsGo": "C'est parti !",
             "slide1": {
-                "title": "La régularisation des charges",
-                "body": "À la signature du bail, vous avez fixé une estimation des charges mensuelles : ce sont les provisions sur charges. À la fin de l'année, vous devez comparer cette estimation avec le coût réel de ces charges.",
+                "title": "La régularisation\ndes charges",
+                "body1": "À la signature du bail, vous avez fixé une estimation des charges mensuelles : ce sont les provisions sur charges.",
+                "body2": "À la fin de l'année, vous comparez cette estimation avec le coût réel.",
                 "real": "Réel",
                 "estimated": "Estimé"
             },
             "slide2": {
-                "title": "Deux issues possibles",
-                "overspend": "Charges > Provisions — Votre locataire vous doit un complément",
-                "underspend": "Charges < Provisions — Vous lui remboursez le trop-perçu"
+                "title": "Deux issues\npossibles",
+                "overspendTitle": "Charges > Provisions",
+                "overspendBody": "Votre locataire vous doit un complément.",
+                "underspendTitle": "Charges < Provisions",
+                "underspendBody": "Vous lui remboursez le trop-perçu."
             },
             "slide3": {
-                "title": "Une fois par an, en début d'année",
-                "body": "Vous régularisez l'année écoulée quand vous avez reçu toutes les factures. Exemple : régularisez 2025 en début 2026."
+                "eyebrow": "Le timing",
+                "title": "Une fois par an,\nen début d'année",
+                "body1": "Vous régularisez l'année écoulée quand vous avez reçu toutes les factures.",
+                "body2": "Exemple : régularisez 2025 en début 2026.",
+                "visual": "Régularisez en début 2026"
             },
             "slide4": {
-                "title": "Vos dépenses doivent être à jour",
-                "body": "Tout au long de l'année, enregistrez chaque dépense de charges dans Coridor : eau, électricité, ménage, entretien…"
+                "eyebrow": "Pré-requis",
+                "title": "Vos dépenses\ndoivent être à jour",
+                "body": "Tout au long de l'année, enregistrez chaque dépense de charges dans Coridor : eau, électricité, ménage, entretien…",
+                "link": "Aller dans Dépenses & Charges",
+                "item1": "Eau froide",
+                "item2": "Électricité communs",
+                "item3": "Ménage hall",
+                "item4": "Entretien chaudière"
             },
             "slide5": {
-                "title": "Coridor s'occupe du reste",
-                "body": "On compare automatiquement vos charges réelles avec les provisions, et on génère un décompte à envoyer à votre locataire."
+                "title": "Coridor s'occupe\ndu reste",
+                "body1": "On compare automatiquement vos charges réelles avec les provisions.",
+                "body2": "On génère un décompte à envoyer à votre locataire."
             }
         },
         "select": {

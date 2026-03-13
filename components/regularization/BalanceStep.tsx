@@ -92,7 +92,7 @@ const BalanceStep: React.FC<BalanceStepProps> = ({
                     <div className="flex justify-between text-sm">
                         <span className="text-neutral-500 dark:text-neutral-400">{t('balance.expenseCount')}</span>
                         <span className="text-neutral-900 dark:text-white font-medium">
-                            {previewData.expenses.length}
+                            {previewData.expenses?.length ?? 0}
                         </span>
                     </div>
                     <div className="flex justify-between text-sm">

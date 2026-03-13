@@ -1,13 +1,13 @@
 'use client';
 
 import { toast, Toast } from 'react-hot-toast';
-import { Check, X } from 'lucide-react';
+import { Check, X, AlertTriangle } from 'lucide-react';
 import { useEffect } from 'react';
 
 interface CustomToastProps {
     t: Toast;
     message: string;
-    type?: 'success' | 'error';
+    type?: 'success' | 'error' | 'warning';
     onUndo?: () => void;
     undoLabel?: string;
     actionLabel?: string;
@@ -59,10 +59,12 @@ const CustomToast: React.FC<CustomToastProps> = ({
                 } w-full max-w-[calc(100vw-32px)] md:w-auto md:min-w-[400px] bg-white dark:bg-neutral-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[20px] pointer-events-auto flex items-center justify-between ring-1 ring-black/5 dark:ring-white/10 py-4 px-[50px] gap-4 transition-all duration-300 cursor-pointer`}
         >
             <div className="flex items-center gap-4 overflow-hidden">
-                <div className={`shrink-0 rounded-full w-8 h-8 flex items-center justify-center ${type === 'error' ? 'bg-rose-500' : 'bg-green-500'
+                <div className={`shrink-0 rounded-full w-8 h-8 flex items-center justify-center ${type === 'error' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-green-500'
                     }`}>
                     {type === 'error' ? (
                         <X size={18} className="text-white" strokeWidth={3} />
+                    ) : type === 'warning' ? (
+                        <AlertTriangle size={18} className="text-white" strokeWidth={2.5} />
                     ) : (
                         <Check size={18} className="text-white" strokeWidth={3} />
                     )}

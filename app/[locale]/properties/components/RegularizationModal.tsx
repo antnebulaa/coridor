@@ -290,6 +290,7 @@ const RegularizationModal: React.FC<RegularizationModalProps> = ({
                         <GuideSlides
                             onComplete={() => setStep('SELECT')}
                             onBack={() => setStep('WELCOME')}
+                            propertyId={propertyId}
                         />
                     )}
 
