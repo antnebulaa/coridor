@@ -23,39 +23,60 @@ const getConversations = async () => {
             },
             include: {
                 users: {
-                    include: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
+                        pseudonymFull: true,
                         createdScopes: {
-                            include: {
+                            take: 1,
+                            orderBy: { createdAt: 'desc' as const },
+                            select: {
                                 applications: {
                                     take: 3,
+                                    select: {
+                                        id: true,
+                                        listingId: true,
+                                        status: true,
+                                        leaseStatus: true,
+                                    }
                                 }
                             }
                         }
                     }
                 },
                 listing: {
-                    include: {
+                    select: {
+                        id: true,
+                        title: true,
+                        propertyAdjective: true,
                         rentalUnit: {
-                            include: {
+                            select: {
                                 property: {
-                                    include: {
+                                    select: {
+                                        category: true,
                                         owner: {
-                                            select: { id: true, name: true, image: true }
+                                            select: { id: true }
                                         },
                                         images: {
-                                            take: 3,
+                                            take: 1,
+                                            orderBy: { order: 'asc' as const },
                                             select: { id: true, url: true, roomId: true }
                                         }
                                     }
                                 },
                                 images: {
-                                    take: 3,
+                                    take: 1,
+                                    orderBy: { order: 'asc' as const },
                                     select: { id: true, url: true }
                                 },
                                 targetRoom: {
-                                    include: {
+                                    select: {
+                                        id: true,
                                         images: {
-                                            take: 3,
+                                            take: 1,
+                                            orderBy: { order: 'asc' as const },
                                             select: { id: true, url: true }
                                         }
                                     }
@@ -137,6 +158,7 @@ const getConversations = async () => {
                 ...conversation,
                 listing: {
                     ...listing,
+                    category: listing.rentalUnit?.property?.category || null,
                     images: aggregatedImages
                 }
             };

@@ -297,7 +297,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const getCalendarEvent = useCallback(() => {
         if (!confirmedVisit || !listing) return null;
 
-        const roomInfo = listing.roomCount ? `T${listing.roomCount}` : (listing.category || 'Visite');
+        const roomInfo = listing.roomCount ? `T${listing.roomCount}` : (listing.rentalUnit?.property?.category || 'Visite');
         const surfaceInfo = listing.surface ? ` ${listing.surface}m²` : '';
         const title = `Visite - ${roomInfo}${surfaceInfo} à ${listing.city || ''}`;
 
