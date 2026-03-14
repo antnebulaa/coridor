@@ -8,7 +8,7 @@ import PageHeader from '@/components/PageHeader';
 import CustomToast from '@/components/ui/CustomToast';
 import {
     Check, Lock, AlertTriangle, ArrowRight, RefreshCw, Gift, Sparkles, Crown,
-    ChevronRight, ChevronDown, ChevronUp, FileText, CreditCard, X,
+    ChevronRight, ChevronDown, ChevronUp, FileText, CreditCard, X, Download,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -260,6 +260,7 @@ export default function SubscriptionClient() {
     const [historyOpen, setHistoryOpen] = useState(false);
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [cancelling, setCancelling] = useState(false);
+    const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
 
     const fetchSubscription = useCallback(async () => {
         setLoading(true);
@@ -302,6 +303,28 @@ export default function SubscriptionClient() {
             ));
         } finally {
             setCancelling(false);
+        }
+    };
+
+    const handleDownloadInvoicePdf = async (invoiceId: string, existingPdfUrl: string | null) => {
+        // If pdfUrl already exists, open it directly
+        if (existingPdfUrl) {
+            window.open(existingPdfUrl, '_blank');
+            return;
+        }
+        // Otherwise, generate on-demand
+        setGeneratingPdfId(invoiceId);
+        try {
+            const res = await axios.post(`/api/invoices/${invoiceId}/generate-pdf`);
+            window.open(res.data.pdfUrl, '_blank');
+            // Refresh data to cache the pdfUrl
+            fetchSubscription();
+        } catch {
+            toast.custom((t) => (
+                <CustomToast t={t} message="Erreur lors de la generation de la facture" type="error" />
+            ));
+        } finally {
+            setGeneratingPdfId(null);
         }
     };
 
@@ -470,11 +493,12 @@ export default function SubscriptionClient() {
                     {invoices.length > 0 ? (
                         <div>
                             {/* Header row */}
-                            <div className="grid grid-cols-4 gap-2 pb-2 border-b border-neutral-100">
+                            <div className="grid grid-cols-5 gap-2 pb-2 border-b border-neutral-100">
                                 <span className="text-xs font-medium text-neutral-400 uppercase tracking-wide">Date</span>
                                 <span className="text-xs font-medium text-neutral-400 uppercase tracking-wide">Description</span>
                                 <span className="text-xs font-medium text-neutral-400 uppercase tracking-wide">Montant</span>
                                 <span className="text-xs font-medium text-neutral-400 uppercase tracking-wide">Statut</span>
+                                <span />
                             </div>
                             {/* Invoice rows */}
                             {invoices.map((invoice) => {
@@ -482,7 +506,7 @@ export default function SubscriptionClient() {
                                 return (
                                     <div
                                         key={invoice.id}
-                                        className="grid grid-cols-4 gap-2 py-2.5 border-b border-neutral-50 last:border-b-0"
+                                        className="grid grid-cols-5 gap-2 py-2.5 border-b border-neutral-50 last:border-b-0"
                                     >
                                         <span className="text-sm text-neutral-700">
                                             {formatDateShort(invoice.invoiceDate)}
@@ -501,6 +525,20 @@ export default function SubscriptionClient() {
                                             >
                                                 {statusBadge.label}
                                             </span>
+                                        </span>
+                                        <span className="flex justify-end">
+                                            <button
+                                                onClick={() => handleDownloadInvoicePdf(invoice.id, invoice.pdfUrl)}
+                                                disabled={generatingPdfId === invoice.id}
+                                                className="text-neutral-400 hover:text-neutral-700 transition disabled:opacity-50"
+                                                title="Telecharger la facture"
+                                            >
+                                                {generatingPdfId === invoice.id ? (
+                                                    <RefreshCw size={14} className="animate-spin" />
+                                                ) : (
+                                                    <Download size={14} />
+                                                )}
+                                            </button>
                                         </span>
                                     </div>
                                 );

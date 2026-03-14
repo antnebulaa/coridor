@@ -37,10 +37,11 @@ export async function POST(request: Request, props: Params) {
           include: {
             listing: {
               select: {
+                title: true,
                 rentalUnit: {
                   include: {
                     property: {
-                      select: { ownerId: true, title: true, city: true, address: true },
+                      select: { ownerId: true, city: true, address: true },
                     },
                   },
                 },
@@ -80,7 +81,8 @@ export async function POST(request: Request, props: Params) {
     });
 
     const tenant = deposit.application.candidateScope?.creatorUser;
-    const property = deposit.application.listing.rentalUnit.property;
+    const listing = deposit.application.listing;
+    const property = listing.rentalUnit.property;
 
     const now = new Date();
     const pdfData: FormalNoticeData = {
@@ -92,7 +94,7 @@ export async function POST(request: Request, props: Params) {
         ? `${landlord.firstName} ${landlord.lastName}`
         : landlord?.name || 'Bailleur',
       landlordAddress: landlord?.address || '(adresse du bailleur)',
-      propertyAddress: property.address || property.title || '(adresse du bien)',
+      propertyAddress: property.address || listing.title || '(adresse du bien)',
       leaseSignedDate: deposit.leaseSignedAt
         ? new Date(deposit.leaseSignedAt).toLocaleDateString('fr-FR')
         : '(date)',

@@ -12,6 +12,7 @@ import {
     Info,
     CheckCircle2,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { SafeListing } from '@/types';
 import EditSectionFooter from './EditSectionFooter';
 import CustomToast from '@/components/ui/CustomToast';
@@ -31,6 +32,7 @@ function toInputDate(dateStr?: string | Date | null): string {
 
 const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
 
     const property = listing.rentalUnit?.property;
@@ -102,20 +104,20 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                 ownerSiren: ownerSiren || null,
                 ownerSiege: ownerSiege || null,
             });
-            toast.custom((t) => (
+            toast.custom((toastData) => (
                 <CustomToast
-                    t={t}
-                    message="Informations legales mises a jour"
+                    t={toastData}
+                    message={t('edit.legal.saved')}
                     type="success"
                 />
             ));
             router.refresh();
         } catch (error) {
             console.error('Failed to save legal info:', error);
-            toast.custom((t) => (
+            toast.custom((toastData) => (
                 <CustomToast
-                    t={t}
-                    message="Erreur lors de la sauvegarde"
+                    t={toastData}
+                    message={t('edit.legal.error')}
                     type="error"
                 />
             ));
@@ -140,19 +142,19 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
             <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center gap-2">
                     <Scale size={18} className="text-neutral-600" />
-                    <h3 className="font-medium text-neutral-800">Regime juridique</h3>
+                    <h3 className="font-medium text-neutral-800">{t('edit.legal.legalRegime')}</h3>
                 </div>
                 <div>
-                    <label className={labelClass}>Type de propriete</label>
+                    <label className={labelClass}>{t('edit.legal.propertyOwnershipType')}</label>
                     <select
                         value={legalRegime}
                         onChange={(e) => setLegalRegime(e.target.value)}
                         disabled={isLoading}
                         className={selectClass}
                     >
-                        <option value="">-- Selectionner --</option>
-                        <option value="COPROPRIETE">Copropriete</option>
-                        <option value="MONOPROPRIETE">Monopropriete</option>
+                        <option value="">{t('edit.legal.select')}</option>
+                        <option value="COPROPRIETE">{t('edit.legal.copropriete')}</option>
+                        <option value="MONOPROPRIETE">{t('edit.legal.monopropriete')}</option>
                     </select>
                 </div>
             </div>
@@ -161,7 +163,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
             <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center gap-2">
                     <Warehouse size={18} className="text-neutral-600" />
-                    <h3 className="font-medium text-neutral-800">Annexes du logement</h3>
+                    <h3 className="font-medium text-neutral-800">{t('edit.legal.annexes')}</h3>
                 </div>
 
                 {/* Cave */}
@@ -181,17 +183,17 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 }`}
                             />
                         </button>
-                        <span className="text-sm text-neutral-700">Cave</span>
+                        <span className="text-sm text-neutral-700">{t('edit.legal.cave')}</span>
                     </div>
                     {hasCave && (
                         <div className="ml-14">
-                            <label className={labelClass}>Reference de la cave</label>
+                            <label className={labelClass}>{t('edit.legal.caveReference')}</label>
                             <input
                                 type="text"
                                 value={caveReference}
                                 onChange={(e) => setCaveReference(e.target.value)}
                                 disabled={isLoading}
-                                placeholder="Ex: Cave n 3, sous-sol 1"
+                                placeholder={t('edit.legal.cavePlaceholder')}
                                 className={inputClass}
                             />
                         </div>
@@ -215,17 +217,17 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 }`}
                             />
                         </button>
-                        <span className="text-sm text-neutral-700">Place de parking</span>
+                        <span className="text-sm text-neutral-700">{t('edit.legal.parking')}</span>
                     </div>
                     {hasParking && (
                         <div className="ml-14">
-                            <label className={labelClass}>Reference du parking</label>
+                            <label className={labelClass}>{t('edit.legal.parkingReference')}</label>
                             <input
                                 type="text"
                                 value={parkingReference}
                                 onChange={(e) => setParkingReference(e.target.value)}
                                 disabled={isLoading}
-                                placeholder="Ex: Place n 12, niveau -1"
+                                placeholder={t('edit.legal.parkingPlaceholder')}
                                 className={inputClass}
                             />
                         </div>
@@ -249,17 +251,17 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 }`}
                             />
                         </button>
-                        <span className="text-sm text-neutral-700">Garage</span>
+                        <span className="text-sm text-neutral-700">{t('edit.legal.garage')}</span>
                     </div>
                     {hasGarage && (
                         <div className="ml-14">
-                            <label className={labelClass}>Reference du garage</label>
+                            <label className={labelClass}>{t('edit.legal.garageReference')}</label>
                             <input
                                 type="text"
                                 value={garageReference}
                                 onChange={(e) => setGarageReference(e.target.value)}
                                 disabled={isLoading}
-                                placeholder="Ex: Box n 5"
+                                placeholder={t('edit.legal.garagePlaceholder')}
                                 className={inputClass}
                             />
                         </div>
@@ -271,20 +273,20 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
             <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center gap-2">
                     <MapPin size={18} className="text-neutral-600" />
-                    <h3 className="font-medium text-neutral-800">Zone tendue</h3>
+                    <h3 className="font-medium text-neutral-800">{t('edit.legal.zoneTendue')}</h3>
                 </div>
 
                 {detectedZoneTendue ? (
                     <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
                         <CheckCircle2 size={16} className="text-green-600 shrink-0" />
                         <span className="text-sm font-medium text-green-700">
-                            Zone tendue detectee automatiquement
+                            {t('edit.legal.zoneTendueDetected')}
                         </span>
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg">
                         <span className="text-sm text-neutral-500">
-                            Ce bien n&apos;est pas situe en zone tendue
+                            {t('edit.legal.zoneTendueNot')}
                         </span>
                     </div>
                 )}
@@ -294,7 +296,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                         <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
                             <p className="text-sm text-blue-700">
-                                En zone tendue, l&apos;encadrement des loyers s&apos;applique. Renseignez les informations ci-dessous pour la generation du bail.
+                                {t('edit.legal.zoneTendueInfo')}
                             </p>
                         </div>
 
@@ -302,7 +304,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                         {rentControlInfo?.zoneRequired && (
                             <div>
                                 <label className={labelClass}>
-                                    Zone d&apos;encadrement ({rentControlInfo.territory})
+                                    {t('edit.legal.rentControlZone', { territory: rentControlInfo.territory ?? '' })}
                                 </label>
                                 <select
                                     value={rentControlZone}
@@ -310,7 +312,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                     disabled={isLoading}
                                     className={selectClass}
                                 >
-                                    <option value="">-- Selectionnez votre zone --</option>
+                                    <option value="">{t('edit.legal.selectZone')}</option>
                                     {rentControlInfo.availableZones?.map((z) => (
                                         <option key={z} value={z}>
                                             Zone {z}
@@ -322,7 +324,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 </select>
                                 {!rentControlZone && (
                                     <p className="text-xs text-amber-600 mt-1">
-                                        Selectionnez votre zone pour obtenir les loyers de reference.
+                                        {t('edit.legal.selectZoneHint')}
                                     </p>
                                 )}
                             </div>
@@ -333,16 +335,14 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                             <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <CheckCircle2 size={16} className="text-green-600 shrink-0 mt-0.5" />
                                 <p className="text-sm text-green-700">
-                                    Donnees officielles ({rentControlInfo.territory}) : ref. {rentControlInfo.referenceRent} EUR/m2,
-                                    majore {rentControlInfo.referenceRentMax} EUR/m2,
-                                    minore {rentControlInfo.referenceRentMin} EUR/m2.
+                                    {t('edit.legal.officialData', { territory: rentControlInfo.territory ?? '', reference: rentControlInfo.referenceRent ?? 0, max: rentControlInfo.referenceRentMax ?? 0, min: rentControlInfo.referenceRentMin ?? 0 })}
                                 </p>
                             </div>
                         )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className={labelClass}>Loyer de reference (EUR/m2/mois)</label>
+                                <label className={labelClass}>{t('edit.legal.referenceRent')}</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -354,7 +354,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Loyer de reference majore (EUR/m2/mois)</label>
+                                <label className={labelClass}>{t('edit.legal.referenceRentIncreased')}</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -366,7 +366,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Complement de loyer (EUR)</label>
+                                <label className={labelClass}>{t('edit.legal.rentSupplement')}</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -378,7 +378,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Dernier loyer applique (EUR)</label>
+                                <label className={labelClass}>{t('edit.legal.previousRent')}</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -395,24 +395,24 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                         {rentSupplement !== '' && Number(rentSupplement) > 0 && (
                             <div>
                                 <label className={labelClass}>
-                                    Justification du complement de loyer
+                                    {t('edit.legal.rentSupplementJustificationLabel')}
                                 </label>
                                 <textarea
                                     value={rentSupplementJustification}
                                     onChange={(e) => setRentSupplementJustification(e.target.value)}
                                     disabled={isLoading}
-                                    placeholder="Decrivez les caracteristiques exceptionnelles justifiant le complement de loyer (ex: terrasse, vue, equipements haut de gamme...)"
+                                    placeholder={t('edit.legal.rentSupplementJustificationPlaceholder')}
                                     rows={3}
                                     className={inputClass}
                                 />
                                 <p className="text-xs text-neutral-500 mt-1">
-                                    Obligatoire legalement (art. 140 VI loi ELAN). Le complement doit etre justifie par des caracteristiques exceptionnelles du logement.
+                                    {t('edit.legal.rentSupplementJustificationHelper')}
                                 </p>
                             </div>
                         )}
 
                         <div className="max-w-xs">
-                            <label className={labelClass}>Date du dernier loyer</label>
+                            <label className={labelClass}>{t('edit.legal.previousRentDate')}</label>
                             <input
                                 type="date"
                                 value={previousRentDate}
@@ -429,28 +429,28 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
             <div className="border border-neutral-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center gap-2">
                     <Building2 size={18} className="text-neutral-600" />
-                    <h3 className="font-medium text-neutral-800">Qualite du bailleur</h3>
+                    <h3 className="font-medium text-neutral-800">{t('edit.legal.landlordQuality')}</h3>
                 </div>
 
                 <div>
-                    <label className={labelClass}>Statut juridique du bailleur</label>
+                    <label className={labelClass}>{t('edit.legal.landlordLegalStatus')}</label>
                     <select
                         value={ownerLegalStatus}
                         onChange={(e) => setOwnerLegalStatus(e.target.value)}
                         disabled={isLoading}
                         className={selectClass}
                     >
-                        <option value="">-- Selectionner --</option>
-                        <option value="PERSONNE_PHYSIQUE">Personne physique</option>
-                        <option value="SCI">SCI (Societe Civile Immobiliere)</option>
-                        <option value="PERSONNE_MORALE">Personne morale (autre)</option>
+                        <option value="">{t('edit.legal.select')}</option>
+                        <option value="PERSONNE_PHYSIQUE">{t('edit.legal.personnePhysique')}</option>
+                        <option value="SCI">{t('edit.legal.sci')}</option>
+                        <option value="PERSONNE_MORALE">{t('edit.legal.personneMorale')}</option>
                     </select>
                 </div>
 
                 {(ownerLegalStatus === 'SCI' || ownerLegalStatus === 'PERSONNE_MORALE') && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className={labelClass}>Numero SIREN</label>
+                            <label className={labelClass}>{t('edit.legal.siren')}</label>
                             <input
                                 type="text"
                                 value={ownerSiren}
@@ -462,13 +462,13 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
                             />
                         </div>
                         <div>
-                            <label className={labelClass}>Siege social</label>
+                            <label className={labelClass}>{t('edit.legal.registeredOffice')}</label>
                             <input
                                 type="text"
                                 value={ownerSiege}
                                 onChange={(e) => setOwnerSiege(e.target.value)}
                                 disabled={isLoading}
-                                placeholder="Adresse du siege social"
+                                placeholder={t('edit.legal.registeredOfficePlaceholder')}
                                 className={inputClass}
                             />
                         </div>
@@ -478,7 +478,7 @@ const LegalInfoSection: React.FC<LegalInfoSectionProps> = ({ listing }) => {
 
             <EditSectionFooter
                 disabled={isLoading}
-                label="Enregistrer"
+                label={t('edit.save')}
                 onClick={handleSave}
             />
         </div>

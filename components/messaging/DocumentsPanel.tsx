@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from 'next-intl';
 import { X, FileText, Image as ImageIcon, File, Download, Search, MessageCircle } from "lucide-react";
 import clsx from "clsx";
 import useConversationDocuments, { ConversationDocument } from "@/hooks/useConversationDocuments";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { format, type Locale } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
 
 type FilterType = "all" | "pdf" | "images" | "coridor";
 
@@ -29,22 +30,17 @@ function getFileIcon(fileType: string) {
     return File;
 }
 
-function groupByMonth(docs: ConversationDocument[]): Record<string, ConversationDocument[]> {
+function groupByMonth(docs: ConversationDocument[], dateFnsLocale: Locale): Record<string, ConversationDocument[]> {
     const groups: Record<string, ConversationDocument[]> = {};
     for (const doc of docs) {
-        const key = format(new Date(doc.createdAt), "MMMM yyyy", { locale: fr });
+        const key = format(new Date(doc.createdAt), "MMMM yyyy", { locale: dateFnsLocale });
         if (!groups[key]) groups[key] = [];
         groups[key].push(doc);
     }
     return groups;
 }
 
-const FILTERS: { key: FilterType; label: string }[] = [
-    { key: "all", label: "Tous" },
-    { key: "pdf", label: "PDF" },
-    { key: "images", label: "Images" },
-    { key: "coridor", label: "Coridor" },
-];
+const FILTER_KEYS: FilterType[] = ["all", "pdf", "images", "coridor"];
 
 const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
     conversationId,
@@ -52,6 +48,9 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
     onScrollToMessage,
     highlightedDocumentId,
 }) => {
+    const t = useTranslations('inbox');
+    const locale = useLocale();
+    const dateFnsLocale = locale === 'fr' ? fr : enUS;
     const [filter, setFilter] = useState<FilterType>("all");
     const [search, setSearch] = useState("");
 
@@ -60,7 +59,14 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
         search: search.trim() || undefined,
     });
 
-    const grouped = groupByMonth(documents);
+    const grouped = groupByMonth(documents, dateFnsLocale);
+
+    const filterLabels: Record<FilterType, string> = {
+        all: t('documents.filterAll'),
+        pdf: t('documents.filterPdf'),
+        images: t('documents.filterImages'),
+        coridor: t('documents.filterCoridor'),
+    };
 
     // Auto-scroll to highlighted document
     useEffect(() => {
@@ -77,7 +83,7 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between h-[72px] px-6 border-b border-gray-200 dark:border-neutral-800">
                 <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">
-                    Documents
+                    {t('documents.title')}
                 </h2>
                 <button
                     onClick={onClose}
@@ -98,7 +104,7 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Rechercher..."
+                        placeholder={t('documents.search')}
                         className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-neutral-900 dark:text-white placeholder:text-gray-400"
                     />
                 </div>
@@ -106,18 +112,18 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
 
             {/* Filter Tabs */}
             <div className="flex items-center gap-1.5 px-4 pb-2">
-                {FILTERS.map((f) => (
+                {FILTER_KEYS.map((key) => (
                     <button
-                        key={f.key}
-                        onClick={() => setFilter(f.key)}
+                        key={key}
+                        onClick={() => setFilter(key)}
                         className={clsx(
                             "px-3 py-1 text-xs font-medium rounded-full transition",
-                            filter === f.key
+                            filter === key
                                 ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700"
                         )}
                     >
-                        {f.label}
+                        {filterLabels[key]}
                     </button>
                 ))}
             </div>
@@ -126,12 +132,12 @@ const DocumentsPanel: React.FC<DocumentsPanelProps> = ({
             <div className="flex-1 overflow-y-auto px-4 py-2">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
-                        Chargement...
+                        {t('documents.loading')}
                     </div>
                 ) : documents.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                         <FileText size={32} className="mb-2 opacity-40" />
-                        <p className="text-sm">Aucun document</p>
+                        <p className="text-sm">{t('documents.empty')}</p>
                     </div>
                 ) : (
                     Object.entries(grouped).map(([month, docs]) => (
@@ -168,10 +174,13 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
     isHighlighted,
     onScrollToMessage,
 }) => {
+    const t = useTranslations('inbox');
+    const locale = useLocale();
+    const dateFnsLocale = locale === 'fr' ? fr : enUS;
     const Icon = getFileIcon(doc.fileType);
     const sizeStr = formatFileSize(doc.fileSize);
     const ext = doc.fileType.split("/").pop()?.toUpperCase() || "";
-    const dateStr = format(new Date(doc.createdAt), "d MMM", { locale: fr });
+    const dateStr = format(new Date(doc.createdAt), "d MMM", { locale: dateFnsLocale });
 
     return (
         <div
@@ -213,7 +222,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
                     <button
                         onClick={() => onScrollToMessage(doc.messageId!)}
                         className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300"
-                        title="Voir dans la conversation"
+                        title={t('documents.viewInConversation')}
                     >
                         <MessageCircle size={14} />
                     </button>
@@ -229,7 +238,7 @@ const DocumentRow: React.FC<DocumentRowProps> = ({
                         }
                     }}
                     className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 cursor-pointer"
-                    title="Télécharger"
+                    title={t('documents.download')}
                 >
                     <Download size={14} />
                 </button>

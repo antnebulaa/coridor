@@ -1,6 +1,7 @@
 'use client';
 
 import Tooltip from '@/components/ui/Tooltip';
+import { useTranslations } from 'next-intl';
 import type { SubscriptionMetricsData } from '@/app/actions/getAdminAdvancedStats';
 
 interface SubscriptionMetricsProps {
@@ -13,6 +14,7 @@ const PLAN_COLORS: Record<string, string> = {
 };
 
 const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
+    const t = useTranslations('admin.subscriptions');
     const totalFromBreakdown = data.planBreakdown.reduce(
         (sum, p) => sum + p.active + p.gifted,
         0
@@ -20,13 +22,13 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200 h-full">
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Abonnements</h3>
-            <p className="text-sm text-slate-500 mb-5">Suivi des souscriptions</p>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">{t('title')}</h3>
+            <p className="text-sm text-slate-500 mb-5">{t('subtitle')}</p>
 
             {/* Top KPIs */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 <div>
-                    <span className="text-xs font-medium text-slate-500">Actifs</span>
+                    <span className="text-xs font-medium text-slate-500">{t('active')}</span>
                     <div className="mt-1">
                         <span className="text-2xl font-extrabold text-slate-900">
                             {data.activeSubscriptions}
@@ -36,7 +38,7 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
                 <div>
                     <div className="flex items-center gap-1">
                         <span className="text-xs font-medium text-slate-500">MRR</span>
-                        <Tooltip content="Revenu mensuel récurrent estimé">
+                        <Tooltip content={t('mrrTooltip')}>
                             <span className="text-slate-400 hover:text-slate-500 cursor-help text-[10px]">?</span>
                         </Tooltip>
                     </div>
@@ -49,7 +51,7 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
                 <div>
                     <div className="flex items-center gap-1">
                         <span className="text-xs font-medium text-slate-500">Churn</span>
-                        <Tooltip content="Taux d'annulation sur les 30 derniers jours">
+                        <Tooltip content={t('churnTooltip')}>
                             <span className="text-slate-400 hover:text-slate-500 cursor-help text-[10px]">?</span>
                         </Tooltip>
                     </div>
@@ -64,12 +66,12 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
             {/* Secondary KPIs */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-purple-50 rounded-lg p-3">
-                    <span className="text-xs font-medium text-purple-600">Offerts</span>
+                    <span className="text-xs font-medium text-purple-600">{t('gifted')}</span>
                     <div className="text-lg font-bold text-purple-700 mt-0.5">{data.activeGifts}</div>
                 </div>
                 <div className={`rounded-lg p-3 ${data.upcomingExpirations > 0 ? 'bg-amber-50' : 'bg-slate-50'}`}>
                     <span className={`text-xs font-medium ${data.upcomingExpirations > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
-                        Expirent sous 7j
+                        {t('expiringIn7d')}
                     </span>
                     <div className={`text-lg font-bold mt-0.5 ${data.upcomingExpirations > 0 ? 'text-amber-700' : 'text-slate-700'}`}>
                         {data.upcomingExpirations}
@@ -80,7 +82,7 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
             {/* Plan breakdown */}
             {data.planBreakdown.length > 0 && (
                 <div className="pt-4 border-t border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Par plan</h4>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">{t('byPlan')}</h4>
                     <div className="space-y-3">
                         {data.planBreakdown.map((plan) => {
                             const total = plan.active + plan.expired + plan.cancelled + plan.gifted;
@@ -97,7 +99,7 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
                                             <span className="text-sm font-medium text-slate-700">{plan.plan}</span>
                                         </div>
                                         <span className="text-sm font-bold text-slate-900">
-                                            {activeTotal} actif{activeTotal > 1 ? 's' : ''}
+                                            {t('activeCount', { count: activeTotal })}
                                         </span>
                                     </div>
                                     <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -107,10 +109,10 @@ const SubscriptionMetrics: React.FC<SubscriptionMetricsProps> = ({ data }) => {
                                         />
                                     </div>
                                     <div className="flex gap-3 mt-1">
-                                        <span className="text-[10px] text-slate-400">{plan.expired} expiré{plan.expired > 1 ? 's' : ''}</span>
-                                        <span className="text-[10px] text-slate-400">{plan.cancelled} annulé{plan.cancelled > 1 ? 's' : ''}</span>
+                                        <span className="text-[10px] text-slate-400">{t('expiredCount', { count: plan.expired })}</span>
+                                        <span className="text-[10px] text-slate-400">{t('cancelledCount', { count: plan.cancelled })}</span>
                                         {plan.gifted > 0 && (
-                                            <span className="text-[10px] text-purple-400">{plan.gifted} offert{plan.gifted > 1 ? 's' : ''}</span>
+                                            <span className="text-[10px] text-purple-400">{t('giftedCount', { count: plan.gifted })}</span>
                                         )}
                                     </div>
                                 </div>

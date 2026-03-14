@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticLight } from '@/lib/haptics';
 import BottomSheet from '@/components/ui/BottomSheet';
+import { useTranslations } from 'next-intl';
 
 import { SafeUser } from '@/types';
 import useLoginModal from '@/hooks/useLoginModal';
@@ -34,6 +35,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
 }) => {
     const loginModal = useLoginModal();
     const isMobile = useMediaQuery('(max-width: 768px)');
+    const t = useTranslations('toasts');
 
     const [mounted, setMounted] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -122,7 +124,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             });
 
             const newWishlist = response.data;
-            toast.success('Collection créée !');
+            toast.success(t('collections.created'));
 
             // Optimistic: add the new wishlist to local state
             setLocalWishlists(current => [...current, {
@@ -133,7 +135,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             setIsCreating(false);
         } catch (error) {
             console.error(error);
-            toast.error('Erreur lors de la création de la collection');
+            toast.error(t('collections.createError'));
         } finally {
             setIsLoading(false);
         }
@@ -159,18 +161,18 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
         try {
             if (hasListing) {
                 await axios.delete(`/api/wishlists/${wishlistId}?listingId=${listingId}`);
-                toast.success("Retiré de la collection");
+                toast.success(t('collections.removed'));
             } else {
                 await axios.post(`/api/wishlists/${wishlistId}`, {
                     listingId
                 });
-                toast.success("Ajouté à la collection");
+                toast.success(t('collections.added'));
             }
         } catch (error) {
             // Rollback on error
             setLocalWishlists(previousWishlists);
             console.error(error);
-            toast.error("Une erreur est survenue");
+            toast.error(t('common.error'));
         }
     };
 
@@ -214,9 +216,9 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
                     await Promise.all(listsToRemove.map((w: any) => axios.delete(`/api/wishlists/${w.id}?listingId=${listingId}`)));
                 }
 
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
+                        t={toastData}
                         message="Retiré de tous les favoris"
                         onUndo={async () => {
                             // Restore local state immediately
@@ -235,9 +237,9 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             } else {
                 await axios.post(`/api/favorites/${listingId}`);
 
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
+                        t={toastData}
                         message="Ajouté aux favoris"
                         onUndo={async () => {
                             // Restore local state immediately
@@ -252,7 +254,7 @@ const SaveListingMenu: React.FC<SaveListingMenuProps> = ({
             // Revert
             setLocalFavoriteIds(previousFavoriteIds);
             setLocalWishlists(previousWishlists);
-            toast.error('Une erreur est survenue');
+            toast.error(t('common.error'));
         }
     };
 

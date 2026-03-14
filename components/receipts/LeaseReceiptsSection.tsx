@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import axios from 'axios';
 import {
     Receipt,
@@ -74,6 +75,7 @@ export default function LeaseReceiptsSection({
     applicationId,
     propertyAddress,
 }: LeaseReceiptsSectionProps) {
+    const t = useTranslations('toasts');
     const [receipts, setReceipts] = useState<ReceiptData[]>([]);
     const [loading, setLoading] = useState(true);
     const [showGenerateForm, setShowGenerateForm] = useState(false);
@@ -124,7 +126,7 @@ export default function LeaseReceiptsSection({
                 year: selected.year,
                 month: selected.month,
             });
-            toast.success('Quittance generee avec succes');
+            toast.success(t('receipts.generated'));
             setShowGenerateForm(false);
             await fetchReceipts();
         } catch (err: any) {
@@ -150,7 +152,7 @@ export default function LeaseReceiptsSection({
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch {
-            toast.error('Erreur lors du telechargement');
+            toast.error(t('receipts.downloadError'));
         } finally {
             setDownloadingId(null);
         }
@@ -160,10 +162,10 @@ export default function LeaseReceiptsSection({
         setSendingId(receiptId);
         try {
             await axios.post(`/api/receipts/${receiptId}/send`);
-            toast.success('Quittance envoyee au locataire');
+            toast.success(t('receipts.sent'));
             await fetchReceipts();
         } catch {
-            toast.error("Erreur lors de l'envoi");
+            toast.error(t('receipts.sendError'));
         } finally {
             setSendingId(null);
         }

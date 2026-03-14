@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useForm, FieldValues, SubmitHandler } from "react-hook-form";
 
+import { useTranslations } from "next-intl";
 import { SafeListing } from "@/types";
 import EditSectionFooter from "./EditSectionFooter";
 import MapboxAddressSelect, { AddressSelectValue } from "@/components/inputs/MapboxAddressSelect";
@@ -19,6 +20,7 @@ interface LocationSectionProps {
 
 const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -90,10 +92,10 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             }
         })
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Emplacement enregistré"
+                        t={toastData}
+                        message={t('edit.location.saved')}
                         type="success"
                     />
                 ));
@@ -101,10 +103,10 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
             })
             .catch((error) => {
                 console.error("Update error full:", error);
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Une erreur est survenue"
+                        t={toastData}
+                        message={t('edit.location.error')}
                         type="error"
                     />
                 ));
@@ -136,7 +138,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({ listing }) => {
 
             <EditSectionFooter
                 disabled={isLoading}
-                label="Enregistrer"
+                label={t('edit.save')}
                 onClick={handleSubmit(onSubmit)}
             />
         </div>

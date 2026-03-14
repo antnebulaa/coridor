@@ -21,7 +21,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     data,
     selected
 }) => {
-    const t = useTranslations('inbox.conversation');
+    const t = useTranslations('inbox');
     const session = useSession();
     const router = useRouter();
     const otherUser = useOtherUser(data);
@@ -55,44 +55,57 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
 
     const lastMessageText = useMemo(() => {
         if (lastMessage?.image) {
-            return t('sentImage');
+            return t('conversation.sentImage');
         }
 
         if (lastMessage?.body) {
             // Translate system messages
-            if (lastMessage.body === 'LEASE_SENT_FOR_SIGNATURE') return 'Bail envoyé pour signature';
-            if (lastMessage.body === 'INVITATION_VISITE') return 'Invitation à une visite';
-            if (lastMessage.body.startsWith('VISIT_CONFIRMED|')) return 'Visite confirmée';
-            if (lastMessage.body.startsWith('APPLICATION_REJECTED|')) return 'Candidature déclinée';
-            if (lastMessage.body.startsWith('INSPECTION_SCHEDULED|')) return "🗓️ État des lieux planifié";
-            if (lastMessage.body.startsWith('INSPECTION_CONFIRMED|')) return "✅ Créneau EDL confirmé";
-            if (lastMessage.body.startsWith('INSPECTION_REMINDER|')) return "🔔 Rappel état des lieux";
-            if (lastMessage.body.startsWith('INSPECTION_STARTED|')) return "🏠 État des lieux démarré";
-            if (lastMessage.body.startsWith('INSPECTION_COMPLETED|')) return '✍️ Bailleur a signé';
-            if (lastMessage.body.startsWith('INSPECTION_SIGNED|')) return '✅ État des lieux signé';
-            if (lastMessage.body.startsWith('INSPECTION_SIGN_LINK_SENT|')) return '✉️ Lien de signature envoyé';
-            if (lastMessage.body.startsWith('INSPECTION_PDF_READY|')) return '📄 PDF disponible';
-            if (lastMessage.body.startsWith('INSPECTION_CANCELLED|')) return '❌ État des lieux annulé';
-            if (lastMessage.body.startsWith('INSPECTION_RESCHEDULED|')) return '🔄 EDL reprogrammé';
-            if (lastMessage.body.startsWith('INSPECTION_AMENDMENT_REQUESTED|')) return '⚠️ Rectification demandée';
+            if (lastMessage.body === 'LEASE_SENT_FOR_SIGNATURE') return t('systemMessages.leaseSentForSignature');
+            if (lastMessage.body === 'INVITATION_VISITE') return t('systemMessages.visitInvitation');
+            if (lastMessage.body.startsWith('VISIT_CONFIRMED|')) return t('systemMessages.visitConfirmed');
+            if (lastMessage.body.startsWith('APPLICATION_REJECTED|')) return t('systemMessages.applicationRejected');
+            if (lastMessage.body.startsWith('INSPECTION_SCHEDULED|')) return `🗓️ ${t('systemMessages.inspectionScheduled')}`;
+            if (lastMessage.body.startsWith('INSPECTION_CONFIRMED|')) return `✅ ${t('systemMessages.inspectionConfirmed')}`;
+            if (lastMessage.body.startsWith('INSPECTION_REMINDER|')) return `🔔 ${t('systemMessages.inspectionReminder')}`;
+            if (lastMessage.body.startsWith('INSPECTION_STARTED|')) return `🏠 ${t('systemMessages.inspectionStarted')}`;
+            if (lastMessage.body.startsWith('INSPECTION_COMPLETED|')) return `✍️ ${t('systemMessages.inspectionCompleted')}`;
+            if (lastMessage.body.startsWith('INSPECTION_SIGNED|')) return `✅ ${t('systemMessages.inspectionSigned')}`;
+            if (lastMessage.body.startsWith('INSPECTION_SIGN_LINK_SENT|')) return `✉️ ${t('systemMessages.inspectionSignLinkSent')}`;
+            if (lastMessage.body.startsWith('INSPECTION_PDF_READY|')) return `📄 ${t('systemMessages.inspectionPdfReady')}`;
+            if (lastMessage.body.startsWith('INSPECTION_CANCELLED|')) return `❌ ${t('systemMessages.inspectionCancelled')}`;
+            if (lastMessage.body.startsWith('INSPECTION_RESCHEDULED|')) return `🔄 ${t('systemMessages.inspectionRescheduled')}`;
+            if (lastMessage.body.startsWith('INSPECTION_AMENDMENT_REQUESTED|')) return `⚠️ ${t('systemMessages.amendmentRequested')}`;
             if (lastMessage.body.startsWith('INSPECTION_AMENDMENT_RESPONDED|')) {
                 const status = lastMessage.body.split('|')[3];
-                return status === 'ACCEPTED' ? '✅ Rectification acceptée' : '❌ Rectification refusée';
+                return status === 'ACCEPTED' ? `✅ ${t('systemMessages.amendmentAccepted')}` : `❌ ${t('systemMessages.amendmentRejected')}`;
             }
             if (lastMessage.body.startsWith('DEPOSIT_EVENT|')) {
                 const eventType = lastMessage.body.split('|')[1];
-                const DEPOSIT_LABELS: Record<string, string> = {
-                    LEASE_SIGNED: '🏦 Dépôt de garantie dû',
-                    PAYMENT_CONFIRMED: '💳 Versement confirmé',
-                    RETENTIONS_PROPOSED: '📋 Retenues proposées',
-                    TENANT_AGREED: '🤝 Accord trouvé',
-                    TENANT_PARTIAL_AGREED: '⚖️ Accord partiel',
-                    TENANT_DISPUTED: '⚠️ Dépôt contesté',
-                    DEADLINE_OVERDUE: '🚨 Délai dépassé',
-                    FULL_RELEASE: '✅ Dépôt restitué',
-                    RESOLVED: '✅ Dépôt — dossier clos',
+                const DEPOSIT_LABEL_KEYS: Record<string, string> = {
+                    LEASE_SIGNED: 'leaseSigned',
+                    PAYMENT_CONFIRMED: 'paymentConfirmed',
+                    RETENTIONS_PROPOSED: 'retentionsProposed',
+                    TENANT_AGREED: 'tenantAgreed',
+                    TENANT_PARTIAL_AGREED: 'tenantPartialAgreed',
+                    TENANT_DISPUTED: 'tenantDisputed',
+                    DEADLINE_OVERDUE: 'deadlineOverdue',
+                    FULL_RELEASE: 'fullRelease',
+                    RESOLVED: 'resolved',
                 };
-                return DEPOSIT_LABELS[eventType] || '🏦 Dépôt de garantie';
+                const DEPOSIT_EMOJIS: Record<string, string> = {
+                    LEASE_SIGNED: '🏦',
+                    PAYMENT_CONFIRMED: '💳',
+                    RETENTIONS_PROPOSED: '📋',
+                    TENANT_AGREED: '🤝',
+                    TENANT_PARTIAL_AGREED: '⚖️',
+                    TENANT_DISPUTED: '⚠️',
+                    DEADLINE_OVERDUE: '🚨',
+                    FULL_RELEASE: '✅',
+                    RESOLVED: '✅',
+                };
+                const key = DEPOSIT_LABEL_KEYS[eventType];
+                const emoji = DEPOSIT_EMOJIS[eventType] || '🏦';
+                return `${emoji} ${key ? t(`depositLabels.${key}`) : t('depositLabels.default')}`;
             }
             if (lastMessage.body.startsWith('CORIDOR_DOCUMENT|')) {
                 const parts = lastMessage.body.split('|');
@@ -102,7 +115,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             return lastMessage.body;
         }
 
-        return t('new');
+        return t('conversation.new');
     }, [lastMessage, t]);
 
     // Application Status Logic
@@ -140,7 +153,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
 
         // 3. Determine label and color — lease status takes priority
         let color = 'bg-gray-400';
-        let label = t('status.pending');
+        let label = t('conversation.status.pending');
 
         // Check EDL status (highest priority — derived from system messages)
         const messages = data.messages || [];
@@ -155,63 +168,63 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
 
         if (hasDepositDisputed && !hasDepositResolved) {
             color = 'bg-red-500';
-            label = 'Dépôt contesté';
+            label = t('applicationStatus.depositDisputed');
         } else if (hasDepositOverdue && !hasDepositResolved) {
             color = 'bg-red-500';
-            label = 'Dépôt en retard';
+            label = t('applicationStatus.depositOverdue');
         } else if (hasEdlSigned) {
             color = 'bg-green-500';
-            label = 'EDL signé';
+            label = t('applicationStatus.edlSigned');
         } else if (hasEdlStarted) {
             color = 'bg-amber-500';
-            label = 'EDL en cours';
+            label = t('applicationStatus.edlInProgress');
         } else if (hasEdlScheduled) {
             color = 'bg-amber-400';
-            label = 'EDL planifié';
+            label = t('applicationStatus.edlScheduled');
         } else if (application.leaseStatus === 'SIGNED') {
             color = 'bg-green-500';
-            label = 'Bail signé';
+            label = t('applicationStatus.leaseSigned');
         } else if (application.leaseStatus === 'PENDING_SIGNATURE') {
             color = 'bg-blue-500';
-            label = 'Bail en signature';
+            label = t('applicationStatus.leaseInSignature');
         } else {
             switch (application.status) {
                 case 'SENT':
                     color = 'bg-blue-500';
-                    label = t('status.sent');
+                    label = t('conversation.status.sent');
                     break;
                 case 'REJECTED':
                     color = 'bg-red-500';
-                    label = t('status.rejected');
+                    label = t('conversation.status.rejected');
                     break;
                 case 'VISIT_PROPOSED':
                     color = 'bg-purple-500';
-                    label = t('status.visitProposed');
+                    label = t('conversation.status.visitProposed');
                     break;
                 case 'VISIT_CONFIRMED':
                     color = 'bg-indigo-500';
-                    label = t('status.visitConfirmed');
+                    label = t('conversation.status.visitConfirmed');
                     break;
                 case 'SELECTED':
                     color = 'bg-green-500';
-                    label = 'Candidature retenue';
+                    label = t('applicationStatus.selected');
                     break;
                 case 'SHORTLISTED':
                     color = 'bg-emerald-500';
-                    label = 'Présélectionné';
+                    label = t('applicationStatus.shortlisted');
                     break;
                 case 'FINALIST':
                     color = 'bg-emerald-500';
-                    label = 'Finaliste';
+                    label = t('applicationStatus.finalist');
                     break;
                 case 'ACCEPTED':
                     color = 'bg-green-500';
-                    label = t('status.accepted');
+                    label = t('conversation.status.accepted');
                     break;
                 case 'PENDING':
                 default:
                     color = 'bg-yellow-500';
-                    label = t('status.pending');
+                    label = t('conversation.status.pending');
                     break;
             }
         }
@@ -226,7 +239,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
     }, [data.messages, data.users, t]);
 
     // PSEUDONYM LOGIC
-    const { showPseudonym, displayName, avatarSeed } = useMemo(() => {
+    const { showPseudonym, displayName, avatarSeed, avatarEmoji } = useMemo(() => {
         const listing = data.listing as any;
         const ownerId = listing?.rentalUnit?.property?.owner?.id;
         const currentUserId = session.data?.user?.id;
@@ -249,6 +262,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                     showPseudonym: false,
                     displayName: formatted,
                     avatarSeed: otherUser?.email || otherUser?.name,
+                    avatarEmoji: null as string | null,
                 };
             }
             // Anonymous: show pseudonym
@@ -256,6 +270,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 showPseudonym: true,
                 displayName: (otherUser as any).pseudonymFull,
                 avatarSeed: (otherUser as any).pseudonymFull,
+                avatarEmoji: (otherUser as any).pseudonymEmoji || null,
             };
         }
 
@@ -265,14 +280,14 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
             const formatted = names.length > 1
                 ? `${names[0]} ${names[names.length - 1][0] ?? ''}.`
                 : names[0];
-            return { showPseudonym: false, displayName: formatted, avatarSeed: otherUser?.email || otherUser?.name };
+            return { showPseudonym: false, displayName: formatted, avatarSeed: otherUser?.email || otherUser?.name, avatarEmoji: null as string | null };
         }
 
         const l = data.listing as any;
         if (l?.category && l?.propertyAdjective) {
-            return { showPseudonym: false, displayName: `${l.category} ${l.propertyAdjective}`, avatarSeed: otherUser?.email || otherUser?.name };
+            return { showPseudonym: false, displayName: `${l.category} ${l.propertyAdjective}`, avatarSeed: otherUser?.email || otherUser?.name, avatarEmoji: null as string | null };
         }
-        return { showPseudonym: false, displayName: l?.title || data.name || t('unknownUser'), avatarSeed: otherUser?.email || otherUser?.name };
+        return { showPseudonym: false, displayName: l?.title || data.name || t('conversation.unknownUser'), avatarSeed: otherUser?.email || otherUser?.name, avatarEmoji: null as string | null };
     }, [data, otherUser, session.data?.user?.id, applicationStatus, applicationLeaseStatus, t]);
 
     // AVATAR LOGIC
@@ -316,7 +331,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                 selected ? 'bg-secondary' : 'bg-background'
             )}
         >
-            <Avatar src={avatarSrc} seed={avatarSeed} size={52} />
+            <Avatar src={avatarSrc} seed={avatarSeed} size={52} emoji={avatarEmoji} />
             <div className="min-w-0 flex-1">
                 <div className="focus:outline-none flex flex-col gap-px">
                     <div className="flex justify-between items-center mb-0">

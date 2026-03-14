@@ -5,6 +5,9 @@ import { sendEmail } from "@/lib/email";
 import { createNotification } from "@/libs/notifications";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getServerTranslation } from '@/lib/serverTranslations';
+
+const t = getServerTranslation('emails');
 
 /**
  * Cron job for visit confirmation reminders and auto-cancellation.
@@ -72,15 +75,15 @@ export async function GET(request: Request) {
             await createNotification({
                 userId: visit.candidateId,
                 type: 'visit',
-                title: 'Visite annulée automatiquement',
-                message: `Votre visite du ${visitDate} à ${visit.startTime} a été annulée car vous ne l'avez pas confirmée dans les 24h.`,
+                title: t('visit.cancelled.notifTitle'),
+                message: t('visit.cancelled.notifMessage', { date: visitDate, time: visit.startTime }),
                 link: '/dashboard'
             });
 
             sendPushNotification({
                 userId: visit.candidateId,
-                title: 'Visite annulée',
-                body: `Votre visite du ${visitDate} à ${visit.startTime} a été annulée (non confirmée sous 24h).`,
+                title: t('visit.cancelled.pushTitle'),
+                body: t('visit.cancelled.pushBody', { date: visitDate, time: visit.startTime }),
                 url: '/dashboard',
                 type: 'visit'
             }).catch(err => console.error("[Push] Failed:", err));
@@ -88,14 +91,13 @@ export async function GET(request: Request) {
             if (visit.candidate.email) {
                 sendEmail(
                     visit.candidate.email,
-                    `Visite annulée - ${visitDate}`,
+                    t('visit.cancelled.emailSubject', { date: visitDate }),
                     `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #111;">Visite annulée</h2>
-                        <p>Bonjour ${visit.candidate.name || ''},</p>
-                        <p>Votre visite prévue le <strong>${visitDate} à ${visit.startTime}</strong> a été automatiquement annulée car vous ne l'avez pas confirmée dans les 24 heures.</p>
-                        <p>Si vous souhaitez toujours visiter ce bien, vous pouvez réserver un nouveau créneau.</p>
-                        <p style="color: #666; margin-top: 24px; font-size: 14px;">— L'équipe Coridor</p>
+                        <h2 style="color: #111;">${t('visit.cancelled.emailHeading')}</h2>
+                        <p>${t('visit.cancelled.emailBody', { name: visit.candidate.name || '', date: visitDate, time: visit.startTime })}</p>
+                        <p>${t('visit.cancelled.emailRebook')}</p>
+                        <p style="color: #666; margin-top: 24px; font-size: 14px;">${t('visit.cancelled.emailSignature')}</p>
                     </div>
                     `
                 ).catch(err => console.error("[Email] Failed:", err));
@@ -105,15 +107,15 @@ export async function GET(request: Request) {
             await createNotification({
                 userId: landlordId,
                 type: 'visit',
-                title: 'Visite annulée (non confirmée)',
-                message: `La visite de ${visit.candidate.name || 'un candidat'} du ${visitDate} à ${visit.startTime} a été annulée automatiquement (non confirmée sous 24h).`,
+                title: t('visit.cancelled.landlordNotifTitle'),
+                message: t('visit.cancelled.landlordNotifMessage', { name: visit.candidate.name || 'un candidat', date: visitDate, time: visit.startTime }),
                 link: '/calendar'
             });
 
             sendPushNotification({
                 userId: landlordId,
-                title: 'Visite annulée automatiquement',
-                body: `La visite de ${visit.candidate.name || 'un candidat'} du ${visitDate} n'a pas été confirmée et a été annulée.`,
+                title: t('visit.cancelled.landlordPushTitle'),
+                body: t('visit.cancelled.landlordPushBody', { name: visit.candidate.name || 'un candidat', date: visitDate }),
                 url: '/calendar',
                 type: 'visit'
             }).catch(err => console.error("[Push] Failed:", err));
@@ -151,16 +153,16 @@ export async function GET(request: Request) {
             await createNotification({
                 userId: visit.candidateId,
                 type: 'visit',
-                title: 'Confirmez votre visite',
-                message: `Rappel : confirmez votre visite du ${visitDate} à ${visit.startTime} avant qu'elle ne soit annulée automatiquement.`,
+                title: t('visit.reminder.notifTitle'),
+                message: t('visit.reminder.notifMessage', { date: visitDate, time: visit.startTime }),
                 link: '/dashboard'
             });
 
             // Push notification
             sendPushNotification({
                 userId: visit.candidateId,
-                title: '⏰ Confirmez votre visite',
-                body: `Plus que 12h pour confirmer votre visite du ${visitDate} à ${visit.startTime}`,
+                title: t('visit.reminder.pushTitle'),
+                body: t('visit.reminder.pushBody', { date: visitDate, time: visit.startTime }),
                 url: '/dashboard',
                 type: 'visit'
             }).catch(err => console.error("[Push] Failed:", err));
@@ -169,20 +171,18 @@ export async function GET(request: Request) {
             if (visit.candidate.email) {
                 sendEmail(
                     visit.candidate.email,
-                    `Rappel : confirmez votre visite du ${visitDate}`,
+                    t('visit.reminder.emailSubject', { date: visitDate }),
                     `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #111;">Confirmez votre visite</h2>
-                        <p>Bonjour ${visit.candidate.name || ''},</p>
-                        <p>Vous avez réservé une visite pour le <strong>${visitDate} à ${visit.startTime}</strong>.</p>
-                        <p>Il vous reste <strong>12 heures</strong> pour confirmer votre présence, sinon la visite sera automatiquement annulée.</p>
+                        <h2 style="color: #111;">${t('visit.reminder.emailHeading')}</h2>
+                        <p>${t('visit.reminder.emailBody', { name: visit.candidate.name || '', date: visitDate, time: visit.startTime })}</p>
                         <p style="margin-top: 24px;">
                             <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr'}/dashboard"
                                style="background: #111; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                                Confirmer ma visite
+                                ${t('visit.reminder.emailCta')}
                             </a>
                         </p>
-                        <p style="color: #666; margin-top: 24px; font-size: 14px;">— L'équipe Coridor</p>
+                        <p style="color: #666; margin-top: 24px; font-size: 14px;">${t('visit.reminder.emailSignature')}</p>
                     </div>
                     `
                 ).catch(err => console.error("[Email] Failed:", err));

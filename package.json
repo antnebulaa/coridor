@@ -15,7 +15,10 @@
     "cap:android:run": "npx cap run android",
     "cap:ios:run": "npx cap run ios",
     "cap:dev:android": "npx cap run android --livereload --external",
-    "cap:dev:ios": "npx cap run ios --livereload --external"
+    "cap:dev:ios": "npx cap run ios --livereload --external",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -40,6 +43,7 @@
     "@prisma/client": "^5.22.0",
     "@react-google-maps/api": "^2.20.7",
     "@react-pdf/renderer": "^4.3.1",
+    "@sentry/nextjs": "^10.43.0",
     "@stripe/stripe-js": "^8.7.0",
     "@supabase/supabase-js": "^2.93.3",
     "@types/bcryptjs": "^2.4.6",
@@ -98,6 +102,7 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.1.0",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.10",

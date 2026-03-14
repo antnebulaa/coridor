@@ -5,6 +5,7 @@ import prisma from "@/libs/prismadb";
 import { sendEmail } from "@/lib/email";
 import { EmailTemplate } from "@/components/emails/EmailTemplate";
 import { PLAN_INFO } from "@/lib/plan-features";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 export async function POST(
     request: Request,
@@ -68,6 +69,8 @@ export async function POST(
         const endDate = new Date(startDate);
         endDate.setMonth(endDate.getMonth() + durationMonths);
 
+        const t = getServerTranslation('emails');
+
         // Create subscription, update user plan, and notify in a transaction
         const subscription = await prisma.$transaction(async (tx) => {
             const newSubscription = await tx.subscription.create({
@@ -89,13 +92,13 @@ export async function POST(
             });
 
             // Notify the user about their gifted subscription
-            const monthLabel = durationMonths === 1 ? "1 mois" : `${durationMonths} mois`;
+            const monthLabel = durationMonths === 1 ? t('subscription.gift.oneMonth') : t('subscription.gift.nMonths', { count: durationMonths });
             await tx.notification.create({
                 data: {
                     userId,
                     type: "SUBSCRIPTION_GIFT",
-                    title: `Vous avez recu un abonnement ${plan} !`,
-                    message: `Un abonnement ${plan} de ${monthLabel} vous a ete offert. ${reason.trim() ? `Raison : ${reason.trim()}` : ""}`.trim(),
+                    title: t('subscription.gift.notifTitle', { plan }),
+                    message: t('subscription.gift.notifMessage', { plan, duration: monthLabel, reason: reason.trim() ? `${t('subscription.gift.reasonLabel')} ${reason.trim()}` : '' }).trim(),
                     link: "/account/subscription",
                 },
             });
@@ -106,7 +109,7 @@ export async function POST(
                     userId,
                     subscriptionId: newSubscription.id,
                     amountCents: 0,
-                    description: `Abonnement ${plan} offert — ${monthLabel}`,
+                    description: t('subscription.gift.invoiceDescription', { plan, duration: monthLabel }),
                     status: "PAID",
                 },
             });
@@ -125,31 +128,30 @@ export async function POST(
                 const planInfo = PLAN_INFO[plan] || PLAN_INFO.FREE;
                 const monthLabel =
                     durationMonths === 1
-                        ? "1 mois"
-                        : `${durationMonths} mois`;
+                        ? t('subscription.gift.oneMonth')
+                        : t('subscription.gift.nMonths', { count: durationMonths });
                 const userName =
                     targetUserEmail.firstName ||
                     targetUserEmail.name ||
-                    "Cher utilisateur";
+                    t('subscription.gift.defaultUser');
                 const appUrl =
                     process.env.NEXT_PUBLIC_APP_URL || "https://coridor.fr";
 
                 await sendEmail(
                     targetUserEmail.email,
-                    `Un cadeau de l'équipe Coridor`,
+                    t('subscription.gift.emailSubject'),
                     createElement(
                         EmailTemplate,
                         {
-                            heading: `${userName}, un cadeau pour vous !`,
-                            actionLabel:
-                                "Découvrir mes nouvelles fonctionnalités",
+                            heading: t('subscription.gift.emailHeading', { name: userName }),
+                            actionLabel: t('subscription.gift.emailCta'),
                             actionUrl: `${appUrl}/account/subscription`,
                             children: null,
                         },
                         createElement(
                             "p",
                             { style: { margin: "0 0 16px" } },
-                            `Nous vous avons offert un abonnement ${planInfo.displayName} pendant ${monthLabel}.`
+                            t('subscription.gift.emailBody', { plan: planInfo.displayName, duration: monthLabel })
                         ),
                         reason.trim()
                             ? createElement(
@@ -160,7 +162,7 @@ export async function POST(
                                           color: "#666",
                                       },
                                   },
-                                  `Raison : ${reason.trim()}`
+                                  `${t('subscription.gift.reasonLabel')} ${reason.trim()}`
                               )
                             : null,
                         createElement(
@@ -171,7 +173,7 @@ export async function POST(
                                     fontWeight: "600",
                                 },
                             },
-                            "Ce que votre nouveau plan inclut :"
+                            t('subscription.gift.emailPlanIncludes')
                         ),
                         createElement(
                             "ul",

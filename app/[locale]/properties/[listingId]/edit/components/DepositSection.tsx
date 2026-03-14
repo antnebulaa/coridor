@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { SafeListing } from '@/types';
 import Heading from '@/components/Heading';
 import { Shield, ArrowRight, Loader2, AlertTriangle, Clock, CircleCheck } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface DepositData {
   applicationId: string;
@@ -17,25 +18,26 @@ interface DepositData {
   events: { createdAt: string; type: string; description: string }[];
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  AWAITING_PAYMENT: { label: 'En attente du versement', color: 'text-amber-700', bg: 'bg-amber-50' },
-  PAID: { label: 'Versé', color: 'text-green-700', bg: 'bg-green-50' },
-  HELD: { label: 'Détenu', color: 'text-blue-700', bg: 'bg-blue-50' },
-  EXIT_INSPECTION: { label: 'EDL de sortie', color: 'text-orange-700', bg: 'bg-orange-50' },
-  RETENTIONS_PROPOSED: { label: 'Retenues proposées', color: 'text-orange-700', bg: 'bg-orange-50' },
-  PARTIALLY_RELEASED: { label: 'Restitution partielle', color: 'text-amber-700', bg: 'bg-amber-50' },
-  FULLY_RELEASED: { label: 'Restitué', color: 'text-green-700', bg: 'bg-green-50' },
-  DISPUTED: { label: 'Contesté', color: 'text-red-700', bg: 'bg-red-50' },
-  RESOLVED: { label: 'Clos', color: 'text-green-700', bg: 'bg-green-50' },
-};
-
 interface DepositSectionProps {
   listing: SafeListing;
 }
 
 const DepositSection: React.FC<DepositSectionProps> = ({ listing }) => {
+  const t = useTranslations('properties.edit.deposit');
   const [deposits, setDeposits] = useState<DepositData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    AWAITING_PAYMENT: { label: t('status.awaitingPayment'), color: 'text-amber-700', bg: 'bg-amber-50' },
+    PAID: { label: t('status.paid'), color: 'text-green-700', bg: 'bg-green-50' },
+    HELD: { label: t('status.held'), color: 'text-blue-700', bg: 'bg-blue-50' },
+    EXIT_INSPECTION: { label: t('status.exitInspection'), color: 'text-orange-700', bg: 'bg-orange-50' },
+    RETENTIONS_PROPOSED: { label: t('status.retentionsProposed'), color: 'text-orange-700', bg: 'bg-orange-50' },
+    PARTIALLY_RELEASED: { label: t('status.partiallyReleased'), color: 'text-amber-700', bg: 'bg-amber-50' },
+    FULLY_RELEASED: { label: t('status.fullyReleased'), color: 'text-green-700', bg: 'bg-green-50' },
+    DISPUTED: { label: t('status.disputed'), color: 'text-red-700', bg: 'bg-red-50' },
+    RESOLVED: { label: t('status.resolved'), color: 'text-green-700', bg: 'bg-green-50' },
+  };
 
   useEffect(() => {
     // Find active applications for this listing to fetch their deposits
@@ -62,14 +64,14 @@ const DepositSection: React.FC<DepositSectionProps> = ({ listing }) => {
   if (deposits.length === 0) {
     return (
       <div>
-        <Heading title="Dépôt de garantie" subtitle="Suivi du dépôt de garantie pour ce bien" />
+        <Heading title={t('title')} subtitle={t('subtitle')} />
         <div className="mt-6 text-center py-8">
           <Shield size={40} className="text-gray-300 mx-auto mb-3" />
           <div className="text-[14px] text-gray-500">
-            Aucun dépôt de garantie en cours pour ce bien.
+            {t('empty')}
           </div>
           <div className="text-[12px] text-gray-400 mt-1">
-            Le suivi démarre automatiquement à la signature du bail.
+            {t('emptyDescription')}
           </div>
         </div>
       </div>
@@ -78,7 +80,7 @@ const DepositSection: React.FC<DepositSectionProps> = ({ listing }) => {
 
   return (
     <div>
-      <Heading title="Dépôt de garantie" subtitle="Suivi du dépôt de garantie pour ce bien" />
+      <Heading title={t('title')} subtitle={t('subtitle')} />
 
       <div className="mt-6 space-y-4">
         {deposits.map((deposit) => {
@@ -112,8 +114,7 @@ const DepositSection: React.FC<DepositSectionProps> = ({ listing }) => {
                 <div className="mx-4 mb-3 flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
                   <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
                   <div className="text-[12px] text-red-700">
-                    Retard de {deposit.overdueMonths} mois — pénalité{' '}
-                    {(deposit.penaltyAmountCents / 100).toFixed(0)}€
+                    {t('overdue', { months: deposit.overdueMonths, penalty: (deposit.penaltyAmountCents / 100).toFixed(0) })}
                   </div>
                 </div>
               )}
@@ -129,7 +130,7 @@ const DepositSection: React.FC<DepositSectionProps> = ({ listing }) => {
                       <div className="mx-4 mb-3 flex gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
                         <Clock size={14} className="text-amber-500 shrink-0 mt-0.5" />
                         <div className="text-[12px] text-amber-700">
-                          {daysLeft} jour{daysLeft > 1 ? 's' : ''} pour restituer
+                          {t('daysToReturn', { days: daysLeft })}
                         </div>
                       </div>
                     );
@@ -163,7 +164,7 @@ const DepositSection: React.FC<DepositSectionProps> = ({ listing }) => {
                 className="flex items-center justify-between px-4 py-3 border-t border-gray-100 hover:bg-gray-50 transition"
               >
                 <span className="text-[13px] font-medium text-blue-600">
-                  Voir le suivi complet
+                  {t('viewFullTracking')}
                 </span>
                 <ArrowRight size={14} className="text-blue-400" />
               </Link>

@@ -416,6 +416,10 @@
 - [x] ~~Sondages V2 (globaux, 3 options, géolocalisation auto)~~ (fait)
 - [ ] Génération PDF de factures
 
+### Monitoring & Tests
+- [✅] Sentry monitoring — `@sentry/nextjs` v10, configs client/server/edge, `instrumentation.ts`, `SentryUserIdentifier` (identification utilisateur connecté), error boundary locale (`app/[locale]/error.tsx`), source maps avec suppression après upload, `enabled: false` sans DSN (pas d'interférence en dev), page confidentialité mise à jour (monitoring technique + sous-traitants RGPD)
+- [✅] Tests E2E Playwright — `@playwright/test`, 8 tests critiques (dashboard, navigation, finances, création annonce, messagerie, suivi loyers, régularisation, EDL), setup auth adapté au LoginModal, projets desktop (Chromium) + mobile (iPhone 14), CI GitHub Actions (`.github/workflows/playwright.yml`), `data-testid="user-menu-trigger"` sur UserMenu
+
 ### Pistes futures
 - [x] ~~Module fiscal (aide déclaration revenus fonciers)~~ (fait — Simulateur fiscal V1, comparaison micro/réel, déficit foncier, LMNP)
 - [x] ~~Simulateur d'investissement locatif~~ (fait — moteur complet rendement/cash-flow/TRI/VAN/plus-value, sauvegarde/partage, export PDF, comparaison placements)
@@ -474,3 +478,4 @@
 - [x] ~~Pages account wrappées dans Container~~ (corrigé — suppression Container/max-w sur 12 pages account qui doublonnaient avec le grid `AccountClientLayout`)
 - [x] ~~Couverture annonce ne change pas après réordonnancement des photos~~ (corrigé — `syncListingCardData` concaténait les images par source sans tri final → ajout `.sort((a, b) => a.order - b.order)` après déduplication)
 - [x] ~~Page édition propriété : scroll desktop bloqué~~ (corrigé — grid CSS implicit `auto` row sizing empêchait `overflow-y-auto` → ajout `md:grid-rows-[1fr]`)
+- [x] ~~Hydratation mismatch HomeClient MapMain~~ (corrigé — `useMediaQuery` utilisait `typeof window !== 'undefined'` dans `useState` initial → serveur rendait `false`, client desktop `true` → mismatch sur `shouldRenderMap`. Fix : `useState(false)` + mise à jour dans `useEffect`)

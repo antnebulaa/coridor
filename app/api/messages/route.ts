@@ -1,8 +1,68 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/libs/prismadb";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { broadcastNewMessage } from "@/lib/supabaseServer";
 import webPush from "web-push";
+import getMessages from "@/app/actions/getMessages";
+
+/**
+ * GET /api/messages?conversationId=X&cursor=Y&limit=Z
+ * Cursor-based pagination for loading older messages on scroll up.
+ */
+export async function GET(request: NextRequest) {
+    try {
+        const user = await getCurrentUser();
+        if (!user?.id) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+
+        const { searchParams } = request.nextUrl;
+        const conversationId = searchParams.get('conversationId');
+        const cursor = searchParams.get('cursor') || undefined;
+        const limit = parseInt(searchParams.get('limit') || '50', 10);
+
+        if (!conversationId) {
+            return new NextResponse('Missing conversationId', { status: 400 });
+        }
+
+        // Verify user is a participant of this conversation
+        const conversation = await prisma.conversation.findFirst({
+            where: {
+                id: conversationId,
+                users: { some: { id: user.id } },
+            },
+            select: { id: true }
+        });
+
+        if (!conversation) {
+            return new NextResponse('Not found', { status: 404 });
+        }
+
+        const result = await getMessages({
+            conversationId,
+            cursor,
+            limit: Math.min(limit, 100), // Cap at 100
+        });
+
+        // Serialize dates for client
+        // Note: messageInclude selects minimal sender (id,name,email,image) and seen (id,email)
+        const safeMessages = result.messages.map((message: any) => ({
+            ...message,
+            createdAt: message.createdAt instanceof Date
+                ? message.createdAt.toISOString()
+                : message.createdAt,
+        }));
+
+        return NextResponse.json({
+            messages: safeMessages,
+            hasMore: result.hasMore,
+            nextCursor: result.nextCursor,
+        });
+    } catch (error: any) {
+        console.error('[API Messages GET]', error);
+        return new NextResponse('Internal Error', { status: 500 });
+    }
+}
 
 /** Convert pipe-delimited system message bodies to human-readable text for notifications */
 function formatSystemMessage(body: string | null): string | null {

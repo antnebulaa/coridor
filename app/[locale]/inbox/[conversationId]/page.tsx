@@ -13,11 +13,14 @@ interface IParams {
 
 const ConversationId = async (props: { params: Promise<IParams> }) => {
     const params = await props.params;
-    const [conversation, messages, currentUser] = await Promise.all([
+    const [conversation, messagesResult, currentUser] = await Promise.all([
         getConversationById(params.conversationId),
-        getMessages(params.conversationId) as Promise<FullMessageType[]>,
+        getMessages({ conversationId: params.conversationId }),
         getCurrentUser(),
     ]);
+    const messages = messagesResult.messages as FullMessageType[];
+    const hasMoreMessages = messagesResult.hasMore;
+    const nextMessageCursor = messagesResult.nextCursor;
     if (!currentUser) { redirect('/'); }
 
     if (!conversation) {
@@ -259,6 +262,8 @@ const ConversationId = async (props: { params: Promise<IParams> }) => {
                 confirmedVisit={confirmedVisit}
                 inspectionData={inspectionData}
                 exitInspectionData={exitInspectionData}
+                hasMoreMessages={hasMoreMessages}
+                nextMessageCursor={nextMessageCursor}
             />
         </div>
     );

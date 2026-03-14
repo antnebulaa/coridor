@@ -72,7 +72,7 @@ const AdminListingDetailClient: React.FC<AdminListingDetailClientProps> = ({ lis
                 <div>
                     <h1 className="text-2xl font-bold">{listing.title}</h1>
                     <div className="text-slate-500 text-sm mt-1">
-                        ID: {listing.id} • {t('back') !== 'Back' ? 'Créé le' : 'Created on'} {new Date(listing.createdAt).toLocaleDateString()}
+                        ID: {listing.id} • {t('createdOn')} {new Date(listing.createdAt).toLocaleDateString()}
                     </div>
                 </div>
                 <div className="flex gap-2">

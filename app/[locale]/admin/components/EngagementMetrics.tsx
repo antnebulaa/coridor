@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Tooltip from '@/components/ui/Tooltip';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 
@@ -26,9 +27,10 @@ interface MetricItemProps {
     color?: string;
     tooltip?: string;
     isEmpty?: boolean;
+    emptyLabel?: string;
 }
 
-const MetricItem: React.FC<MetricItemProps> = ({ label, value, sublabel, color = 'text-slate-900', tooltip, isEmpty }) => (
+const MetricItem: React.FC<MetricItemProps> = ({ label, value, sublabel, color = 'text-slate-900', tooltip, isEmpty, emptyLabel }) => (
     <div className="flex flex-col">
         <div className="flex items-center gap-1">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</span>
@@ -39,7 +41,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ label, value, sublabel, color =
             )}
         </div>
         <span className={`text-2xl font-extrabold mt-1 ${isEmpty ? 'text-slate-300' : color}`}>{value}</span>
-        {isEmpty && <span className="text-xs text-slate-400 italic mt-0.5">Pas encore de données</span>}
+        {isEmpty && <span className="text-xs text-slate-400 italic mt-0.5">{emptyLabel}</span>}
         {!isEmpty && sublabel && <span className="text-xs text-slate-400 mt-0.5">{sublabel}</span>}
     </div>
 );
@@ -87,20 +89,23 @@ const ProgressBar: React.FC<{ value: number; label: React.ReactNode; color: stri
 );
 
 const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ data }) => {
+    const t = useTranslations('admin.engagement');
+
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200 h-full">
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Engagement</h3>
-            <p className="text-sm text-slate-500 mb-5">Activité des utilisateurs</p>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">{t('title')}</h3>
+            <p className="text-sm text-slate-500 mb-5">{t('subtitle')}</p>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="flex items-end gap-2">
                     <MetricItem
                         label="DAU"
                         value={data.dau}
-                        sublabel="Aujourd'hui"
+                        sublabel={t('today')}
                         color="text-blue-600"
-                        tooltip="Daily Active Users — Utilisateurs uniques connectés aujourd'hui"
+                        tooltip={t('dauTooltip')}
                         isEmpty={data.dau === 0}
+                        emptyLabel={t('noData')}
                     />
                     {data.sparklines && <Sparkline data={data.sparklines.dau} color="blue" />}
                 </div>
@@ -108,10 +113,11 @@ const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ data }) => {
                     <MetricItem
                         label="WAU"
                         value={data.wau}
-                        sublabel="Cette semaine"
+                        sublabel={t('thisWeek')}
                         color="text-indigo-600"
-                        tooltip="Weekly Active Users — Utilisateurs uniques connectés cette semaine"
+                        tooltip={t('wauTooltip')}
                         isEmpty={data.wau === 0}
+                        emptyLabel={t('noData')}
                     />
                     {data.sparklines && <Sparkline data={data.sparklines.wau} color="indigo" />}
                 </div>
@@ -119,10 +125,11 @@ const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ data }) => {
                     <MetricItem
                         label="MAU"
                         value={data.mau}
-                        sublabel="Ce mois"
+                        sublabel={t('thisMonth')}
                         color="text-purple-600"
-                        tooltip="Monthly Active Users — Utilisateurs uniques connectés ce mois"
+                        tooltip={t('mauTooltip')}
                         isEmpty={data.mau === 0}
+                        emptyLabel={t('noData')}
                     />
                     {data.sparklines && <Sparkline data={data.sparklines.mau} color="purple" />}
                 </div>
@@ -132,8 +139,8 @@ const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ data }) => {
                 <ProgressBar
                     label={
                         <div className="flex items-center gap-1">
-                            <span className="text-sm font-medium text-slate-700">Profils complétés</span>
-                            <Tooltip content="Utilisateurs ayant renseigné leur adresse, photo et profil locataire">
+                            <span className="text-sm font-medium text-slate-700">{t('profileCompletion')}</span>
+                            <Tooltip content={t('profileCompletionTooltip')}>
                                 <span className="text-slate-400 hover:text-slate-500 cursor-help text-[10px]">?</span>
                             </Tooltip>
                         </div>
@@ -146,8 +153,8 @@ const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ data }) => {
             <div className="mt-5 pt-4 border-t border-slate-100">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                        <span className="text-sm text-slate-600">Brouillons abandonnés</span>
-                        <Tooltip content="Annonces restées en brouillon depuis plus de 7 jours sans être publiées">
+                        <span className="text-sm text-slate-600">{t('abandonedDrafts')}</span>
+                        <Tooltip content={t('abandonedDraftsTooltip')}>
                             <span className="text-slate-400 hover:text-slate-500 cursor-help text-[10px]">?</span>
                         </Tooltip>
                     </div>
@@ -155,7 +162,7 @@ const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ data }) => {
                         {data.draftNeverPublished}
                     </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">Annonces en brouillon depuis +7 jours</p>
+                <p className="text-xs text-slate-400 mt-1">{t('abandonedDraftsDetail')}</p>
             </div>
         </div>
     );

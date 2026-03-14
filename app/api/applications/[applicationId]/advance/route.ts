@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
 import { ApplicationStatus } from "@prisma/client";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 interface IParams {
     applicationId: string;
@@ -70,29 +71,30 @@ export async function POST(
 
     const selectedCandidate = application.candidateScope.creatorUser;
     const listingTitle = application.listing.title;
+    const t = getServerTranslation('emails');
 
     if (targetStatus === "SELECTED") {
         // Notify landlord about identity reveal
         await createNotification({
             userId: currentUser.id,
             type: "application",
-            title: "Identité révélée",
-            message: `L'identité de ${selectedCandidate.pseudonymFull || 'votre candidat'} vous est maintenant visible.`,
+            title: t('application.identityRevealed.title'),
+            message: t('application.identityRevealed.message', { candidateName: selectedCandidate.pseudonymFull || t('application.identityRevealed.defaultCandidate') }),
             link: `/inbox`
         });
 
         await createNotification({
             userId: selectedCandidate.id,
             type: "application",
-            title: "Candidature retenue !",
-            message: `Votre candidature pour "${listingTitle}" a ete retenue. Felicitations !`,
+            title: t('application.selected.title'),
+            message: t('application.selected.message', { title: listingTitle }),
             link: "/dashboard/applications"
         });
 
         sendPushNotification({
             userId: selectedCandidate.id,
-            title: "Candidature retenue !",
-            body: `Votre candidature pour "${listingTitle}" a ete retenue !`,
+            title: t('application.selected.title'),
+            body: t('application.selected.pushBody', { title: listingTitle }),
             url: "/dashboard/applications",
             type: "application"
         }).catch((err) => console.error("[Push] Failed:", err));
@@ -100,20 +102,20 @@ export async function POST(
         if (selectedCandidate.email) {
             sendEmail(
                 selectedCandidate.email,
-                `Candidature retenue - ${listingTitle}`,
+                t('application.selected.emailSubject', { title: listingTitle }),
                 `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #111;">Candidature retenue</h2>
-                    <p>Bonjour ${selectedCandidate.firstName || selectedCandidate.name || ""},</p>
-                    <p>Nous avons le plaisir de vous informer que votre candidature pour <strong>"${listingTitle}"</strong> a ete retenue !</p>
-                    <p>Le proprietaire va prendre contact avec vous pour la suite.</p>
+                    <h2 style="color: #111;">${t('application.selected.emailHeading')}</h2>
+                    <p>${t('application.selected.emailGreeting', { name: selectedCandidate.firstName || selectedCandidate.name || '' })}</p>
+                    <p>${t('application.selected.emailBody', { title: listingTitle })}</p>
+                    <p>${t('application.selected.emailFollowUp')}</p>
                     <p style="margin-top: 24px;">
                         <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://coridor.fr"}/dashboard/applications"
                            style="background: #111; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                            Voir ma candidature
+                            ${t('application.selected.emailCta')}
                         </a>
                     </p>
-                    <p style="color: #666; margin-top: 24px; font-size: 14px;">-- L'equipe Coridor</p>
+                    <p style="color: #666; margin-top: 24px; font-size: 14px;">${t('application.selected.emailSignature')}</p>
                 </div>
                 `
             ).catch((err) => console.error("[Email] Failed:", err));
@@ -136,7 +138,7 @@ export async function POST(
             }
         });
 
-        const rejectionReason = "Un autre candidat a ete retenu";
+        const rejectionReason = t('application.rejected.reason');
 
         for (const other of otherApplications) {
             await prisma.rentalApplication.update({
@@ -153,15 +155,15 @@ export async function POST(
             await createNotification({
                 userId: candidate.id,
                 type: "application",
-                title: "Candidature non retenue",
-                message: `Votre candidature pour "${listingTitle}" n'a pas ete retenue. Motif : ${rejectionReason}`,
+                title: t('application.rejected.title'),
+                message: t('application.rejected.message', { title: listingTitle, reason: rejectionReason }),
                 link: "/dashboard/applications"
             });
 
             sendPushNotification({
                 userId: candidate.id,
-                title: "Candidature non retenue",
-                body: `Votre candidature pour "${listingTitle}" n'a pas ete retenue.`,
+                title: t('application.rejected.title'),
+                body: t('application.rejected.pushBody', { title: listingTitle }),
                 url: "/dashboard/applications",
                 type: "application"
             }).catch((err) => console.error("[Push] Failed:", err));
@@ -169,21 +171,21 @@ export async function POST(
             if (candidate.email) {
                 sendEmail(
                     candidate.email,
-                    `Candidature non retenue - ${listingTitle}`,
+                    t('application.rejected.emailSubject', { title: listingTitle }),
                     `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #111;">Candidature non retenue</h2>
-                        <p>Bonjour ${candidate.firstName || candidate.name || ""},</p>
-                        <p>Nous vous informons que votre candidature pour <strong>"${listingTitle}"</strong> n'a pas ete retenue.</p>
-                        <p><strong>Motif :</strong> ${rejectionReason}</p>
-                        <p>Ne vous decouragez pas, d'autres opportunites vous attendent sur Coridor.</p>
+                        <h2 style="color: #111;">${t('application.rejected.emailHeading')}</h2>
+                        <p>${t('application.rejected.emailGreeting', { name: candidate.firstName || candidate.name || '' })}</p>
+                        <p>${t('application.rejected.emailBody', { title: listingTitle })}</p>
+                        <p><strong>${t('application.rejected.emailReasonLabel')}</strong> ${rejectionReason}</p>
+                        <p>${t('application.rejected.emailEncouragement')}</p>
                         <p style="margin-top: 24px;">
                             <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://coridor.fr"}/listings"
                                style="background: #111; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                                Continuer ma recherche
+                                ${t('application.rejected.emailCta')}
                             </a>
                         </p>
-                        <p style="color: #666; margin-top: 24px; font-size: 14px;">-- L'equipe Coridor</p>
+                        <p style="color: #666; margin-top: 24px; font-size: 14px;">${t('application.rejected.emailSignature')}</p>
                     </div>
                     `
                 ).catch((err) => console.error("[Email] Failed:", err));

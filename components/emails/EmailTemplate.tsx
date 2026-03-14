@@ -7,6 +7,8 @@ interface EmailTemplateProps {
     children: React.ReactNode;
     actionLabel?: string;
     actionUrl?: string;
+    footerCopyright?: string;
+    footerDisclaimer?: string;
 }
 
 export const EmailTemplate: React.FC<EmailTemplateProps> = ({
@@ -14,7 +16,9 @@ export const EmailTemplate: React.FC<EmailTemplateProps> = ({
     heading,
     children,
     actionLabel,
-    actionUrl
+    actionUrl,
+    footerCopyright,
+    footerDisclaimer
 }) => (
     <div style={{
         backgroundColor: '#f6f9fc',
@@ -84,9 +88,9 @@ export const EmailTemplate: React.FC<EmailTemplateProps> = ({
                 color: '#888888',
                 fontSize: '12px',
             }}>
-                <p style={{ margin: 0 }}>© {new Date().getFullYear()} Coridor. Tous droits réservés.</p>
+                <p style={{ margin: 0 }}>{footerCopyright || `\u00a9 ${new Date().getFullYear()} Coridor. Tous droits r\u00e9serv\u00e9s.`}</p>
                 <p style={{ margin: '8px 0 0' }}>
-                    Vous recevez cet email car vous êtes inscrit sur Coridor.
+                    {footerDisclaimer || 'Vous recevez cet e-mail car vous \u00eates inscrit sur Coridor.'}
                 </p>
             </div>
         </div>

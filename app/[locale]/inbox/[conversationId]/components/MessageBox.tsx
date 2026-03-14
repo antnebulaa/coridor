@@ -38,6 +38,7 @@ interface MessageBoxProps {
         endTime: string;
     } | null;
     onViewInPanel?: (documentId: string) => void;
+    otherUserEmoji?: string | null;
 }
 
 const MessageBox: React.FC<MessageBoxProps> = ({
@@ -54,6 +55,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
     leaseStatus,
     confirmedVisit,
     onViewInPanel,
+    otherUserEmoji,
 }) => {
     const t = useTranslations('inbox');
     const session = useSession();
@@ -167,7 +169,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
         }}>
             {!isOwn && (
                 <div className={avatar}>
-                    <Avatar src={data.sender?.image} seed={data.sender?.email || data.sender?.name} />
+                    <Avatar src={data.sender?.image} seed={data.sender?.email || data.sender?.name} emoji={otherUserEmoji} />
                 </div>
             )}
 
@@ -387,7 +389,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     })()}
                                                 </div>
                                                 <div className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
-                                                    {(data.listing as any).city || 'Localisation inconnue'}
+                                                    {(data.listing as any).city || t('message.unknownLocation')}
                                                 </div>
                                             </div>
                                         </div>
@@ -425,7 +427,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                Candidature déclinée
+                                                {t('message.applicationRejected')}
                                             </div>
                                             <div className="text-sm text-red-600">
                                                 {reason}
@@ -440,10 +442,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
-                                        Bail envoyé pour signature
+                                        {t('message.lease.sentForSignature')}
                                     </div>
                                     <div className="text-sm text-blue-600">
-                                        Le bail de location a été envoyé pour signature électronique via Yousign.
+                                        {t('message.lease.sentDescription')}
                                     </div>
                                     {applicationId && (
                                         <button
@@ -453,7 +455,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                             }}
                                             className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit"
                                         >
-                                            {leaseStatus === 'SIGNED' ? 'Consulter le bail' : 'Signer le bail'}
+                                            {leaseStatus === 'SIGNED' ? t('message.lease.viewLease') : t('message.lease.signLease')}
                                         </button>
                                     )}
                                 </div>
@@ -464,7 +466,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const inspectionId = parts[1];
                                     const inspType = parts[2];
                                     const scheduledIso = parts[3];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     let dateStr = '';
                                     let timeStr = '';
                                     try {
@@ -479,12 +481,12 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-amber-700 font-medium text-sm">
                                                 <span className="text-base">🗓️</span>
-                                                {label} planifié
+                                                {label} {t('edl.scheduled')}
                                             </div>
                                             <div className="text-sm text-amber-600">
                                                 {dateStr && timeStr
-                                                    ? `Prévu le ${dateStr} à ${timeStr}.`
-                                                    : "La date sera confirmée."
+                                                    ? t('edl.scheduledDate', { date: dateStr, time: timeStr })
+                                                    : t('edl.dateToBeConfirmed')
                                                 }
                                             </div>
                                             {isOwn && inspectionId && (
@@ -495,7 +497,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     }}
                                                     className="mt-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition w-fit"
                                                 >
-                                                    Démarrer l&apos;EDL →
+                                                    {t('edl.startEdl')} →
                                                 </button>
                                             )}
                                             {!isOwn && inspectionId && (
@@ -506,14 +508,14 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                         setIsConfirmingEdl(true);
                                                         try {
                                                             await axios.post(`/api/inspection/${inspectionId}/confirm`);
-                                                            toast.success('Présence confirmée');
+                                                            toast.success(t('edl.presenceConfirmed'));
                                                             router.refresh();
                                                         } catch (err: unknown) {
                                                             const error = err as { response?: { status?: number } };
                                                             if (error?.response?.status === 409) {
-                                                                toast.success('Déjà confirmé');
+                                                                toast.success(t('edl.alreadyConfirmed'));
                                                             } else {
-                                                                toast.error('Erreur lors de la confirmation');
+                                                                toast.error(t('edl.confirmError'));
                                                             }
                                                         } finally {
                                                             setIsConfirmingEdl(false);
@@ -521,7 +523,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     }}
                                                     className="mt-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition w-fit disabled:opacity-50"
                                                 >
-                                                    {isConfirmingEdl ? '...' : 'Confirmer ma présence ✓'}
+                                                    {isConfirmingEdl ? '...' : `${t('edl.confirmPresence')} ✓`}
                                                 </button>
                                             )}
                                         </div>
@@ -533,7 +535,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const parts = data.body!.split('|');
                                     const inspType = parts[2];
                                     const scheduledIso = parts[3];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     let dateStr = '';
                                     let timeStr = '';
                                     try {
@@ -548,10 +550,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-green-700 font-medium text-sm">
                                                 <span className="text-base">✅</span>
-                                                Créneau confirmé
+                                                {t('edl.slotConfirmed')}
                                             </div>
                                             <div className="text-sm text-green-600">
-                                                {label} confirmé{dateStr && timeStr ? ` pour le ${dateStr} à ${timeStr}.` : '.'}
+                                                {label} {dateStr && timeStr ? t('edl.confirmedDate', { date: dateStr, time: timeStr }) : t('edl.confirmed')}
                                             </div>
                                         </div>
                                     );
@@ -561,7 +563,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                 (() => {
                                     const parts = data.body!.split('|');
                                     const inspType = parts[2];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     return (
                                         <div className={clsx(
                                             "flex flex-col gap-2 bg-red-50 border border-red-200 p-4 rounded-2xl max-w-xs",
@@ -569,10 +571,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-red-700 font-medium text-sm">
                                                 <span className="text-base">❌</span>
-                                                {label} annulé
+                                                {label} {t('edl.cancelled')}
                                             </div>
                                             <div className="text-sm text-red-600">
-                                                L&apos;état des lieux a été annulé par le propriétaire.
+                                                {t('edl.cancelledDescription')}
                                             </div>
                                         </div>
                                     );
@@ -584,7 +586,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const inspectionId = parts[1];
                                     const inspType = parts[2];
                                     const scheduledIso = parts[3];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     let dateStr = '';
                                     let timeStr = '';
                                     try {
@@ -599,12 +601,12 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
                                                 <span className="text-base">🔄</span>
-                                                {label} reprogrammé
+                                                {label} {t('edl.rescheduled')}
                                             </div>
                                             <div className="text-sm text-blue-600">
                                                 {dateStr && timeStr
-                                                    ? `Nouveau créneau : ${dateStr} à ${timeStr}.`
-                                                    : "La nouvelle date sera confirmée."
+                                                    ? t('edl.newSlot', { date: dateStr, time: timeStr })
+                                                    : t('edl.newDateToBeConfirmed')
                                                 }
                                             </div>
                                             {!isOwn && inspectionId && (
@@ -615,14 +617,14 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                         setIsConfirmingEdl(true);
                                                         try {
                                                             await axios.post(`/api/inspection/${inspectionId}/confirm`);
-                                                            toast.success('Présence confirmée');
+                                                            toast.success(t('edl.presenceConfirmed'));
                                                             router.refresh();
                                                         } catch (err: unknown) {
                                                             const error = err as { response?: { status?: number } };
                                                             if (error?.response?.status === 409) {
-                                                                toast.success('Déjà confirmé');
+                                                                toast.success(t('edl.alreadyConfirmed'));
                                                             } else {
-                                                                toast.error('Erreur lors de la confirmation');
+                                                                toast.error(t('edl.confirmError'));
                                                             }
                                                         } finally {
                                                             setIsConfirmingEdl(false);
@@ -630,7 +632,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     }}
                                                     className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit disabled:opacity-50"
                                                 >
-                                                    {isConfirmingEdl ? '...' : 'Confirmer ma présence ✓'}
+                                                    {isConfirmingEdl ? '...' : `${t('edl.confirmPresence')} ✓`}
                                                 </button>
                                             )}
                                         </div>
@@ -643,7 +645,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const inspectionId = parts[1];
                                     const inspType = parts[2];
                                     const scheduledIso = parts[3];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     let dateStr = '';
                                     let timeStr = '';
                                     try {
@@ -658,12 +660,12 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
                                                 <span className="text-base">🔔</span>
-                                                Rappel : {label} demain
+                                                {t('edl.reminderTomorrow', { label })}
                                             </div>
                                             <div className="text-sm text-blue-600">
                                                 {dateStr && timeStr
-                                                    ? `Prévu ${dateStr} à ${timeStr}.`
-                                                    : "Consultez votre agenda."
+                                                    ? t('edl.reminderDate', { date: dateStr, time: timeStr })
+                                                    : t('edl.checkAgenda')
                                                 }
                                             </div>
                                             {isOwn && inspectionId && (
@@ -674,7 +676,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     }}
                                                     className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit"
                                                 >
-                                                    Voir l&apos;état des lieux →
+                                                    {t('edl.viewEdl')} →
                                                 </button>
                                             )}
                                         </div>
@@ -686,7 +688,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const parts = data.body!.split('|');
                                     const inspectionId = parts[1];
                                     const inspType = parts[2];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     return (
                                         <div className={clsx(
                                             "flex flex-col gap-2 bg-amber-50 border border-amber-200 p-4 rounded-2xl max-w-xs",
@@ -694,10 +696,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-amber-700 font-medium text-sm">
                                                 <span className="text-base">🏠</span>
-                                                {label} démarré
+                                                {label} {t('edl.started')}
                                             </div>
                                             <div className="text-sm text-amber-600">
-                                                L&apos;inspection du logement est en cours.
+                                                {t('edl.inspectionInProgress')}
                                             </div>
                                             {isOwn && inspectionId && (
                                                 <button
@@ -707,7 +709,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     }}
                                                     className="mt-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition w-fit"
                                                 >
-                                                    Reprendre l&apos;EDL →
+                                                    {t('edl.resumeEdl')} →
                                                 </button>
                                             )}
                                         </div>
@@ -718,7 +720,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                 (() => {
                                     const parts = data.body!.split('|');
                                     const inspType = parts[2];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     return (
                                         <div className={clsx(
                                             "flex flex-col gap-2 bg-blue-50 border border-blue-200 p-4 rounded-2xl max-w-xs",
@@ -726,10 +728,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
                                                 <span className="text-base">✍️</span>
-                                                {label} — bailleur signé
+                                                {t('edl.landlordSigned', { label })}
                                             </div>
                                             <div className="text-sm text-blue-600">
-                                                En attente de la signature du locataire.
+                                                {t('edl.awaitingTenantSignature')}
                                             </div>
                                         </div>
                                     );
@@ -739,7 +741,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                 (() => {
                                     const parts = data.body!.split('|');
                                     const inspType = parts[2];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     return (
                                         <div className={clsx(
                                             "flex flex-col gap-2 bg-green-50 border border-green-200 p-4 rounded-2xl max-w-xs",
@@ -747,10 +749,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-green-700 font-medium text-sm">
                                                 <span className="text-base">✅</span>
-                                                {label} signé
+                                                {label} {t('edl.signed')}
                                             </div>
                                             <div className="text-sm text-green-600">
-                                                Signé par les deux parties. Le PDF sera envoyé par email.
+                                                {t('edl.signedDescription')}
                                             </div>
                                         </div>
                                     );
@@ -761,7 +763,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const parts = data.body!.split('|');
                                     const inspId = parts[1];
                                     const inspType = parts[2];
-                                    const label = inspType === 'EXIT' ? "État des lieux de sortie" : "État des lieux d'entrée";
+                                    const label = inspType === 'EXIT' ? t('edl.exit') : t('edl.entry');
                                     return (
                                         <div className={clsx(
                                             "flex flex-col gap-2 bg-purple-50 border border-purple-200 p-4 rounded-2xl max-w-xs",
@@ -769,10 +771,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-purple-700 font-medium text-sm">
                                                 <span className="text-base">✉️</span>
-                                                Lien de signature envoyé
+                                                {t('edl.signLinkSent')}
                                             </div>
                                             <div className="text-sm text-purple-600">
-                                                Le locataire a été invité à signer l&apos;{label.toLowerCase()}.
+                                                {t('edl.tenantInvitedToSign', { label: label.toLowerCase() })}
                                             </div>
                                             {!isOwn && inspId && (
                                                 <button
@@ -782,7 +784,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     }}
                                                     className="mt-1 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition w-fit"
                                                 >
-                                                    Signer l&apos;état des lieux →
+                                                    {t('edl.signEdl')} →
                                                 </button>
                                             )}
                                         </div>
@@ -800,10 +802,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
                                                 <span className="text-base">📄</span>
-                                                PDF de l&apos;état des lieux
+                                                {t('edl.pdfTitle')}
                                             </div>
                                             <div className="text-sm text-blue-600">
-                                                Le document est prêt et disponible en téléchargement.
+                                                {t('edl.pdfReady')}
                                             </div>
                                             {pdfUrl && (
                                                 <a
@@ -813,7 +815,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     onClick={(e) => e.stopPropagation()}
                                                     className="mt-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition w-fit inline-block"
                                                 >
-                                                    Voir le PDF
+                                                    {t('edl.viewPdf')}
                                                 </a>
                                             )}
                                         </div>
@@ -832,10 +834,10 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                         )}>
                                             <div className="flex items-center gap-2 text-orange-700 font-medium text-sm">
                                                 <span className="text-base">⚠️</span>
-                                                Demande de rectification
+                                                {t('edl.amendmentRequest')}
                                             </div>
                                             <div className="text-sm text-orange-600">
-                                                {description || 'Un défaut a été signalé sur l\'état des lieux.'}
+                                                {description || t('edl.amendmentDefaultDesc')}
                                             </div>
                                             <button
                                                 onClick={(e) => {
@@ -844,7 +846,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                 }}
                                                 className="mt-1 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition w-fit"
                                             >
-                                                Voir les rectifications
+                                                {t('edl.viewAmendments')}
                                             </button>
                                         </div>
                                     );
@@ -868,7 +870,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                 accepted ? "text-green-700" : "text-red-700"
                                             )}>
                                                 <span className="text-base">{accepted ? '✅' : '❌'}</span>
-                                                Rectification {accepted ? 'acceptée' : 'refusée'}
+                                                {accepted ? t('edl.amendmentAccepted') : t('edl.amendmentRejected')}
                                             </div>
                                             {description && (
                                                 <div className={clsx(
@@ -888,7 +890,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                     accepted ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
                                                 )}
                                             >
-                                                Voir les rectifications
+                                                {t('edl.viewAmendments')}
                                             </button>
                                         </div>
                                     );
@@ -902,22 +904,31 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const appId = parts[3];
                                     const amount = (amountCents / 100).toFixed(2);
 
-                                    const DEPOSIT_EVENT_CONFIG: Record<string, { emoji: string; label: string; desc: string; color: string; border: string; bg: string; cta?: string }> = {
-                                        LEASE_SIGNED: { emoji: '📝', label: 'Bail signé', desc: `Dépôt de ${amount}€ dû.`, color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', cta: 'Voir le suivi' },
-                                        PAYMENT_CONFIRMED: { emoji: '💳', label: 'Versement confirmé', desc: `Dépôt de ${amount}€ enregistré.`, color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
-                                        RETENTIONS_PROPOSED: { emoji: '📋', label: 'Retenues proposées', desc: `Le propriétaire propose des retenues.`, color: 'text-orange-700', border: 'border-orange-200', bg: 'bg-orange-50', cta: 'Consulter et répondre' },
-                                        TENANT_AGREED: { emoji: '🤝', label: 'Accord trouvé', desc: 'Le locataire accepte les retenues.', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
-                                        TENANT_PARTIAL_AGREED: { emoji: '⚖️', label: 'Accord partiel', desc: 'Le locataire accepte partiellement. Délai de 14 jours.', color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
-                                        TENANT_DISPUTED: { emoji: '⚠️', label: 'Contestation', desc: '14 jours pour trouver un accord.', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
-                                        DEADLINE_OVERDUE: { emoji: '🚨', label: 'Délai dépassé', desc: 'Le délai légal de restitution est dépassé.', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50', cta: 'Voir les options' },
-                                        FULL_RELEASE: { emoji: '✅', label: 'Dépôt restitué', desc: `Dépôt de ${amount}€ restitué intégralement.`, color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
-                                        RESOLVED: { emoji: '✅', label: 'Dossier clos', desc: 'Le dépôt de garantie est résolu.', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                    const DEPOSIT_EVENT_CONFIG: Record<string, { emoji: string; labelKey: string; descKey: string; color: string; border: string; bg: string; ctaKey?: string }> = {
+                                        LEASE_SIGNED: { emoji: '📝', labelKey: 'leaseSigned', descKey: 'leaseSigned_desc', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', ctaKey: 'viewTracking' },
+                                        PAYMENT_CONFIRMED: { emoji: '💳', labelKey: 'paymentConfirmed', descKey: 'paymentConfirmed_desc', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                        RETENTIONS_PROPOSED: { emoji: '📋', labelKey: 'retentionsProposed', descKey: 'retentionsProposed_desc', color: 'text-orange-700', border: 'border-orange-200', bg: 'bg-orange-50', ctaKey: 'consultAndReply' },
+                                        TENANT_AGREED: { emoji: '🤝', labelKey: 'tenantAgreed', descKey: 'tenantAgreed_desc', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                        TENANT_PARTIAL_AGREED: { emoji: '⚖️', labelKey: 'tenantPartialAgreed', descKey: 'tenantPartialAgreed_desc', color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+                                        TENANT_DISPUTED: { emoji: '⚠️', labelKey: 'tenantDisputed', descKey: 'tenantDisputed_desc', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+                                        DEADLINE_OVERDUE: { emoji: '🚨', labelKey: 'deadlineOverdue', descKey: 'deadlineOverdue_desc', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50', ctaKey: 'viewOptions' },
+                                        FULL_RELEASE: { emoji: '✅', labelKey: 'fullRelease', descKey: 'fullRelease_desc', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
+                                        RESOLVED: { emoji: '✅', labelKey: 'resolved', descKey: 'resolved_desc', color: 'text-green-700', border: 'border-green-200', bg: 'bg-green-50' },
                                     };
 
-                                    const config = DEPOSIT_EVENT_CONFIG[eventType] || {
-                                        emoji: '🏦', label: 'Dépôt de garantie', desc: eventType.replace(/_/g, ' ').toLowerCase(),
+                                    const rawConfig = DEPOSIT_EVENT_CONFIG[eventType];
+                                    const config = rawConfig ? {
+                                        emoji: rawConfig.emoji,
+                                        label: t(`depositEvents.${rawConfig.labelKey}`),
+                                        desc: t(`depositEvents.${rawConfig.descKey}`, { amount }),
+                                        color: rawConfig.color,
+                                        border: rawConfig.border,
+                                        bg: rawConfig.bg,
+                                        cta: rawConfig.ctaKey ? t(`depositEvents.${rawConfig.ctaKey}`) : undefined,
+                                    } : {
+                                        emoji: '🏦', label: t('depositEvents.default'), desc: eventType.replace(/_/g, ' ').toLowerCase(),
                                         color: 'text-gray-700', border: 'border-gray-200', bg: 'bg-gray-50'
-                                    };
+                                    } as { emoji: string; label: string; desc: string; color: string; border: string; bg: string; cta?: string };
 
                                     return (
                                         <div className={clsx(
@@ -959,16 +970,21 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                     const label = parts[2];
                                     const url = parts.slice(3).join('|');
 
-                                    const CORIDOR_DOC_CONFIG: Record<string, { emoji: string; color: string; border: string; bg: string; desc: string }> = {
-                                        quittance: { emoji: '🧾', color: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50', desc: 'Disponible en téléchargement.' },
-                                        bail: { emoji: '📝', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', desc: 'Signé par toutes les parties.' },
-                                        edl: { emoji: '📋', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', desc: 'Document disponible.' },
-                                        mise_en_demeure: { emoji: '⚖️', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50', desc: 'Document juridique généré.' },
-                                        inventaire: { emoji: '🪑', color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50', desc: 'Inventaire du mobilier.' },
+                                    const CORIDOR_DOC_CONFIG: Record<string, { emoji: string; color: string; border: string; bg: string; descKey: string }> = {
+                                        quittance: { emoji: '🧾', color: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50', descKey: 'quittance_desc' },
+                                        bail: { emoji: '📝', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', descKey: 'bail_desc' },
+                                        edl: { emoji: '📋', color: 'text-blue-700', border: 'border-blue-200', bg: 'bg-blue-50', descKey: 'edl_desc' },
+                                        mise_en_demeure: { emoji: '⚖️', color: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50', descKey: 'mise_en_demeure_desc' },
+                                        inventaire: { emoji: '🪑', color: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50', descKey: 'inventaire_desc' },
                                     };
 
-                                    const config = CORIDOR_DOC_CONFIG[docType] || {
-                                        emoji: '📄', color: 'text-gray-700', border: 'border-gray-200', bg: 'bg-gray-50', desc: 'Document disponible.'
+                                    const rawDocConfig = CORIDOR_DOC_CONFIG[docType];
+                                    const config = {
+                                        emoji: rawDocConfig?.emoji || '📄',
+                                        color: rawDocConfig?.color || 'text-gray-700',
+                                        border: rawDocConfig?.border || 'border-gray-200',
+                                        bg: rawDocConfig?.bg || 'bg-gray-50',
+                                        desc: t(`coridorDocuments.${rawDocConfig?.descKey || 'default_desc'}`),
                                     };
 
                                     return (
@@ -997,7 +1013,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
                                                         "bg-blue-600 hover:bg-blue-700"
                                                     )}
                                                 >
-                                                    Télécharger
+                                                    {t('coridorDocuments.download')}
                                                 </a>
                                             )}
                                         </div>

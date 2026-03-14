@@ -336,8 +336,8 @@ Ce document sert de **référence unique** pour l'état d'avancement du projet C
 - [x] **Nettoyage Code** : Linting & suppression code unused.
 - [x] **Performance** : Optimisation Images (Cloudinary transforms) & Requêtes DB.
 - [x] **Migration Structure** : Migration vers `app/[locale]/` terminée.
-- [ ] **Tests E2E** : Tests navigateur automatisés (Cypress/Playwright) qui simulent un vrai utilisateur cliquant dans l'app. Complémentaire à Vercel (qui gère le déploiement/preview, pas les tests fonctionnels).
-- [ ] **Monitoring** : Intégration Sentry ou équivalent pour error tracking.
+- [x] **Tests E2E** : Playwright installé, 8 tests critiques (dashboard, navigation, finances, création annonce, messagerie, suivi loyers, régularisation, EDL), setup auth, CI GitHub Actions, projets desktop + mobile.
+- [x] **Monitoring** : Sentry intégré — `@sentry/nextjs` v10, configs client/server/edge, instrumentation Next.js, identification utilisateur, error boundary locale, source maps, page confidentialité RGPD.
 - [ ] **Documentation** : Documentation développeur (Storybook, composants, API).
 
 ---

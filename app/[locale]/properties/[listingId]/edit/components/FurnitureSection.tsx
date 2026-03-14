@@ -9,53 +9,41 @@ import { Button } from "@/components/ui/Button";
 import { Check } from "lucide-react";
 import EditSectionFooter from "./EditSectionFooter";
 import CustomToast from "@/components/ui/CustomToast";
+import { useTranslations } from 'next-intl';
 
 interface FurnitureSectionProps {
     listing: SafeListing & { furniture?: any };
 }
 
-// Define the structure for items
-const MANDATORY_ITEMS = [
-    { id: 'bedding', label: 'Literie avec couette' },
-    { id: 'curtains', label: 'Volets ou rideaux dans les chambres' },
-    { id: 'hob', label: 'Plaques de cuisson' },
-    { id: 'oven', label: 'Four ou four à micro-onde' },
-    { id: 'fridge', label: 'Réfrigérateur' },
-    { id: 'freezer', label: 'Congélateur' },
-    { id: 'dishes', label: 'Vaisselle' },
-    { id: 'utensils', label: 'Ustensiles de cuisine' },
-    { id: 'table', label: 'Table' },
-    { id: 'seats', label: 'Sièges' },
-    { id: 'shelves', label: 'Étagères de rangement' },
-    { id: 'lights', label: 'Luminaires' },
-    { id: 'vacuum', label: 'Aspirateur' },
+const MANDATORY_IDS = [
+    'bedding', 'curtains', 'hob', 'oven', 'fridge', 'freezer',
+    'dishes', 'utensils', 'table', 'seats', 'shelves', 'lights', 'vacuum',
 ];
 
-const OPTIONAL_ITEMS = [
-    { id: 'washingMachine', label: 'Lave-linge' },
-    { id: 'coffeeMaker', label: 'Cafetière' },
-    { id: 'toaster', label: 'Grille-pain' },
-    { id: 'dishwasher', label: 'Lave-vaisselle' },
-    { id: 'hairDryer', label: 'Sèche-cheveux' },
-    { id: 'mirror', label: 'Miroir' },
-    { id: 'sheets', label: 'Draps' },
-    { id: 'towels', label: 'Serviettes de bain' },
-    { id: 'cloths', label: 'Torchons' },
+const OPTIONAL_IDS = [
+    'washingMachine', 'coffeeMaker', 'toaster', 'dishwasher',
+    'hairDryer', 'mirror', 'sheets', 'towels', 'cloths',
 ];
+
+const ALL_IDS = [...MANDATORY_IDS, ...OPTIONAL_IDS];
 
 const FurnitureSection: React.FC<FurnitureSectionProps> = ({
     listing
 }) => {
     const router = useRouter();
+    const t = useTranslations('properties.edit.furniture');
     const [isLoading, setIsLoading] = useState(false);
+
+    const MANDATORY_ITEMS = MANDATORY_IDS.map(id => ({ id, label: t(`mandatory.${id}`) }));
+    const OPTIONAL_ITEMS = OPTIONAL_IDS.map(id => ({ id, label: t(`optional.${id}`) }));
 
     // Initial state derived from listing.furniture or false
     const [state, setState] = useState<Record<string, boolean>>(() => {
         const initial: Record<string, boolean> = {};
         const furniture = listing.furniture || {};
 
-        [...MANDATORY_ITEMS, ...OPTIONAL_ITEMS].forEach(item => {
-            initial[item.id] = furniture[item.id] || false;
+        ALL_IDS.forEach(id => {
+            initial[id] = furniture[id] || false;
         });
 
         return initial;
@@ -73,20 +61,20 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
 
         axios.post(`/api/listings/${listing.id}/furniture`, state)
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((toastRef) => (
                     <CustomToast
-                        t={t}
-                        message="Équipements sauvegardés"
+                        t={toastRef}
+                        message={t('saved')}
                         type="success"
                     />
                 ));
                 router.refresh(); // Refresh to update server-side data
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((toastRef) => (
                     <CustomToast
-                        t={t}
-                        message="Une erreur est survenue"
+                        t={toastRef}
+                        message={t('error')}
                         type="error"
                     />
                 ));
@@ -97,11 +85,11 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
     };
 
     // Check compliance: All mandatory items must be true
-    const isCompliant = MANDATORY_ITEMS.every(item => state[item.id]);
+    const isCompliant = MANDATORY_IDS.every(id => state[id]);
 
     return (
         <div className="flex flex-col gap-8">
-            
+
 
             <div className={`
                 border rounded-lg p-4 text-sm flex gap-3 items-start
@@ -123,20 +111,17 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="font-semibold">
-                        {isCompliant ? 'Logement conforme' : 'Mise en conformité requise'}
+                        {isCompliant ? t('compliant') : t('nonCompliant')}
                     </span>
                     <span>
-                        {isCompliant
-                            ? 'Votre logement dispose de tous les équipements obligatoires pour être loué en meublé. Le propriétaire est en règle.'
-                            : 'Un logement meublé doit obligatoirement inclure tous les équipements de la liste ci-dessous pour être en règle.'
-                        }
+                        {isCompliant ? t('compliantDescription') : t('nonCompliantDescription')}
                     </span>
                 </div>
             </div>
 
             {/* Mandatory Section */}
             <div className="flex flex-col gap-4">
-                <h3 className="font-medium text-lg border-b pb-2">Équipements obligatoires (Meublé)</h3>
+                <h3 className="font-medium text-lg border-b pb-2">{t('mandatoryTitle')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {MANDATORY_ITEMS.map((item) => (
                         <div
@@ -159,7 +144,7 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
                                     <Check size={14} className="text-white" strokeWidth={1.5} />
                                 )}
                             </div>
-                            
+
                         </div>
                     ))}
                 </div>
@@ -167,7 +152,7 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
 
             {/* Optional Section */}
             <div className="flex flex-col gap-4">
-                <h3 className="font-medium text-lg border-b pb-2">Équipements facultatifs</h3>
+                <h3 className="font-medium text-lg border-b pb-2">{t('optionalTitle')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {OPTIONAL_ITEMS.map((item) => (
                         <div
@@ -196,7 +181,7 @@ const FurnitureSection: React.FC<FurnitureSectionProps> = ({
             </div>
 
             <EditSectionFooter
-                label={isLoading ? "Sauvegarde..." : "Enregistrer"}
+                label={isLoading ? t('saving') : t('save')}
                 onClick={onSave}
                 disabled={isLoading}
             />

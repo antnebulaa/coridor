@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/libs/prismadb';
 import getCurrentUser from '@/app/actions/getCurrentUser';
 import { sendEmail } from '@/lib/email';
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 type Params = { params: Promise<{ inspectionId: string }> };
 
@@ -49,28 +50,30 @@ export async function POST(request: Request, props: Params) {
       return NextResponse.json({ error: 'PDF not generated yet' }, { status: 400 });
     }
 
+    const t = getServerTranslation('emails');
+
     const emailHtml = (name: string | null) => `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #1a1a1a; margin-bottom: 8px;">État des lieux signé</h2>
+        <h2 style="color: #1a1a1a; margin-bottom: 8px;">${t('inspection.pdfEmail.heading')}</h2>
         <p style="color: #555; line-height: 1.6;">
-          Bonjour${name ? ` ${name}` : ''},<br/><br/>
-          Voici le PDF de votre état des lieux signé.
+          ${t('inspection.pdfEmail.greeting', { name: name || '' })}<br/><br/>
+          ${t('inspection.pdfEmail.body')}
         </p>
         <a href="${inspection.pdfUrl}" style="display: inline-block; background: #1719FF; color: #fff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 600; margin: 16px 0;">
-          Consulter le PDF
+          ${t('inspection.pdfEmail.cta')}
         </a>
         <p style="color: #999; font-size: 13px; margin-top: 24px;">
-          Rappel : le locataire dispose de 10 jours après la remise des clés pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989).
+          ${t('inspection.pdfEmail.legalNote')}
         </p>
       </div>`;
 
     let sent = 0;
     if (inspection.landlord?.email) {
-      await sendEmail(inspection.landlord.email, "État des lieux — PDF signé", emailHtml(inspection.landlord.name));
+      await sendEmail(inspection.landlord.email, t('inspection.pdfEmail.subject'), emailHtml(inspection.landlord.name));
       sent++;
     }
     if (inspection.tenant?.email) {
-      await sendEmail(inspection.tenant.email, "État des lieux — PDF signé", emailHtml(inspection.tenant.name));
+      await sendEmail(inspection.tenant.email, t('inspection.pdfEmail.subject'), emailHtml(inspection.tenant.name));
       sent++;
     }
 

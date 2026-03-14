@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import Tooltip from '@/components/ui/Tooltip';
 import type { FunnelStep } from '@/app/actions/getAdminAdvancedStats';
 
@@ -13,13 +14,6 @@ interface ConversionFunnelProps {
     onCityChange: (city: string | undefined) => void;
 }
 
-const periods = [
-    { label: '7j', value: '7d' },
-    { label: '30j', value: '30d' },
-    { label: '90j', value: '90d' },
-    { label: 'Tout', value: 'all' },
-];
-
 const barColors = [
     '#3B82F6',
     '#4B8DF7',
@@ -29,6 +23,15 @@ const barColors = [
 ];
 
 const ConversionFunnel: React.FC<ConversionFunnelProps> = ({ data, period, onPeriodChange, city, cities, onCityChange }) => {
+    const t = useTranslations('admin.conversionFunnel');
+
+    const periods = useMemo(() => [
+        { label: t('period7d'), value: '7d' },
+        { label: t('period30d'), value: '30d' },
+        { label: t('period90d'), value: '90d' },
+        { label: t('periodAll'), value: 'all' },
+    ], [t]);
+
     const maxCount = useMemo(() => {
         if (!data || data.length === 0) return 1;
         return Math.max(...data.map(d => d.count), 1);
@@ -39,12 +42,12 @@ const ConversionFunnel: React.FC<ConversionFunnelProps> = ({ data, period, onPer
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                     <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-slate-800">Funnel de conversion</h3>
-                        <Tooltip content="Parcours de conversion — De l'inscription à la signature du bail">
+                        <h3 className="text-lg font-bold text-slate-800">{t('title')}</h3>
+                        <Tooltip content={t('tooltip')}>
                             <span className="text-slate-400 hover:text-slate-600 cursor-help text-sm">?</span>
                         </Tooltip>
                     </div>
-                    <p className="text-sm text-slate-500 mt-0.5">Du signup au bail signé</p>
+                    <p className="text-sm text-slate-500 mt-0.5">{t('subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <select
@@ -52,7 +55,7 @@ const ConversionFunnel: React.FC<ConversionFunnelProps> = ({ data, period, onPer
                         onChange={(e) => onCityChange(e.target.value || undefined)}
                         className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     >
-                        <option value="">Toutes les villes</option>
+                        <option value="">{t('allCities')}</option>
                         {cities.map((c) => (
                             <option key={c} value={c}>{c}</option>
                         ))}

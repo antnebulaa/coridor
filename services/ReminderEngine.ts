@@ -8,6 +8,7 @@ import { createNotification } from '@/libs/notifications';
 import { sendEmail } from '@/lib/email';
 import { EmailTemplate } from '@/components/emails/EmailTemplate';
 import { createElement } from 'react';
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 /**
  * Orchestrateur principal du systeme de rappels legaux.
@@ -44,6 +45,7 @@ export class ReminderEngine {
    * 5. Sync les rappels fiscaux pour tous les proprietaires
    */
   static async dailyCronJob(): Promise<{ updated: number; notified: number; overdue: number }> {
+    const t = getServerTranslation('emails');
     const now = new Date();
     let updated = 0;
     let notified = 0;
@@ -93,16 +95,18 @@ export class ReminderEngine {
               createElement(
                 EmailTemplate,
                 {
-                  heading: 'Rappel admin Coridor',
-                  actionLabel: 'Accéder',
+                  heading: t('reminder.adminHeading'),
+                  actionLabel: t('reminder.adminAction'),
                   actionUrl: reminder.actionUrl || `${appUrl}/admin`,
+                  footerCopyright: t('common.footer.copyright', { year: String(new Date().getFullYear()) }),
+                  footerDisclaimer: t('common.footer.disclaimer'),
                   children: null,
                 },
                 createElement('p', { style: { margin: '0 0 16px' } }, reminder.title),
                 createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
                   reminder.description || ''),
                 createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
-                  `Date limite : ${reminder.dueDate.toLocaleDateString('fr-FR')}`)
+                  t('reminder.deadline', { date: reminder.dueDate.toLocaleDateString('fr-FR') }))
               )
             );
           }
@@ -112,30 +116,32 @@ export class ReminderEngine {
             userId: reminder.userId,
             type: 'LEGAL_REMINDER',
             title: reminder.title,
-            message: reminder.description || `Echeance le ${reminder.dueDate.toLocaleDateString('fr-FR')}`,
+            message: reminder.description || t('reminder.defaultDeadlineMessage', { date: reminder.dueDate.toLocaleDateString('fr-FR') }),
             link: reminder.actionUrl || '/account/reminders'
           });
 
           if (reminder.user?.email) {
-            const userName = reminder.user.firstName || reminder.user.name || 'Cher proprietaire';
+            const userName = reminder.user.firstName || reminder.user.name || t('reminder.defaultLandlordName');
             const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr';
 
             await sendEmail(
               reminder.user.email,
-              `Rappel legal : ${reminder.title}`,
+              t('reminder.legalEmailSubject', { title: reminder.title }),
               createElement(
                 EmailTemplate,
                 {
-                  heading: `${userName}, rappel important`,
-                  actionLabel: 'Voir mes rappels',
+                  heading: t('reminder.importantReminder', { name: userName }),
+                  actionLabel: t('reminder.viewReminders'),
                   actionUrl: `${appUrl}/account/reminders`,
+                  footerCopyright: t('common.footer.copyright', { year: String(new Date().getFullYear()) }),
+                  footerDisclaimer: t('common.footer.disclaimer'),
                   children: null,
                 },
                 createElement('p', { style: { margin: '0 0 16px' } }, reminder.title),
                 createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
                   reminder.description || ''),
                 createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
-                  `Date limite : ${reminder.dueDate.toLocaleDateString('fr-FR')}`)
+                  t('reminder.deadline', { date: reminder.dueDate.toLocaleDateString('fr-FR') }))
               )
             );
           }
@@ -175,13 +181,15 @@ export class ReminderEngine {
               createElement(
                 EmailTemplate,
                 {
-                  heading: 'Rappel admin urgent — Coridor',
-                  actionLabel: 'Accéder',
+                  heading: t('reminder.adminUrgentHeading'),
+                  actionLabel: t('reminder.adminAction'),
                   actionUrl: reminder.actionUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr'}/admin`,
+                  footerCopyright: t('common.footer.copyright', { year: String(new Date().getFullYear()) }),
+                  footerDisclaimer: t('common.footer.disclaimer'),
                   children: null,
                 },
                 createElement('p', { style: { margin: '0 0 16px', fontWeight: '600' } },
-                  `${reminder.title} — Échéance imminente !`),
+                  t('reminder.imminentDeadline', { title: reminder.title })),
                 createElement('p', { style: { margin: '0 0 16px', color: '#666' } },
                   reminder.description || '')
               )
@@ -191,8 +199,8 @@ export class ReminderEngine {
           await createNotification({
             userId: reminder.userId,
             type: 'LEGAL_REMINDER',
-            title: `${reminder.title} — Rappel urgent`,
-            message: `Echeance dans moins d'un mois ! ${reminder.description || ''}`,
+            title: t('reminder.urgentTitle', { title: reminder.title }),
+            message: t('reminder.urgentMessage', { description: reminder.description || '' }),
             link: reminder.actionUrl || '/account/reminders'
           });
         }

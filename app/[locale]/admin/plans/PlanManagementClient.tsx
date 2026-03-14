@@ -7,6 +7,7 @@ import {
   CreditCard, Check, X, Save, Loader2, ChevronDown, ChevronUp,
   Users, Settings, Zap, RefreshCw
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Feature {
   id: string;
@@ -40,6 +41,7 @@ interface Plan {
 }
 
 export default function PlanManagementClient() {
+  const t = useTranslations('admin.plans');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +72,7 @@ export default function PlanManagementClient() {
       setPlans(plansRes.data);
       setFeatures(featuresRes.data);
     } catch {
-      toast.error('Erreur lors du chargement');
+      toast.error(t('loadError'));
     } finally {
       setLoading(false);
     }
@@ -110,10 +112,10 @@ export default function PlanManagementClient() {
         id: planId,
         ...editForm,
       });
-      toast.success('Plan mis à jour');
+      toast.success(t('saveSuccess'));
       fetchData();
     } catch {
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(t('saveError'));
     } finally {
       setSaving(false);
     }
@@ -149,9 +151,9 @@ export default function PlanManagementClient() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Plans & Features</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
           <p className="text-sm text-neutral-500 mt-1">
-            Gérez les plans d&apos;abonnement et les fonctionnalités associées.
+            {t('subtitle')}
           </p>
         </div>
         <button
@@ -159,19 +161,19 @@ export default function PlanManagementClient() {
           className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 rounded-lg hover:bg-neutral-100 transition"
         >
           <RefreshCw size={16} />
-          Actualiser
+          {t('refresh')}
         </button>
       </div>
 
       {/* Plans Table */}
       <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
         <div className="grid grid-cols-7 gap-4 px-6 py-3 bg-neutral-50 border-b border-neutral-200 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-          <div className="col-span-2">Plan</div>
-          <div>Prix mensuel</div>
-          <div>Prix annuel</div>
-          <div>Max biens</div>
-          <div>Abonnés</div>
-          <div>Statut</div>
+          <div className="col-span-2">{t('colPlan')}</div>
+          <div>{t('colMonthlyPrice')}</div>
+          <div>{t('colYearlyPrice')}</div>
+          <div>{t('colMaxProperties')}</div>
+          <div>{t('colSubscribers')}</div>
+          <div>{t('colStatus')}</div>
         </div>
 
         {plans.map((plan) => (
@@ -191,18 +193,18 @@ export default function PlanManagementClient() {
                 </div>
                 {plan.isPopular && (
                   <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                    POPULAIRE
+                    {t('popularBadge')}
                   </span>
                 )}
               </div>
               <div className="text-sm text-neutral-700">
-                {plan.monthlyPriceCents === 0 ? 'Gratuit' : `${(plan.monthlyPriceCents / 100).toFixed(2)}€`}
+                {plan.monthlyPriceCents === 0 ? t('free') : `${(plan.monthlyPriceCents / 100).toFixed(2)}€`}
               </div>
               <div className="text-sm text-neutral-700">
-                {plan.yearlyPriceCents === 0 ? 'Gratuit' : `${(plan.yearlyPriceCents / 100).toFixed(2)}€`}
+                {plan.yearlyPriceCents === 0 ? t('free') : `${(plan.yearlyPriceCents / 100).toFixed(2)}€`}
               </div>
               <div className="text-sm text-neutral-700">
-                {plan.maxProperties >= 999 ? 'Illimité' : plan.maxProperties}
+                {plan.maxProperties >= 999 ? t('unlimited') : plan.maxProperties}
               </div>
               <div className="flex items-center gap-1.5 text-sm text-neutral-700">
                 <Users size={14} />
@@ -210,7 +212,7 @@ export default function PlanManagementClient() {
               </div>
               <div className="flex items-center gap-2">
                 <span className={`inline-flex text-xs font-medium px-2 py-0.5 rounded-full ${plan.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {plan.isActive ? 'Actif' : 'Inactif'}
+                  {plan.isActive ? t('active') : t('inactive')}
                 </span>
                 {expandedPlanId === plan.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
@@ -224,11 +226,11 @@ export default function PlanManagementClient() {
                   <div className="space-y-4">
                     <h3 className="font-semibold text-neutral-800 flex items-center gap-2">
                       <Settings size={16} />
-                      Paramètres du plan
+                      {t('planSettings')}
                     </h3>
 
                     <div>
-                      <label className="block text-xs font-medium text-neutral-600 mb-1">Nom affiché</label>
+                      <label className="block text-xs font-medium text-neutral-600 mb-1">{t('displayName')}</label>
                       <input
                         type="text"
                         value={editForm.displayName}
@@ -238,7 +240,7 @@ export default function PlanManagementClient() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-neutral-600 mb-1">Description</label>
+                      <label className="block text-xs font-medium text-neutral-600 mb-1">{t('description')}</label>
                       <input
                         type="text"
                         value={editForm.description}
@@ -249,7 +251,7 @@ export default function PlanManagementClient() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-neutral-600 mb-1">Prix mensuel (centimes)</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">{t('monthlyPriceCents')}</label>
                         <input
                           type="number"
                           value={editForm.monthlyPriceCents}
@@ -258,7 +260,7 @@ export default function PlanManagementClient() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-neutral-600 mb-1">Prix annuel (centimes)</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">{t('yearlyPriceCents')}</label>
                         <input
                           type="number"
                           value={editForm.yearlyPriceCents}
@@ -269,7 +271,7 @@ export default function PlanManagementClient() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-neutral-600 mb-1">Max biens</label>
+                      <label className="block text-xs font-medium text-neutral-600 mb-1">{t('colMaxProperties')}</label>
                       <input
                         type="number"
                         value={editForm.maxProperties}
@@ -280,7 +282,7 @@ export default function PlanManagementClient() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-neutral-600 mb-1">Stripe Price ID (mensuel)</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">{t('stripePriceMonthly')}</label>
                         <input
                           type="text"
                           value={editForm.stripePriceIdMonthly}
@@ -290,7 +292,7 @@ export default function PlanManagementClient() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-neutral-600 mb-1">Stripe Price ID (annuel)</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">{t('stripePriceYearly')}</label>
                         <input
                           type="text"
                           value={editForm.stripePriceIdYearly}
@@ -309,7 +311,7 @@ export default function PlanManagementClient() {
                           onChange={(e) => setEditForm({ ...editForm, isPopular: e.target.checked })}
                           className="w-4 h-4 rounded border-neutral-300"
                         />
-                        <span className="text-sm text-neutral-700">Populaire</span>
+                        <span className="text-sm text-neutral-700">{t('popular')}</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -318,7 +320,7 @@ export default function PlanManagementClient() {
                           onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
                           className="w-4 h-4 rounded border-neutral-300"
                         />
-                        <span className="text-sm text-neutral-700">Actif</span>
+                        <span className="text-sm text-neutral-700">{t('active')}</span>
                       </label>
                     </div>
                   </div>
@@ -327,7 +329,7 @@ export default function PlanManagementClient() {
                   <div className="space-y-4">
                     <h3 className="font-semibold text-neutral-800 flex items-center gap-2">
                       <Zap size={16} />
-                      Fonctionnalités ({editForm.featureIds.length})
+                      {t('features', { count: editForm.featureIds.length })}
                     </h3>
 
                     <div className="max-h-[400px] overflow-y-auto space-y-4">
@@ -371,7 +373,7 @@ export default function PlanManagementClient() {
                     className="flex items-center gap-2 px-6 py-2.5 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition disabled:opacity-50"
                   >
                     {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                    {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                    {saving ? t('saving') : t('save')}
                   </button>
                 </div>
               </div>
@@ -388,7 +390,7 @@ export default function PlanManagementClient() {
             <div className="text-3xl font-bold text-neutral-900 mt-1">
               {plan._count.totalSubscribers}
             </div>
-            <div className="text-xs text-neutral-400 mt-1">abonnés actifs</div>
+            <div className="text-xs text-neutral-400 mt-1">{t('activeSubscribers')}</div>
           </div>
         ))}
       </div>

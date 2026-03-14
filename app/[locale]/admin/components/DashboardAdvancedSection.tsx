@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import ConversionFunnel from './ConversionFunnel';
 import ActivityFeed from './ActivityFeed';
 import EngagementMetrics from './EngagementMetrics';
@@ -40,6 +41,7 @@ const SkeletonBlock = () => (
 );
 
 const DashboardAdvancedSection: React.FC = () => {
+    const t = useTranslations('admin.advanced');
     const [data, setData] = useState<AdvancedStatsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -69,7 +71,7 @@ const DashboardAdvancedSection: React.FC = () => {
             });
         } catch (err: any) {
             console.error('Error fetching advanced stats:', err);
-            setError(err.message || 'Erreur de chargement');
+            setError(err.message || t('loadError'));
         } finally {
             setLoading(false);
         }
@@ -90,13 +92,13 @@ const DashboardAdvancedSection: React.FC = () => {
     if (error && !data) {
         return (
             <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-                <p className="text-red-700 font-medium mb-2">Erreur de chargement des statistiques avancées</p>
+                <p className="text-red-700 font-medium mb-2">{t('loadErrorTitle')}</p>
                 <p className="text-red-500 text-sm mb-4">{error}</p>
                 <button
                     onClick={() => fetchData(period, city)}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition"
                 >
-                    Réessayer
+                    {t('retry')}
                 </button>
             </div>
         );
@@ -107,7 +109,7 @@ const DashboardAdvancedSection: React.FC = () => {
             <div className="mt-8 space-y-6">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="h-1 w-8 bg-indigo-500 rounded-full" />
-                    <h3 className="text-xl font-bold text-slate-900">Statistiques avancées</h3>
+                    <h3 className="text-xl font-bold text-slate-900">{t('title')}</h3>
                 </div>
                 <SkeletonBlock />
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

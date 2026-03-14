@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+import { useTranslations } from "next-intl";
 import { SafeListing } from "@/types";
 import { Button } from "@/components/ui/Button";
 import SoftTextArea from "@/components/inputs/SoftTextArea";
@@ -18,6 +19,7 @@ interface DescriptionSectionProps {
 
 const DescriptionSection: React.FC<DescriptionSectionProps> = ({ listing }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -40,20 +42,20 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ listing }) => {
 
         axios.put(`/api/listings/${listing.id}`, data)
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Description mise à jour !"
+                        t={toastData}
+                        message={t('edit.description.saved')}
                         type="success"
                     />
                 ));
                 router.refresh();
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Une erreur est survenue"
+                        t={toastData}
+                        message={t('edit.description.error')}
                         type="error"
                     />
                 ));
@@ -66,11 +68,11 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ listing }) => {
     return (
         <div className="flex flex-col gap-8">
             <div className="text-neutral-500 text-sm">
-                Décrivez votre logement en détail pour donner envie aux futurs locataires.
+                {t('edit.description.helper')}
             </div>
             <SoftTextArea
                 id="description"
-                label="Description détaillée"
+                label={t('edit.description.label')}
                 disabled={isLoading}
                 register={register}
                 errors={errors}
@@ -80,7 +82,7 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ listing }) => {
             />
             <EditSectionFooter
                 disabled={isLoading}
-                label="Enregistrer"
+                label={t('edit.save')}
                 onClick={handleSubmit(onSubmit)}
             />
         </div>

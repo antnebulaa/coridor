@@ -11,6 +11,12 @@ export default function CapacitorInit() {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform()) return;
 
+        // Mark html element for Capacitor-specific CSS
+        document.documentElement.classList.add('capacitor-native');
+        if (Capacitor.getPlatform() === 'ios') {
+          document.documentElement.classList.add('cap-ios');
+        }
+
         // --- StatusBar ---
         try {
           const { StatusBar, Style } = await import('@capacitor/status-bar');

@@ -81,6 +81,7 @@ const Header: React.FC<HeaderProps> = ({
                         const pseudonymFull = otherUser?.pseudonymFull;
                         const avatarSeed = showPseudo ? pseudonymFull : (otherUser?.email || otherUser?.name);
                         const avatarImage = showPseudo ? null : otherUser?.image;
+                        const avatarEmoji = showPseudo ? (otherUser as any)?.pseudonymEmoji || null : null;
                         const otherName = showPseudo
                             ? pseudonymFull
                             : otherUser?.name;
@@ -89,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({
                             return (
                                 <>
                                     <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
-                                        <Avatar src={avatarImage} seed={avatarSeed} size={40} />
+                                        <Avatar src={avatarImage} seed={avatarSeed} size={40} emoji={avatarEmoji} />
                                     </div>
                                     <div className="flex flex-col overflow-hidden">
                                         <div className="text-sm font-semibold text-neutral-800 dark:text-white truncate max-w-[150px] sm:max-w-xs">
@@ -104,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({
                         }
                         return (
                             <>
-                                <Avatar src={avatarImage} seed={avatarSeed} size={40} />
+                                <Avatar src={avatarImage} seed={avatarSeed} size={40} emoji={avatarEmoji} />
                                 <div className="flex flex-col">
                                     <div className="text-base font-semibold text-neutral-800 dark:text-white">
                                         {conversation.name || otherName}

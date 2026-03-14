@@ -84,6 +84,7 @@ const RentModal = () => {
     const rentModal = useRentModal();
     const isRoom = !!rentModal.propertyContext || rentModal.editingListing?.rentalUnit?.type === 'PRIVATE_ROOM';
     const t = useTranslations('rentModal');
+    const tToasts = useTranslations('toasts');
 
     const Map = useMemo(() => dynamic(() => import('../Map'), {
         ssr: false
@@ -405,7 +406,7 @@ const RentModal = () => {
         // Advance to CATEGORY step (user verifies/adjusts from there)
         setStep(STEPS.CATEGORY);
 
-        toast.success(`Annonce importée depuis ${result.source || 'le texte'}`, { duration: 3000 });
+        toast.success(tToasts('rentModal.listingImported', { source: result.source || tToasts('rentModal.importSourceText') }), { duration: 3000 });
     };
 
     const onBack = () => {

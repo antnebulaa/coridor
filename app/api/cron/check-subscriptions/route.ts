@@ -5,6 +5,9 @@ import { createNotification } from "@/libs/notifications";
 import { sendEmail } from "@/lib/email";
 import { EmailTemplate } from "@/components/emails/EmailTemplate";
 import { PLAN_INFO } from "@/lib/plan-features";
+import { getServerTranslation } from '@/lib/serverTranslations';
+
+const t = getServerTranslation('emails');
 
 /**
  * Cron job to check for expired subscriptions and downgrade users.
@@ -93,38 +96,38 @@ export async function GET(request: Request) {
         for (const sub of expiringIn7Days) {
             const planInfo = PLAN_INFO[sub.plan] || PLAN_INFO.FREE;
             const userName =
-                sub.user.firstName || sub.user.name || "Cher utilisateur";
+                sub.user.firstName || sub.user.name || t('subscription.defaultUser');
 
             try {
                 await createNotification({
                     userId: sub.user.id,
                     type: "SUBSCRIPTION_EXPIRING",
-                    title: "Votre abonnement expire bientôt",
-                    message: `Votre abonnement ${planInfo.displayName} expire dans 7 jours. Renouvelez pour ne pas perdre vos fonctionnalités.`,
+                    title: t('subscription.expiring.notifTitle'),
+                    message: t('subscription.expiring.notifMessage', { plan: planInfo.displayName }),
                     link: "/account/subscription",
                 });
 
                 if (sub.user.email) {
                     await sendEmail(
                         sub.user.email,
-                        "Votre abonnement expire dans 7 jours",
+                        t('subscription.expiring.emailSubject'),
                         createElement(
                             EmailTemplate,
                             {
-                                heading: `${userName}, votre abonnement expire bientôt`,
-                                actionLabel: "Renouveler mon abonnement",
+                                heading: t('subscription.expiring.emailHeading', { name: userName }),
+                                actionLabel: t('subscription.expiring.emailCta'),
                                 actionUrl: `${appUrl}/account/subscription`,
                                 children: null,
                             },
                             createElement(
                                 "p",
                                 { style: { margin: "0 0 16px" } },
-                                `Votre abonnement ${planInfo.displayName} expire dans 7 jours.`
+                                t('subscription.expiring.emailBody', { plan: planInfo.displayName })
                             ),
                             createElement(
                                 "p",
                                 { style: { margin: "0 0 16px" } },
-                                "Renouvelez maintenant pour continuer à profiter de toutes vos fonctionnalités :"
+                                t('subscription.expiring.emailRenew')
                             ),
                             createElement(
                                 "ul",
@@ -162,33 +165,33 @@ export async function GET(request: Request) {
         for (const sub of expiringIn1Day) {
             const planInfo = PLAN_INFO[sub.plan] || PLAN_INFO.FREE;
             const userName =
-                sub.user.firstName || sub.user.name || "Cher utilisateur";
+                sub.user.firstName || sub.user.name || t('subscription.defaultUser');
 
             try {
                 await createNotification({
                     userId: sub.user.id,
                     type: "SUBSCRIPTION_EXPIRING",
-                    title: "Votre abonnement expire bientôt",
-                    message: `Votre abonnement ${planInfo.displayName} expire demain ! Renouvelez maintenant.`,
+                    title: t('subscription.expiringTomorrow.notifTitle'),
+                    message: t('subscription.expiringTomorrow.notifMessage', { plan: planInfo.displayName }),
                     link: "/account/subscription",
                 });
 
                 if (sub.user.email) {
                     await sendEmail(
                         sub.user.email,
-                        "Votre abonnement expire demain !",
+                        t('subscription.expiringTomorrow.emailSubject'),
                         createElement(
                             EmailTemplate,
                             {
-                                heading: `${userName}, votre abonnement expire demain !`,
-                                actionLabel: "Renouveler maintenant",
+                                heading: t('subscription.expiringTomorrow.emailHeading', { name: userName }),
+                                actionLabel: t('subscription.expiringTomorrow.emailCta'),
                                 actionUrl: `${appUrl}/account/subscription`,
                                 children: null,
                             },
                             createElement(
                                 "p",
                                 { style: { margin: "0 0 16px" } },
-                                `Votre abonnement ${planInfo.displayName} expire demain.`
+                                t('subscription.expiringTomorrow.emailBody', { plan: planInfo.displayName })
                             ),
                             createElement(
                                 "p",
@@ -198,7 +201,7 @@ export async function GET(request: Request) {
                                         fontWeight: "600",
                                     },
                                 },
-                                "Ne perdez pas l'accès à vos fonctionnalités :"
+                                t('subscription.expiringTomorrow.emailWarning')
                             ),
                             createElement(
                                 "ul",

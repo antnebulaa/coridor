@@ -4,6 +4,9 @@ import { createNotification } from '@/libs/notifications';
 import { sendPushNotification } from '@/app/lib/sendPushNotification';
 import { PassportService } from '@/services/PassportService';
 import { DepositService } from '@/services/DepositService';
+import { getServerTranslation } from '@/lib/serverTranslations';
+
+const t = getServerTranslation('emails');
 
 // POST /api/cron/deposit-resolution — Auto-resolve + deadline reminders + overdue + penalties
 export async function POST() {
@@ -76,15 +79,15 @@ export async function POST() {
         await createNotification({
           userId,
           type: 'inspection',
-          title: 'Depot de garantie — delai expire',
-          message: 'Le delai de 14 jours est expire. Le depot est restitue selon l\'accord partiel.',
+          title: t('deposit.resolution.notifTitle'),
+          message: t('deposit.resolution.notifMessage'),
           link: `/inspection/${inspectionId}/deductions`,
         });
 
         sendPushNotification({
           userId,
-          title: 'Depot de garantie restitue',
-          body: 'Le delai de contestation est expire. Le depot est restitue selon l\'accord partiel.',
+          title: t('deposit.resolution.pushTitle'),
+          body: t('deposit.resolution.pushBody'),
           url: `/inspection/${inspectionId}/deductions`,
         });
       }

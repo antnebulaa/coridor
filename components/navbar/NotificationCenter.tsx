@@ -7,6 +7,7 @@ import { useRouter } from '@/i18n/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 interface Notification {
     id: string;
@@ -24,6 +25,7 @@ interface NotificationCenterProps {
 }
 
 const NotificationCenter: React.FC<NotificationCenterProps> = ({ currentUser, redirectToPage }) => {
+    const t = useTranslations('toasts');
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
@@ -97,9 +99,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ currentUser, re
 
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
-            toast.success("Tout est lu !");
+            toast.success(t('notifications.allRead'));
         } catch (error) {
-            toast.error("Erreur");
+            toast.error(t('common.error'));
         } finally {
             setIsLoading(false);
         }

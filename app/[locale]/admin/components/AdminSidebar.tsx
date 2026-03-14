@@ -4,16 +4,18 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LayoutDashboard, Home, Users, BarChart3, ArrowLeft, CreditCard } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const NAV_ITEMS = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-    { href: '/admin/listings', label: 'Annonces', icon: Home },
-    { href: '/admin/users', label: 'Utilisateurs', icon: Users },
-    { href: '/admin/polls', label: 'Sondages', icon: BarChart3 },
-    { href: '/admin/plans', label: 'Plans & Features', icon: CreditCard },
+    { href: '/admin', labelKey: 'sidebar.dashboard' as const, icon: LayoutDashboard, exact: true },
+    { href: '/admin/listings', labelKey: 'sidebar.listings' as const, icon: Home },
+    { href: '/admin/users', labelKey: 'sidebar.users' as const, icon: Users },
+    { href: '/admin/polls', labelKey: 'sidebar.polls' as const, icon: BarChart3 },
+    { href: '/admin/plans', labelKey: 'sidebar.plans' as const, icon: CreditCard },
 ];
 
 const AdminSidebar: React.FC = () => {
+    const t = useTranslations('admin');
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
 
@@ -76,7 +78,7 @@ const AdminSidebar: React.FC = () => {
                             }`}
                         >
                             <item.icon size={18} />
-                            <span>{item.label}</span>
+                            <span>{t(item.labelKey)}</span>
                         </Link>
                     );
                 })}
@@ -88,7 +90,7 @@ const AdminSidebar: React.FC = () => {
                     className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm px-4 py-2"
                 >
                     <ArrowLeft size={16} />
-                    <span>Retour au site</span>
+                    <span>{t('sidebar.backToSite')}</span>
                 </Link>
             </div>
         </>

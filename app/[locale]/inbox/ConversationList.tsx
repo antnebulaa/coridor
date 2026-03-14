@@ -22,7 +22,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
     const t = useTranslations('inbox');
     const [items, setItems] = useState(initialItems);
-    const [currentTab, setCurrentTab] = useState<Tab>('all');
+    const defaultTab: Tab = currentUser?.userMode === 'LANDLORD' ? 'landlord' : currentUser?.userMode === 'TENANT' ? 'tenant' : 'all';
+    const [currentTab, setCurrentTab] = useState<Tab>(defaultTab);
     const router = useRouter();
     const { isOpen } = useConversation();
 

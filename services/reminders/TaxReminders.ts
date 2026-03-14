@@ -1,5 +1,6 @@
 import prisma from "@/libs/prismadb";
 import { LegalReminderType, LegalReminderPriority } from "@prisma/client";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 /**
  * Gere les rappels fiscaux pour les proprietaires.
@@ -54,13 +55,14 @@ export class TaxReminders {
       });
 
       if (!existing) {
+        const t = getServerTranslation('emails');
         await prisma.legalReminder.create({
           data: {
             userId: ownerId,
             type: LegalReminderType.TAX_DECLARATION_DEADLINE,
             priority: LegalReminderPriority.HIGH,
-            title: `Declaration de revenus fonciers ${currentYear}`,
-            description: `Votre récap fiscal ${currentYear - 1} est disponible. Consultez-le pour préparer votre déclaration de revenus fonciers 2044. Date limite de déclaration en ligne : environ le 20 mai.`,
+            title: t('reminder.tax.declaration.title', { year: String(currentYear) }),
+            description: t('reminder.tax.declaration.description', { year: String(currentYear - 1) }),
             legalReference: 'Art. 28 CGI — Declaration des revenus fonciers',
             actionUrl: '/account/fiscal',
             dueDate,

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { BellPlus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Modal from '../modals/Modal';
 
 import useLoginModal from '@/hooks/useLoginModal';
@@ -30,6 +31,7 @@ const SearchAlertModal: React.FC<SearchAlertModalProps> = ({
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const loginModal = useLoginModal();
+    const t = useTranslations('toasts');
 
     // Initialize with current search, or empty defaults
     // If no search is active, user creates a generic alert?
@@ -61,10 +63,10 @@ const SearchAlertModal: React.FC<SearchAlertModalProps> = ({
             await axios.post('/api/alerts', {
                 ...currentSearch
             });
-            toast.success('Alerte créée ! Vous recevrez un email.');
+            toast.success(t('alerts.created'));
             onClose();
         } catch (error) {
-            toast.error("Erreur lors de la création de l'alerte.");
+            toast.error(t('alerts.createError'));
         } finally {
             setIsLoading(false);
         }

@@ -12,6 +12,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
 
 interface VisitsClientProps {
     visits: SafeVisit[];
@@ -65,15 +66,16 @@ const VisitsClient: React.FC<VisitsClientProps> = ({
 const VisitCard = ({ visit }: { visit: SafeVisit }) => {
     const router = useRouter();
     const [isConfirming, setIsConfirming] = useState(false);
+    const t = useTranslations('toasts');
 
     const handleConfirm = async () => {
         setIsConfirming(true);
         try {
             await axios.post(`/api/visits/${visit.id}/confirm`);
-            toast.success('Visite confirmée !');
+            toast.success(t('visits.confirmed'));
             router.refresh();
         } catch {
-            toast.error('Erreur lors de la confirmation');
+            toast.error(t('visits.confirmError'));
         } finally {
             setIsConfirming(false);
         }

@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { createNotification } from "@/libs/notifications";
 import { sendPushNotification } from "@/app/lib/sendPushNotification";
 import { sendEmail } from "@/lib/email";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 /**
  * Get all signed leases for a property to populate the selection dropdown.
@@ -204,13 +205,14 @@ export async function sendRegularizationMessage(leaseId: string, documentUrl: st
         throw new Error("Bail ou locataire introuvable");
     }
 
+    const t = getServerTranslation('emails');
     const tenant = lease.candidateScope.creatorUser;
     const tenantId = tenant.id;
     const tenantEmail = tenant.email;
     const listingId = lease.listingId;
-    const landlordName = currentUser.name || 'Votre propriétaire';
+    const landlordName = currentUser.name || t('regularization.defaultLandlordName');
     const property = lease.listing.rentalUnit.property;
-    const propertyTitle = [property.addressLine1, property.city].filter(Boolean).join(', ') || 'Votre logement';
+    const propertyTitle = [property.addressLine1, property.city].filter(Boolean).join(', ') || t('regularization.defaultPropertyTitle');
 
     // 2. Find Conversation (Owner <-> Tenant) linked to this listing
     let conversation = await prisma.conversation.findFirst({
@@ -239,8 +241,8 @@ export async function sendRegularizationMessage(leaseId: string, documentUrl: st
     }
 
     // 3. Send Message in conversation
-    const messageBody = `Bonjour,\n\nVoici le décompte de régularisation des charges pour l'année ${year}.\n\nVous pouvez consulter le document ci-joint :`;
-    const fullBody = `${messageBody}\n\n[Télécharger le Document](${documentUrl})`;
+    const messageBody = t('regularization.messageBody', { year: String(year) });
+    const fullBody = `${messageBody}\n\n[${t('regularization.downloadLink')}](${documentUrl})`;
 
     await prisma.message.create({
         data: {
@@ -263,44 +265,45 @@ export async function sendRegularizationMessage(leaseId: string, documentUrl: st
     await createNotification({
         userId: tenantId,
         type: 'REGULARIZATION',
-        title: `Régularisation des charges ${year}`,
-        message: `${landlordName} vous a envoyé le décompte de régularisation des charges pour ${propertyTitle}.`,
+        title: t('regularization.notifTitle', { year: String(year) }),
+        message: t('regularization.notifMessage', { landlord: landlordName, property: propertyTitle }),
         link: `/inbox/${conversation.id}`,
     }).catch(err => console.error("[Notification] Failed to create regularization notification:", err));
 
     // 5. Push notification (fire-and-forget)
     sendPushNotification({
         userId: tenantId,
-        title: `Régularisation des charges ${year}`,
-        body: `${landlordName} vous a envoyé le décompte de régularisation des charges.`,
+        title: t('regularization.pushTitle', { year: String(year) }),
+        body: t('regularization.pushBody', { landlord: landlordName }),
         url: `/inbox/${conversation.id}`,
         type: 'message',
     }).catch(err => console.error("[Push] Failed to notify tenant for regularization:", err));
 
     // 6. Email notification (fire-and-forget)
     if (tenantEmail) {
+        const tenantGreeting = tenant.name ? ` ${tenant.name}` : '';
         sendEmail(
             tenantEmail,
-            `Régularisation des charges ${year} — ${propertyTitle}`,
+            t('regularization.emailSubject', { year: String(year), property: propertyTitle }),
             `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
-                    <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Régularisation des charges ${year}</h2>
+                    <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">${t('regularization.emailHeading', { year: String(year) })}</h2>
                     <p style="color: #525252; font-size: 15px; line-height: 1.6;">
-                        Bonjour${tenant.name ? ` ${tenant.name}` : ''},
+                        ${t('regularization.emailGreeting', { name: tenantGreeting })}
                     </p>
                     <p style="color: #525252; font-size: 15px; line-height: 1.6;">
-                        ${landlordName} vous a envoyé le décompte de régularisation des charges pour l'année ${year} concernant le logement <strong>${propertyTitle}</strong>.
+                        ${t('regularization.emailBody', { landlord: landlordName, year: String(year), property: propertyTitle })}
                     </p>
                     <p style="color: #525252; font-size: 15px; line-height: 1.6;">
-                        Vous pouvez consulter le document et échanger avec votre propriétaire directement sur Coridor.
+                        ${t('regularization.emailCta')}
                     </p>
                     <div style="text-align: center; margin: 24px 0;">
                         <a href="${process.env.NEXTAUTH_URL || 'https://coridor.fr'}/inbox/${conversation.id}" style="display: inline-block; background: #171717; color: #fff; font-weight: 600; padding: 12px 28px; border-radius: 999px; text-decoration: none; font-size: 15px;">
-                            Voir le décompte
+                            ${t('regularization.emailAction')}
                         </a>
                     </div>
                     <p style="color: #a3a3a3; font-size: 13px; margin-top: 32px; border-top: 1px solid #e5e5e5; padding-top: 16px;">
-                        Coridor — Location immobilière entre particuliers
+                        ${t('regularization.emailFooter')}
                     </p>
                 </div>
             `

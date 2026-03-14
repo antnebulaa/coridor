@@ -124,7 +124,7 @@ const PropertyStandardCard: React.FC<PropertyStandardCardProps> = ({
                         </div>
                         <div className="flex items-center gap-2 font-medium text-[16px] text-neutral-800">
                             <div className={`w-2.5 h-2.5 rounded-full ${isOccupied ? 'bg-green-600' : hasPendingSignature ? 'bg-blue-500' : 'bg-orange-500'}`} />
-                            {isOccupied ? t('status.occupied') : hasPendingSignature ? 'Bail en signature' : t('status.vacant')}
+                            {isOccupied ? t('status.occupied') : hasPendingSignature ? t('status.pendingSignature') : t('status.vacant')}
                         </div>
                     </div>
 

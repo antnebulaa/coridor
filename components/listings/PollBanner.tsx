@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useTranslations } from 'next-intl';
 import { BarChart3, X } from "lucide-react";
 
 interface PollBannerProps {
@@ -50,6 +51,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const PollBanner: React.FC<PollBannerProps> = ({ currentUser, locationContext }) => {
+  const t = useTranslations('toasts');
   const [poll, setPoll] = useState<PollData | null>(null);
   const [results, setResults] = useState<ResultsData | null>(null);
   const [isVoting, setIsVoting] = useState(false);
@@ -95,7 +97,7 @@ const PollBanner: React.FC<PollBannerProps> = ({ currentUser, locationContext })
 
   const handleVote = useCallback(async (selectedOption: number) => {
     if (!currentUser) {
-      toast.error("Connectez-vous pour voter");
+      toast.error(t('polls.loginToVote'));
       return;
     }
 
@@ -113,7 +115,7 @@ const PollBanner: React.FC<PollBannerProps> = ({ currentUser, locationContext })
       });
       setResults(data);
     } catch {
-      toast.error("Erreur lors du vote");
+      toast.error(t('polls.voteError'));
     } finally {
       setIsVoting(false);
     }

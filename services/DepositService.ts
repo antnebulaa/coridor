@@ -5,7 +5,8 @@ import { sendEmail } from '@/lib/email';
 import React from 'react';
 import { EmailTemplate } from '@/components/emails/EmailTemplate';
 import { TRANSITIONS, EVENT_TO_STATUS } from '@/lib/depositRules';
-import type { SecurityDeposit, DepositEvent, DepositStatus, DepositEventType } from '@prisma/client';
+import { getServerTranslation } from '@/lib/serverTranslations';
+import type { SecurityDeposit, DepositEvent, DepositResolution, DepositStatus, DepositEventType, RentalApplication, Listing, RentalUnit, Property, TenantCandidateScope, User } from '@prisma/client';
 
 type TransitionOpts = {
   actorType?: string;
@@ -16,6 +17,17 @@ type TransitionOpts = {
 
 type SecurityDepositFull = SecurityDeposit & {
   events: DepositEvent[];
+  depositResolution: DepositResolution | null;
+  application: RentalApplication & {
+    listing: Pick<Listing, 'id' | 'title' | 'price' | 'securityDeposit'> & {
+      rentalUnit: RentalUnit & {
+        property: Pick<Property, 'id' | 'ownerId' | 'city'>;
+      };
+    };
+    candidateScope: (Pick<TenantCandidateScope, 'creatorUserId'> & {
+      creatorUser: Pick<User, 'name' | 'firstName'>;
+    }) | null;
+  };
 };
 
 export class DepositService {
@@ -204,9 +216,10 @@ export class DepositService {
 
     // ⚠️ PAID → HELD chaining: auto-chain immediately, no zombie state
     if (targetStatus === 'PAID') {
+      const tChain = getServerTranslation('emails');
       return DepositService.transition(depositId, 'PAYMENT_CONFIRMED', {
         ...opts,
-        description: 'Dépôt détenu par le propriétaire',
+        description: tChain('deposit.events.heldByLandlord'),
       }).catch(() => {
         // If already HELD (race condition), just return
         return prisma.securityDeposit.update({
@@ -229,12 +242,13 @@ export class DepositService {
 
     // Email for critical events
     if (event === 'RETENTIONS_PROPOSED' && tenantId) {
+      const t = getServerTranslation('emails');
       DepositService.sendDepositEmail(
         tenantId,
-        'Dépôt de garantie — Retenues proposées',
-        'Le propriétaire a proposé des retenues',
-        `Le propriétaire a proposé des retenues sur votre dépôt de garantie. Consultez le détail et donnez votre réponse depuis votre espace Coridor.`,
-        'Consulter et répondre',
+        t('deposit.retentionsProposed.emailSubject'),
+        t('deposit.retentionsProposed.emailHeading'),
+        t('deposit.retentionsProposed.emailBody'),
+        t('deposit.retentionsProposed.emailAction'),
         `/deposit/${deposit.applicationId}`,
       ).catch(console.error);
     }
@@ -350,8 +364,9 @@ export class DepositService {
           include: {
             listing: {
               select: {
+                title: true,
                 rentalUnit: {
-                  include: { property: { select: { ownerId: true, title: true } } },
+                  include: { property: { select: { ownerId: true } } },
                 },
               },
             },
@@ -398,33 +413,34 @@ export class DepositService {
         });
 
         // Notify landlord + tenant on first overdue
+        const t = getServerTranslation('emails');
         const landlordId = deposit.application.listing.rentalUnit.property.ownerId;
         const tenantId = deposit.application.candidateScope?.creatorUserId;
-        const propertyTitle = deposit.application.listing.rentalUnit.property.title || 'votre bien';
+        const propertyTitle = deposit.application.listing.title || t('deposit.defaultPropertyTitle');
         const penaltyDisplay = (penaltyAmountCents / 100).toFixed(0);
         const depositLink = `/deposit/${deposit.applicationId}`;
 
         await createNotification({
           userId: landlordId,
           type: 'deposit',
-          title: 'Délai de restitution dépassé',
-          message: `Le délai légal de restitution du dépôt pour ${propertyTitle} est dépassé. Pénalité : ${penaltyDisplay}€.`,
+          title: t('deposit.overdue.landlordNotifTitle'),
+          message: t('deposit.overdue.landlordNotifMessage', { property: propertyTitle, penalty: penaltyDisplay }),
           link: depositLink,
         });
 
         sendPushNotification({
           userId: landlordId,
-          title: 'Dépôt — délai dépassé',
-          body: `Pénalité de ${penaltyDisplay}€. Restituez le dépôt.`,
+          title: t('deposit.overdue.landlordPushTitle'),
+          body: t('deposit.overdue.landlordPushBody', { penalty: penaltyDisplay }),
           url: depositLink,
         }).catch(console.error);
 
         DepositService.sendDepositEmail(
           landlordId,
-          'Dépôt de garantie — Délai de restitution dépassé',
-          'Délai de restitution dépassé',
-          `Le délai légal de restitution du dépôt de garantie pour ${propertyTitle} est dépassé. Une pénalité de ${penaltyDisplay}€ s'applique (10% du loyer par mois de retard, article 22 de la loi du 6 juillet 1989). Restituez le dépôt pour éviter des pénalités supplémentaires.`,
-          'Voir le suivi',
+          t('deposit.overdue.landlordEmailSubject'),
+          t('deposit.overdue.landlordEmailHeading'),
+          t('deposit.overdue.landlordEmailBody', { property: propertyTitle, penalty: penaltyDisplay }),
+          t('deposit.overdue.landlordEmailAction'),
           depositLink,
         ).catch(console.error);
 
@@ -432,24 +448,24 @@ export class DepositService {
           await createNotification({
             userId: tenantId,
             type: 'deposit',
-            title: 'Dépôt non restitué dans les délais',
-            message: `Le délai de restitution de votre dépôt pour ${propertyTitle} est dépassé. Pénalité applicable : ${penaltyDisplay}€.`,
+            title: t('deposit.overdue.tenantNotifTitle'),
+            message: t('deposit.overdue.tenantNotifMessage', { property: propertyTitle, penalty: penaltyDisplay }),
             link: depositLink,
           });
 
           sendPushNotification({
             userId: tenantId,
-            title: 'Dépôt — délai dépassé',
-            body: `Votre dépôt n'a pas été restitué dans les délais.`,
+            title: t('deposit.overdue.tenantPushTitle'),
+            body: t('deposit.overdue.tenantPushBody'),
             url: depositLink,
           }).catch(console.error);
 
           DepositService.sendDepositEmail(
             tenantId,
-            'Dépôt de garantie — Délai dépassé',
-            'Votre dépôt n\'a pas été restitué',
-            `Le délai légal de restitution de votre dépôt de garantie pour ${propertyTitle} est dépassé. Une pénalité de ${penaltyDisplay}€ s'applique en votre faveur. Vous pouvez consulter votre espace pour connaître vos options.`,
-            'Voir mes options',
+            t('deposit.overdue.tenantEmailSubject'),
+            t('deposit.overdue.tenantEmailHeading'),
+            t('deposit.overdue.tenantEmailBody', { property: propertyTitle, penalty: penaltyDisplay }),
+            t('deposit.overdue.tenantEmailAction'),
             depositLink,
           ).catch(console.error);
         }
@@ -509,6 +525,8 @@ export class DepositService {
       },
     });
 
+    const t = getServerTranslation('emails');
+
     for (const deposit of deposits) {
       const landlordId = deposit.application.listing.rentalUnit.property.ownerId;
       const tenantId = deposit.application.candidateScope?.creatorUserId;
@@ -517,7 +535,7 @@ export class DepositService {
         data: {
           depositId: deposit.id,
           type: 'DEADLINE_WARNING',
-          description: `Rappel : restitution du dépôt dans 7 jours`,
+          description: t('deposit.preDeadline.eventDescription'),
           actorType: 'cron',
         },
       });
@@ -526,24 +544,24 @@ export class DepositService {
       await createNotification({
         userId: landlordId,
         type: 'deposit',
-        title: 'Restitution du dépôt — 7 jours restants',
-        message: `Le délai légal de restitution du dépôt de garantie expire dans 7 jours. Pensez à restituer le dépôt au locataire.`,
+        title: t('deposit.preDeadline.landlordNotifTitle'),
+        message: t('deposit.preDeadline.landlordNotifMessage'),
         link: `/deposit/${deposit.applicationId}`,
       });
 
       sendPushNotification({
         userId: landlordId,
-        title: 'Dépôt de garantie — 7 jours',
-        body: 'Le délai de restitution expire dans 7 jours.',
+        title: t('deposit.preDeadline.landlordPushTitle'),
+        body: t('deposit.preDeadline.landlordPushBody'),
         url: `/deposit/${deposit.applicationId}`,
       });
 
       DepositService.sendDepositEmail(
         landlordId,
-        'Dépôt de garantie — 7 jours restants',
-        'Restitution du dépôt dans 7 jours',
-        `Le délai légal de restitution du dépôt de garantie expire dans 7 jours. Pensez à restituer le dépôt au locataire pour éviter les pénalités prévues par la loi.`,
-        'Voir le suivi',
+        t('deposit.preDeadline.landlordEmailSubject'),
+        t('deposit.preDeadline.landlordEmailHeading'),
+        t('deposit.preDeadline.landlordEmailBody'),
+        t('deposit.preDeadline.landlordEmailAction'),
         `/deposit/${deposit.applicationId}`,
       ).catch(console.error);
 
@@ -552,24 +570,24 @@ export class DepositService {
         await createNotification({
           userId: tenantId,
           type: 'deposit',
-          title: 'Restitution du dépôt — 7 jours',
-          message: `Le propriétaire doit restituer votre dépôt de garantie sous 7 jours.`,
+          title: t('deposit.preDeadline.tenantNotifTitle'),
+          message: t('deposit.preDeadline.tenantNotifMessage'),
           link: `/deposit/${deposit.applicationId}`,
         });
 
         sendPushNotification({
           userId: tenantId,
-          title: 'Dépôt de garantie — 7 jours',
-          body: 'Votre dépôt doit être restitué sous 7 jours.',
+          title: t('deposit.preDeadline.tenantPushTitle'),
+          body: t('deposit.preDeadline.tenantPushBody'),
           url: `/deposit/${deposit.applicationId}`,
         });
 
         DepositService.sendDepositEmail(
           tenantId,
-          'Dépôt de garantie — Restitution dans 7 jours',
-          'Votre dépôt doit être restitué',
-          `Le propriétaire doit restituer votre dépôt de garantie sous 7 jours. Vous pouvez suivre l'avancement depuis votre espace.`,
-          'Voir le suivi',
+          t('deposit.preDeadline.tenantEmailSubject'),
+          t('deposit.preDeadline.tenantEmailHeading'),
+          t('deposit.preDeadline.tenantEmailBody'),
+          t('deposit.preDeadline.tenantEmailAction'),
           `/deposit/${deposit.applicationId}`,
         ).catch(console.error);
       }
@@ -616,15 +634,19 @@ export class DepositService {
       },
     });
 
+    const t = getServerTranslation('emails');
+
     for (const deposit of deposits) {
       const landlordId = deposit.application.listing.rentalUnit.property.ownerId;
       const tenantId = deposit.application.candidateScope?.creatorUserId;
+      const penaltyDisplay = (deposit.penaltyAmountCents / 100).toFixed(2);
+      const penaltyDisplayRounded = (deposit.penaltyAmountCents / 100).toFixed(0);
 
       await prisma.depositEvent.create({
         data: {
           depositId: deposit.id,
           type: 'SECOND_REMINDER',
-          description: `Second rappel — J+15 après expiration du délai légal`,
+          description: t('deposit.postDeadline.eventDescription'),
           actorType: 'cron',
         },
       });
@@ -633,24 +655,24 @@ export class DepositService {
       await createNotification({
         userId: landlordId,
         type: 'deposit',
-        title: 'Dépôt de garantie en retard — Action requise',
-        message: `Le délai légal de restitution est dépassé de 15 jours. Une pénalité de ${(deposit.penaltyAmountCents / 100).toFixed(2)}€ s'applique. Restituez le dépôt pour éviter des pénalités supplémentaires.`,
+        title: t('deposit.postDeadline.landlordNotifTitle'),
+        message: t('deposit.postDeadline.landlordNotifMessage', { penalty: penaltyDisplay }),
         link: `/deposit/${deposit.applicationId}`,
       });
 
       sendPushNotification({
         userId: landlordId,
-        title: 'Dépôt en retard — pénalité en cours',
-        body: `Pénalité de ${(deposit.penaltyAmountCents / 100).toFixed(2)}€. Restituez le dépôt.`,
+        title: t('deposit.postDeadline.landlordPushTitle'),
+        body: t('deposit.postDeadline.landlordPushBody', { penalty: penaltyDisplay }),
         url: `/deposit/${deposit.applicationId}`,
       });
 
       DepositService.sendDepositEmail(
         landlordId,
-        'Dépôt de garantie — Retard de 15 jours',
-        'Dépôt en retard — Action urgente requise',
-        `Le délai légal de restitution du dépôt de garantie est dépassé de 15 jours. Une pénalité de ${(deposit.penaltyAmountCents / 100).toFixed(0)}€ s'applique. Restituez le dépôt pour limiter les pénalités.`,
-        'Restituer le dépôt',
+        t('deposit.postDeadline.landlordEmailSubject'),
+        t('deposit.postDeadline.landlordEmailHeading'),
+        t('deposit.postDeadline.landlordEmailBody', { penalty: penaltyDisplayRounded }),
+        t('deposit.postDeadline.landlordEmailAction'),
         `/deposit/${deposit.applicationId}`,
       ).catch(console.error);
 
@@ -659,24 +681,24 @@ export class DepositService {
         await createNotification({
           userId: tenantId,
           type: 'deposit',
-          title: 'Dépôt non restitué — Vous pouvez agir',
-          message: `Votre dépôt n'a pas été restitué dans les délais. Vous pouvez générer une mise en demeure depuis votre espace.`,
+          title: t('deposit.postDeadline.tenantNotifTitle'),
+          message: t('deposit.postDeadline.tenantNotifMessage'),
           link: `/deposit/${deposit.applicationId}`,
         });
 
         sendPushNotification({
           userId: tenantId,
-          title: 'Dépôt non restitué',
-          body: 'Vous pouvez générer une mise en demeure.',
+          title: t('deposit.postDeadline.tenantPushTitle'),
+          body: t('deposit.postDeadline.tenantPushBody'),
           url: `/deposit/${deposit.applicationId}`,
         });
 
         DepositService.sendDepositEmail(
           tenantId,
-          'Dépôt de garantie — Vous pouvez agir',
-          'Votre dépôt n\'a toujours pas été restitué',
-          `Votre dépôt de garantie n'a pas été restitué dans les délais légaux. Vous pouvez générer une mise en demeure depuis votre espace Coridor pour faire valoir vos droits.`,
-          'Générer une mise en demeure',
+          t('deposit.postDeadline.tenantEmailSubject'),
+          t('deposit.postDeadline.tenantEmailHeading'),
+          t('deposit.postDeadline.tenantEmailBody'),
+          t('deposit.postDeadline.tenantEmailAction'),
           `/deposit/${deposit.applicationId}`,
         ).catch(console.error);
       }
@@ -729,6 +751,7 @@ export class DepositService {
    * Mark formal notice as sent.
    */
   static async markFormalNoticeSent(depositId: string, sentDate: Date): Promise<void> {
+    const t = getServerTranslation('emails');
     await prisma.securityDeposit.update({
       where: { id: depositId },
       data: { formalNoticeSentAt: sentDate },
@@ -738,7 +761,7 @@ export class DepositService {
       data: {
         depositId,
         type: 'FORMAL_NOTICE_SENT',
-        description: `Mise en demeure envoyée le ${sentDate.toLocaleDateString('fr-FR')}`,
+        description: t('deposit.events.formalNoticeSent', { date: sentDate.toLocaleDateString('fr-FR') }),
         actorType: 'tenant',
       },
     });
@@ -777,7 +800,6 @@ export class DepositService {
                       select: {
                         id: true,
                         ownerId: true,
-                        title: true,
                         city: true,
                       },
                     },
@@ -881,31 +903,32 @@ export class DepositService {
     event: DepositEventType,
     deposit: SecurityDeposit
   ): string {
+    const t = getServerTranslation('emails');
     const amount = (deposit.amountCents / 100).toFixed(2);
     const descriptions: Partial<Record<DepositEventType, string>> = {
-      LEASE_SIGNED: `Bail signé — dépôt de ${amount}€ dû`,
-      PAYMENT_DETECTED: `Versement du dépôt détecté`,
-      PAYMENT_CONFIRMED: `Versement du dépôt confirmé (${amount}€)`,
-      ENTRY_INSPECTION_DONE: `État des lieux d'entrée réalisé`,
-      EXIT_INSPECTION_STARTED: `État des lieux de sortie démarré`,
-      EXIT_INSPECTION_SIGNED: `État des lieux de sortie signé`,
-      RETENTIONS_PROPOSED: `Retenues proposées par le propriétaire`,
-      TENANT_AGREED: `Locataire accepte les retenues`,
-      TENANT_PARTIAL_AGREED: `Accord partiel du locataire`,
-      TENANT_DISPUTED: `Locataire conteste les retenues`,
-      PARTIAL_RELEASE: `Restitution partielle du dépôt`,
-      FULL_RELEASE: `Dépôt restitué intégralement`,
-      DEADLINE_WARNING: `Rappel : restitution dans 7 jours`,
-      DEADLINE_OVERDUE: `Délai légal de restitution dépassé`,
-      PENALTY_UPDATED: `Pénalité mise à jour`,
-      FORMAL_NOTICE_GENERATED: `Mise en demeure générée`,
-      FORMAL_NOTICE_SENT: `Mise en demeure envoyée`,
-      CDC_DOSSIER_GENERATED: `Dossier CDC généré`,
-      TIMELINE_EXPORTED: `Timeline exportée`,
-      RESOLVED: `Dépôt de garantie — dossier clos`,
-      SECOND_REMINDER: `Second rappel — J+15 après expiration`,
-      DEDUCTION_EXCEEDS_DEPOSIT: `Les retenues dépassent le montant du dépôt`,
+      LEASE_SIGNED: t('deposit.events.leaseSigned', { amount }),
+      PAYMENT_DETECTED: t('deposit.events.paymentDetected'),
+      PAYMENT_CONFIRMED: t('deposit.events.paymentConfirmed', { amount }),
+      ENTRY_INSPECTION_DONE: t('deposit.events.entryInspectionDone'),
+      EXIT_INSPECTION_STARTED: t('deposit.events.exitInspectionStarted'),
+      EXIT_INSPECTION_SIGNED: t('deposit.events.exitInspectionSigned'),
+      RETENTIONS_PROPOSED: t('deposit.events.retentionsProposed'),
+      TENANT_AGREED: t('deposit.events.tenantAgreed'),
+      TENANT_PARTIAL_AGREED: t('deposit.events.tenantPartialAgreed'),
+      TENANT_DISPUTED: t('deposit.events.tenantDisputed'),
+      PARTIAL_RELEASE: t('deposit.events.partialRelease'),
+      FULL_RELEASE: t('deposit.events.fullRelease'),
+      DEADLINE_WARNING: t('deposit.events.deadlineWarning'),
+      DEADLINE_OVERDUE: t('deposit.events.deadlineOverdue'),
+      PENALTY_UPDATED: t('deposit.events.penaltyUpdated'),
+      FORMAL_NOTICE_GENERATED: t('deposit.events.formalNoticeGenerated'),
+      FORMAL_NOTICE_SENT: t('deposit.events.formalNoticeSentDefault'),
+      CDC_DOSSIER_GENERATED: t('deposit.events.cdcDossierGenerated'),
+      TIMELINE_EXPORTED: t('deposit.events.timelineExported'),
+      RESOLVED: t('deposit.events.resolved'),
+      SECOND_REMINDER: t('deposit.events.secondReminder'),
+      DEDUCTION_EXCEEDS_DEPOSIT: t('deposit.events.deductionExceedsDeposit'),
     };
-    return descriptions[event] || `Événement : ${event}`;
+    return descriptions[event] || t('deposit.events.default', { event });
   }
 }

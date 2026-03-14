@@ -25,9 +25,10 @@ export async function GET() {
           include: {
             listing: {
               select: {
+                title: true,
                 rentalUnit: {
                   include: {
-                    property: { select: { ownerId: true, title: true, city: true } },
+                    property: { select: { ownerId: true, city: true } },
                   },
                 },
               },
@@ -53,7 +54,7 @@ export async function GET() {
       const isLandlord = currentUser.id === deposit.application.listing.rentalUnit.property.ownerId;
       const isTenant = currentUser.id === deposit.application.candidateScope?.creatorUserId;
       const property = deposit.application.listing.rentalUnit.property;
-      const title = property.title || property.city || 'Bien';
+      const title = deposit.application.listing.title || property.city || 'Bien';
 
       // Overdue — high urgency
       if (deposit.isOverdue) {

@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { createNotification } from "@/libs/notifications";
 import { sendEmail } from "@/lib/email";
 import { EmailTemplate } from "@/components/emails/EmailTemplate";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 export interface RentReceiptData {
   // Propriétaire
@@ -225,44 +226,47 @@ export class RentReceiptService {
 
     if (!receipt) return;
 
+    const t = getServerTranslation('emails');
     const tenant = receipt.rentalApplication.candidateScope.creatorUser;
     const monthName = receipt.periodStart.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    const docType = receipt.isPartialPayment ? 'reçu' : 'quittance';
+    const docType = receipt.isPartialPayment ? t('receipt.docTypePartial') : t('receipt.docTypeFull');
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr';
 
     // Notification in-app
     await createNotification({
       userId: tenant.id,
       type: 'RENT_RECEIPT',
-      title: `Votre ${docType} de loyer est disponible`,
-      message: `Votre ${docType} de loyer pour ${monthName} est disponible au téléchargement.`,
+      title: t('receipt.notifTitle', { docType }),
+      message: t('receipt.notifMessage', { docType, month: monthName }),
       link: '/account/receipts'
     });
 
     // Email
     if (tenant.email) {
-      const tenantName = tenant.firstName || tenant.name || 'Cher locataire';
+      const tenantName = tenant.firstName || tenant.name || t('receipt.defaultTenantName');
 
       await sendEmail(
         tenant.email,
-        `Votre ${docType} de loyer — ${monthName}`,
+        t('receipt.emailSubject', { docType, month: monthName }),
         createElement(
           EmailTemplate,
           {
-            heading: `${tenantName}, votre ${docType} est disponible`,
-            actionLabel: 'Voir mes quittances',
+            heading: t('receipt.emailHeading', { name: tenantName, docType }),
+            actionLabel: t('receipt.emailAction'),
             actionUrl: `${appUrl}/account/receipts`,
+            footerCopyright: t('common.footer.copyright', { year: String(new Date().getFullYear()) }),
+            footerDisclaimer: t('common.footer.disclaimer'),
             children: null,
           },
           createElement(
             'p',
             { style: { margin: '0 0 16px' } },
-            `Votre ${docType} de loyer pour ${monthName} a été générée et est disponible dans votre espace Coridor.`
+            t('receipt.emailBody', { docType, month: monthName })
           ),
           createElement(
             'p',
             { style: { margin: '0 0 16px' } },
-            `Montant total : ${(receipt.totalAmountCents / 100).toFixed(2)} \u20ac`
+            t('receipt.emailAmount', { amount: (receipt.totalAmountCents / 100).toFixed(2) })
           )
         )
       );

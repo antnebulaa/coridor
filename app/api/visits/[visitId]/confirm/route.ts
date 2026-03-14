@@ -3,6 +3,7 @@ import getCurrentUser from "@/app/actions/getCurrentUser";
 import prisma from "@/libs/prismadb";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 interface IParams {
     visitId?: string;
@@ -82,14 +83,16 @@ export async function POST(
     // Notify landlord
     const landlordId = visit.listing.rentalUnit.property.ownerId;
     const visitDate = format(new Date(visit.date), 'dd/MM/yyyy', { locale: fr });
+    const t = getServerTranslation('emails');
+    const candidateName = currentUser.pseudonymFull || t('visit.confirmed.defaultCandidate');
 
     // In-app notification
     const { createNotification } = await import("@/libs/notifications");
     await createNotification({
         userId: landlordId,
         type: 'visit',
-        title: 'Visite confirmée',
-        message: `${currentUser.pseudonymFull || 'Un candidat'} a confirmé sa visite du ${visitDate} à ${visit.startTime}.`,
+        title: t('visit.confirmed.notifTitle'),
+        message: t('visit.confirmed.notifMessage', { candidate: candidateName, date: visitDate, time: visit.startTime }),
         link: '/calendar'
     });
 
@@ -97,8 +100,8 @@ export async function POST(
     const { sendPushNotification } = await import("@/app/lib/sendPushNotification");
     sendPushNotification({
         userId: landlordId,
-        title: "Visite confirmée ✓",
-        body: `${currentUser.pseudonymFull || 'Un candidat'} a confirmé sa visite du ${visitDate} à ${visit.startTime}`,
+        title: t('visit.confirmed.pushTitle'),
+        body: t('visit.confirmed.notifMessage', { candidate: candidateName, date: visitDate, time: visit.startTime }),
         url: `/calendar`,
         type: 'visit'
     }).catch(err => console.error("[Push] Failed to notify landlord:", err));
@@ -113,19 +116,19 @@ export async function POST(
         const { sendEmail } = await import("@/lib/email");
         sendEmail(
             landlord.email,
-            `Visite confirmée - ${visitDate} à ${visit.startTime}`,
+            t('visit.confirmed.emailSubject', { date: visitDate, time: visit.startTime }),
             `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #111;">Visite confirmée</h2>
-                <p>Bonjour ${landlord.name || ''},</p>
-                <p><strong>${currentUser.pseudonymFull || 'Un candidat'}</strong> a confirmé sa présence pour la visite prévue le <strong>${visitDate} à ${visit.startTime}</strong>.</p>
+                <h2 style="color: #111;">${t('visit.confirmed.emailHeading')}</h2>
+                <p>${t('visit.confirmed.emailGreeting', { name: landlord.name || '' })}</p>
+                <p>${t('visit.confirmed.emailBody', { candidate: candidateName, date: visitDate, time: visit.startTime })}</p>
                 <p style="margin-top: 24px;">
                     <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://coridor.fr'}/calendar"
                        style="background: #111; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                        Voir mon calendrier
+                        ${t('visit.confirmed.emailCta')}
                     </a>
                 </p>
-                <p style="color: #666; margin-top: 24px; font-size: 14px;">— L'équipe Coridor</p>
+                <p style="color: #666; margin-top: 24px; font-size: 14px;">${t('visit.confirmed.emailSignature')}</p>
             </div>
             `
         ).catch(err => console.error("[Email] Failed to notify landlord:", err));

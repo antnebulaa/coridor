@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { Plus, X, Archive, Trash2, Search, BarChart3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Modal from '@/components/modals/Modal';
 import Heading from '@/components/Heading';
 import SoftInput from '@/components/inputs/SoftInput';
@@ -29,28 +30,16 @@ interface PollManagementClientProps {
     polls: SafePoll[];
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-    NOISE_LEVEL: 'Bruit',
-    SAFETY: 'Securite',
-    TRANSPORT: 'Transports',
-    SHOPPING: 'Commerces',
-    SCHOOLS: 'Ecoles',
-    PARKING: 'Stationnement',
-    GREEN_SPACES: 'Espaces verts',
-    COMMUNITY_SPIRIT: 'Vie de quartier',
-};
+const CATEGORY_KEYS = [
+    'NOISE_LEVEL', 'SAFETY', 'TRANSPORT', 'SHOPPING',
+    'SCHOOLS', 'PARKING', 'GREEN_SPACES', 'COMMUNITY_SPIRIT',
+] as const;
 
-const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS);
-
-const STATUS_FILTERS = [
-    { value: 'ALL', label: 'Tous' },
-    { value: 'ACTIVE', label: 'Actif' },
-    { value: 'CLOSED', label: 'Ferme' },
-    { value: 'ARCHIVED', label: 'Archive' },
-];
+const STATUS_FILTER_VALUES = ['ALL', 'ACTIVE', 'CLOSED', 'ARCHIVED'] as const;
 
 const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) => {
     const router = useRouter();
+    const t = useTranslations('admin.polls');
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
@@ -86,14 +75,14 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
 
     // Actions
     const onClose = async (id: string) => {
-        if (!window.confirm('Fermer ce sondage ? Les utilisateurs ne pourront plus y repondre.')) return;
+        if (!window.confirm(t('confirmClose'))) return;
         setLoadingId(id);
         try {
             await axios.patch(`/api/admin/polls/${id}`, { status: 'CLOSED' });
-            toast.success('Sondage ferme avec succes');
+            toast.success(t('closeSuccess'));
             router.refresh();
         } catch (error) {
-            toast.error('Erreur lors de la fermeture du sondage');
+            toast.error(t('closeError'));
         } finally {
             setLoadingId(null);
         }
@@ -103,24 +92,24 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
         setLoadingId(id);
         try {
             await axios.patch(`/api/admin/polls/${id}`, { status: 'ARCHIVED' });
-            toast.success('Sondage archive avec succes');
+            toast.success(t('archiveSuccess'));
             router.refresh();
         } catch (error) {
-            toast.error('Erreur lors de l\'archivage du sondage');
+            toast.error(t('archiveError'));
         } finally {
             setLoadingId(null);
         }
     };
 
     const onDelete = async (id: string) => {
-        if (!window.confirm('Supprimer definitivement ce sondage et toutes ses reponses ?')) return;
+        if (!window.confirm(t('confirmDelete'))) return;
         setLoadingId(id);
         try {
             await axios.delete(`/api/admin/polls/${id}`);
-            toast.success('Sondage supprime avec succes');
+            toast.success(t('deleteSuccess'));
             router.refresh();
         } catch (error) {
-            toast.error('Erreur lors de la suppression du sondage');
+            toast.error(t('deleteError'));
         } finally {
             setLoadingId(null);
         }
@@ -130,12 +119,12 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
         setLoadingId('create');
         try {
             await axios.post('/api/admin/polls', data);
-            toast.success('Sondage cree avec succes');
+            toast.success(t('createSuccess'));
             setIsCreateModalOpen(false);
             reset();
             router.refresh();
         } catch (error) {
-            toast.error('Erreur lors de la creation du sondage');
+            toast.error(t('createError'));
         } finally {
             setLoadingId(null);
         }
@@ -145,7 +134,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
         <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 className="text-2xl font-bold">Gestion des sondages</h2>
+                <h2 className="text-2xl font-bold">{t('title')}</h2>
                 <button
                     onClick={() => {
                         reset();
@@ -154,7 +143,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                     className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition text-sm font-medium"
                 >
                     <Plus size={16} />
-                    Nouveau sondage
+                    {t('newPoll')}
                 </button>
             </div>
 
@@ -166,7 +155,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                     </div>
                     <div>
                         <div className="text-2xl font-bold text-slate-900">{totalPolls}</div>
-                        <div className="text-sm text-slate-500">Total sondages</div>
+                        <div className="text-sm text-slate-500">{t('totalPolls')}</div>
                     </div>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-3">
@@ -175,7 +164,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                     </div>
                     <div>
                         <div className="text-2xl font-bold text-slate-900">{activePolls}</div>
-                        <div className="text-sm text-slate-500">Sondages actifs</div>
+                        <div className="text-sm text-slate-500">{t('activePolls')}</div>
                     </div>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex items-center gap-3">
@@ -184,7 +173,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                     </div>
                     <div>
                         <div className="text-2xl font-bold text-slate-900">{totalResponses}</div>
-                        <div className="text-sm text-slate-500">Total reponses</div>
+                        <div className="text-sm text-slate-500">{t('totalResponses')}</div>
                     </div>
                 </div>
             </div>
@@ -195,24 +184,24 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Rechercher par titre..."
+                        placeholder={t('searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-500"
                     />
                 </div>
                 <div className="flex gap-1">
-                    {STATUS_FILTERS.map(sf => (
+                    {STATUS_FILTER_VALUES.map(value => (
                         <button
-                            key={sf.value}
-                            onClick={() => setFilterStatus(sf.value)}
+                            key={value}
+                            onClick={() => setFilterStatus(value)}
                             className={`px-3 py-2 text-sm rounded-lg transition font-medium ${
-                                filterStatus === sf.value
+                                filterStatus === value
                                     ? 'bg-slate-900 text-white'
                                     : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
                             }`}
                         >
-                            {sf.label}
+                            {t(`status.${value}`)}
                         </button>
                     ))}
                 </div>
@@ -225,25 +214,25 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                         <thead className="bg-slate-50">
                             <tr>
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Titre
+                                    {t('colTitle')}
                                 </th>
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Categorie
+                                    {t('colCategory')}
                                 </th>
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Options
+                                    {t('colOptions')}
                                 </th>
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Statut
+                                    {t('colStatus')}
                                 </th>
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Reponses
+                                    {t('colResponses')}
                                 </th>
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Date creation
+                                    {t('colCreatedAt')}
                                 </th>
                                 <th className="px-6 py-3 text-right font-medium text-slate-500 uppercase tracking-wider">
-                                    Actions
+                                    {t('colActions')}
                                 </th>
                             </tr>
                         </thead>
@@ -260,7 +249,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700">
-                                            {CATEGORY_LABELS[poll.category] || poll.category}
+                                            {t(`category.${poll.category}`)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
@@ -283,7 +272,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                                         <div className="flex items-center justify-end gap-1">
                                             {poll.status === 'ACTIVE' && (
                                                 <button
-                                                    title="Fermer le sondage"
+                                                    title={t('closePoll')}
                                                     onClick={() => onClose(poll.id)}
                                                     disabled={loadingId === poll.id}
                                                     className="p-2 text-slate-400 hover:text-orange-600 rounded-full hover:bg-orange-50 transition disabled:opacity-50"
@@ -293,7 +282,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                                             )}
                                             {(poll.status === 'ACTIVE' || poll.status === 'CLOSED') && (
                                                 <button
-                                                    title="Archiver le sondage"
+                                                    title={t('archivePoll')}
                                                     onClick={() => onArchive(poll.id)}
                                                     disabled={loadingId === poll.id}
                                                     className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition disabled:opacity-50"
@@ -302,7 +291,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                                                 </button>
                                             )}
                                             <button
-                                                title="Supprimer le sondage"
+                                                title={t('deletePoll')}
                                                 onClick={() => onDelete(poll.id)}
                                                 disabled={loadingId === poll.id}
                                                 className="p-2 text-slate-400 hover:text-red-600 rounded-full hover:bg-red-50 transition disabled:opacity-50"
@@ -318,7 +307,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                 </div>
                 {filteredPolls.length === 0 && (
                     <div className="p-8 text-center text-slate-500 italic">
-                        Aucun sondage trouve.
+                        {t('noResults')}
                     </div>
                 )}
             </div>
@@ -327,17 +316,17 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
             <Modal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
-                title="Nouveau sondage"
-                actionLabel="Creer"
-                secondaryActionLabel="Annuler"
+                title={t('newPoll')}
+                actionLabel={t('create')}
+                secondaryActionLabel={t('cancel')}
                 secondaryAction={() => setIsCreateModalOpen(false)}
                 onSubmit={handleSubmit(onCreateSubmit)}
                 disabled={loadingId === 'create'}
                 body={
                     <div className="flex flex-col gap-4">
                         <Heading
-                            title="Creer un sondage"
-                            subtitle="Definissez la question et les 3 options de reponse."
+                            title={t('createTitle')}
+                            subtitle={t('createSubtitle')}
                         />
                         <SoftInput
                             id="title"
@@ -349,31 +338,31 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                         />
                         <SoftInput
                             id="description"
-                            label="Description (optionnel)"
+                            label={t('descriptionLabel')}
                             disabled={loadingId === 'create'}
                             register={register}
                             errors={errors}
                         />
                         <div className="w-full">
                             <label className="block text-sm font-medium text-slate-700 mb-1">
-                                Categorie
+                                {t('colCategory')}
                             </label>
                             <select
                                 {...register('category', { required: true })}
                                 disabled={loadingId === 'create'}
                                 className="w-full px-3 py-3 border border-input rounded-xl text-sm outline-none focus:border-foreground transition bg-background"
                             >
-                                {CATEGORY_OPTIONS.map(([value, label]) => (
-                                    <option key={value} value={value}>{label}</option>
+                                {CATEGORY_KEYS.map(value => (
+                                    <option key={value} value={value}>{t(`category.${value}`)}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="border-t border-slate-200 pt-4">
-                            <p className="text-sm font-medium text-slate-700 mb-3">Options de reponse</p>
+                            <p className="text-sm font-medium text-slate-700 mb-3">{t('responseOptions')}</p>
                             <div className="flex flex-col gap-3">
                                 <SoftInput
                                     id="option1"
-                                    label="Option 1 (ex: Calme)"
+                                    label={t('option1Label')}
                                     disabled={loadingId === 'create'}
                                     register={register}
                                     errors={errors}
@@ -381,7 +370,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                                 />
                                 <SoftInput
                                     id="option2"
-                                    label="Option 2 (ex: Moyen)"
+                                    label={t('option2Label')}
                                     disabled={loadingId === 'create'}
                                     register={register}
                                     errors={errors}
@@ -389,7 +378,7 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
                                 />
                                 <SoftInput
                                     id="option3"
-                                    label="Option 3 (ex: Bruyant)"
+                                    label={t('option3Label')}
                                     disabled={loadingId === 'create'}
                                     register={register}
                                     errors={errors}
@@ -405,16 +394,17 @@ const PollManagementClient: React.FC<PollManagementClientProps> = ({ polls }) =>
 };
 
 const PollStatusBadge = ({ status }: { status: string }) => {
-    switch (status) {
-        case 'ACTIVE':
-            return <div className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Actif</div>;
-        case 'CLOSED':
-            return <div className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Ferme</div>;
-        case 'ARCHIVED':
-            return <div className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">Archive</div>;
-        default:
-            return <div className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600">{status}</div>;
-    }
+    const t = useTranslations('admin.polls');
+    const badgeClass = status === 'ACTIVE'
+        ? 'bg-green-100 text-green-800'
+        : status === 'CLOSED'
+            ? 'bg-gray-100 text-gray-800'
+            : 'bg-slate-100 text-slate-600';
+    return (
+        <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badgeClass}`}>
+            {t(`status.${status}`)}
+        </div>
+    );
 };
 
 export default PollManagementClient;

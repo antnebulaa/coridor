@@ -1,21 +1,7 @@
 import prisma from "@/libs/prismadb";
 import { createNotification } from "@/libs/notifications";
 import { sendEmail } from "@/lib/email";
-
-const MOIS_FR = [
-  "janvier",
-  "février",
-  "mars",
-  "avril",
-  "mai",
-  "juin",
-  "juillet",
-  "août",
-  "septembre",
-  "octobre",
-  "novembre",
-  "décembre",
-];
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 /**
  * Formate une adresse lisible à partir d'un objet Property.
@@ -295,6 +281,14 @@ export class RentCollectionService {
       },
     });
 
+    const t = getServerTranslation('emails');
+    const MONTH_KEYS = [
+      'common.months.january', 'common.months.february', 'common.months.march',
+      'common.months.april', 'common.months.may', 'common.months.june',
+      'common.months.july', 'common.months.august', 'common.months.september',
+      'common.months.october', 'common.months.november', 'common.months.december',
+    ];
+
     let lateNotified = 0;
     let emailsSent = 0;
     let overdueNotified = 0;
@@ -311,7 +305,7 @@ export class RentCollectionService {
         const landlord = property.owner;
         const landlordId = landlord.id;
         const address = formatAddress(property);
-        const monthName = MOIS_FR[tracking.periodMonth - 1];
+        const monthName = t(MONTH_KEYS[tracking.periodMonth - 1]);
 
         // PENDING et J+5 -> passer a LATE + notification proprio
         if (tracking.status === "PENDING" && daysLate >= 5) {
@@ -323,8 +317,8 @@ export class RentCollectionService {
           await createNotification({
             userId: landlordId,
             type: "RENT_LATE",
-            title: "Loyer non détecté",
-            message: `Loyer de ${monthName} non détecté pour ${address}. Vérifiez vos relevés.`,
+            title: t('rentCollection.late.notifTitle'),
+            message: t('rentCollection.late.notifMessage', { month: monthName, address }),
             link: "/dashboard/finances",
           });
 
@@ -339,25 +333,27 @@ export class RentCollectionService {
         ) {
           const landlordEmail = landlord.email;
           if (landlordEmail) {
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://coridor.fr";
+            const amountDisplay = (tracking.expectedAmountCents / 100).toFixed(2);
             const htmlContent = `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>Suivi loyer - ${monthName} ${tracking.periodYear}</h2>
-                <p>Bonjour,</p>
-                <p>Nous n'avons pas encore détecté le paiement du loyer de <strong>${monthName} ${tracking.periodYear}</strong> pour votre bien situé au <strong>${address}</strong>.</p>
-                <p>Montant attendu : <strong>${(tracking.expectedAmountCents / 100).toFixed(2)} &euro;</strong></p>
-                <p>Si vous avez déjà reçu le paiement, vous pouvez le confirmer manuellement depuis votre espace Coridor.</p>
+                <h2>${t('rentCollection.email.heading', { month: monthName, year: String(tracking.periodYear) })}</h2>
+                <p>${t('rentCollection.email.greeting')}</p>
+                <p>${t('rentCollection.email.body', { month: monthName, year: String(tracking.periodYear), address })}</p>
+                <p>${t('rentCollection.email.expectedAmount', { amount: amountDisplay })}</p>
+                <p>${t('rentCollection.email.manualConfirm')}</p>
                 <p>
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://coridor.fr"}/dashboard/finances"
+                  <a href="${appUrl}/dashboard/finances"
                      style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; border-radius: 8px; text-decoration: none;">
-                    Voir mes finances
+                    ${t('rentCollection.email.action')}
                   </a>
                 </p>
-                <p>L'équipe Coridor</p>
+                <p>${t('common.signature')}</p>
               </div>
             `;
             await sendEmail(
               landlordEmail,
-              `Suivi loyer - Rappel ${monthName} ${tracking.periodYear}`,
+              t('rentCollection.email.subject', { month: monthName, year: String(tracking.periodYear) }),
               htmlContent
             );
           }
@@ -386,8 +382,8 @@ export class RentCollectionService {
           await createNotification({
             userId: landlordId,
             type: "RENT_OVERDUE",
-            title: "Loyer impayé",
-            message: `Le loyer de ${monthName} est toujours impayé pour ${address}.`,
+            title: t('rentCollection.overdue.notifTitle'),
+            message: t('rentCollection.overdue.notifMessage', { month: monthName, address }),
             link: "/dashboard/finances",
           });
 
@@ -404,8 +400,8 @@ export class RentCollectionService {
           await createNotification({
             userId: landlordId,
             type: "RENT_CRITICAL",
-            title: "Alerte critique - Impayé",
-            message: `Le loyer de ${monthName} n'est toujours pas réglé pour ${address}. Nous vous recommandons de prendre contact avec votre locataire.`,
+            title: t('rentCollection.critical.notifTitle'),
+            message: t('rentCollection.critical.notifMessage', { month: monthName, address }),
             link: "/dashboard/finances",
           });
 
@@ -516,10 +512,17 @@ export class RentCollectionService {
       throw new Error("Non autorisé");
     }
 
+    const t = getServerTranslation('emails');
+    const MONTH_KEYS = [
+      'common.months.january', 'common.months.february', 'common.months.march',
+      'common.months.april', 'common.months.may', 'common.months.june',
+      'common.months.july', 'common.months.august', 'common.months.september',
+      'common.months.october', 'common.months.november', 'common.months.december',
+    ];
     const tenant = tracking.rentalApplication.candidateScope.creatorUser;
     const tenantId = tenant.id;
-    const tenantFirstName = tenant.firstName || tenant.name || "Locataire";
-    const monthName = MOIS_FR[tracking.periodMonth - 1];
+    const tenantFirstName = tenant.firstName || tenant.name || t('rentCollection.defaultTenantName');
+    const monthName = t(MONTH_KEYS[tracking.periodMonth - 1]);
     const expectedAmount = (tracking.expectedAmountCents / 100).toFixed(2);
 
     // 2. Trouver la conversation liée au listing entre le proprio et le locataire
@@ -541,7 +544,7 @@ export class RentCollectionService {
     }
 
     // 3. Créer le message dans la conversation
-    const messageBody = `Bonjour ${tenantFirstName}, nous n'avons pas encore enregistré votre loyer de ${monthName} (montant attendu : ${expectedAmount}\u00a0\u20ac). Si vous avez déjà effectué le paiement, merci de ne pas tenir compte de ce message. En cas de difficulté, n'hésitez pas à en discuter avec votre propriétaire.`;
+    const messageBody = t('rentCollection.friendlyReminder.messageBody', { name: tenantFirstName, month: monthName, amount: expectedAmount });
 
     await prisma.message.create({
       data: {
@@ -570,8 +573,8 @@ export class RentCollectionService {
     await createNotification({
       userId: tenantId,
       type: "RENT_REMINDER",
-      title: "Rappel de loyer",
-      message: `Un rappel concernant votre loyer de ${monthName} vous a été envoyé.`,
+      title: t('rentCollection.friendlyReminder.notifTitle'),
+      message: t('rentCollection.friendlyReminder.notifMessage', { month: monthName }),
       link: "/conversations",
     });
   }

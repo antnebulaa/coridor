@@ -6,6 +6,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { DoorOpen, Armchair, Users, GraduationCap, Briefcase } from "lucide-react";
 import { LeaseType } from "@prisma/client";
+import { useTranslations } from "next-intl";
 import { SafeListing, SafeUser } from "@/types";
 import CustomToast from "@/components/ui/CustomToast";
 import SoftSelect from "@/components/inputs/SoftSelect";
@@ -18,6 +19,7 @@ interface LeaseTypeSectionProps {
 
 const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUser }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
 
     // --- Colocation Logic ---
@@ -46,10 +48,10 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
             const response = await axios.post(`/api/listings/${listing.id}/mode`, { mode: newMode });
 
             if (response.data?.targetListingId && response.data.targetListingId !== listing.id) {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message={newMode === 'COLOCATION' ? 'Mode Colocation activé (Redirection...)' : 'Mode Logement Entier activé (Redirection...)'}
+                        t={toastData}
+                        message={newMode === 'COLOCATION' ? t('edit.leaseType.colocationActivatedRedirect') : t('edit.leaseType.entirePlaceActivatedRedirect')}
                         type="success"
                     />
                 ));
@@ -58,19 +60,19 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
             }
 
             setMode(newMode);
-            toast.custom((t) => (
+            toast.custom((toastData) => (
                 <CustomToast
-                    t={t}
-                    message={newMode === 'COLOCATION' ? 'Mode Colocation activé' : 'Mode Logement Entier activé'}
+                    t={toastData}
+                    message={newMode === 'COLOCATION' ? t('edit.leaseType.colocationActivated') : t('edit.leaseType.entirePlaceActivated')}
                     type="success"
                 />
             ));
             router.refresh();
         } catch (error) {
-            toast.custom((t) => (
+            toast.custom((toastData) => (
                 <CustomToast
-                    t={t}
-                    message="Erreur lors du changement de mode"
+                    t={toastData}
+                    message={t('edit.leaseType.modeChangeError')}
                     type="error"
                 />
             ));
@@ -121,19 +123,19 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
                 acceptsStudentLease: isFurnished ? acceptsStudentLease : false,
                 acceptsMobilityLease: isFurnished ? acceptsMobilityLease : false,
             });
-            toast.custom((t) => (
+            toast.custom((toastData) => (
                 <CustomToast
-                    t={t}
-                    message="Type de bail mis à jour"
+                    t={toastData}
+                    message={t('edit.leaseType.saved')}
                     type="success"
                 />
             ));
             router.refresh();
         } catch {
-            toast.custom((t) => (
+            toast.custom((toastData) => (
                 <CustomToast
-                    t={t}
-                    message="Erreur lors de la mise à jour"
+                    t={toastData}
+                    message={t('edit.leaseType.error')}
                     type="error"
                 />
             ));
@@ -146,23 +148,23 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
         {
             id: 'bare' as const,
             icon: DoorOpen,
-            title: 'Location nue',
-            desc: 'Bail classique de 3 ans. Le locataire apporte ses meubles.',
-            tags: ['Bail 3 ans', 'Préavis 3 mois'],
+            title: t('edit.leaseType.bare.title'),
+            desc: t('edit.leaseType.bare.desc'),
+            tags: [t('edit.leaseType.bare.tag1'), t('edit.leaseType.bare.tag2')],
         },
         {
             id: 'furnished' as const,
             icon: Armchair,
-            title: 'Location meublée',
-            desc: 'Bail d\'1 an (9 mois étudiant). Logement équipé selon le décret.',
-            tags: ['Bail 1 an', 'Loyer plus élevé'],
+            title: t('edit.leaseType.furnished.title'),
+            desc: t('edit.leaseType.furnished.desc'),
+            tags: [t('edit.leaseType.furnished.tag1'), t('edit.leaseType.furnished.tag2')],
         },
         {
             id: 'colocation' as const,
             icon: Users,
-            title: 'Colocation',
-            desc: 'Gestion par chambre avec baux individuels ou bail commun.',
-            tags: ['Multi-locataires', 'Gestion par chambre'],
+            title: t('edit.leaseType.colocation.title'),
+            desc: t('edit.leaseType.colocation.desc'),
+            tags: [t('edit.leaseType.colocation.tag1'), t('edit.leaseType.colocation.tag2')],
         },
     ];
 
@@ -170,9 +172,9 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
         <div className="flex flex-col gap-8 pb-28 md:pb-24">
             {/* Lease type cards */}
             <div className="flex flex-col gap-3">
-                <h3 className="text-lg font-semibold">Type de bail</h3>
+                <h3 className="text-lg font-semibold">{t('edit.leaseType.heading')}</h3>
                 <p className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
-                    Choisissez le type de location pour ce bien.
+                    {t('edit.leaseType.subtitle')}
                 </p>
 
                 <div className="flex flex-col gap-3 mt-2">
@@ -227,9 +229,9 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
             {/* Special lease toggles — only for furnished/colocation */}
             {(selectedCard === 'furnished' || selectedCard === 'colocation') && (
                 <div className="flex flex-col gap-3">
-                    <h3 className="text-lg font-semibold">Baux spéciaux acceptés</h3>
+                    <h3 className="text-lg font-semibold">{t('edit.leaseType.specialLeases')}</h3>
                     <p className="text-neutral-500 dark:text-neutral-400 font-light text-sm">
-                        Autorisez les locataires à demander ces types de bail lors de leur candidature.
+                        {t('edit.leaseType.specialLeasesHelper')}
                     </p>
 
                     <div className="flex flex-col gap-3 mt-1">
@@ -255,9 +257,9 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
                                 <GraduationCap size={18} />
                             </div>
                             <div className="flex-1">
-                                <span className="font-medium text-sm">Bail étudiant</span>
+                                <span className="font-medium text-sm">{t('edit.leaseType.studentLease')}</span>
                                 <span className="text-xs text-neutral-500 dark:text-neutral-400 block mt-0.5">
-                                    Durée de 9 mois, non renouvelable. Réservé aux étudiants.
+                                    {t('edit.leaseType.studentLeaseDesc')}
                                 </span>
                             </div>
                             <div className={`
@@ -293,9 +295,9 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
                                 <Briefcase size={18} />
                             </div>
                             <div className="flex-1">
-                                <span className="font-medium text-sm">Bail mobilité</span>
+                                <span className="font-medium text-sm">{t('edit.leaseType.mobilityLease')}</span>
                                 <span className="text-xs text-neutral-500 dark:text-neutral-400 block mt-0.5">
-                                    Durée de 1 à 10 mois. Pas de dépôt de garantie. Pour formation, stage, mission temporaire...
+                                    {t('edit.leaseType.mobilityLeaseDesc')}
                                 </span>
                             </div>
                             <div className={`
@@ -314,7 +316,7 @@ const LeaseTypeSection: React.FC<LeaseTypeSectionProps> = ({ listing, currentUse
 
             <EditSectionFooter
                 disabled={isLoading}
-                label="Enregistrer"
+                label={t('edit.save')}
                 onClick={handleSave}
             />
         </div>

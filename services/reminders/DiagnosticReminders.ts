@@ -1,5 +1,6 @@
 import prisma from "@/libs/prismadb";
 import { LegalReminderType, LegalReminderPriority } from "@prisma/client";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 /**
  * Calcule et synchronise les rappels diagnostics pour un bien donné.
@@ -15,11 +16,10 @@ export class DiagnosticReminders {
     });
     if (!property) return;
 
+    const t = getServerTranslation('emails');
     const userId = property.ownerId;
 
     // --- DPE EXPIRY ---
-    // DPE valide 10 ans. Si dpeDate existe sans dpeExpiryDate, expiry = dpeDate + 10 ans
-    // Rappels : 3 mois avant + 1 mois avant
     if (property.dpeExpiryDate || property.dpeDate) {
       const expiryDate = property.dpeExpiryDate
         || (property.dpeDate ? addYears(property.dpeDate, 10) : null);
@@ -30,8 +30,8 @@ export class DiagnosticReminders {
           propertyId,
           type: LegalReminderType.DPE_EXPIRY,
           priority: LegalReminderPriority.CRITICAL,
-          title: 'DPE — Diagnostic de Performance Energetique a renouveler',
-          description: 'Le DPE de votre bien arrive a expiration. Un nouveau diagnostic doit etre realise avant de pouvoir relouer.',
+          title: t('reminder.diagnostic.dpe.title'),
+          description: t('reminder.diagnostic.dpe.description'),
           legalReference: 'Art. L126-26 CCH',
           actionUrl: '/properties',
           dueDate: expiryDate,
@@ -43,7 +43,6 @@ export class DiagnosticReminders {
     }
 
     // --- ELECTRICAL DIAGNOSTIC EXPIRY ---
-    // Valide 6 ans. Obligatoire si installation > 15 ans
     if (property.electricalDiagnosticDate) {
       const expiryDate = addYears(property.electricalDiagnosticDate, 6);
       await this.upsertReminder({
@@ -51,8 +50,8 @@ export class DiagnosticReminders {
         propertyId,
         type: LegalReminderType.ELECTRICAL_DIAGNOSTIC_EXPIRY,
         priority: LegalReminderPriority.CRITICAL,
-        title: 'Diagnostic electricite a renouveler',
-        description: 'Le diagnostic electricite expire. Obligatoire pour toute location si installation > 15 ans.',
+        title: t('reminder.diagnostic.electricity.title'),
+        description: t('reminder.diagnostic.electricity.description'),
         legalReference: 'Art. L134-7 CCH',
         actionUrl: '/properties',
         dueDate: expiryDate,
@@ -63,7 +62,6 @@ export class DiagnosticReminders {
     }
 
     // --- GAS DIAGNOSTIC EXPIRY ---
-    // Valide 6 ans. Obligatoire si installation gaz
     if (property.hasGasInstallation && property.gasDiagnosticDate) {
       const expiryDate = addYears(property.gasDiagnosticDate, 6);
       await this.upsertReminder({
@@ -71,8 +69,8 @@ export class DiagnosticReminders {
         propertyId,
         type: LegalReminderType.GAS_DIAGNOSTIC_EXPIRY,
         priority: LegalReminderPriority.CRITICAL,
-        title: 'Diagnostic gaz a renouveler',
-        description: 'Le diagnostic gaz expire. Obligatoire pour toute location avec installation gaz de plus de 15 ans.',
+        title: t('reminder.diagnostic.gas.title'),
+        description: t('reminder.diagnostic.gas.description'),
         legalReference: 'Art. L134-6 CCH',
         actionUrl: '/properties',
         dueDate: expiryDate,
@@ -83,7 +81,6 @@ export class DiagnosticReminders {
     }
 
     // --- ERP EXPIRY ---
-    // Valide 6 mois seulement !
     if (property.erpDate) {
       const expiryDate = addMonths(property.erpDate, 6);
       await this.upsertReminder({
@@ -91,8 +88,8 @@ export class DiagnosticReminders {
         propertyId,
         type: LegalReminderType.ERP_EXPIRY,
         priority: LegalReminderPriority.HIGH,
-        title: 'Etat des Risques et Pollutions (ERP) a renouveler',
-        description: "L'ERP n'est valide que 6 mois. Il doit etre a jour lors de la signature du bail.",
+        title: t('reminder.diagnostic.erp.title'),
+        description: t('reminder.diagnostic.erp.description'),
         legalReference: "Art. L125-5 Code de l'environnement",
         actionUrl: '/properties',
         dueDate: expiryDate,
@@ -103,7 +100,6 @@ export class DiagnosticReminders {
     }
 
     // --- RENT FREEZE DPE F/G ---
-    // Alerte permanente si DPE est F ou G
     const dpe = property.dpe?.toUpperCase();
     if (dpe === 'F' || dpe === 'G') {
       const existing = await prisma.legalReminder.findFirst({
@@ -122,10 +118,10 @@ export class DiagnosticReminders {
             propertyId,
             type: LegalReminderType.RENT_FREEZE_DPE_FG,
             priority: LegalReminderPriority.CRITICAL,
-            title: `Gel des loyers — DPE ${dpe}`,
+            title: t('reminder.diagnostic.rentFreeze.title', { dpe }),
             description: dpe === 'G'
-              ? 'Votre bien est classe DPE G. Il est interdit de le louer depuis le 1er janvier 2025. Vous devez realiser des travaux de renovation energetique.'
-              : 'Votre bien est classe DPE F. Il sera interdit a la location a partir du 1er janvier 2028. Toute augmentation de loyer (y compris IRL) est interdite depuis aout 2022.',
+              ? t('reminder.diagnostic.rentFreeze.descriptionG')
+              : t('reminder.diagnostic.rentFreeze.descriptionF'),
             legalReference: 'Loi Climat et Resilience, Art. 159-160',
             actionUrl: '/properties',
             dueDate: dpe === 'G' ? new Date('2025-01-01') : new Date('2028-01-01'),

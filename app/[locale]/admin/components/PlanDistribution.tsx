@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { PlanDistributionData } from '@/app/actions/getAdminAdvancedStats';
 
 interface PlanDistributionProps {
@@ -20,6 +21,8 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 const PlanDistribution: React.FC<PlanDistributionProps> = ({ data }) => {
+    const t = useTranslations('admin.planDistribution');
+
     const total = useMemo(
         () => data.plans.reduce((sum, p) => sum + p.count, 0),
         [data.plans]
@@ -34,8 +37,8 @@ const PlanDistribution: React.FC<PlanDistributionProps> = ({ data }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                 <div>
-                    <h3 className="text-lg font-bold text-slate-800">Répartition des plans</h3>
-                    <p className="text-sm text-slate-500 mt-0.5">{total} utilisateurs au total</p>
+                    <h3 className="text-lg font-bold text-slate-800">{t('title')}</h3>
+                    <p className="text-sm text-slate-500 mt-0.5">{t('totalUsers', { count: total })}</p>
                 </div>
             </div>
 
@@ -86,35 +89,35 @@ const PlanDistribution: React.FC<PlanDistributionProps> = ({ data }) => {
                 <div className="grid grid-cols-1 gap-4">
                     <div className="bg-slate-50 rounded-lg p-4">
                         <span className="text-xs font-medium text-slate-500">
-                            Connexions bancaires actives
+                            {t('activeBankConnections')}
                         </span>
                         <p className={`text-2xl font-extrabold mt-1 ${data.activeBankConnections === 0 ? 'text-slate-300' : 'text-slate-900'}`}>
                             {data.activeBankConnections}
                         </p>
                         {data.activeBankConnections === 0 && (
-                            <span className="text-xs text-slate-400 italic">Pas encore de données</span>
+                            <span className="text-xs text-slate-400 italic">{t('noData')}</span>
                         )}
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                         <span className="text-xs font-medium text-slate-500">
-                            Locataires vérifiés
+                            {t('verifiedTenants')}
                         </span>
                         <p className={`text-2xl font-extrabold mt-1 ${data.verifiedTenants === 0 ? 'text-slate-300' : 'text-emerald-600'}`}>
                             {data.verifiedTenants}
                         </p>
                         {data.verifiedTenants === 0 && (
-                            <span className="text-xs text-slate-400 italic">Pas encore de données</span>
+                            <span className="text-xs text-slate-400 italic">{t('noData')}</span>
                         )}
                     </div>
                     <div className="bg-slate-50 rounded-lg p-4">
                         <span className="text-xs font-medium text-slate-500">
-                            Transactions traitées
+                            {t('processedTransactions')}
                         </span>
                         <p className={`text-2xl font-extrabold mt-1 ${data.processedTransactions === 0 ? 'text-slate-300' : 'text-slate-900'}`}>
                             {data.processedTransactions.toLocaleString('fr-FR')}
                         </p>
                         {data.processedTransactions === 0 && (
-                            <span className="text-xs text-slate-400 italic">Pas encore de données</span>
+                            <span className="text-xs text-slate-400 italic">{t('noData')}</span>
                         )}
                     </div>
                 </div>

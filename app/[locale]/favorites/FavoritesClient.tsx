@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useTranslations } from 'next-intl';
 
 import { SafeUser } from "@/types";
 import Container from "@/components/Container";
@@ -20,6 +21,7 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
     currentUser
 }) => {
     const router = useRouter();
+    const t = useTranslations('toasts');
     const [isEditing, setIsEditing] = useState(false);
     const [deletingId, setDeletingId] = useState('');
 
@@ -32,11 +34,11 @@ const FavoritesClient: React.FC<FavoritesClientProps> = ({
             setDeletingId(id);
             axios.delete(`/api/wishlists/${id}`)
                 .then(() => {
-                    toast.success('Wishlist supprimée');
+                    toast.success(t('favorites.wishlistDeleted'));
                     router.refresh();
                 })
                 .catch((error) => {
-                    toast.error('Une erreur s\'est produite.');
+                    toast.error(t('common.error'));
                 })
                 .finally(() => {
                     setDeletingId('');

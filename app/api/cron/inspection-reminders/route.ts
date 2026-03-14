@@ -4,6 +4,9 @@ import { sendPushNotification } from "@/app/lib/sendPushNotification";
 import { createNotification } from "@/libs/notifications";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getServerTranslation } from '@/lib/serverTranslations';
+
+const t = getServerTranslation('emails');
 
 /**
  * Cron job for EDL (inspection) reminders.
@@ -74,19 +77,18 @@ export async function GET(request: Request) {
       const scheduledAt = insp.scheduledAt!;
       const isToday = scheduledAt >= today && scheduledAt <= todayEnd;
       const dateStr = format(scheduledAt, "EEEE d MMMM 'à' HH'h'mm", { locale: fr });
-      const typeLabel = insp.type === 'ENTRY' ? "d'entrée" : 'de sortie';
+      const typeLabel = insp.type === 'ENTRY' ? t('inspection.reminder.typeEntry') : t('inspection.reminder.typeExit');
       const address = insp.application.listing.rentalUnit.property.address
         || insp.application.listing.rentalUnit.property.addressLine1
         || insp.application.listing.rentalUnit.property.city
         || '';
 
       const title = isToday
-        ? `État des lieux aujourd'hui`
-        : `État des lieux demain`;
+        ? t('inspection.reminder.titleToday')
+        : t('inspection.reminder.titleTomorrow');
 
-      const body = isToday
-        ? `Rappel : état des lieux ${typeLabel} prévu ${dateStr}${address ? ` — ${address}` : ''}.`
-        : `Rappel : état des lieux ${typeLabel} prévu ${dateStr}${address ? ` — ${address}` : ''}.`;
+      const addressSuffix = address ? ` — ${address}` : '';
+      const body = t('inspection.reminder.body', { type: typeLabel, date: dateStr, address: addressSuffix });
 
       // Notify landlord
       if (insp.landlordId) {

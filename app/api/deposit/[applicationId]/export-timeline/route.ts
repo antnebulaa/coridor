@@ -47,10 +47,11 @@ export async function POST(request: Request, props: Params) {
           include: {
             listing: {
               select: {
+                title: true,
                 rentalUnit: {
                   include: {
                     property: {
-                      select: { ownerId: true, title: true, address: true, city: true },
+                      select: { ownerId: true, address: true, city: true },
                     },
                   },
                 },
@@ -84,7 +85,8 @@ export async function POST(request: Request, props: Params) {
     });
 
     const tenant = deposit.application.candidateScope?.creatorUser;
-    const property = deposit.application.listing.rentalUnit.property;
+    const listing = deposit.application.listing;
+    const property = listing.rentalUnit.property;
 
     const pdfData: DepositTimelineData = {
       landlordName: landlord?.firstName && landlord?.lastName
@@ -93,7 +95,7 @@ export async function POST(request: Request, props: Params) {
       tenantName: tenant?.firstName && tenant?.lastName
         ? `${tenant.firstName} ${tenant.lastName}`
         : tenant?.name || 'Locataire',
-      propertyAddress: property.address || `${property.title}${property.city ? `, ${property.city}` : ''}`,
+      propertyAddress: property.address || `${listing.title}${property.city ? `, ${property.city}` : ''}`,
       depositAmountCents: deposit.amountCents,
       status: STATUS_LABELS[deposit.status] || deposit.status,
       isOverdue: deposit.isOverdue,

@@ -6,6 +6,7 @@ interface AvatarProps {
     src: string | null | undefined;
     seed?: string | null;
     size?: number;
+    emoji?: string | null;
 }
 
 const gradients = [
@@ -45,18 +46,28 @@ const getGradient = (seed?: string | null) => {
     return gradients[Math.abs(hash) % gradients.length];
 };
 
-const Avatar: React.FC<AvatarProps> = ({ src, seed, size = 30 }) => {
+const Avatar: React.FC<AvatarProps> = ({ src, seed, size = 30, emoji }) => {
     if (!src) {
         const gradient = getGradient(seed);
+        const emojiSize = Math.max(14, Math.round(size * 0.5));
         return (
             <div
-                className="rounded-full"
+                className="rounded-full relative"
                 style={{
                     background: gradient,
                     height: `${size}px`,
                     width: `${size}px`
                 }}
-            />
+            >
+                {emoji && (
+                    <span
+                        className="absolute inset-0 flex items-center justify-center drop-shadow-sm"
+                        style={{ fontSize: `${emojiSize}px` }}
+                    >
+                        {emoji}
+                    </span>
+                )}
+            </div>
         );
     }
 

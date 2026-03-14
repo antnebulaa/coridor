@@ -68,10 +68,11 @@ export class CDCDossierService {
             listing: {
               select: {
                 id: true,
+                title: true,
                 rentalUnit: {
                   include: {
                     property: {
-                      select: { ownerId: true, title: true, address: true, city: true },
+                      select: { ownerId: true, address: true, city: true },
                     },
                   },
                 },
@@ -102,7 +103,8 @@ export class CDCDossierService {
     });
 
     const tenant = deposit.application.candidateScope?.creatorUser;
-    const property = deposit.application.listing.rentalUnit.property;
+    const listing = deposit.application.listing;
+    const property = listing.rentalUnit.property;
 
     // Fetch inspections (entry + exit)
     const inspections = await prisma.inspection.findMany({
@@ -144,7 +146,7 @@ export class CDCDossierService {
 
     // Fetch conversation messages between parties
     const messages = await CDCDossierService.fetchMessages(
-      deposit.application.listing.id,
+      listing.id,
       landlordId,
       deposit.application.candidateScope?.creatorUserId
     );
@@ -180,7 +182,7 @@ export class CDCDossierService {
       landlordName,
       landlordAddress: landlord?.address || '(adresse du bailleur)',
       propertyAddress:
-        property.address || `${property.title}${property.city ? `, ${property.city}` : ''}`,
+        property.address || `${listing.title}${property.city ? `, ${property.city}` : ''}`,
 
       leaseSignedDate: formatDate(deposit.leaseSignedAt),
       moveOutDate: formatDate(deposit.exitInspectionAt),

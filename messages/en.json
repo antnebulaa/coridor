@@ -1147,7 +1147,30 @@
             "toastDeleted": "User deleted",
             "toastActionError": "Error during action",
             "toastDeleteError": "Error during deletion",
-            "noResults": "No users found."
+            "toastLoadError": "Error loading users",
+            "noResults": "No users found.",
+            "titleLoading": "Users",
+            "filterPlanAll": "Plan: All",
+            "filterPlanFree": "Free",
+            "filterPlanPlus": "Plus",
+            "filterPlanPro": "Pro",
+            "filterStatusAll": "Status: All",
+            "filterStatusActive": "Active",
+            "filterStatusBanned": "Banned",
+            "filterModeAll": "Mode: All",
+            "filterModeTenant": "Tenant",
+            "filterModeLandlord": "Landlord",
+            "resetFilters": "Reset",
+            "colPlan": "Plan",
+            "colSubscription": "Subscription",
+            "colMode": "Mode",
+            "colPropertiesListings": "Properties / Listings",
+            "colApplications": "Applications",
+            "colRegisteredOn": "Registered on",
+            "subscriptionNone": "None",
+            "propertiesListingsCount": "{properties} properties · {listings} listings",
+            "view": "View",
+            "pagination": "Page {page} of {totalPages}"
         },
         "listingModeration": {
             "title": "Listing Moderation",
@@ -1227,7 +1250,201 @@
             "phone": "Phone:",
             "notProvided": "Not provided",
             "verifiedAccount": "Verified account:",
-            "location": "Location"
+            "location": "Location",
+            "createdOn": "Created on"
+        },
+        "conversionFunnel": {
+            "title": "Conversion Funnel",
+            "tooltip": "Conversion path — From signup to lease signing",
+            "subtitle": "From signup to signed lease",
+            "allCities": "All cities",
+            "period7d": "7d",
+            "period30d": "30d",
+            "period90d": "90d",
+            "periodAll": "All"
+        },
+        "engagement": {
+            "title": "Engagement",
+            "subtitle": "User activity",
+            "today": "Today",
+            "thisWeek": "This week",
+            "thisMonth": "This month",
+            "noData": "No data yet",
+            "dauTooltip": "Daily Active Users — Unique users connected today",
+            "wauTooltip": "Weekly Active Users — Unique users connected this week",
+            "mauTooltip": "Monthly Active Users — Unique users connected this month",
+            "profileCompletion": "Completed profiles",
+            "profileCompletionTooltip": "Users who have filled in their address, photo, and tenant profile",
+            "abandonedDrafts": "Abandoned drafts",
+            "abandonedDraftsTooltip": "Listings that have remained as drafts for more than 7 days without being published",
+            "abandonedDraftsDetail": "Draft listings for 7+ days"
+        },
+        "rentalMetrics": {
+            "title": "Rental Metrics",
+            "subtitle": "Market performance",
+            "avgDelay": "Average delay",
+            "days": "{count}d",
+            "noLeaseYet": "No signed lease yet",
+            "listingToLease": "Listing to signed lease",
+            "applicationsPerListing": "Applications / listing",
+            "globalAverage": "Global average",
+            "visitAcceptanceRate": "Visit acceptance rate",
+            "visitAcceptanceTooltip": "Percentage of proposed visits that were confirmed by applicants",
+            "topCities": "Top cities"
+        },
+        "planDistribution": {
+            "title": "Plan Distribution",
+            "totalUsers": "{count} total users",
+            "activeBankConnections": "Active bank connections",
+            "verifiedTenants": "Verified tenants",
+            "processedTransactions": "Processed transactions",
+            "noData": "No data yet"
+        },
+        "geoDistribution": {
+            "title": "Geographic Distribution",
+            "subtitle": "{listings} published listings · {cities} cities",
+            "noData": "No data available"
+        },
+        "sidebar": {
+            "dashboard": "Dashboard",
+            "listings": "Listings",
+            "users": "Users",
+            "polls": "Polls",
+            "plans": "Plans & Features",
+            "backToSite": "Back to site"
+        },
+        "polls": {
+            "title": "Poll Management",
+            "newPoll": "New poll",
+            "totalPolls": "Total polls",
+            "activePolls": "Active polls",
+            "totalResponses": "Total responses",
+            "searchPlaceholder": "Search by title...",
+            "colTitle": "Title",
+            "colCategory": "Category",
+            "colOptions": "Options",
+            "colStatus": "Status",
+            "colResponses": "Responses",
+            "colCreatedAt": "Created",
+            "colActions": "Actions",
+            "closePoll": "Close poll",
+            "archivePoll": "Archive poll",
+            "deletePoll": "Delete poll",
+            "noResults": "No polls found.",
+            "create": "Create",
+            "cancel": "Cancel",
+            "createTitle": "Create a poll",
+            "createSubtitle": "Define the question and 3 response options.",
+            "descriptionLabel": "Description (optional)",
+            "responseOptions": "Response options",
+            "option1Label": "Option 1 (e.g. Quiet)",
+            "option2Label": "Option 2 (e.g. Average)",
+            "option3Label": "Option 3 (e.g. Noisy)",
+            "confirmClose": "Close this poll? Users will no longer be able to respond.",
+            "closeSuccess": "Poll closed successfully",
+            "closeError": "Error closing poll",
+            "archiveSuccess": "Poll archived successfully",
+            "archiveError": "Error archiving poll",
+            "confirmDelete": "Permanently delete this poll and all its responses?",
+            "deleteSuccess": "Poll deleted successfully",
+            "deleteError": "Error deleting poll",
+            "createSuccess": "Poll created successfully",
+            "createError": "Error creating poll",
+            "status": {
+                "ALL": "All",
+                "ACTIVE": "Active",
+                "CLOSED": "Closed",
+                "ARCHIVED": "Archived"
+            },
+            "category": {
+                "NOISE_LEVEL": "Noise",
+                "SAFETY": "Safety",
+                "TRANSPORT": "Transport",
+                "SHOPPING": "Shops",
+                "SCHOOLS": "Schools",
+                "PARKING": "Parking",
+                "GREEN_SPACES": "Green spaces",
+                "COMMUNITY_SPIRIT": "Community spirit"
+            }
+        },
+        "plans": {
+            "title": "Plans & Features",
+            "subtitle": "Manage subscription plans and associated features.",
+            "refresh": "Refresh",
+            "loadError": "Error loading data",
+            "saveSuccess": "Plan updated",
+            "saveError": "Error saving",
+            "colPlan": "Plan",
+            "colMonthlyPrice": "Monthly price",
+            "colYearlyPrice": "Yearly price",
+            "colMaxProperties": "Max properties",
+            "colSubscribers": "Subscribers",
+            "colStatus": "Status",
+            "free": "Free",
+            "unlimited": "Unlimited",
+            "active": "Active",
+            "inactive": "Inactive",
+            "popular": "Popular",
+            "popularBadge": "POPULAR",
+            "planSettings": "Plan settings",
+            "displayName": "Display name",
+            "description": "Description",
+            "monthlyPriceCents": "Monthly price (cents)",
+            "yearlyPriceCents": "Yearly price (cents)",
+            "stripePriceMonthly": "Stripe Price ID (monthly)",
+            "stripePriceYearly": "Stripe Price ID (yearly)",
+            "features": "Features ({count})",
+            "save": "Save",
+            "saving": "Saving...",
+            "activeSubscribers": "active subscribers"
+        },
+        "activityFeed": {
+            "title": "Recent activity",
+            "eventCount": "{count} events",
+            "noActivity": "No recent activity",
+            "justNow": "just now",
+            "minutesAgo": "{count}min ago",
+            "hoursAgo": "{count}h ago",
+            "daysAgo": "{count}d ago",
+            "defaultUser": "User",
+            "defaultListing": "listing",
+            "descSignup": "{name} signed up{city}",
+            "descApplication": "{name} applied to {title}",
+            "descVisit": "Visit by {name} for {title}",
+            "descMessages": "{name} sent {count} messages",
+            "descMessage": "{name} sent a message",
+            "descReport": "Report by {name}",
+            "descBank": "{name} connected their bank",
+            "event": {
+                "user_signup": "Signup",
+                "listing_published": "Listing published",
+                "application_sent": "Application",
+                "visit_confirmed": "Visit confirmed",
+                "lease_signed": "Lease signed",
+                "message_sent": "Message",
+                "report_created": "Report",
+                "bank_connected": "Bank connected"
+            }
+        },
+        "subscriptions": {
+            "title": "Subscriptions",
+            "subtitle": "Subscription tracking",
+            "active": "Active",
+            "mrrTooltip": "Estimated monthly recurring revenue",
+            "churnTooltip": "Cancellation rate over the last 30 days",
+            "gifted": "Gifted",
+            "expiringIn7d": "Expiring in 7d",
+            "byPlan": "By plan",
+            "activeCount": "{count, plural, one {# active} other {# active}}",
+            "expiredCount": "{count, plural, one {# expired} other {# expired}}",
+            "cancelledCount": "{count, plural, one {# cancelled} other {# cancelled}}",
+            "giftedCount": "{count, plural, one {# gifted} other {# gifted}}"
+        },
+        "advanced": {
+            "title": "Advanced statistics",
+            "loadError": "Loading error",
+            "loadErrorTitle": "Error loading advanced statistics",
+            "retry": "Retry"
         }
     },
     "listing": {
@@ -1334,6 +1551,7 @@
         },
         "empty": "No conversations",
         "conversation": {
+            "beginning": "Beginning of conversation",
             "sentImage": "Sent an image",
             "new": "New conversation",
             "unknownUser": "Unknown User",
@@ -1383,6 +1601,270 @@
             "attachment": {
                 "defaultName": "Attachment",
                 "defaultType": "File"
+            },
+            "lease": {
+                "sentForSignature": "Lease sent for signature",
+                "sentDescription": "The rental lease has been sent for electronic signature via Yousign.",
+                "viewLease": "View lease",
+                "signLease": "Sign the lease"
+            },
+            "applicationRejected": "Application declined",
+            "unknownLocation": "Unknown location"
+        },
+        "systemMessages": {
+            "leaseSentForSignature": "Lease sent for signature",
+            "visitInvitation": "Visit invitation",
+            "visitConfirmed": "Visit confirmed",
+            "applicationRejected": "Application declined",
+            "inspectionScheduled": "Inspection scheduled",
+            "inspectionConfirmed": "Inspection slot confirmed",
+            "inspectionReminder": "Inspection reminder",
+            "inspectionStarted": "Inspection started",
+            "inspectionCompleted": "Landlord signed",
+            "inspectionSigned": "Inspection signed",
+            "inspectionSignLinkSent": "Signature link sent",
+            "inspectionPdfReady": "PDF available",
+            "inspectionCancelled": "Inspection cancelled",
+            "inspectionRescheduled": "Inspection rescheduled",
+            "amendmentRequested": "Amendment requested",
+            "amendmentAccepted": "Amendment accepted",
+            "amendmentRejected": "Amendment rejected",
+            "depositDefault": "Security deposit"
+        },
+        "edl": {
+            "entry": "Move-in inspection",
+            "exit": "Move-out inspection",
+            "scheduled": "scheduled",
+            "scheduledDate": "Scheduled for {date} at {time}.",
+            "dateToBeConfirmed": "The date will be confirmed.",
+            "startEdl": "Start inspection",
+            "confirmPresence": "Confirm my presence",
+            "presenceConfirmed": "Presence confirmed",
+            "alreadyConfirmed": "Already confirmed",
+            "confirmError": "Error confirming",
+            "slotConfirmed": "Slot confirmed",
+            "confirmedDate": "confirmed for {date} at {time}.",
+            "confirmed": "confirmed.",
+            "cancelled": "cancelled",
+            "cancelledDescription": "The inspection has been cancelled by the landlord.",
+            "rescheduled": "rescheduled",
+            "newSlot": "New slot: {date} at {time}.",
+            "newDateToBeConfirmed": "The new date will be confirmed.",
+            "reminderTomorrow": "Reminder: {label} tomorrow",
+            "reminderDate": "Scheduled {date} at {time}.",
+            "checkAgenda": "Check your calendar.",
+            "viewEdl": "View inspection",
+            "started": "started",
+            "inspectionInProgress": "The property inspection is in progress.",
+            "resumeEdl": "Resume inspection",
+            "landlordSigned": "{label} — landlord signed",
+            "awaitingTenantSignature": "Awaiting tenant signature.",
+            "signed": "signed",
+            "signedDescription": "Signed by both parties. The PDF will be sent by email.",
+            "signLinkSent": "Signature link sent",
+            "tenantInvitedToSign": "The tenant has been invited to sign the {label}.",
+            "signEdl": "Sign the inspection",
+            "pdfTitle": "Inspection PDF",
+            "pdfReady": "The document is ready and available for download.",
+            "viewPdf": "View PDF",
+            "amendmentRequest": "Amendment request",
+            "amendmentDefaultDesc": "A defect has been reported on the inspection.",
+            "viewAmendments": "View amendments",
+            "amendmentAccepted": "Amendment accepted",
+            "amendmentRejected": "Amendment rejected"
+        },
+        "depositEvents": {
+            "leaseSigned": "Lease signed",
+            "leaseSigned_desc": "Deposit of {amount}€ due.",
+            "paymentConfirmed": "Payment confirmed",
+            "paymentConfirmed_desc": "Deposit of {amount}€ recorded.",
+            "retentionsProposed": "Deductions proposed",
+            "retentionsProposed_desc": "The landlord proposes deductions.",
+            "tenantAgreed": "Agreement reached",
+            "tenantAgreed_desc": "The tenant accepts the deductions.",
+            "tenantPartialAgreed": "Partial agreement",
+            "tenantPartialAgreed_desc": "The tenant partially agrees. 14-day period.",
+            "tenantDisputed": "Dispute",
+            "tenantDisputed_desc": "14 days to reach an agreement.",
+            "deadlineOverdue": "Deadline exceeded",
+            "deadlineOverdue_desc": "The legal return deadline has been exceeded.",
+            "fullRelease": "Deposit returned",
+            "fullRelease_desc": "Deposit of {amount}€ returned in full.",
+            "resolved": "Case closed",
+            "resolved_desc": "The security deposit is resolved.",
+            "default": "Security deposit",
+            "viewTracking": "View tracking",
+            "consultAndReply": "Review and reply",
+            "viewOptions": "View options"
+        },
+        "depositLabels": {
+            "leaseSigned": "Security deposit due",
+            "paymentConfirmed": "Payment confirmed",
+            "retentionsProposed": "Deductions proposed",
+            "tenantAgreed": "Agreement reached",
+            "tenantPartialAgreed": "Partial agreement",
+            "tenantDisputed": "Deposit disputed",
+            "deadlineOverdue": "Deadline exceeded",
+            "fullRelease": "Deposit returned",
+            "resolved": "Deposit — case closed",
+            "default": "Security deposit"
+        },
+        "coridorDocuments": {
+            "quittance_desc": "Available for download.",
+            "bail_desc": "Signed by all parties.",
+            "edl_desc": "Document available.",
+            "mise_en_demeure_desc": "Legal document generated.",
+            "inventaire_desc": "Furniture inventory.",
+            "default_desc": "Document available.",
+            "download": "Download"
+        },
+        "applicationStatus": {
+            "depositDisputed": "Deposit disputed",
+            "depositOverdue": "Deposit overdue",
+            "edlSigned": "Inspection signed",
+            "edlInProgress": "Inspection in progress",
+            "edlScheduled": "Inspection scheduled",
+            "leaseSigned": "Lease signed",
+            "leaseInSignature": "Lease pending signature",
+            "selected": "Application selected",
+            "shortlisted": "Shortlisted",
+            "finalist": "Finalist"
+        },
+        "documents": {
+            "title": "Documents",
+            "download": "Download",
+            "viewInDocuments": "View in Documents",
+            "viewInConversation": "View in conversation",
+            "filterAll": "All",
+            "filterPdf": "PDF",
+            "filterImages": "Images",
+            "filterCoridor": "Coridor",
+            "search": "Search...",
+            "loading": "Loading...",
+            "empty": "No documents"
+        },
+        "conversationClient": {
+            "close": "Close",
+            "toasts": {
+                "selectReason": "Please select a reason",
+                "noApplication": "No application found",
+                "applicationDeclined": "Application declined",
+                "rejectionError": "Error declining application",
+                "edlScheduled": "Inspection scheduled",
+                "schedulingError": "Error scheduling inspection",
+                "exitEdlCreated": "Move-out inspection created",
+                "exitEdlError": "Error creating move-out inspection",
+                "noApplicationForDossier": "No rental application found for this file.",
+                "invitationSent": "Invitation sent",
+                "sendError": "Error sending invitation"
+            },
+            "timeline": {
+                "applicationSent": "Application sent",
+                "applicationSentDesc": "The landlord has received your file and is reviewing your profile.",
+                "applicationNotRetained": "Application not retained",
+                "applicationNotRetainedDesc": "The landlord has declined your application.",
+                "rejectionReason": "Reason: {reason}",
+                "visitProposal": "Visit proposal",
+                "visitProposalDesc": "The landlord is interested in your profile and proposes a visit.",
+                "appointmentConfirmed": "Appointment confirmed",
+                "visitScheduledAt": "Visit scheduled on {date} at {time}.",
+                "applicationRetained": "Application retained",
+                "applicationRetainedDesc": "Your profile has been selected by the landlord.",
+                "leaseSentForSignature": "Lease sent for signature",
+                "leaseSentForSignatureDesc": "The lease is ready to be signed. You will receive an email from Yousign.",
+                "viewLease": "View lease",
+                "leaseSentElectronic": "The lease has been sent for electronic signature.",
+                "leaseSigned": "Lease signed",
+                "leaseSignedDesc": "The lease has been signed by all parties.",
+                "viewSignedLease": "View signed lease",
+                "edlCancelled": "Inspection cancelled",
+                "edlCancelledDesc": "The inspection has been cancelled by the landlord.",
+                "edlSigned": "Inspection signed",
+                "edlSignedDesc": "The inspection has been signed by both parties.",
+                "edlScheduled": "Inspection scheduled",
+                "scheduledAt": "Scheduled on {date} at {time}.",
+                "edlInProgress": "Inspection in progress",
+                "edlInProgressDesc": "The property inspection is being carried out.",
+                "edlSignaturePending": "Inspection — signature",
+                "edlSignaturePendingDesc": "Awaiting tenant signature.",
+                "exitEdlCancelled": "Move-out inspection cancelled",
+                "exitEdlCancelledDesc": "The move-out inspection has been cancelled.",
+                "exitEdlSigned": "Move-out inspection signed",
+                "exitEdlSignedDesc": "The move-out inspection has been signed by both parties.",
+                "exitEdlScheduled": "Move-out inspection scheduled",
+                "exitEdlInProgress": "Move-out inspection in progress",
+                "exitEdlInProgressDesc": "The move-out inspection is being carried out.",
+                "exitEdlSignaturePending": "Move-out inspection — signature"
+            },
+            "dossier": {
+                "title": "Applicant file",
+                "declined": "Declined",
+                "applicationDeclined": "Application declined"
+            },
+            "edl": {
+                "inspection": "Inspection",
+                "scheduleEdl": "Schedule an inspection",
+                "scheduleEdlDesc": "Choose a date and notify the tenant",
+                "startEdl": "Start inspection",
+                "startImmediately": "Start immediately",
+                "resumeEdl": "Resume inspection",
+                "viewEntryPdf": "View move-in inspection PDF",
+                "exitInspection": "Move-out inspection",
+                "startNow": "Start now",
+                "compareWithEntry": "Compare with move-in inspection",
+                "startExitEdl": "Start move-out inspection",
+                "resumeExitEdl": "Resume move-out inspection",
+                "viewExitPdf": "View move-out inspection PDF",
+                "exitAwaitingSignature": "Move-out inspection — awaiting signature",
+                "awaitingTenantSignature": "Awaiting tenant signature",
+                "scheduleTitle": "Schedule inspection",
+                "chooseDate": "Choose a date",
+                "changeDate": "Change date",
+                "time": "Time",
+                "durationTip": "Allow 1 to 1.5 hours depending on the property size",
+                "scheduling": "Scheduling...",
+                "confirm": "Confirm"
+            },
+            "lease": {
+                "signingInProgress": "Signing in progress...",
+                "viewLease": "View lease"
+            },
+            "actions": {
+                "generateLease": "Generate rental lease",
+                "proposeVisit": "Propose a visit",
+                "declineApplication": "Decline application"
+            },
+            "decline": {
+                "title": "Decline application",
+                "confirmRefusal": "Confirm refusal",
+                "description": "Select a reason to inform the applicant. Coridor protects against discrimination by offering respectful and objective reasons.",
+                "otherReason": "Other reason",
+                "specifyReason": "Specify the reason...",
+                "reasons": {
+                    "alreadyTaken": "The property has already been taken",
+                    "doesNotMatch": "Your file does not meet the required criteria",
+                    "anotherSelected": "Another applicant has been selected"
+                }
+            },
+            "availability": {
+                "title": "Set your availability",
+                "defineSlots": "Set my slots",
+                "noSlotsTitle": "You have no available slots",
+                "noSlotsSubtitle": "To propose a visit, you must first set your availability.",
+                "noSlotsDescription": "This allows applicants to choose a slot from those you have defined, avoiding unnecessary back and forth.",
+                "noSlotsAlt": "No slots"
+            },
+            "sidebar": {
+                "visits": "Visits",
+                "recap": "Summary",
+                "apartment": "Apartment",
+                "perMonth": "/ month",
+                "landlord": "Landlord: {name}",
+                "details": "{rooms} rooms • {bedrooms} bedrooms • {surface} {unit}"
+            },
+            "calendar": {
+                "visit": "Visit",
+                "visitTitle": "Visit - {info}{surface} in {city}"
             }
         }
     },
@@ -1413,7 +1895,8 @@
             "status": {
                 "label": "STATUS",
                 "occupied": "Occupied",
-                "vacant": "Vacant"
+                "vacant": "Vacant",
+                "pendingSignature": "Lease pending signature"
             },
             "rent": {
                 "label": "RENT",
@@ -1428,6 +1911,369 @@
             "title": "Colocation",
             "rooms": "{count, plural, =0 {room} one {room} other {rooms}}",
             "empty": "No tenant"
+        },
+        "edit": {
+            "furniture": {
+                "mandatory": {
+                    "bedding": "Bedding with duvet",
+                    "curtains": "Shutters or curtains in bedrooms",
+                    "hob": "Cooking hob",
+                    "oven": "Oven or microwave",
+                    "fridge": "Refrigerator",
+                    "freezer": "Freezer",
+                    "dishes": "Dishes",
+                    "utensils": "Kitchen utensils",
+                    "table": "Table",
+                    "seats": "Seats",
+                    "shelves": "Storage shelves",
+                    "lights": "Light fixtures",
+                    "vacuum": "Vacuum cleaner"
+                },
+                "optional": {
+                    "washingMachine": "Washing machine",
+                    "coffeeMaker": "Coffee maker",
+                    "toaster": "Toaster",
+                    "dishwasher": "Dishwasher",
+                    "hairDryer": "Hair dryer",
+                    "mirror": "Mirror",
+                    "sheets": "Sheets",
+                    "towels": "Bath towels",
+                    "cloths": "Dish cloths"
+                },
+                "saved": "Equipment saved",
+                "error": "An error occurred",
+                "compliant": "Property compliant",
+                "nonCompliant": "Compliance required",
+                "compliantDescription": "Your property has all the mandatory equipment required to be rented as furnished. You are in compliance.",
+                "nonCompliantDescription": "A furnished property must include all the equipment listed below to comply with regulations.",
+                "mandatoryTitle": "Mandatory equipment (Furnished)",
+                "optionalTitle": "Optional equipment",
+                "saving": "Saving...",
+                "save": "Save"
+            },
+            "edl": {
+                "title": "Property inspections",
+                "subtitle": "History and tracking of property inspections for this unit.",
+                "status": {
+                    "signed": "Signed",
+                    "pendingSignature": "Pending signature",
+                    "draft": "In progress",
+                    "notScheduled": "Not scheduled"
+                },
+                "type": {
+                    "entry": "Move-in inspection",
+                    "exit": "Move-out inspection"
+                },
+                "rooms": "{completed}/{total} rooms",
+                "resumeEdl": "Resume inspection",
+                "resendLink": "Resend link",
+                "viewPdf": "View PDF",
+                "viewSummary": "View summary",
+                "notificationSent": "Notification sent to tenant",
+                "error": "Error",
+                "networkError": "Network error",
+                "empty": "No property inspection",
+                "emptyDescription": "The property inspection is started from the conversation with the tenant."
+            },
+            "deposit": {
+                "title": "Security deposit",
+                "subtitle": "Security deposit tracking for this property",
+                "status": {
+                    "awaitingPayment": "Awaiting payment",
+                    "paid": "Paid",
+                    "held": "Held",
+                    "exitInspection": "Move-out inspection",
+                    "retentionsProposed": "Retentions proposed",
+                    "partiallyReleased": "Partially released",
+                    "fullyReleased": "Fully released",
+                    "disputed": "Disputed",
+                    "resolved": "Resolved"
+                },
+                "empty": "No security deposit in progress for this property.",
+                "emptyDescription": "Tracking starts automatically when the lease is signed.",
+                "overdue": "{months} months overdue — penalty {penalty}€",
+                "daysToReturn": "{days, plural, one {# day} other {# days}} to return",
+                "viewFullTracking": "View full tracking"
+            },
+            "save": "Save",
+            "title": {
+                "label": "Title",
+                "saved": "Title updated",
+                "error": "An error occurred"
+            },
+            "description": {
+                "label": "Detailed description",
+                "helper": "Describe your property in detail to attract future tenants.",
+                "saved": "Description updated!",
+                "error": "An error occurred"
+            },
+            "category": {
+                "saved": "Your listing has been updated",
+                "error": "An error occurred",
+                "propertyType": "What type of property are you renting?",
+                "house": "A house",
+                "apartment": "An apartment",
+                "boat": "A boat",
+                "apartmentType": "Apartment type",
+                "subTypes": {
+                    "standard": "Standard",
+                    "duplex": "Duplex",
+                    "triplex": "Triplex",
+                    "loft": "Loft",
+                    "penthouse": "Penthouse",
+                    "mansarde": "Attic"
+                },
+                "adjectiveTitle": "How would you describe your property?",
+                "adjectiveHelper": "This adjective will appear after the property type on the listing (e.g. \"Quiet house\").",
+                "adjectiveLabel": "Choose an adjective",
+                "adjectives": {
+                    "lumineux": "Bright",
+                    "spacieux": "Spacious",
+                    "traversant": "Dual-aspect",
+                    "ensoleille": "Sunny",
+                    "haussmannien": "Haussmann-style",
+                    "atypique": "Unique",
+                    "loft": "Loft",
+                    "ancien": "Period",
+                    "moderne": "Modern",
+                    "neuf": "New",
+                    "renove": "Renovated",
+                    "calme": "Quiet",
+                    "cosy": "Cosy",
+                    "charme": "Charming",
+                    "familial": "Family-friendly",
+                    "etudiant": "Student",
+                    "standing": "Upscale",
+                    "prestige": "Prestigious"
+                },
+                "furnishedQuestion": "Is your property furnished?",
+                "furnished": "Furnished property",
+                "unfurnished": "Unfurnished property",
+                "roomSurface": "Room surface area ({unit})",
+                "propertySurface": "Property surface area ({unit})",
+                "unit": "Unit",
+                "roomCount": "Number of rooms",
+                "roomCountHelper": "Exclude kitchen, bathrooms and toilets",
+                "bedroomCount": "Number of bedrooms",
+                "bedroomCountHelper": "A studio has no bedroom",
+                "privateBathroom": "Private bathroom",
+                "privateBathroomHelper": "Is there a bathroom exclusive to this room?",
+                "bathroomCount": "Number of bathrooms",
+                "kitchenQuestion": "Does your property have a separate kitchen?",
+                "kitchenSeparate": "Separate kitchen",
+                "kitchenOpen": "Open kitchen",
+                "totalFloors": "How many floors does the building have?",
+                "floor": "What floor is the property on?",
+                "buildYear": "Year of construction",
+                "buildPeriods": {
+                    "before1946": "Before 1946",
+                    "1946to1970": "1946 - 1970",
+                    "1971to1990": "1971 - 1990",
+                    "after1990": "After 1990"
+                },
+                "buildYearHelper": "If you don't know the construction period, you can find it <link>here</link>."
+            },
+            "location": {
+                "saved": "Location saved",
+                "error": "An error occurred"
+            },
+            "legal": {
+                "saved": "Legal information updated",
+                "error": "Error saving information",
+                "legalRegime": "Legal regime",
+                "propertyOwnershipType": "Ownership type",
+                "select": "-- Select --",
+                "copropriete": "Co-ownership",
+                "monopropriete": "Sole ownership",
+                "annexes": "Property annexes",
+                "cave": "Cellar",
+                "caveReference": "Cellar reference",
+                "cavePlaceholder": "E.g. Cellar #3, basement 1",
+                "parking": "Parking space",
+                "parkingReference": "Parking reference",
+                "parkingPlaceholder": "E.g. Space #12, level -1",
+                "garage": "Garage",
+                "garageReference": "Garage reference",
+                "garagePlaceholder": "E.g. Box #5",
+                "zoneTendue": "Tight housing zone",
+                "zoneTendueDetected": "Tight housing zone automatically detected",
+                "zoneTendueNot": "This property is not located in a tight housing zone",
+                "zoneTendueInfo": "In a tight housing zone, rent control applies. Fill in the information below for lease generation.",
+                "rentControlZone": "Rent control zone ({territory})",
+                "selectZone": "-- Select your zone --",
+                "selectZoneHint": "Select your zone to get reference rents.",
+                "officialData": "Official data ({territory}): ref. {reference} EUR/m², increased {max} EUR/m², reduced {min} EUR/m².",
+                "referenceRent": "Reference rent (EUR/m²/month)",
+                "referenceRentIncreased": "Increased reference rent (EUR/m²/month)",
+                "rentSupplement": "Rent supplement (EUR)",
+                "previousRent": "Last applied rent (EUR)",
+                "rentSupplementJustificationLabel": "Rent supplement justification",
+                "rentSupplementJustificationPlaceholder": "Describe the exceptional characteristics justifying the rent supplement (e.g. terrace, view, high-end equipment...)",
+                "rentSupplementJustificationHelper": "Legally required (art. 140 VI ELAN law). The supplement must be justified by exceptional characteristics of the property.",
+                "previousRentDate": "Date of last rent",
+                "landlordQuality": "Landlord status",
+                "landlordLegalStatus": "Landlord legal status",
+                "personnePhysique": "Individual",
+                "sci": "SCI (Real Estate Company)",
+                "personneMorale": "Legal entity (other)",
+                "siren": "SIREN number",
+                "registeredOffice": "Registered office",
+                "registeredOfficePlaceholder": "Registered office address"
+            },
+            "leaseType": {
+                "heading": "Lease type",
+                "subtitle": "Choose the rental type for this property.",
+                "saved": "Lease type updated",
+                "error": "Error updating lease type",
+                "modeChangeError": "Error changing mode",
+                "colocationActivated": "Colocation mode activated",
+                "colocationActivatedRedirect": "Colocation mode activated (Redirecting...)",
+                "entirePlaceActivated": "Entire place mode activated",
+                "entirePlaceActivatedRedirect": "Entire place mode activated (Redirecting...)",
+                "bare": {
+                    "title": "Unfurnished rental",
+                    "desc": "Standard 3-year lease. The tenant brings their own furniture.",
+                    "tag1": "3-year lease",
+                    "tag2": "3-month notice"
+                },
+                "furnished": {
+                    "title": "Furnished rental",
+                    "desc": "1-year lease (9 months for students). Property equipped per regulations.",
+                    "tag1": "1-year lease",
+                    "tag2": "Higher rent"
+                },
+                "colocation": {
+                    "title": "Shared housing",
+                    "desc": "Room-by-room management with individual or joint leases.",
+                    "tag1": "Multiple tenants",
+                    "tag2": "Room management"
+                },
+                "specialLeases": "Accepted special leases",
+                "specialLeasesHelper": "Allow tenants to request these lease types when applying.",
+                "studentLease": "Student lease",
+                "studentLeaseDesc": "9-month duration, non-renewable. Reserved for students.",
+                "mobilityLease": "Mobility lease",
+                "mobilityLeaseDesc": "1 to 10 months duration. No security deposit. For training, internship, temporary assignment..."
+            }
+        },
+        "expenses": {
+            "pageTitle": "Expenses & Charges",
+            "editListing": "Edit listing",
+            "addExpense": "Add expense",
+            "expensesLabel": "Expenses",
+            "upcoming": "Upcoming",
+            "next12Months": "Next 12 months",
+            "chargesBreakdown": "Charges breakdown",
+            "recoverable": "Recoverable",
+            "nonRecoverable": "Non-recoverable",
+            "recoverableShort": "Recov.",
+            "nonRecoverableShort": "Non-recov.",
+            "deductible": "Deductible",
+            "regularized": "Regularized",
+            "deleteShort": "Delete",
+            "frequency": "Frequency",
+            "recoverableQuestion": "Recoverable charge?",
+            "legallyNotRecoverable": "Legally non-recoverable for this category",
+            "warningNotRecoverable": "Warning: this charge is legally non-recoverable from the tenant.",
+            "fiscalDeductibility": "Tax Deductibility",
+            "deductibleTooltip": "A deductible charge reduces your taxable income.",
+            "deductibilityFull": "100% deductible from your rental income",
+            "deductibilityPartial": "Non-recoverable amount = deductible",
+            "deductibilityNone": "Non-deductible (recoverable charge)",
+            "deductibilityManual": "Enter the deductible amount manually",
+            "yearlySmoothed": "This expense will be smoothed monthly in your stats.",
+            "confirmDelete": "Delete this expense?",
+            "deleteExpense": "Delete this expense",
+            "continue": "Continue",
+            "save": "Save",
+            "add": "Add",
+            "back": "Back",
+            "cancel": "Cancel",
+            "change": "Change",
+            "yes": "Yes",
+            "no": "No",
+            "noFilterResults": "No results for these filters",
+            "noExpensesThisYear": "No expenses this year",
+            "resetFilters": "Reset filters",
+            "categories": {
+                "coldWater": "Cold Water",
+                "hotWater": "Hot Water",
+                "electricityCommon": "Electricity (Common)",
+                "electricityPrivate": "Electricity (Private)",
+                "heatingCollective": "Collective Heating",
+                "taxProperty": "Property Tax",
+                "meters": "Meters",
+                "generalCharges": "Common charges",
+                "buildingCharges": "Building charges",
+                "elevator": "Elevator",
+                "parking": "Parking",
+                "insurance": "PNO Insurance",
+                "insuranceGli": "GLI Insurance",
+                "maintenance": "Maintenance",
+                "caretaker": "Caretaker",
+                "other": "Other"
+            },
+            "frequencies": {
+                "oneTime": "One-time",
+                "monthly": "Monthly",
+                "quarterly": "Quarterly",
+                "yearly": "Yearly"
+            },
+            "frequenciesShort": {
+                "oneTimeShort": "One-time",
+                "monthlyShort": "Monthly",
+                "quarterlyShort": "Quarterly",
+                "yearlyShort": "Yearly"
+            },
+            "months": {
+                "all": "All",
+                "jan": "Jan",
+                "feb": "Feb",
+                "mar": "Mar",
+                "apr": "Apr",
+                "may": "May",
+                "jun": "Jun",
+                "jul": "Jul",
+                "aug": "Aug",
+                "sep": "Sep",
+                "oct": "Oct",
+                "nov": "Nov",
+                "dec": "Dec"
+            },
+            "modal": {
+                "categoryTitle": "Expense type",
+                "categorySubtitle": "What is this about?",
+                "detailsTitle": "Details",
+                "detailsSubtitle": "Complete the information",
+                "editTitle": "Edit expense",
+                "editSubtitle": "Update the information",
+                "proofTitle": "Proof",
+                "proofSubtitle": "Add a photo if you wish.",
+                "proofHint": "Take a photo of your invoice or receipt.",
+                "summary": "Summary",
+                "labelPlaceholder": "Label (e.g. Suez Invoice January)",
+                "totalAmount": "Amount (€)",
+                "recoverableAmount": "Recoverable amount (€)",
+                "deductibleAmount": "Deductible amount (€)",
+                "amount": "Amount",
+                "date": "Date"
+            },
+            "empty": {
+                "title": "No expenses",
+                "subtitle": "Add your invoices to track profitability and prepare regularizations.",
+                "addFirst": "Add my first expense"
+            },
+            "toasts": {
+                "invalidAmounts": "Please enter valid amounts",
+                "recoverableExceedsTotal": "Recoverable amount cannot exceed total",
+                "expenseAdded": "Expense added",
+                "expenseUpdated": "Expense updated",
+                "yearAlreadyRegularized": "This year has already been regularized. This expense will not be included in the existing regularization.",
+                "saveError": "Error while saving",
+                "expenseDeleted": "Expense deleted",
+                "deleteCancelled": "Deletion cancelled",
+                "deleteError": "Error while deleting"
+            }
         }
     },
     "regularization": {
@@ -1835,6 +2681,462 @@
             "signatureBlockedDetail": "Connect to Wi-Fi to speed up.",
             "photoPending": "{count} photo(s) pending upload",
             "mutationPending": "{count} change(s) pending"
+        }
+    },
+    "toasts": {
+        "common": {
+            "error": "An error occurred",
+            "saved": "Saved"
+        },
+        "collections": {
+            "created": "Collection created!",
+            "createError": "Error creating collection",
+            "removed": "Removed from collection",
+            "added": "Added to collection"
+        },
+        "alerts": {
+            "created": "Alert created! You will receive an email.",
+            "createError": "Error creating alert"
+        },
+        "rentModal": {
+            "listingImported": "Listing imported from {source}",
+            "importSourceText": "text"
+        },
+        "deposit": {
+            "paymentConfirmed": "Payment confirmed",
+            "confirmError": "Error during confirmation",
+            "releaseConfirmed": "Release confirmed",
+            "cdcGenerating": "Generating CDC file\u2026",
+            "cdcGenerated": "CDC file generated",
+            "formalNoticeGenerating": "Generating formal notice\u2026",
+            "formalNoticeGenerated": "Formal notice generated"
+        },
+        "visits": {
+            "confirmed": "Visit confirmed!",
+            "confirmError": "Error during confirmation"
+        },
+        "favorites": {
+            "wishlistDeleted": "Wishlist deleted"
+        },
+        "receipts": {
+            "generated": "Receipt generated successfully",
+            "downloadError": "Error downloading receipt",
+            "sent": "Receipt sent to tenant",
+            "sendError": "Error sending receipt"
+        },
+        "rentTracking": {
+            "loadError": "Unable to load rent tracking",
+            "manualConfirm": "Payment manually confirmed",
+            "confirmError": "Error during confirmation",
+            "reminderSent": "Reminder sent to tenant",
+            "reminderError": "Error sending reminder",
+            "monthIgnored": "Month ignored",
+            "operationError": "Error during operation"
+        },
+        "notifications": {
+            "allRead": "All read!"
+        },
+        "polls": {
+            "loginToVote": "Log in to vote",
+            "voteError": "Error during vote"
+        }
+    },
+    "emails": {
+        "application": {
+            "identityRevealed": {
+                "title": "Identity revealed",
+                "message": "The identity of {candidateName} is now visible to you.",
+                "defaultCandidate": "your candidate"
+            },
+            "selected": {
+                "title": "Application accepted!",
+                "message": "Your application for \"{title}\" has been accepted. Congratulations!",
+                "pushBody": "Your application for \"{title}\" has been accepted!",
+                "emailSubject": "Application accepted - {title}",
+                "emailHeading": "Application accepted",
+                "emailGreeting": "Hello {name},",
+                "emailBody": "We are pleased to inform you that your application for <strong>\"{title}\"</strong> has been accepted!",
+                "emailFollowUp": "The landlord will contact you for the next steps.",
+                "emailCta": "View my application",
+                "emailSignature": "-- The Coridor Team"
+            },
+            "rejected": {
+                "title": "Application not selected",
+                "message": "Your application for \"{title}\" was not selected. Reason: {reason}",
+                "pushBody": "Your application for \"{title}\" was not selected.",
+                "reason": "Another candidate was selected",
+                "emailSubject": "Application not selected - {title}",
+                "emailHeading": "Application not selected",
+                "emailGreeting": "Hello {name},",
+                "emailBody": "We inform you that your application for <strong>\"{title}\"</strong> was not selected.",
+                "emailReasonLabel": "Reason:",
+                "emailEncouragement": "Don't be discouraged, more opportunities await you on Coridor.",
+                "emailCta": "Continue my search",
+                "emailSignature": "-- The Coridor Team"
+            }
+        },
+        "visit": {
+            "confirmed": {
+                "notifTitle": "Visit confirmed",
+                "notifMessage": "{candidate} confirmed their visit on {date} at {time}.",
+                "defaultCandidate": "A candidate",
+                "pushTitle": "Visit confirmed \u2713",
+                "emailSubject": "Visit confirmed - {date} at {time}",
+                "emailHeading": "Visit confirmed",
+                "emailGreeting": "Hello {name},",
+                "emailBody": "<strong>{candidate}</strong> confirmed their attendance for the visit scheduled on <strong>{date} at {time}</strong>.",
+                "emailCta": "View my calendar",
+                "emailSignature": "— The Coridor Team"
+            },
+            "cancelled": {
+                "notifTitle": "Visit automatically cancelled",
+                "notifMessage": "Your visit on {date} at {time} was cancelled because you did not confirm it within 24 hours.",
+                "pushTitle": "Visit cancelled",
+                "pushBody": "Your visit on {date} at {time} was cancelled (not confirmed within 24h).",
+                "emailSubject": "Visit cancelled - {date}",
+                "emailHeading": "Visit cancelled",
+                "emailBody": "Hello {name}, your visit scheduled for <strong>{date} at {time}</strong> was automatically cancelled because you did not confirm it within 24 hours.",
+                "emailRebook": "If you still wish to visit this property, you can book a new time slot.",
+                "emailSignature": "— The Coridor Team",
+                "landlordNotifTitle": "Visit cancelled (not confirmed)",
+                "landlordNotifMessage": "The visit of {name} on {date} at {time} was automatically cancelled (not confirmed within 24h).",
+                "landlordPushTitle": "Visit automatically cancelled",
+                "landlordPushBody": "The visit of {name} on {date} was not confirmed and has been cancelled."
+            },
+            "reminder": {
+                "notifTitle": "Confirm your visit",
+                "notifMessage": "Reminder: confirm your visit on {date} at {time} before it is automatically cancelled.",
+                "pushTitle": "Confirm your visit",
+                "pushBody": "Only 12 hours left to confirm your visit on {date} at {time}",
+                "emailSubject": "Reminder: confirm your visit on {date}",
+                "emailHeading": "Confirm your visit",
+                "emailBody": "Hello {name}, you have booked a visit for <strong>{date} at {time}</strong>. You have <strong>12 hours</strong> left to confirm your attendance, otherwise the visit will be automatically cancelled.",
+                "emailCta": "Confirm my visit",
+                "emailSignature": "— The Coridor Team"
+            }
+        },
+        "subscription": {
+            "defaultUser": "Dear user",
+            "gift": {
+                "oneMonth": "1 month",
+                "nMonths": "{count} months",
+                "notifTitle": "You received a {plan} subscription!",
+                "notifMessage": "A {plan} subscription for {duration} has been gifted to you. {reason}",
+                "reasonLabel": "Reason:",
+                "invoiceDescription": "{plan} subscription gifted — {duration}",
+                "defaultUser": "Dear user",
+                "emailSubject": "A gift from the Coridor team",
+                "emailHeading": "{name}, a gift for you!",
+                "emailBody": "We have gifted you a {plan} subscription for {duration}.",
+                "emailCta": "Discover my new features",
+                "emailPlanIncludes": "What your new plan includes:"
+            },
+            "expiring": {
+                "notifTitle": "Your subscription expires soon",
+                "notifMessage": "Your {plan} subscription expires in 7 days. Renew to keep your features.",
+                "emailSubject": "Your subscription expires in 7 days",
+                "emailHeading": "{name}, your subscription expires soon",
+                "emailBody": "Your {plan} subscription expires in 7 days.",
+                "emailRenew": "Renew now to keep enjoying all your features:",
+                "emailCta": "Renew my subscription"
+            },
+            "expiringTomorrow": {
+                "notifTitle": "Your subscription expires soon",
+                "notifMessage": "Your {plan} subscription expires tomorrow! Renew now.",
+                "emailSubject": "Your subscription expires tomorrow!",
+                "emailHeading": "{name}, your subscription expires tomorrow!",
+                "emailBody": "Your {plan} subscription expires tomorrow.",
+                "emailWarning": "Don't lose access to your features:",
+                "emailCta": "Renew now"
+            }
+        },
+        "inspection": {
+            "signLink": {
+                "defaultProperty": "your property",
+                "notifTitle": "Inspection report to sign",
+                "notifMessage": "The landlord has signed the inspection report for {property}. It is now your turn to sign.",
+                "pushTitle": "Inspection report to sign",
+                "pushBody": "Sign the inspection report for {property}",
+                "emailSubject": "Inspection report — Sign your inspection report",
+                "emailHeading": "Inspection report to sign",
+                "emailGreeting": "Hello {name},",
+                "emailBody": "The landlord has signed the inspection report for <strong>{property}</strong>. It is now your turn to sign it.",
+                "emailDeadline": "You have <strong>24 hours</strong> to sign from your phone.",
+                "emailCta": "Sign the inspection report",
+                "emailExpiry": "This link expires in 24 hours. If you cannot sign now, ask the landlord to resend the link."
+            },
+            "pdfEmail": {
+                "subject": "Inspection report — Signed PDF",
+                "heading": "Signed inspection report",
+                "greeting": "Hello {name},",
+                "body": "Here is the PDF of your signed inspection report.",
+                "cta": "View the PDF",
+                "legalNote": "Reminder: the tenant has 10 days after receiving the keys to report any hidden defect (art. 3-2 of the law of July 6, 1989)."
+            },
+            "pdfReady": {
+                "notifTitle": "Inspection report PDF available",
+                "notifMessage": "The inspection report PDF is ready. You can view and download it.",
+                "pushTitle": "Inspection report PDF ready",
+                "pushBody": "The inspection report PDF is now available.",
+                "emailSubject": "Inspection report — Signed PDF available",
+                "emailHeading": "Signed inspection report",
+                "emailGreeting": "Hello {name},",
+                "emailBody": "The inspection report has been signed by both parties. The PDF is available by clicking the button below.",
+                "emailCta": "View the PDF",
+                "emailLegalNote": "Reminder: the tenant has 10 days after receiving the keys to report any hidden defect (art. 3-2 of the law of July 6, 1989)."
+            },
+            "reminder": {
+                "typeEntry": "move-in",
+                "typeExit": "move-out",
+                "titleToday": "Inspection today",
+                "titleTomorrow": "Inspection tomorrow",
+                "body": "Reminder: {type} inspection scheduled {date}{address}."
+            }
+        },
+        "deposit": {
+            "resolution": {
+                "notifTitle": "Security deposit — deadline expired",
+                "notifMessage": "The 14-day deadline has expired. The deposit is returned according to the partial agreement.",
+                "pushTitle": "Security deposit returned",
+                "pushBody": "The dispute deadline has expired. The deposit is returned according to the partial agreement."
+            },
+            "defaultPropertyTitle": "your property",
+            "retentionsProposed": {
+                "emailSubject": "Security deposit — Deductions proposed",
+                "emailHeading": "The landlord has proposed deductions",
+                "emailBody": "The landlord has proposed deductions on your security deposit. View the details and respond from your Coridor account.",
+                "emailAction": "View and respond"
+            },
+            "overdue": {
+                "landlordNotifTitle": "Return deadline exceeded",
+                "landlordNotifMessage": "The legal deadline for returning the deposit for {property} has passed. Penalty: {penalty}\u20ac.",
+                "landlordPushTitle": "Deposit — deadline exceeded",
+                "landlordPushBody": "Penalty of {penalty}\u20ac. Return the deposit.",
+                "landlordEmailSubject": "Security deposit — Return deadline exceeded",
+                "landlordEmailHeading": "Return deadline exceeded",
+                "landlordEmailBody": "The legal deadline for returning the security deposit for {property} has passed. A penalty of {penalty}\u20ac applies (10% of monthly rent per month of delay, article 22 of the law of July 6, 1989). Return the deposit to avoid further penalties.",
+                "landlordEmailAction": "View tracking",
+                "tenantNotifTitle": "Deposit not returned on time",
+                "tenantNotifMessage": "The return deadline for your deposit for {property} has passed. Applicable penalty: {penalty}\u20ac.",
+                "tenantPushTitle": "Deposit — deadline exceeded",
+                "tenantPushBody": "Your deposit has not been returned on time.",
+                "tenantEmailSubject": "Security deposit — Deadline exceeded",
+                "tenantEmailHeading": "Your deposit has not been returned",
+                "tenantEmailBody": "The legal deadline for returning your security deposit for {property} has passed. A penalty of {penalty}\u20ac applies in your favor. You can check your account to learn about your options.",
+                "tenantEmailAction": "View my options"
+            },
+            "preDeadline": {
+                "eventDescription": "Reminder: deposit return in 7 days",
+                "landlordNotifTitle": "Deposit return — 7 days remaining",
+                "landlordNotifMessage": "The legal deadline for returning the security deposit expires in 7 days. Remember to return the deposit to the tenant.",
+                "landlordPushTitle": "Security deposit — 7 days",
+                "landlordPushBody": "The return deadline expires in 7 days.",
+                "landlordEmailSubject": "Security deposit — 7 days remaining",
+                "landlordEmailHeading": "Deposit return in 7 days",
+                "landlordEmailBody": "The legal deadline for returning the security deposit expires in 7 days. Remember to return the deposit to the tenant to avoid penalties provided by law.",
+                "landlordEmailAction": "View tracking",
+                "tenantNotifTitle": "Deposit return — 7 days",
+                "tenantNotifMessage": "The landlord must return your security deposit within 7 days.",
+                "tenantPushTitle": "Security deposit — 7 days",
+                "tenantPushBody": "Your deposit must be returned within 7 days.",
+                "tenantEmailSubject": "Security deposit — Return within 7 days",
+                "tenantEmailHeading": "Your deposit must be returned",
+                "tenantEmailBody": "The landlord must return your security deposit within 7 days. You can track the progress from your account.",
+                "tenantEmailAction": "View tracking"
+            },
+            "postDeadline": {
+                "eventDescription": "Second reminder — D+15 after legal deadline expiry",
+                "landlordNotifTitle": "Security deposit overdue — Action required",
+                "landlordNotifMessage": "The legal return deadline has been exceeded by 15 days. A penalty of {penalty}\u20ac applies. Return the deposit to avoid further penalties.",
+                "landlordPushTitle": "Deposit overdue — penalty accruing",
+                "landlordPushBody": "Penalty of {penalty}\u20ac. Return the deposit.",
+                "landlordEmailSubject": "Security deposit — 15 days overdue",
+                "landlordEmailHeading": "Deposit overdue — Urgent action required",
+                "landlordEmailBody": "The legal deadline for returning the security deposit has been exceeded by 15 days. A penalty of {penalty}\u20ac applies. Return the deposit to limit penalties.",
+                "landlordEmailAction": "Return the deposit",
+                "tenantNotifTitle": "Deposit not returned — You can take action",
+                "tenantNotifMessage": "Your deposit has not been returned on time. You can generate a formal notice from your account.",
+                "tenantPushTitle": "Deposit not returned",
+                "tenantPushBody": "You can generate a formal notice.",
+                "tenantEmailSubject": "Security deposit — You can take action",
+                "tenantEmailHeading": "Your deposit has still not been returned",
+                "tenantEmailBody": "Your security deposit has not been returned within the legal deadlines. You can generate a formal notice from your Coridor account to assert your rights.",
+                "tenantEmailAction": "Generate a formal notice"
+            },
+            "events": {
+                "leaseSigned": "Lease signed — deposit of {amount}\u20ac due",
+                "paymentDetected": "Deposit payment detected",
+                "paymentConfirmed": "Deposit payment confirmed ({amount}\u20ac)",
+                "heldByLandlord": "Deposit held by the landlord",
+                "entryInspectionDone": "Move-in inspection completed",
+                "exitInspectionStarted": "Move-out inspection started",
+                "exitInspectionSigned": "Move-out inspection signed",
+                "retentionsProposed": "Deductions proposed by the landlord",
+                "tenantAgreed": "Tenant accepts the deductions",
+                "tenantPartialAgreed": "Partial agreement from the tenant",
+                "tenantDisputed": "Tenant disputes the deductions",
+                "partialRelease": "Partial deposit return",
+                "fullRelease": "Deposit fully returned",
+                "deadlineWarning": "Reminder: return within 7 days",
+                "deadlineOverdue": "Legal return deadline exceeded",
+                "penaltyUpdated": "Penalty updated",
+                "formalNoticeGenerated": "Formal notice generated",
+                "formalNoticeSentDefault": "Formal notice sent",
+                "formalNoticeSent": "Formal notice sent on {date}",
+                "cdcDossierGenerated": "CDC file generated",
+                "timelineExported": "Timeline exported",
+                "resolved": "Security deposit — case closed",
+                "secondReminder": "Second reminder — D+15 after expiry",
+                "deductionExceedsDeposit": "Deductions exceed the deposit amount",
+                "default": "Event: {event}"
+            }
+        },
+        "common": {
+            "months": {
+                "january": "January",
+                "february": "February",
+                "march": "March",
+                "april": "April",
+                "may": "May",
+                "june": "June",
+                "july": "July",
+                "august": "August",
+                "september": "September",
+                "october": "October",
+                "november": "November",
+                "december": "December"
+            },
+            "signature": "The Coridor Team",
+            "footer": {
+                "copyright": "\u00a9 {year} Coridor. All rights reserved.",
+                "disclaimer": "You are receiving this email because you are registered on Coridor."
+            }
+        },
+        "reminder": {
+            "adminHeading": "Coridor admin reminder",
+            "adminUrgentHeading": "Urgent admin reminder — Coridor",
+            "adminAction": "Access",
+            "deadline": "Deadline: {date}",
+            "defaultDeadlineMessage": "Deadline on {date}",
+            "defaultLandlordName": "Dear landlord",
+            "legalEmailSubject": "Legal reminder: {title}",
+            "importantReminder": "{name}, important reminder",
+            "viewReminders": "View my reminders",
+            "imminentDeadline": "{title} — Imminent deadline!",
+            "urgentTitle": "{title} — Urgent reminder",
+            "urgentMessage": "Deadline in less than a month! {description}",
+            "diagnostic": {
+                "dpe": {
+                    "title": "EPC — Energy Performance Certificate to renew",
+                    "description": "The EPC of your property is expiring. A new diagnostic must be completed before you can re-let."
+                },
+                "electricity": {
+                    "title": "Electrical diagnostic to renew",
+                    "description": "The electrical diagnostic is expiring. Mandatory for any rental if installation is over 15 years old."
+                },
+                "gas": {
+                    "title": "Gas diagnostic to renew",
+                    "description": "The gas diagnostic is expiring. Mandatory for any rental with a gas installation over 15 years old."
+                },
+                "erp": {
+                    "title": "Natural Hazards Report (ERP) to renew",
+                    "description": "The ERP is only valid for 6 months. It must be up to date at the time of lease signing."
+                },
+                "rentFreeze": {
+                    "title": "Rent freeze — EPC {dpe}",
+                    "descriptionG": "Your property is rated EPC G. It has been prohibited to rent since January 1, 2025. You must carry out energy renovation works.",
+                    "descriptionF": "Your property is rated EPC F. It will be prohibited to rent from January 1, 2028. Any rent increase (including IRL) has been prohibited since August 2022."
+                }
+            },
+            "lease": {
+                "furnished": "furnished",
+                "unfurnished": "unfurnished",
+                "endNotice": {
+                    "title": "Landlord termination notice — {type}",
+                    "descriptionFurnished": "The furnished lease ends on {date}. The notice period is 3 months. You must send the notice by registered mail or process server.",
+                    "descriptionUnfurnished": "The unfurnished lease ends on {date}. The notice period is 6 months. The notice must be justified (sale, personal use, legitimate reason)."
+                },
+                "rentRevision": {
+                    "title": "Annual rent revision (IRL)",
+                    "description": "It is time to revise the rent according to the Rent Reference Index. The revision must be applied within the year following the anniversary date, otherwise it is lost."
+                },
+                "chargesRegularization": {
+                    "title": "Annual service charges adjustment",
+                    "description": "The service charges adjustment must be carried out annually. You must compare the provisions paid by the tenant with the actual charges and make the adjustment."
+                },
+                "depositReturn": {
+                    "title": "Security deposit return",
+                    "description": "The security deposit must be returned within 2 months after the keys are handed back (1 month if the move-out inspection is compliant). After this deadline, penalties of 10% of the monthly rent per month of delay apply."
+                },
+                "tenantInsurance": {
+                    "title": "Tenant insurance certificate verification",
+                    "description": "The tenant is required to provide a home insurance certificate annually. In case of failure, the landlord may terminate the lease after a formal notice that remains without effect for 1 month."
+                }
+            },
+            "tax": {
+                "declaration": {
+                    "title": "Property income tax return {year}",
+                    "description": "Your {year} tax summary is available. Review it to prepare your property income tax return (Form 2044). Online filing deadline: approximately May 20."
+                }
+            }
+        },
+        "receipt": {
+            "docTypeFull": "receipt",
+            "docTypePartial": "partial receipt",
+            "defaultTenantName": "Dear tenant",
+            "notifTitle": "Your rent {docType} is available",
+            "notifMessage": "Your rent {docType} for {month} is available for download.",
+            "emailSubject": "Your rent {docType} — {month}",
+            "emailHeading": "{name}, your {docType} is available",
+            "emailAction": "View my receipts",
+            "emailBody": "Your rent {docType} for {month} has been generated and is available in your Coridor account.",
+            "emailAmount": "Total amount: {amount} \u20ac"
+        },
+        "rentCollection": {
+            "defaultTenantName": "Tenant",
+            "late": {
+                "notifTitle": "Rent not detected",
+                "notifMessage": "Rent for {month} not detected for {address}. Check your statements."
+            },
+            "email": {
+                "heading": "Rent tracking - {month} {year}",
+                "greeting": "Hello,",
+                "body": "We have not yet detected the rent payment for <strong>{month} {year}</strong> for your property located at <strong>{address}</strong>.",
+                "expectedAmount": "Expected amount: <strong>{amount} &euro;</strong>",
+                "manualConfirm": "If you have already received the payment, you can manually confirm it from your Coridor account.",
+                "action": "View my finances",
+                "subject": "Rent tracking - Reminder {month} {year}"
+            },
+            "overdue": {
+                "notifTitle": "Unpaid rent",
+                "notifMessage": "The rent for {month} is still unpaid for {address}."
+            },
+            "critical": {
+                "notifTitle": "Critical alert - Unpaid rent",
+                "notifMessage": "The rent for {month} is still unpaid for {address}. We recommend contacting your tenant."
+            },
+            "friendlyReminder": {
+                "messageBody": "Hello {name}, we have not yet recorded your rent for {month} (expected amount: {amount}\u00a0\u20ac). If you have already made the payment, please disregard this message. If you are experiencing difficulties, do not hesitate to discuss with your landlord.",
+                "notifTitle": "Rent reminder",
+                "notifMessage": "A reminder about your rent for {month} has been sent to you."
+            }
+        },
+        "regularization": {
+            "defaultLandlordName": "Your landlord",
+            "defaultPropertyTitle": "Your property",
+            "messageBody": "Hello,\n\nHere is the service charges adjustment statement for the year {year}.\n\nYou can view the attached document:",
+            "downloadLink": "Download the Document",
+            "notifTitle": "Service charges adjustment {year}",
+            "notifMessage": "{landlord} has sent you the service charges adjustment statement for {property}.",
+            "pushTitle": "Service charges adjustment {year}",
+            "pushBody": "{landlord} has sent you the service charges adjustment statement.",
+            "emailSubject": "Service charges adjustment {year} — {property}",
+            "emailHeading": "Service charges adjustment {year}",
+            "emailGreeting": "Hello{name},",
+            "emailBody": "{landlord} has sent you the service charges adjustment statement for the year {year} regarding the property <strong>{property}</strong>.",
+            "emailCta": "You can view the document and communicate with your landlord directly on Coridor.",
+            "emailAction": "View the statement",
+            "emailFooter": "Coridor — Peer-to-peer property rental"
         }
     }
 }

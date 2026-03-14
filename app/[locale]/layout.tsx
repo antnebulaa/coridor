@@ -23,6 +23,7 @@ import { routing } from '@/i18n/routing';
 import { notFound } from 'next/navigation';
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import SentryUserIdentifier from "@/components/providers/SentryUserIdentifier";
 
 export function generateStaticParams() {
     return routing.locales.map((locale) => ({ locale }));
@@ -79,15 +80,16 @@ export default async function LocaleLayout({
                             }}
                         />
                         <ModalProvider currentUser={currentUser} />
+                        <SentryUserIdentifier currentUser={currentUser} />
                         <PushNotificationManager />
                         <InstallPrompt />
 
                         {/* Desktop: flex-col layout keeps navbar at top, content scrolls below */}
-                        <div className="md:flex md:flex-col md:h-dvh">
+                        <div id="app-shell" className="md:flex md:flex-col md:h-dvh">
                             <Suspense fallback={<div></div>}>
                                 <Navbar currentUser={currentUser} />
                             </Suspense>
-                            <div className="md:flex-1 md:overflow-y-auto md:min-h-0">
+                            <div id="app-content" className="md:flex-1 md:overflow-y-auto md:min-h-0">
                                 <MainLayout>
                                     <TransitionProvider>
                                         {children}

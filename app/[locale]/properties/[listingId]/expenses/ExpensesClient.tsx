@@ -45,26 +45,27 @@ import PageBody from "@/components/ui/PageBody";
 import Modal from "@/components/modals/Modal";
 import Heading from "@/components/Heading";
 import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 // ─── Category Config ──────────────────────────────────────
 
-const CATEGORY_META: Record<string, { Icon: LucideIcon; label: string; color: string; recoverable: boolean; ratio: number; frequency?: string }> = {
-    COLD_WATER:          { Icon: Droplets,       label: 'Eau Froide',             color: '#0891b2', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
-    HOT_WATER:           { Icon: Flame,          label: 'Eau Chaude',             color: '#ea580c', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
-    ELECTRICITY_COMMON:  { Icon: Zap,            label: 'Électricité (Commun)',   color: '#ca8a04', recoverable: true, ratio: 1.0, frequency: 'MONTHLY' },
-    ELECTRICITY_PRIVATE: { Icon: Zap,            label: 'Électricité (Privé)',    color: '#a16207', recoverable: false, ratio: 0, frequency: 'MONTHLY' },
-    HEATING_COLLECTIVE:  { Icon: Flame,          label: 'Chauffage Collectif',    color: '#dc2626', recoverable: true, ratio: 1.0, frequency: 'MONTHLY' },
-    TAX_PROPERTY:        { Icon: Landmark,       label: 'Taxe Foncière',          color: '#7c3aed', recoverable: false, ratio: 0, frequency: 'YEARLY' },
-    METERS:              { Icon: Gauge,          label: 'Compteurs',              color: '#0891b2', recoverable: true, ratio: 1.0, frequency: 'YEARLY' },
-    GENERAL_CHARGES:     { Icon: Building2,      label: 'Charges communes',       color: '#4f46e5', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
-    BUILDING_CHARGES:    { Icon: Construction,   label: 'Charges bâtiment',       color: '#6366f1', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
-    ELEVATOR:            { Icon: ArrowUpDown,    label: 'Ascenseur',              color: '#8b5cf6', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
-    PARKING:             { Icon: CircleParking,  label: 'Parking',                color: '#64748b', recoverable: false, ratio: 0, frequency: 'MONTHLY' },
-    INSURANCE:           { Icon: Shield,         label: 'Assurance PNO',          color: '#2563eb', recoverable: false, ratio: 0, frequency: 'YEARLY' },
-    INSURANCE_GLI:       { Icon: ClipboardCheck, label: 'Assurance GLI',          color: '#0d9488', recoverable: false, ratio: 0, frequency: 'YEARLY' },
-    MAINTENANCE:         { Icon: Wrench,         label: 'Entretien',              color: '#d97706', recoverable: true, ratio: 1.0 },
-    CARETAKER:           { Icon: UserRound,      label: 'Gardien',                color: '#e11d48', recoverable: true, ratio: 1.0, frequency: 'MONTHLY' },
-    OTHER:               { Icon: Paperclip,      label: 'Autre',                  color: '#64748b', recoverable: false, ratio: 0 },
+const CATEGORY_META: Record<string, { Icon: LucideIcon; labelKey: string; color: string; recoverable: boolean; ratio: number; frequency?: string }> = {
+    COLD_WATER:          { Icon: Droplets,       labelKey: 'coldWater',             color: '#0891b2', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
+    HOT_WATER:           { Icon: Flame,          labelKey: 'hotWater',              color: '#ea580c', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
+    ELECTRICITY_COMMON:  { Icon: Zap,            labelKey: 'electricityCommon',     color: '#ca8a04', recoverable: true, ratio: 1.0, frequency: 'MONTHLY' },
+    ELECTRICITY_PRIVATE: { Icon: Zap,            labelKey: 'electricityPrivate',    color: '#a16207', recoverable: false, ratio: 0, frequency: 'MONTHLY' },
+    HEATING_COLLECTIVE:  { Icon: Flame,          labelKey: 'heatingCollective',     color: '#dc2626', recoverable: true, ratio: 1.0, frequency: 'MONTHLY' },
+    TAX_PROPERTY:        { Icon: Landmark,       labelKey: 'taxProperty',           color: '#7c3aed', recoverable: false, ratio: 0, frequency: 'YEARLY' },
+    METERS:              { Icon: Gauge,          labelKey: 'meters',                color: '#0891b2', recoverable: true, ratio: 1.0, frequency: 'YEARLY' },
+    GENERAL_CHARGES:     { Icon: Building2,      labelKey: 'generalCharges',        color: '#4f46e5', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
+    BUILDING_CHARGES:    { Icon: Construction,   labelKey: 'buildingCharges',       color: '#6366f1', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
+    ELEVATOR:            { Icon: ArrowUpDown,    labelKey: 'elevator',              color: '#8b5cf6', recoverable: true, ratio: 1.0, frequency: 'QUARTERLY' },
+    PARKING:             { Icon: CircleParking,  labelKey: 'parking',               color: '#64748b', recoverable: false, ratio: 0, frequency: 'MONTHLY' },
+    INSURANCE:           { Icon: Shield,         labelKey: 'insurance',             color: '#2563eb', recoverable: false, ratio: 0, frequency: 'YEARLY' },
+    INSURANCE_GLI:       { Icon: ClipboardCheck, labelKey: 'insuranceGli',          color: '#0d9488', recoverable: false, ratio: 0, frequency: 'YEARLY' },
+    MAINTENANCE:         { Icon: Wrench,         labelKey: 'maintenance',           color: '#d97706', recoverable: true, ratio: 1.0 },
+    CARETAKER:           { Icon: UserRound,      labelKey: 'caretaker',             color: '#e11d48', recoverable: true, ratio: 1.0, frequency: 'MONTHLY' },
+    OTHER:               { Icon: Paperclip,      labelKey: 'other',                 color: '#64748b', recoverable: false, ratio: 0 },
 };
 
 const DEDUCTIBILITY_RULES: Record<string, 'FULL' | 'PARTIAL' | 'NONE' | 'MANUAL'> = {
@@ -75,18 +76,18 @@ const DEDUCTIBILITY_RULES: Record<string, 'FULL' | 'PARTIAL' | 'NONE' | 'MANUAL'
     OTHER: 'MANUAL',
 };
 
-const FREQUENCIES = [
-    { value: 'ONCE', label: 'Ponctuelle' },
-    { value: 'MONTHLY', label: 'Mensuelle' },
-    { value: 'QUARTERLY', label: 'Trimestrielle' },
-    { value: 'YEARLY', label: 'Annuelle' },
+const FREQUENCY_KEYS: { value: string; labelKey: string }[] = [
+    { value: 'ONCE', labelKey: 'oneTime' },
+    { value: 'MONTHLY', labelKey: 'monthly' },
+    { value: 'QUARTERLY', labelKey: 'quarterly' },
+    { value: 'YEARLY', labelKey: 'yearly' },
 ];
 
-const FREQUENCY_LABELS: Record<string, string> = {
-    ONCE: 'Ponctuel', MONTHLY: 'Mensuel', QUARTERLY: 'Trimestriel', YEARLY: 'Annuel',
+const FREQUENCY_LABEL_KEYS: Record<string, string> = {
+    ONCE: 'oneTimeShort', MONTHLY: 'monthlyShort', QUARTERLY: 'quarterlyShort', YEARLY: 'yearlyShort',
 };
 
-const MONTH_PILLS = ['Tous', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const MONTH_PILL_KEYS = ['all', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 function formatEuros(cents: number): string {
     return Math.round(cents / 100).toLocaleString('fr-FR');
@@ -127,7 +128,7 @@ interface UpcomingItem {
     nextDate: Date;
 }
 
-const UpcomingWidget: React.FC<{ expenses: SafeExpense[] }> = ({ expenses }) => {
+const UpcomingWidget: React.FC<{ expenses: SafeExpense[]; t: (key: string) => string }> = ({ expenses, t }) => {
     const [expanded, setExpanded] = useState(false);
 
     const upcomingItems = useMemo(() => {
@@ -170,13 +171,13 @@ const UpcomingWidget: React.FC<{ expenses: SafeExpense[] }> = ({ expenses }) => 
                 className="flex items-center justify-between w-full"
             >
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[#18160f] dark:text-white">À venir</span>
+                    <span className="text-sm font-medium text-[#18160f] dark:text-white">{t('expenses.upcoming')}</span>
                     <span className="text-xs font-medium bg-[#fef9ee] text-[#b45309] px-2 py-1.5 rounded-full">
                         ~{formatEuros(totalAmount)}€
                     </span>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-[#9e9890]">
-                    <span>12 prochains mois</span>
+                    <span>{t('expenses.next12Months')}</span>
                     <ChevronDown size={14} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
                 </div>
             </button>
@@ -202,7 +203,7 @@ const UpcomingWidget: React.FC<{ expenses: SafeExpense[] }> = ({ expenses }) => 
                                                 {item.label}
                                             </span>
                                             <span className="text-xs text-[#9e9890]">
-                                                {FREQUENCY_LABELS[item.frequency] || item.frequency}
+                                                {FREQUENCY_LABEL_KEYS[item.frequency] ? t(`expenses.frequenciesShort.${FREQUENCY_LABEL_KEYS[item.frequency]}`) : item.frequency}
                                             </span>
                                         </div>
                                         <div className="text-right shrink-0">
@@ -226,7 +227,7 @@ const UpcomingWidget: React.FC<{ expenses: SafeExpense[] }> = ({ expenses }) => 
 
 // ─── Breakdown Widget ─────────────────────────────────────
 
-const BreakdownWidget: React.FC<{ expenses: SafeExpense[]; year: number }> = ({ expenses, year }) => {
+const BreakdownWidget: React.FC<{ expenses: SafeExpense[]; year: number; t: (key: string) => string }> = ({ expenses, year, t }) => {
     const [hovered, setHovered] = useState<string | null>(null);
 
     const breakdown = useMemo(() => {
@@ -246,7 +247,7 @@ const BreakdownWidget: React.FC<{ expenses: SafeExpense[]; year: number }> = ({ 
     return (
         <div className="bg-white dark:bg-neutral-800 rounded-xl dark:border-neutral-700  mb-5">
             <p className="text-base font-medium text-[#18160f] dark:text-white mb-2">
-                Répartition des charges {year}
+                {t('expenses.chargesBreakdown')} {year}
             </p>
 
             {/* Bar */}
@@ -286,7 +287,7 @@ const BreakdownWidget: React.FC<{ expenses: SafeExpense[]; year: number }> = ({ 
                         >
                             <div className="flex items-center gap-2 min-w-0">
                                 <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                                <span className="text-sm text-[#3f3f3f] dark:text-neutral-400 truncate">{cat.label}</span>
+                                <span className="text-sm text-[#3f3f3f] dark:text-neutral-400 truncate">{t(`expenses.categories.${cat.labelKey}`)}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <span className="text-sm text-[#9e9890]">{pct}%</span>
@@ -308,7 +309,8 @@ const ExpenseRow: React.FC<{
     onEdit: () => void;
     onDelete: () => void;
     isDeleting?: boolean;
-}> = ({ expense, onEdit, onDelete, isDeleting }) => {
+    t: (key: string) => string;
+}> = ({ expense, onEdit, onDelete, isDeleting, t }) => {
     const cat = CATEGORY_META[expense.category] || CATEGORY_META.OTHER;
     const isLocked = !!expense.isFinalized;
     const touchStartX = useRef(0);
@@ -355,7 +357,7 @@ const ExpenseRow: React.FC<{
                         className="flex items-center gap-1.5 text-white text-xs font-semibold"
                     >
                         <Trash2 size={16} />
-                        Suppr.
+                        {t('expenses.deleteShort')}
                     </button>
                 </div>
             )}
@@ -389,22 +391,22 @@ const ExpenseRow: React.FC<{
                         <div className="flex flex-wrap items-center gap-1 mt-0.5">
                             {expense.isRecoverable && (expense.amountRecoverableCents || 0) > 0 ? (
                                 <span className="text-[11px] font-medium px-1.5 py-px rounded-full bg-[#edf7f2] text-[#0a7a5a]">
-                                    Récup.
+                                    {t('expenses.recoverableShort')}
                                 </span>
                             ) : null}
                             {(expense.amountDeductibleCents || 0) > 0 && (
                                 <span className="text-[11px] font-medium px-1.5 py-px rounded-full bg-[#f3f0ff] text-[#6d28d9]">
-                                    Déductible
+                                    {t('expenses.deductible')}
                                 </span>
                             )}
                             {!expense.isRecoverable && (expense.amountDeductibleCents || 0) === 0 && (
                                 <span className="text-[11px] font-medium px-1.5 py-px rounded-full bg-[#f6f4f0] text-[#9e9890]">
-                                    Non récup.
+                                    {t('expenses.nonRecoverableShort')}
                                 </span>
                             )}
                             {expense.isFinalized && (
                                 <span className="text-[11px] font-medium px-1.5 py-px rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-500">
-                                    Régularisé
+                                    {t('expenses.regularized')}
                                 </span>
                             )}
                         </div>
@@ -467,6 +469,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
     switcherProperties = [],
 }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);
     const switcherRef = useRef<HTMLDivElement>(null);
@@ -570,10 +573,15 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
     const hasWarning = useMemo(() => {
         if ((category === 'INSURANCE' || category === 'ELECTRICITY_PRIVATE') && isRecoverable) {
-            return "Attention, cette charge n'est légalement pas récupérable sur le locataire.";
+            return t('expenses.warningNotRecoverable');
         }
         return null;
-    }, [category, isRecoverable]);
+    }, [category, isRecoverable, t]);
+
+    const getCategoryLabel = useCallback((key: string) => {
+        const meta = CATEGORY_META[key];
+        return meta ? t(`expenses.categories.${meta.labelKey}`) : key;
+    }, [t]);
 
     const handleCategoryChange = (value: string) => {
         const oldCat = CATEGORY_META[category];
@@ -584,8 +592,8 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
             if (cat.recoverable) setRecoverableAmount(amount || '0');
             else setRecoverableAmount('0');
             if (cat.frequency) setFrequency(cat.frequency);
-            if (!label || (oldCat && label === oldCat.label)) {
-                setLabel(cat.label);
+            if (!label || (oldCat && label === getCategoryLabel(category))) {
+                setLabel(getCategoryLabel(value));
             }
         }
         setStep(STEPS.DETAILS);
@@ -630,7 +638,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         const parsedDeductible = parseFloat(deductibleAmount || '0');
 
         if (isNaN(parsedAmount) || (isRecoverable && isNaN(parsedRecoverable)) || isNaN(parsedDeductible)) {
-            toast.custom((t) => <CustomToast t={t} message="Veuillez entrer des montants valides" type="error" />);
+            toast.custom((toastT) => <CustomToast t={toastT} message={t('expenses.toasts.invalidAmounts')} type="error" />);
             setIsLoading(false);
             return;
         }
@@ -639,7 +647,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         const amountRecoverableCents = isRecoverable ? Math.round(parsedRecoverable * 100) : 0;
 
         if (amountRecoverableCents > amountCents) {
-            toast.custom((t) => <CustomToast t={t} message="Le montant récupérable ne peut pas dépasser le total" type="error" />);
+            toast.custom((toastT) => <CustomToast t={toastT} message={t('expenses.toasts.recoverableExceedsTotal')} type="error" />);
             setIsLoading(false);
             return;
         }
@@ -665,17 +673,17 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
         request
             .then((res) => {
-                toast.custom((t) => <CustomToast t={t} message={editingExpense ? 'Dépense modifiée' : 'Dépense ajoutée'} type="success" />);
+                toast.custom((toastT) => <CustomToast t={toastT} message={editingExpense ? t('expenses.toasts.expenseUpdated') : t('expenses.toasts.expenseAdded')} type="success" />);
                 if (res.data?.warning === 'YEAR_ALREADY_REGULARIZED') {
                     setTimeout(() => {
-                        toast.custom((t) => <CustomToast t={t} message="Cette année a déjà été régularisée. Cette dépense ne sera pas incluse dans la régularisation existante." type="warning" />, { duration: 6000 });
+                        toast.custom((toastT) => <CustomToast t={toastT} message={t('expenses.toasts.yearAlreadyRegularized')} type="warning" />, { duration: 6000 });
                     }, 500);
                 }
                 onClose();
                 router.refresh();
             })
             .catch(() => {
-                toast.custom((t) => <CustomToast t={t} message="Erreur lors de l'enregistrement" type="error" />);
+                toast.custom((toastT) => <CustomToast t={toastT} message={t('expenses.toasts.saveError')} type="error" />);
             })
             .finally(() => setIsLoading(false));
     }, [property.id, category, label, amount, date, frequency, isRecoverable, recoverableAmount, deductibleAmount, rentalUnitId, router, editingExpense, proofUrl]);
@@ -687,20 +695,20 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         setDeletingId(expense.id);
 
         // Show undo toast — delay actual deletion by 4s
-        const toastId = toast.custom((t) => (
+        const toastId = toast.custom((toastT) => (
             <div className="bg-[#18160f] text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm">
-                <span>Dépense supprimée</span>
+                <span>{t('expenses.toasts.expenseDeleted')}</span>
                 <button
                     onClick={() => {
                         // Cancel deletion
                         if (deleteTimeoutRef.current) clearTimeout(deleteTimeoutRef.current);
                         setDeletingId(null);
-                        toast.dismiss(t.id);
-                        toast.custom((t2) => <CustomToast t={t2} message="Suppression annulée" type="success" />, { duration: 2000 });
+                        toast.dismiss(toastT.id);
+                        toast.custom((t2) => <CustomToast t={t2} message={t('expenses.toasts.deleteCancelled')} type="success" />, { duration: 2000 });
                     }}
                     className="font-semibold text-emerald-400 hover:text-emerald-300 transition"
                 >
-                    Annuler
+                    {t('expenses.cancel')}
                 </button>
             </div>
         ), { duration: 4500 });
@@ -711,7 +719,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     router.refresh();
                 })
                 .catch(() => {
-                    toast.custom((t) => <CustomToast t={t} message="Erreur lors de la suppression" type="error" />);
+                    toast.custom((toastT) => <CustomToast t={toastT} message={t('expenses.toasts.deleteError')} type="error" />);
                 })
                 .finally(() => setDeletingId(null));
         }, 4000);
@@ -730,15 +738,15 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
     // ─── Modal Steps ──────────────────────────────────────
 
     const actionLabel = useMemo(() => {
-        if (step === STEPS.DETAILS) return 'Continuer';
-        if (step === STEPS.PROOF) return editingExpense ? 'Enregistrer' : 'Ajouter';
+        if (step === STEPS.DETAILS) return t('expenses.continue');
+        if (step === STEPS.PROOF) return editingExpense ? t('expenses.save') : t('expenses.add');
         return undefined;
-    }, [step, editingExpense, STEPS.DETAILS, STEPS.PROOF]);
+    }, [step, editingExpense, STEPS.DETAILS, STEPS.PROOF, t]);
 
     const secondaryActionLabel = useMemo(() => {
-        if (step === STEPS.DETAILS || step === STEPS.PROOF) return 'Retour';
-        return 'Annuler';
-    }, [step, STEPS.DETAILS, STEPS.PROOF]);
+        if (step === STEPS.DETAILS || step === STEPS.PROOF) return t('expenses.back');
+        return t('expenses.cancel');
+    }, [step, STEPS.DETAILS, STEPS.PROOF, t]);
 
     const secondaryAction = useMemo(() => {
         if (step === STEPS.DETAILS || step === STEPS.PROOF) return () => setStep(s => s - 1);
@@ -754,7 +762,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
     let bodyContent = (
         <div className="flex flex-col gap-4">
-            <Heading title="Type de dépense" subtitle="De quoi s'agit-il ?" />
+            <Heading title={t('expenses.modal.categoryTitle')} subtitle={t('expenses.modal.categorySubtitle')} />
             <div
                 className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-px pb-2 custom-scrollbar"
                 onTouchStart={(e) => e.stopPropagation()}
@@ -771,7 +779,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                         `}
                     >
                         <cat.Icon size={28} style={{ color: cat.color }} />
-                        <span className="text-sm font-medium text-[#18160f] dark:text-white">{cat.label}</span>
+                        <span className="text-sm font-medium text-[#18160f] dark:text-white">{t(`expenses.categories.${cat.labelKey}`)}</span>
                     </div>
                 ))}
             </div>
@@ -783,25 +791,25 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         bodyContent = (
             <div className="flex flex-col gap-4">
                 <Heading
-                    title={editingExpense ? "Modifier la dépense" : "Détails"}
-                    subtitle={editingExpense ? "Modifiez les informations" : "Complétez les informations"}
+                    title={editingExpense ? t('expenses.modal.editTitle') : t('expenses.modal.detailsTitle')}
+                    subtitle={editingExpense ? t('expenses.modal.editSubtitle') : t('expenses.modal.detailsSubtitle')}
                 />
 
                 {/* Selected category badge */}
                 <div className="flex items-center gap-3 p-3 py-4 bg-[#f3efe8] dark:bg-neutral-800 rounded-xl mb-2">
                     <currentCat.Icon size={20} style={{ color: currentCat.color }} />
-                    <span className="font-medium text-[#18160f] dark:text-white">{currentCat.label}</span>
+                    <span className="font-medium text-[#18160f] dark:text-white">{t(`expenses.categories.${currentCat.labelKey}`)}</span>
                     <button
                         onClick={() => setStep(STEPS.CATEGORY)}
                         className="ml-auto text-sm font-medium underline text-[#9e9890] hover:text-[#a8825e]"
                     >
-                        Modifier
+                        {t('expenses.change')}
                     </button>
                 </div>
 
                 <Input
                     id="label"
-                    label="Libellé (ex: Facture Suez Janvier)"
+                    label={t('expenses.modal.labelPlaceholder')}
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
                     disabled={isLoading}
@@ -811,7 +819,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                         id="amount"
-                        label="Montant (€)"
+                        label={t('expenses.modal.totalAmount')}
                         type="number"
                         inputMode="decimal"
                         formatPrice
@@ -829,7 +837,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     />
                     <Input
                         id="date"
-                        label="Date"
+                        label={t('expenses.modal.date')}
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
@@ -842,9 +850,9 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
 
                 {/* Frequency */}
                 <div className="flex flex-col gap-2 mb-2">
-                    <label className="text-xl font-medium text-[#6b6660] dark:text-neutral-400">Fréquence</label>
+                    <label className="text-xl font-medium text-[#6b6660] dark:text-neutral-400">{t('expenses.frequency')}</label>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
-                        {FREQUENCIES.map((freq) => (
+                        {FREQUENCY_KEYS.map((freq) => (
                             <button
                                 key={freq.value}
                                 onClick={() => setFrequency(freq.value)}
@@ -853,14 +861,14 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                         ? 'bg-[#18160f] text-white border-[#18160f]'
                                         : 'bg-neutral-100 dark:bg-neutral-800 text-[#6b6660] dark:text-neutral-300 border-[#e8e4dc] dark:border-neutral-600 hover:border-[#9e9890]'}`}
                             >
-                                {freq.label}
+                                {t(`expenses.frequencies.${freq.labelKey}`)}
                             </button>
                         ))}
                     </div>
                     {frequency === 'YEARLY' && (
                         <div className="text-xs text-[#9e9890] flex items-center gap-1 mt-1 bg-[#f6f4f0] dark:bg-neutral-800 p-2 rounded-lg">
                             <Info size={14} />
-                            Cette dépense sera lissée mensuellement dans vos stats.
+                            {t('expenses.yearlySmoothed')}
                         </div>
                     )}
                 </div>
@@ -875,9 +883,9 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                         return (
                             <>
                                 <div className="flex flex-col gap-1 ">
-                                    <span className="font-medium text-xl text-[#18160f] dark:text-white">Charge récupérable ?</span>
+                                    <span className="font-medium text-xl text-[#18160f] dark:text-white">{t('expenses.recoverableQuestion')}</span>
                                     {locked && (
-                                        <span className="text-sm text-neutral-500">Non récupérable légalement pour cette catégorie</span>
+                                        <span className="text-sm text-neutral-500">{t('expenses.legallyNotRecoverable')}</span>
                                     )}
                                     <div className="flex gap-2 mt-2">
                                         <button
@@ -895,7 +903,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                         : 'bg-white dark:bg-neutral-800 border-[#e8e4dc] dark:border-neutral-700 text-[#3d3a32] dark:text-neutral-300 hover:border-[#0a7a5a]/40'
                                             }`}
                                         >
-                                            Récupérable
+                                            {t('expenses.recoverable')}
                                         </button>
                                         <button
                                             type="button"
@@ -911,7 +919,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                         : 'bg-white dark:bg-neutral-800 border-[#e8e4dc] dark:border-neutral-700 text-[#3d3a32] dark:text-neutral-300 hover:border-neutral-400'
                                             }`}
                                         >
-                                            Non récupérable
+                                            {t('expenses.nonRecoverable')}
                                         </button>
                                     </div>
                                 </div>
@@ -929,7 +937,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     {isRecoverable && (
                         <Input
                             id="recoverableAmount"
-                            label="Montant récupérable (€)"
+                            label={t('expenses.modal.recoverableAmount')}
                             type="number"
                             inputMode="decimal"
                             formatPrice
@@ -944,17 +952,17 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     {/* Deductible */}
                     <div className="mb-5">
                         <div className="flex items-center gap-2 mb-3">
-                            <span className="text-xl font-medium text-[#272727] dark:text-neutral-300">Déductibilité Fiscale</span>
+                            <span className="text-xl font-medium text-[#272727] dark:text-neutral-300">{t('expenses.fiscalDeductibility')}</span>
                             <div className="group relative">
                                 <HelpCircle size={14} className="text-[#9e9890] cursor-help" />
                                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-[#18160f] text-white text-xs rounded-xl opacity-0 group-hover:opacity-100 transition pointer-events-none z-50">
-                                    Une charge déductible réduit votre base imposable.
+                                    {t('expenses.deductibleTooltip')}
                                 </div>
                             </div>
                         </div>
                         <Input
                             id="deductibleAmount"
-                            label="Montant déductible (€)"
+                            label={t('expenses.modal.deductibleAmount')}
                             type="number"
                             inputMode="decimal"
                             formatPrice
@@ -963,10 +971,10 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             disabled={isLoading || DEDUCTIBILITY_RULES[category] !== 'MANUAL'}
                         />
                         <p className="text-xs text-[#9e9890] mt-1">
-                            {DEDUCTIBILITY_RULES[category] === 'FULL' && "100% déductible de vos revenus fonciers"}
-                            {DEDUCTIBILITY_RULES[category] === 'PARTIAL' && "Montant non récupérable = déductible"}
-                            {DEDUCTIBILITY_RULES[category] === 'NONE' && "Non déductible (charge récupérable)"}
-                            {DEDUCTIBILITY_RULES[category] === 'MANUAL' && "Saisissez le montant déductible manuellement"}
+                            {DEDUCTIBILITY_RULES[category] === 'FULL' && t('expenses.deductibilityFull')}
+                            {DEDUCTIBILITY_RULES[category] === 'PARTIAL' && t('expenses.deductibilityPartial')}
+                            {DEDUCTIBILITY_RULES[category] === 'NONE' && t('expenses.deductibilityNone')}
+                            {DEDUCTIBILITY_RULES[category] === 'MANUAL' && t('expenses.deductibilityManual')}
                         </p>
                     </div>
                 </div>
@@ -975,14 +983,14 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                 {editingExpense && !editingExpense.isFinalized && (
                     <button
                         onClick={() => {
-                            if (window.confirm('Supprimer cette dépense ?')) {
+                            if (window.confirm(t('expenses.confirmDelete'))) {
                                 handleDelete(editingExpense);
                                 onClose();
                             }
                         }}
                         className="text-xs text-[#c4321a] font-semibold mt-2 hover:underline self-start"
                     >
-                        Supprimer cette dépense
+                        {t('expenses.deleteExpense')}
                     </button>
                 )}
             </div>
@@ -993,26 +1001,26 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
         const currentCat = CATEGORY_META[category] || CATEGORY_META.OTHER;
         bodyContent = (
             <div className="flex flex-col gap-4">
-                <Heading title="Justificatif" subtitle="Ajoutez une photo si vous le souhaitez." />
+                <Heading title={t('expenses.modal.proofTitle')} subtitle={t('expenses.modal.proofSubtitle')} />
 
                 <div className="bg-[#f6f4f0] dark:bg-neutral-800 p-4 rounded-xl mb-2 text-sm text-[#6b6660] dark:text-neutral-400">
-                    Prenez en photo votre facture ou ticket de caisse.
+                    {t('expenses.modal.proofHint')}
                 </div>
 
                 <ImageUpload value={proofUrl} onChange={(value) => setProofUrl(value)} />
 
                 {/* Recap */}
                 <div className="bg-[#f3efe8] dark:bg-neutral-800 rounded-xl p-3 mt-2">
-                    <p className="text-[10px] font-semibold text-[#9e9890] uppercase tracking-wider mb-2">Récapitulatif</p>
+                    <p className="text-[10px] font-semibold text-[#9e9890] uppercase tracking-wider mb-2">{t('expenses.modal.summary')}</p>
                     <div className="flex items-center gap-2 mb-1.5">
                         <currentCat.Icon size={16} style={{ color: currentCat.color }} />
-                        <span className="text-sm font-medium text-[#18160f] dark:text-white">{label || currentCat.label}</span>
+                        <span className="text-sm font-medium text-[#18160f] dark:text-white">{label || t(`expenses.categories.${currentCat.labelKey}`)}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-1 text-xs text-[#6b6660] dark:text-neutral-400">
-                        <span>Montant : <strong className="text-[#18160f] dark:text-white">{amount || '0'}€</strong></span>
-                        <span>Date : <strong className="text-[#18160f] dark:text-white">{date}</strong></span>
-                        <span>Fréquence : <strong className="text-[#18160f] dark:text-white">{FREQUENCY_LABELS[frequency]}</strong></span>
-                        <span>Récupérable : <strong className="text-[#18160f] dark:text-white">{isRecoverable ? 'Oui' : 'Non'}</strong></span>
+                        <span>{t('expenses.modal.amount')} : <strong className="text-[#18160f] dark:text-white">{amount || '0'}€</strong></span>
+                        <span>{t('expenses.modal.date')} : <strong className="text-[#18160f] dark:text-white">{date}</strong></span>
+                        <span>{t('expenses.frequency')} : <strong className="text-[#18160f] dark:text-white">{t(`expenses.frequenciesShort.${FREQUENCY_LABEL_KEYS[frequency]}`)}</strong></span>
+                        <span>{t('expenses.recoverable')} : <strong className="text-[#18160f] dark:text-white">{isRecoverable ? t('expenses.yes') : t('expenses.no')}</strong></span>
                     </div>
                 </div>
             </div>
@@ -1052,7 +1060,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             <ArrowLeft size={24} className="text-[#18160f] dark:text-white" />
                         </button>
                         <div className="text-2xl font-medium text-[#18160f] dark:text-white">
-                            Modification d&apos;annonce
+                            {t('expenses.editListing')}
                         </div>
                     </div>
                     <EditPropertySidebar
@@ -1068,7 +1076,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                     {/* Desktop Title + Year Selector */}
                     <div className="hidden md:flex h-10 items-center justify-between mb-6">
                         <h2 className="text-2xl font-medium text-[#18160f] dark:text-white">
-                            Dépenses & Charges
+                            {t('expenses.pageTitle')}
                         </h2>
                         <div className="flex items-center gap-2">
                             <button
@@ -1096,7 +1104,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             {/* Mobile Title + Year Selector */}
                             <div className="md:hidden flex items-center justify-between mb-4">
                                 <h2 className="text-2xl font-medium text-[#18160f] dark:text-white">
-                                    Dépenses & Charges
+                                    {t('expenses.pageTitle')}
                                 </h2>
                                 <div className="flex items-center gap-1.5">
                                     <button
@@ -1269,7 +1277,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                     className="text-sm text-[#a8825e] font-medium flex items-center gap-1 justify-center hover:opacity-80 transition"
                                                 >
                                                     <Plus size={15} />
-                                                    Ajouter un bien
+                                                    {t('addProperty')}
                                                 </Link>
                                             </div>
                                         </div>
@@ -1278,24 +1286,24 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                             </div>
 
                             {/* Upcoming Widget */}
-                            <UpcomingWidget expenses={property.expenses} />
+                            <UpcomingWidget expenses={property.expenses} t={t} />
 
                           
 
                             {/* Month pills */}
                                     <div className="flex gap-1.5 overflow-x-auto pb-1 pt-4 -mx-1 px-1 scrollbar-hide">
-                                        {MONTH_PILLS.map((m, i) => {
+                                        {MONTH_PILL_KEYS.map((key, i) => {
                                             const isActive = i === 0 ? filterMonth === null : filterMonth === i - 1;
                                             return (
                                                 <button
-                                                    key={m}
+                                                    key={key}
                                                     onClick={() => setFilterMonth(i === 0 ? null : i - 1)}
                                                     className={`px-4 py-1.5 rounded-full text-base font-medium transition whitespace-nowrap shrink-0
                                                         ${isActive
                                                             ? 'bg-[#18160f] dark:bg-white text-white dark:text-neutral-900'
                                                             : 'text-[#9e9890] bg-neutral-100  hover:text-[#6b6660] dark:hover:text-neutral-300'}`}
                                                 >
-                                                    {m}
+                                                    {t(`expenses.months.${key}`)}
                                                 </button>
                                             );
                                         })}
@@ -1306,19 +1314,19 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                 <div className="flex flex-col gap-2 mb-4">
                                     {/* Total en gros */}
                                     <div className="mt-3 mb-3">
-                                        <p className="text-xs font-medium mb-1 text-[#5f5e5c] dark:text-neutral-500 uppercase tracking-wide">Dépenses {filterMonth !== null ? `${MONTH_PILLS[filterMonth + 1]} ${filterYear}` : filterYear}</p>
+                                        <p className="text-xs font-medium mb-1 text-[#5f5e5c] dark:text-neutral-500 uppercase tracking-wide">{t('expenses.expensesLabel')} {filterMonth !== null ? `${t(`expenses.months.${MONTH_PILL_KEYS[filterMonth + 1]}`)} ${filterYear}` : filterYear}</p>
                                         <p className="text-4xl md:text-3xl font-medium tabular-nums text-[#18160f] dark:text-white">{formatEuros(yearStats.total)}€</p>
                                     </div>
 
                                       {/* Breakdown Widget */}
-                            <BreakdownWidget expenses={periodExpenses} year={filterYear} />
+                            <BreakdownWidget expenses={periodExpenses} year={filterYear} t={t} />
 
                                     {/* 3 filter cards — checkbox (cumulative) */}
                                     <div className="grid grid-cols-3 gap-3 mt-2">
                                         {([
-                                            { key: 'recoverable', label: 'Récupérable', amount: yearStats.recoverable, color: 'bg-neutral-700', bg: 'bg-neutral-100 dark:bg-neutral-800', bgActive: 'bg-[#FE3C10]', textActive: 'text-white', labelActive: 'text-white/75' },
-                                            { key: 'non-recoverable', label: 'Non récup.', amount: yearStats.nonRecoverable, color: 'bg-neutral-700', bg: 'bg-neutral-100 dark:bg-neutral-800', bgActive: 'bg-[#FE3C10]', textActive: 'text-white', labelActive: 'text-white/75' },
-                                            { key: 'deductible', label: 'Déductible', amount: yearStats.deductible, color: 'bg-neutral-700', bg: 'bg-neutral-100 dark:bg-neutral-800', bgActive: 'bg-[#FE3C10]', textActive: 'text-white', labelActive: 'text-white/75' },
+                                            { key: 'recoverable', labelKey: 'recoverable', amount: yearStats.recoverable, color: 'bg-neutral-700', bg: 'bg-neutral-100 dark:bg-neutral-800', bgActive: 'bg-[#FE3C10]', textActive: 'text-white', labelActive: 'text-white/75' },
+                                            { key: 'non-recoverable', labelKey: 'nonRecoverableShort', amount: yearStats.nonRecoverable, color: 'bg-neutral-700', bg: 'bg-neutral-100 dark:bg-neutral-800', bgActive: 'bg-[#FE3C10]', textActive: 'text-white', labelActive: 'text-white/75' },
+                                            { key: 'deductible', labelKey: 'deductible', amount: yearStats.deductible, color: 'bg-neutral-700', bg: 'bg-neutral-100 dark:bg-neutral-800', bgActive: 'bg-[#FE3C10]', textActive: 'text-white', labelActive: 'text-white/75' },
                                         ]).map((cell) => {
                                             const isActive = filterRecoverable.has(cell.key);
                                             return (
@@ -1333,7 +1341,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                     className={`rounded-2xl py-3 px-1.5 text-center transition-colors ${isActive ? `${cell.bgActive} border-transparent` : `${cell.bg} border-[#e8e4dc] dark:border-neutral-700`}`}
                                                 >
                                                     <p className={`text-[11px] font-normal uppercase pb-1 tracking-wide ${isActive ? cell.labelActive : 'opacity-70'}`} style={!isActive ? { color: cell.color } : undefined}>
-                                                        {isActive ? ' ' : ''}{cell.label}
+                                                        {isActive ? ' ' : ''}{t(`expenses.${cell.labelKey}`)}
                                                     </p>
                                                     <p className={`text-lg md:text-base font-medium tabular-nums ${isActive ? cell.textActive : ''}`} style={!isActive ? { color: cell.color } : undefined}>
                                                         {formatEuros(cell.amount)}€
@@ -1352,26 +1360,26 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                     <div className="p-4 bg-[#f3efe8] dark:bg-neutral-700 rounded-full mb-4">
                                         <Receipt size={32} className="text-[#9e9890]" />
                                     </div>
-                                    <h3 className="text-lg font-medium text-[#18160f] dark:text-white">Aucune dépense</h3>
-                                    <p className="text-[#9e9890] max-w-sm mt-2 mb-6">Ajoutez vos factures pour suivre la rentabilité et préparer les régularisations.</p>
+                                    <h3 className="text-lg font-medium text-[#18160f] dark:text-white">{t('expenses.empty.title')}</h3>
+                                    <p className="text-[#9e9890] max-w-sm mt-2 mb-6">{t('expenses.empty.subtitle')}</p>
                                     <button
                                         onClick={() => setIsOpen(true)}
                                         className="px-4 py-2.5 bg-[#18160f] dark:bg-white text-white dark:text-neutral-900 rounded-xl text-sm font-semibold hover:opacity-90 transition"
                                     >
-                                        Ajouter ma première dépense
+                                        {t('expenses.empty.addFirst')}
                                     </button>
                                 </div>
                             ) : filteredExpenses.length === 0 ? (
                                 <div className="p-8 flex flex-col items-center justify-center text-center border-dashed border-2 border-[#e8e4dc] dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800">
                                     <p className="text-[#9e9890] mb-4">
-                                        {hasFilters ? 'Aucun résultat pour ces filtres' : 'Aucune dépense cette année'}
+                                        {hasFilters ? t('expenses.noFilterResults') : t('expenses.noExpensesThisYear')}
                                     </p>
                                     {hasFilters && (
                                         <button
                                             onClick={() => { setFilterCategories([]); setFilterRecoverable(new Set()); setFilterMonth(null); }}
                                             className="px-3 py-1.5 rounded-full bg-[#18160f] dark:bg-white text-white dark:text-neutral-900 text-xs font-semibold hover:opacity-90 transition"
                                         >
-                                            Réinitialiser les filtres
+                                            {t('expenses.resetFilters')}
                                         </button>
                                     )}
                                 </div>
@@ -1393,6 +1401,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                                                         onEdit={() => handleEdit(expense)}
                                                         onDelete={() => handleDelete(expense)}
                                                         isDeleting={deletingId === expense.id}
+                                                        t={t}
                                                     />
                                                 ))}
                                             </div>
@@ -1425,7 +1434,7 @@ const ExpensesClient: React.FC<ExpensesClientProps> = ({
                         className="px-4 py-3 bg-[#18160f] dark:bg-white text-white dark:text-neutral-900 rounded-full shadow-lg hover:opacity-90 transition flex items-center gap-2 text-sm font-semibold"
                     >
                         <Plus size={18} />
-                        Ajouter une dépense
+                        {t('expenses.addExpense')}
                     </button>
                 </div>
             )}

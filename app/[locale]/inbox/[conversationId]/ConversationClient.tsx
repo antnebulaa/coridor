@@ -25,11 +25,12 @@ import BottomSheet from "@/components/ui/BottomSheet";
 import DocumentsPanel from "@/components/messaging/DocumentsPanel";
 import { AnimatePresence, motion } from "framer-motion";
 import { shouldRevealIdentity } from "@/lib/pseudonym/utils";
+import { useTranslations } from 'next-intl';
 
-const REJECTION_REASONS = [
-    "Le logement a déjà trouvé preneur",
-    "Votre dossier ne correspond pas aux critères requis",
-    "Un autre candidat a été retenu",
+const REJECTION_REASON_KEYS = [
+    "alreadyTaken",
+    "doesNotMatch",
+    "anotherSelected",
 ] as const;
 
 interface ConversationClientProps {
@@ -75,6 +76,8 @@ interface ConversationClientProps {
         pdfUrl: string | null;
         scheduledAt: string | null;
     } | null;
+    hasMoreMessages?: boolean;
+    nextMessageCursor?: string | null;
 }
 
 const ConversationClient: React.FC<ConversationClientProps> = ({
@@ -93,15 +96,19 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     conversationId,
     confirmedVisit,
     inspectionData,
-    exitInspectionData
+    exitInspectionData,
+    hasMoreMessages,
+    nextMessageCursor
 }) => {
     const router = useRouter();
+    const t = useTranslations('inbox');
 
     const [messages, setMessages] = useState(initialMessages);
     const hasProposedVisit = messages.some(m => m.body === 'INVITATION_VISITE' || m.body?.startsWith('VISIT_CONFIRMED|') || m.body?.startsWith('VISIT_PENDING|'));
     const [applicationStatus, setApplicationStatus] = useState(initialApplicationStatus);
     const isLandlord = listing?.user?.id === currentUser?.id;
     const isIdentityRevealed = !isLandlord || shouldRevealIdentity(applicationStatus, initialLeaseStatus);
+    const otherUserEmoji = (!isIdentityRevealed && (otherUser as any)?.pseudonymEmoji) || null;
 
     useEffect(() => {
         setMessages(initialMessages);
@@ -215,13 +222,13 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     }, []);
 
     const handleDecline = useCallback(async () => {
-        const reason = selectedReason === 'other' ? customReason.trim() : selectedReason;
+        const reason = selectedReason === 'other' ? customReason.trim() : t(`conversationClient.decline.reasons.${selectedReason}`);
         if (!reason) {
-            toast.error('Veuillez sélectionner un motif');
+            toast.error(t('conversationClient.toasts.selectReason'));
             return;
         }
         if (!applicationId) {
-            toast.error('Aucune candidature trouvée');
+            toast.error(t('conversationClient.toasts.noApplication'));
             return;
         }
 
@@ -232,12 +239,12 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 rejectionReason: reason,
                 conversationId: conversation.id
             });
-            toast.success('Candidature déclinée');
+            toast.success(t('conversationClient.toasts.applicationDeclined'));
             setIsDeclineModalOpen(false);
             setApplicationStatus('REJECTED');
             router.refresh();
         } catch {
-            toast.error('Erreur lors du rejet');
+            toast.error(t('conversationClient.toasts.rejectionError'));
         } finally {
             setIsDeclining(false);
         }
@@ -253,11 +260,11 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 type: 'ENTRY',
                 scheduledAt,
             });
-            toast.success('État des lieux planifié');
+            toast.success(t('conversationClient.toasts.edlScheduled'));
             setIsScheduleModalOpen(false);
             router.refresh();
         } catch {
-            toast.error("Erreur lors de la planification");
+            toast.error(t('conversationClient.toasts.schedulingError'));
         } finally {
             setIsScheduling(false);
         }
@@ -272,7 +279,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 payload.scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
             }
             const res = await axios.post('/api/inspection', payload);
-            toast.success('État des lieux de sortie créé');
+            toast.success(t('conversationClient.toasts.exitEdlCreated'));
             setIsExitEdlSheetOpen(false);
             if (!scheduled) {
                 router.push(`/inspection/${res.data.id}`);
@@ -280,7 +287,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 router.refresh();
             }
         } catch {
-            toast.error("Erreur lors de la création de l'EDL de sortie");
+            toast.error(t('conversationClient.toasts.exitEdlError'));
         } finally {
             setIsStartingExitEdl(false);
         }
@@ -297,9 +304,9 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const getCalendarEvent = useCallback(() => {
         if (!confirmedVisit || !listing) return null;
 
-        const roomInfo = listing.roomCount ? `T${listing.roomCount}` : (listing.rentalUnit?.property?.category || 'Visite');
+        const roomInfo = listing.roomCount ? `T${listing.roomCount}` : (listing.rentalUnit?.property?.category || t('conversationClient.calendar.visit'));
         const surfaceInfo = listing.surface ? ` ${listing.surface}m²` : '';
-        const title = `Visite - ${roomInfo}${surfaceInfo} à ${listing.city || ''}`;
+        const title = t('conversationClient.calendar.visitTitle', { info: roomInfo, surface: surfaceInfo, city: listing.city || '' });
 
         const parts = [
             listing.addressLine1,
@@ -323,18 +330,18 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
     const timelineSteps = useMemo(() => {
         const steps: { title: string; description: any; completed: boolean }[] = [
             {
-                title: "Candidature envoyée",
-                description: "Le propriétaire a bien reçu votre dossier et étudie votre profil.",
+                title: t('conversationClient.timeline.applicationSent'),
+                description: t('conversationClient.timeline.applicationSentDesc'),
                 completed: true
             }
         ];
 
         if (isRejected) {
             steps.push({
-                title: "Candidature non retenue",
+                title: t('conversationClient.timeline.applicationNotRetained'),
                 description: initialRejectionReason
-                    ? `Motif : ${initialRejectionReason}`
-                    : "Le propriétaire a décliné votre candidature.",
+                    ? t('conversationClient.timeline.rejectionReason', { reason: initialRejectionReason })
+                    : t('conversationClient.timeline.applicationNotRetainedDesc'),
                 completed: true
             });
             return steps;
@@ -342,8 +349,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
         if (hasProposedVisit) {
             steps.push({
-                title: "Proposition de visite",
-                description: "Votre profil intéresse le propriétaire qui vous propose une visite.",
+                title: t('conversationClient.timeline.visitProposal'),
+                description: t('conversationClient.timeline.visitProposalDesc'),
                 completed: true
             });
         }
@@ -356,11 +363,11 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
             const calendarEvent = getCalendarEvent();
             steps.push({
-                title: "Rendez-vous confirmé",
+                title: t('conversationClient.timeline.appointmentConfirmed'),
                 description: (
                     <div className="flex flex-col gap-2">
                         <span>
-                            Visite programmée le {dateFormatted} à {confirmedVisit.startTime}.
+                            {t('conversationClient.timeline.visitScheduledAt', { date: dateFormatted, time: confirmedVisit.startTime })}
                         </span>
                         {calendarEvent && (
                             <AddToCalendarButton
@@ -378,8 +385,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         // Selected / shortlisted — show if explicitly selected OR if lease process has started
         if (isSelected || hasLeaseAction) {
             steps.push({
-                title: "Candidature retenue",
-                description: "Votre profil a été sélectionné par le propriétaire.",
+                title: t('conversationClient.timeline.applicationRetained'),
+                description: t('conversationClient.timeline.applicationRetainedDesc'),
                 completed: true
             });
         }
@@ -387,16 +394,16 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         // Lease steps
         if (initialLeaseStatus === 'PENDING_SIGNATURE') {
             steps.push({
-                title: "Bail envoyé pour signature",
+                title: t('conversationClient.timeline.leaseSentForSignature'),
                 description: (
                     <div className="flex flex-col gap-2">
-                        <span>Le bail de location est prêt à être signé. Vous allez recevoir un email de Yousign.</span>
+                        <span>{t('conversationClient.timeline.leaseSentForSignatureDesc')}</span>
                         {applicationId && (
                             <button
                                 onClick={() => window.open(`/leases/${applicationId}`, '_blank')}
                                 className="text-left text-sm font-medium text-blue-600 hover:text-blue-700 underline"
                             >
-                                Consulter le bail
+                                {t('conversationClient.timeline.viewLease')}
                             </button>
                         )}
                     </div>
@@ -406,21 +413,21 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         } else if (initialLeaseStatus === 'SIGNED') {
             // Show both steps when signed: the signature step (completed) + signed step
             steps.push({
-                title: "Bail envoyé pour signature",
-                description: "Le bail a été envoyé pour signature électronique.",
+                title: t('conversationClient.timeline.leaseSentForSignature'),
+                description: t('conversationClient.timeline.leaseSentElectronic'),
                 completed: true
             });
             steps.push({
-                title: "Bail signé",
+                title: t('conversationClient.timeline.leaseSigned'),
                 description: (
                     <div className="flex flex-col gap-2">
-                        <span>Le bail a été signé par toutes les parties.</span>
+                        <span>{t('conversationClient.timeline.leaseSignedDesc')}</span>
                         {applicationId && (
                             <button
                                 onClick={() => window.open(`/leases/${applicationId}`, '_blank')}
                                 className="text-left text-sm font-medium text-green-600 hover:text-green-700 underline"
                             >
-                                Voir le bail signé
+                                {t('conversationClient.timeline.viewSignedLease')}
                             </button>
                         )}
                     </div>
@@ -433,14 +440,14 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         if (inspectionData) {
             if (inspectionData.status === 'CANCELLED') {
                 steps.push({
-                    title: "État des lieux annulé",
-                    description: "L'état des lieux a été annulé par le propriétaire.",
+                    title: t('conversationClient.timeline.edlCancelled'),
+                    description: t('conversationClient.timeline.edlCancelledDesc'),
                     completed: true
                 });
             } else if (inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED') {
                 steps.push({
-                    title: "État des lieux signé",
-                    description: "L'état des lieux a été signé par les deux parties.",
+                    title: t('conversationClient.timeline.edlSigned'),
+                    description: t('conversationClient.timeline.edlSignedDesc'),
                     completed: true
                 });
             } else if (inspectionData.status === 'DRAFT' && inspectionData.scheduledAt) {
@@ -448,20 +455,20 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 const dateStr = schedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
                 const timeStr = schedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
                 steps.push({
-                    title: "État des lieux planifié",
-                    description: `Prévu le ${dateStr} à ${timeStr}.`,
+                    title: t('conversationClient.timeline.edlScheduled'),
+                    description: t('conversationClient.timeline.scheduledAt', { date: dateStr, time: timeStr }),
                     completed: false
                 });
             } else if (inspectionData.status === 'DRAFT') {
                 steps.push({
-                    title: "État des lieux en cours",
-                    description: "L'inspection du logement est en cours de réalisation.",
+                    title: t('conversationClient.timeline.edlInProgress'),
+                    description: t('conversationClient.timeline.edlInProgressDesc'),
                     completed: false
                 });
             } else if (inspectionData.status === 'PENDING_SIGNATURE') {
                 steps.push({
-                    title: "État des lieux — signature",
-                    description: "En attente de la signature du locataire.",
+                    title: t('conversationClient.timeline.edlSignaturePending'),
+                    description: t('conversationClient.timeline.edlSignaturePendingDesc'),
                     completed: false
                 });
             }
@@ -471,14 +478,14 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
         if (exitInspectionData) {
             if (exitInspectionData.status === 'CANCELLED') {
                 steps.push({
-                    title: "EDL de sortie annulé",
-                    description: "L'état des lieux de sortie a été annulé.",
+                    title: t('conversationClient.timeline.exitEdlCancelled'),
+                    description: t('conversationClient.timeline.exitEdlCancelledDesc'),
                     completed: true
                 });
             } else if (exitInspectionData.status === 'SIGNED' || exitInspectionData.status === 'LOCKED') {
                 steps.push({
-                    title: "EDL de sortie signé",
-                    description: "L'état des lieux de sortie a été signé par les deux parties.",
+                    title: t('conversationClient.timeline.exitEdlSigned'),
+                    description: t('conversationClient.timeline.exitEdlSignedDesc'),
                     completed: true
                 });
             } else if (exitInspectionData.status === 'DRAFT' && exitInspectionData.scheduledAt) {
@@ -486,20 +493,20 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                 const dateStr = schedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
                 const timeStr = schedDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
                 steps.push({
-                    title: "EDL de sortie planifié",
-                    description: `Prévu le ${dateStr} à ${timeStr}.`,
+                    title: t('conversationClient.timeline.exitEdlScheduled'),
+                    description: t('conversationClient.timeline.scheduledAt', { date: dateStr, time: timeStr }),
                     completed: false
                 });
             } else if (exitInspectionData.status === 'DRAFT') {
                 steps.push({
-                    title: "EDL de sortie en cours",
-                    description: "L'état des lieux de sortie est en cours de réalisation.",
+                    title: t('conversationClient.timeline.exitEdlInProgress'),
+                    description: t('conversationClient.timeline.exitEdlInProgressDesc'),
                     completed: false
                 });
             } else if (exitInspectionData.status === 'PENDING_SIGNATURE') {
                 steps.push({
-                    title: "EDL de sortie — signature",
-                    description: "En attente de la signature du locataire.",
+                    title: t('conversationClient.timeline.exitEdlSignaturePending'),
+                    description: t('conversationClient.timeline.edlSignaturePendingDesc'),
                     completed: false
                 });
             }
@@ -522,9 +529,11 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         isIdentityRevealed={isIdentityRevealed}
                     />
                 </div>
-                <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="flex-1 min-h-0">
                     <Body
                         initialMessages={messages}
+                        hasMoreMessages={hasMoreMessages}
+                        nextMessageCursor={nextMessageCursor}
                         onOpenVisitSlots={handleOpenVisitSelection}
                         onToggleDossier={toggleDossier}
                         onOpenListingRecap={handleOpenListingRecap}
@@ -533,6 +542,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         confirmedVisit={confirmedVisit}
                         leaseStatus={initialLeaseStatus}
                         onViewInPanel={handleViewInPanel}
+                        otherUserEmoji={otherUserEmoji}
                     />
                 </div>
                 <div className="flex-none bg-white dark:bg-neutral-900"
@@ -579,10 +589,10 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                         justify-between
                                     ">
                                         <div className="flex items-center gap-3">
-                                            <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">Dossier candidat</h2>
+                                            <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">{t('conversationClient.dossier.title')}</h2>
                                             {isRejected && (
                                                 <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                                                    Déclinée
+                                                    {t('conversationClient.dossier.declined')}
                                                 </span>
                                             )}
                                         </div>
@@ -590,7 +600,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             onClick={() => setIsDossierOpen(false)}
                                             className="xl:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
                                         >
-                                            <span className="sr-only">Fermer</span>
+                                            <span className="sr-only">{t('conversationClient.close')}</span>
                                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
@@ -627,7 +637,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             {initialLeaseStatus === 'SIGNED' ? (
                                                 <div className="flex flex-col gap-2">
                                                     <Button
-                                                        label="Voir le bail signé"
+                                                        label={t('conversationClient.timeline.viewSignedLease')}
                                                         outline
                                                         onClick={() => {
                                                             if (applicationId) {
@@ -639,13 +649,13 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                         !inspectionData || inspectionData.status === 'CANCELLED' ? (
                                                             <>
                                                                 <Button
-                                                                    label="État des lieux"
+                                                                    label={t('conversationClient.edl.inspection')}
                                                                     onClick={() => setIsEdlSheetOpen(true)}
                                                                 />
                                                                 <BottomSheet
                                                                     isOpen={isEdlSheetOpen}
                                                                     onClose={() => setIsEdlSheetOpen(false)}
-                                                                    title="État des lieux"
+                                                                    title={t('conversationClient.edl.inspection')}
                                                                 >
                                                                     <div className="flex flex-col p-2 pb-8">
                                                                         <button
@@ -659,8 +669,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                                 <CalendarDays size={20} className="text-amber-600" />
                                                                             </div>
                                                                             <div className="flex flex-col text-left">
-                                                                                <span className="font-medium text-[16px]">Planifier un état des lieux</span>
-                                                                                <span className="text-sm text-neutral-500">Choisir une date et notifier le locataire</span>
+                                                                                <span className="font-medium text-[16px]">{t('conversationClient.edl.scheduleEdl')}</span>
+                                                                                <span className="text-sm text-neutral-500">{t('conversationClient.edl.scheduleEdlDesc')}</span>
                                                                             </div>
                                                                         </button>
                                                                         <button
@@ -676,8 +686,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                                 <Play size={20} className="text-green-600" />
                                                                             </div>
                                                                             <div className="flex flex-col text-left">
-                                                                                <span className="font-medium text-[16px]">Démarrer l&apos;état des lieux</span>
-                                                                                <span className="text-sm text-neutral-500">Commencer immédiatement</span>
+                                                                                <span className="font-medium text-[16px]">{t('conversationClient.edl.startEdl')}</span>
+                                                                                <span className="text-sm text-neutral-500">{t('conversationClient.edl.startImmediately')}</span>
                                                                             </div>
                                                                         </button>
                                                                     </div>
@@ -685,7 +695,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                             </>
                                                         ) : inspectionData.status === 'DRAFT' ? (
                                                             <Button
-                                                                label={inspectionData.scheduledAt ? "Démarrer l'état des lieux" : "Reprendre l'état des lieux"}
+                                                                label={inspectionData.scheduledAt ? t('conversationClient.edl.startEdl') : t('conversationClient.edl.resumeEdl')}
                                                                 onClick={() => router.push(`/inspection/${inspectionData!.id}`)}
                                                             />
                                                         ) : inspectionData.status === 'SIGNED' || inspectionData.status === 'LOCKED' ? (
@@ -697,20 +707,20 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                         rel="noopener noreferrer"
                                                                         className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
                                                                     >
-                                                                        Voir le PDF de l&apos;EDL d&apos;entrée
+                                                                        {t('conversationClient.edl.viewEntryPdf')}
                                                                     </a>
                                                                 )}
                                                                 {/* EXIT inspection buttons */}
                                                                 {!exitInspectionData || exitInspectionData.status === 'CANCELLED' ? (
                                                                     <>
                                                                         <Button
-                                                                            label="État des lieux de sortie"
+                                                                            label={t('conversationClient.edl.exitInspection')}
                                                                             onClick={() => setIsExitEdlSheetOpen(true)}
                                                                         />
                                                                         <BottomSheet
                                                                             isOpen={isExitEdlSheetOpen}
                                                                             onClose={() => setIsExitEdlSheetOpen(false)}
-                                                                            title="État des lieux de sortie"
+                                                                            title={t('conversationClient.edl.exitInspection')}
                                                                         >
                                                                             <div className="flex flex-col p-2 pb-8">
                                                                                 <button
@@ -725,8 +735,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                                         <Play size={20} className="text-green-600" />
                                                                                     </div>
                                                                                     <div className="flex flex-col text-left">
-                                                                                        <span className="font-medium text-[16px]">Démarrer maintenant</span>
-                                                                                        <span className="text-sm text-neutral-500">Comparer avec l&apos;EDL d&apos;entrée</span>
+                                                                                        <span className="font-medium text-[16px]">{t('conversationClient.edl.startNow')}</span>
+                                                                                        <span className="text-sm text-neutral-500">{t('conversationClient.edl.compareWithEntry')}</span>
                                                                                     </div>
                                                                                 </button>
                                                                             </div>
@@ -734,7 +744,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                     </>
                                                                 ) : exitInspectionData.status === 'DRAFT' ? (
                                                                     <Button
-                                                                        label={exitInspectionData.scheduledAt ? "Démarrer l'EDL de sortie" : "Reprendre l'EDL de sortie"}
+                                                                        label={exitInspectionData.scheduledAt ? t('conversationClient.edl.startExitEdl') : t('conversationClient.edl.resumeExitEdl')}
                                                                         onClick={() => router.push(`/inspection/${exitInspectionData!.id}`)}
                                                                     />
                                                                 ) : exitInspectionData.status === 'SIGNED' || exitInspectionData.status === 'LOCKED' ? (
@@ -745,18 +755,18 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                             rel="noopener noreferrer"
                                                                             className="w-full py-2.5 px-4 text-sm font-medium text-center text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition block"
                                                                         >
-                                                                            Voir le PDF de l&apos;EDL de sortie
+                                                                            {t('conversationClient.edl.viewExitPdf')}
                                                                         </a>
                                                                     )
                                                                 ) : exitInspectionData.status === 'PENDING_SIGNATURE' ? (
                                                                     <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
-                                                                        EDL de sortie — en attente de signature
+                                                                        {t('conversationClient.edl.exitAwaitingSignature')}
                                                                     </div>
                                                                 ) : null}
                                                             </>
                                                         ) : inspectionData.status === 'PENDING_SIGNATURE' ? (
                                                             <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-white bg-neutral-900 rounded-xl border border-neutral-900">
-                                                                En attente de signature locataire
+                                                                {t('conversationClient.edl.awaitingTenantSignature')}
                                                             </div>
                                                         ) : null
                                                     ) : (
@@ -768,7 +778,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                     rel="noopener noreferrer"
                                                                     className="w-full py-2.5 px-4 text-sm font-medium text-center text-green-700 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition block"
                                                                 >
-                                                                    Voir le PDF de l&apos;EDL d&apos;entrée
+                                                                    {t('conversationClient.edl.viewEntryPdf')}
                                                                 </a>
                                                             )}
                                                             {exitInspectionData && exitInspectionData.status !== 'CANCELLED' && (exitInspectionData.status === 'SIGNED' || exitInspectionData.status === 'LOCKED') && exitInspectionData.pdfUrl && (
@@ -778,7 +788,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                                     rel="noopener noreferrer"
                                                                     className="w-full py-2.5 px-4 text-sm font-medium text-center text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition block"
                                                                 >
-                                                                    Voir le PDF de l&apos;EDL de sortie
+                                                                    {t('conversationClient.edl.viewExitPdf')}
                                                                 </a>
                                                             )}
                                                         </>
@@ -787,10 +797,10 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             ) : initialLeaseStatus === 'PENDING_SIGNATURE' ? (
                                                 <div className="flex flex-col gap-2">
                                                     <div className="flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200">
-                                                        En cours de signature...
+                                                        {t('conversationClient.lease.signingInProgress')}
                                                     </div>
                                                     <Button
-                                                        label="Voir le bail"
+                                                        label={t('conversationClient.lease.viewLease')}
                                                         outline
                                                         onClick={() => {
                                                             if (applicationId) {
@@ -802,14 +812,14 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                             ) : (
                                                 <Button
                                                     disabled={!listing}
-                                                    label={hasProposedVisit ? "Générer le bail de location" : "Proposer une visite"}
+                                                    label={hasProposedVisit ? t('conversationClient.actions.generateLease') : t('conversationClient.actions.proposeVisit')}
                                                     onClick={() => {
                                                         if (!listing) return;
                                                         if (hasProposedVisit) {
                                                             if (applicationId) {
                                                                 window.open(`/leases/${applicationId}`, '_blank');
                                                             } else {
-                                                                toast.error("Aucune demande de location trouvée pour ce dossier.");
+                                                                toast.error(t('conversationClient.toasts.noApplicationForDossier'));
                                                             }
                                                             return;
                                                         }
@@ -823,10 +833,10 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                             listingId: listing.id
                                                         })
                                                             .then(() => {
-                                                                toast.success('Invitation envoyée');
+                                                                toast.success(t('conversationClient.toasts.invitationSent'));
                                                                 router.refresh();
                                                             })
-                                                            .catch(() => toast.error('Erreur lors de l\'envoi'));
+                                                            .catch(() => toast.error(t('conversationClient.toasts.sendError')));
                                                     }}
                                                 />
                                             )}
@@ -839,7 +849,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                                     }}
                                                     className="w-full py-2.5 px-4 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
                                                 >
-                                                    Décliner la candidature
+                                                    {t('conversationClient.actions.declineApplication')}
                                                 </button>
                                             )}
                                         </div>
@@ -849,7 +859,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                         <div className="flex-none border-t border-gray-200 dark:border-neutral-800 p-4">
                                             <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg p-3">
                                                 <XCircle size={16} className="shrink-0" />
-                                                <span>Candidature déclinée</span>
+                                                <span>{t('conversationClient.dossier.applicationDeclined')}</span>
                                             </div>
                                         </div>
                                     )}
@@ -880,22 +890,22 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             <Modal
                 isOpen={isDeclineModalOpen}
                 onClose={() => setIsDeclineModalOpen(false)}
-                title="Décliner la candidature"
-                actionLabel={isDeclining ? "..." : "Confirmer le refus"}
+                title={t('conversationClient.decline.title')}
+                actionLabel={isDeclining ? "..." : t('conversationClient.decline.confirmRefusal')}
                 onSubmit={handleDecline}
                 disabled={isDeclining || (!selectedReason || (selectedReason === 'other' && !customReason.trim()))}
                 body={
                     <div className="flex flex-col gap-4">
                         <p className="text-neutral-500 text-sm">
-                            Sélectionnez un motif pour informer le candidat. Coridor protège contre les discriminations en proposant des motifs respectueux et objectifs.
+                            {t('conversationClient.decline.description')}
                         </p>
                         <div className="flex flex-col gap-2">
-                            {REJECTION_REASONS.map((reason) => (
+                            {REJECTION_REASON_KEYS.map((key) => (
                                 <label
-                                    key={reason}
+                                    key={key}
                                     className={clsx(
                                         "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition",
-                                        selectedReason === reason
+                                        selectedReason === key
                                             ? "border-red-300 bg-red-50"
                                             : "border-gray-200 hover:border-gray-300"
                                     )}
@@ -903,12 +913,12 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     <input
                                         type="radio"
                                         name="rejectionReason"
-                                        value={reason}
-                                        checked={selectedReason === reason}
-                                        onChange={() => setSelectedReason(reason)}
+                                        value={key}
+                                        checked={selectedReason === key}
+                                        onChange={() => setSelectedReason(key)}
                                         className="accent-red-600"
                                     />
-                                    <span className="text-sm text-neutral-800">{reason}</span>
+                                    <span className="text-sm text-neutral-800">{t(`conversationClient.decline.reasons.${key}`)}</span>
                                 </label>
                             ))}
                             <label
@@ -928,12 +938,12 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     className="accent-red-600 mt-1"
                                 />
                                 <div className="flex-1">
-                                    <span className="text-sm text-neutral-800">Autre raison</span>
+                                    <span className="text-sm text-neutral-800">{t('conversationClient.decline.otherReason')}</span>
                                     {selectedReason === 'other' && (
                                         <textarea
                                             value={customReason}
                                             onChange={(e) => setCustomReason(e.target.value)}
-                                            placeholder="Précisez le motif..."
+                                            placeholder={t('conversationClient.decline.specifyReason')}
                                             rows={2}
                                             maxLength={200}
                                             className="mt-2 w-full text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:border-red-300"
@@ -949,8 +959,8 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             <Modal
                 isOpen={isAvailabilityModalOpen}
                 onClose={() => setIsAvailabilityModalOpen(false)}
-                title="Définissez vos disponibilités"
-                actionLabel="Définir mes créneaux"
+                title={t('conversationClient.availability.title')}
+                actionLabel={t('conversationClient.availability.defineSlots')}
                 onSubmit={() => {
                     if (listing) {
                         router.push(`/properties/${listing.id}/edit?section=visits`);
@@ -961,18 +971,18 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         <div className="w-full flex justify-center mb-2">
                             <Image
                                 src="/images/no-slots.png"
-                                alt="Aucun créneau"
+                                alt={t('conversationClient.availability.noSlotsAlt')}
                                 width={300}
                                 height={200}
                                 className="object-contain"
                             />
                         </div>
                         <Heading
-                            title="Vous n'avez pas de créneaux disponibles"
-                            subtitle="Pour proposer une visite, vous devez d'abord définir vos disponibilités."
+                            title={t('conversationClient.availability.noSlotsTitle')}
+                            subtitle={t('conversationClient.availability.noSlotsSubtitle')}
                         />
                         <p className="text-neutral-500">
-                            Cela permet aux candidats de choisir un créneau parmi ceux que vous avez définis, évitant ainsi les allers-retours inutiles.
+                            {t('conversationClient.availability.noSlotsDescription')}
                         </p>
                     </div>
                 }
@@ -982,7 +992,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
             <BottomSheet
                 isOpen={isScheduleModalOpen}
                 onClose={() => setIsScheduleModalOpen(false)}
-                title="Planifier l'état des lieux"
+                title={t('conversationClient.edl.scheduleTitle')}
             >
                 <div className="flex flex-col px-6 pb-8">
                     {/* Hero date display */}
@@ -1025,13 +1035,13 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                             className="w-full px-4 py-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-2xl text-center text-sm font-medium text-transparent focus:outline-none transition appearance-none"
                         />
                         <span className="absolute inset-0 flex items-center justify-center text-xl font-medium text-neutral-500 dark:text-neutral-400 pointer-events-none">
-                            {scheduleDate ? 'Modifier la date' : 'Choisir une date'}
+                            {scheduleDate ? t('conversationClient.edl.changeDate') : t('conversationClient.edl.chooseDate')}
                         </span>
                     </div>
 
                     {/* Time selector */}
                     <div className="mb-5">
-                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-3 block">Heure</span>
+                        <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-3 block">{t('conversationClient.edl.time')}</span>
                         <div className="flex flex-wrap gap-2">
                             {['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time) => (
                                 <button
@@ -1052,7 +1062,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
 
                     {/* Tip */}
                     <p className="text-xs text-neutral-400 text-center mb-5">
-                        Prévoyez 1h à 1h30 selon la taille du logement
+                        {t('conversationClient.edl.durationTip')}
                     </p>
 
                     {/* CTA */}
@@ -1061,7 +1071,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         disabled={isScheduling || !scheduleDate}
                         className="w-full py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-base font-semibold disabled:opacity-30 transition-all active:scale-[0.98]"
                     >
-                        {isScheduling ? "Planification..." : "Confirmer"}
+                        {isScheduling ? t('conversationClient.edl.scheduling') : t('conversationClient.edl.confirm')}
                     </button>
                 </div>
             </BottomSheet>
@@ -1089,7 +1099,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                         h-[73px]
                     ">
                             <h2 className="text-2xl font-medium text-neutral-800 dark:text-white">
-                                {isVisitSelectionOpen ? 'Visites' : 'Récapitulatif'}
+                                {isVisitSelectionOpen ? t('conversationClient.sidebar.visits') : t('conversationClient.sidebar.recap')}
                             </h2>
                             {/* Mobile Close Button */}
                             {(isVisitSelectionOpen || isMobileRecapOpen) && (
@@ -1100,7 +1110,7 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     }}
                                     className="p-2 -mr-2 text-gray-500 hover:text-black dark:text-neutral-400 dark:hover:text-white xl:hidden"
                                 >
-                                    <span className="sr-only">Fermer</span>
+                                    <span className="sr-only">{t('conversationClient.close')}</span>
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
@@ -1133,22 +1143,22 @@ const ConversationClient: React.FC<ConversationClientProps> = ({
                                     <div className="flex flex-col gap-1">
                                         <div className="flex flex-col gap-1">
                                             <div className="text-2xl font-medium dark:text-white">
-                                                {rent} € <span className="font-light text-neutral-500 dark:text-neutral-400 text-sm">/ mois</span>
+                                                {rent} € <span className="font-light text-neutral-500 dark:text-neutral-400 text-sm">{t('conversationClient.sidebar.perMonth')}</span>
                                             </div>
                                             <div className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                                                {listing?.category || "Appartement"} - {listing?.city}
+                                                {listing?.category || t('conversationClient.sidebar.apartment')} - {listing?.city}
                                             </div>
                                             <div className="text-sm text-neutral-500 dark:text-neutral-400">
-                                                Propriétaire : {listing?.user?.name}
+                                                {t('conversationClient.sidebar.landlord', { name: listing?.user?.name || '' })}
                                             </div>
                                             <div className="text-md text-neutral-500 dark:text-neutral-400 mt-1">
-                                                {listing?.roomCount} pièces • {listing?.guestCount} chambres • {displaySurface} {unit}
+                                                {t('conversationClient.sidebar.details', { rooms: listing?.roomCount || 0, bedrooms: listing?.guestCount || 0, surface: displaySurface || 0, unit })}
                                             </div>
                                             <div className="mt-8 mb-12">
                                                 <div className="flex flex-col">
                                                     {timelineSteps.map((step, index) => {
                                                         const isLast = index === timelineSteps.length - 1;
-                                                        const isRejectedStep = step.title === "Candidature non retenue" || step.title === "État des lieux annulé";
+                                                        const isRejectedStep = step.title === t('conversationClient.timeline.applicationNotRetained') || step.title === t('conversationClient.timeline.edlCancelled');
                                                         return (
                                                             <div key={index} className="relative pl-6 pb-8 last:pb-0">
                                                                 {/* Line */}

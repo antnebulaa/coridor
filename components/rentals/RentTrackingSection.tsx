@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import {
   Check,
   AlertTriangle,
@@ -330,6 +331,7 @@ const RentTrackingSection: React.FC<RentTrackingSectionProps> = ({
   applicationId,
   hasBankConnection,
 }) => {
+  const t = useTranslations('toasts');
   const [trackings, setTrackings] = useState<RentPaymentTracking[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear());
@@ -349,7 +351,7 @@ const RentTrackingSection: React.FC<RentTrackingSectionProps> = ({
       setTrackings(res.data);
     } catch (err) {
       console.error('Failed to fetch rent trackings:', err);
-      toast.error('Impossible de charger le suivi des loyers');
+      toast.error(t('rentTracking.loadError'));
     } finally {
       setLoading(false);
     }
@@ -377,11 +379,11 @@ const RentTrackingSection: React.FC<RentTrackingSectionProps> = ({
 
     try {
       await axios.patch(`/api/rent-tracking/${id}/confirm`);
-      toast.success('Paiement confirme manuellement');
+      toast.success(t('rentTracking.manualConfirm'));
     } catch (err) {
       // Revert optimistic update
       await fetchTrackings();
-      toast.error('Erreur lors de la confirmation');
+      toast.error(t('rentTracking.confirmError'));
     } finally {
       setActionLoading(null);
     }
@@ -400,10 +402,10 @@ const RentTrackingSection: React.FC<RentTrackingSectionProps> = ({
 
     try {
       await axios.post(`/api/rent-tracking/${id}/send-reminder`);
-      toast.success('Rappel envoye au locataire');
+      toast.success(t('rentTracking.reminderSent'));
     } catch (err) {
       await fetchTrackings();
-      toast.error("Erreur lors de l'envoi du rappel");
+      toast.error(t('rentTracking.reminderError'));
     } finally {
       setActionLoading(null);
     }
@@ -423,10 +425,10 @@ const RentTrackingSection: React.FC<RentTrackingSectionProps> = ({
 
     try {
       await axios.patch(`/api/rent-tracking/${id}/ignore`, { reason });
-      toast.success('Mois ignore');
+      toast.success(t('rentTracking.monthIgnored'));
     } catch (err) {
       await fetchTrackings();
-      toast.error("Erreur lors de l'operation");
+      toast.error(t('rentTracking.operationError'));
     } finally {
       setActionLoading(null);
     }

@@ -169,6 +169,36 @@ hr {
   padding-top: calc(env(safe-area-inset-top, 0px) + 5rem);
 }
 
+/* ──── Capacitor iOS Viewport Fix ──── */
+/* Prevent body scroll in native WebView — content scrolls inside #app-content */
+html.cap-ios {
+  height: 100vh;
+  overflow: hidden;
+}
+
+html.cap-ios body {
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  min-height: 100% !important;
+}
+
+html.cap-ios #app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+html.cap-ios #app-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ──── Capacitor Keyboard ──── */
 body.keyboard-open #bottom-nav {
   display: none;

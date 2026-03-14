@@ -1171,7 +1171,30 @@
             "toastDeleted": "Utilisateur supprimé",
             "toastActionError": "Erreur lors de l'action",
             "toastDeleteError": "Erreur lors de la suppression",
-            "noResults": "Aucun utilisateur trouvé."
+            "toastLoadError": "Erreur lors du chargement des utilisateurs",
+            "noResults": "Aucun utilisateur trouvé.",
+            "titleLoading": "Utilisateurs",
+            "filterPlanAll": "Plan : Tous",
+            "filterPlanFree": "Free",
+            "filterPlanPlus": "Plus",
+            "filterPlanPro": "Pro",
+            "filterStatusAll": "Statut : Tous",
+            "filterStatusActive": "Actifs",
+            "filterStatusBanned": "Bannis",
+            "filterModeAll": "Mode : Tous",
+            "filterModeTenant": "Locataire",
+            "filterModeLandlord": "Propriétaire",
+            "resetFilters": "Réinitialiser",
+            "colPlan": "Plan",
+            "colSubscription": "Abonnement",
+            "colMode": "Mode",
+            "colPropertiesListings": "Biens / Annonces",
+            "colApplications": "Candidatures",
+            "colRegisteredOn": "Inscrit le",
+            "subscriptionNone": "Aucun",
+            "propertiesListingsCount": "{properties} biens · {listings} annonces",
+            "view": "Voir",
+            "pagination": "Page {page} sur {totalPages}"
         },
         "listingModeration": {
             "title": "Modération des Annonces",
@@ -1251,7 +1274,201 @@
             "phone": "Tel:",
             "notProvided": "Non renseigné",
             "verifiedAccount": "Compte vérifié:",
-            "location": "Localisation"
+            "location": "Localisation",
+            "createdOn": "Créé le"
+        },
+        "conversionFunnel": {
+            "title": "Funnel de conversion",
+            "tooltip": "Parcours de conversion — De l'inscription à la signature du bail",
+            "subtitle": "Du signup au bail signé",
+            "allCities": "Toutes les villes",
+            "period7d": "7j",
+            "period30d": "30j",
+            "period90d": "90j",
+            "periodAll": "Tout"
+        },
+        "engagement": {
+            "title": "Engagement",
+            "subtitle": "Activité des utilisateurs",
+            "today": "Aujourd'hui",
+            "thisWeek": "Cette semaine",
+            "thisMonth": "Ce mois",
+            "noData": "Pas encore de données",
+            "dauTooltip": "Daily Active Users — Utilisateurs uniques connectés aujourd'hui",
+            "wauTooltip": "Weekly Active Users — Utilisateurs uniques connectés cette semaine",
+            "mauTooltip": "Monthly Active Users — Utilisateurs uniques connectés ce mois",
+            "profileCompletion": "Profils complétés",
+            "profileCompletionTooltip": "Utilisateurs ayant renseigné leur adresse, photo et profil locataire",
+            "abandonedDrafts": "Brouillons abandonnés",
+            "abandonedDraftsTooltip": "Annonces restées en brouillon depuis plus de 7 jours sans être publiées",
+            "abandonedDraftsDetail": "Annonces en brouillon depuis +7 jours"
+        },
+        "rentalMetrics": {
+            "title": "Métriques locatives",
+            "subtitle": "Performance du marché",
+            "avgDelay": "Délai moyen",
+            "days": "{count}j",
+            "noLeaseYet": "Aucun bail signé pour le moment",
+            "listingToLease": "Annonce → bail signé",
+            "applicationsPerListing": "Candidatures / annonce",
+            "globalAverage": "Moyenne globale",
+            "visitAcceptanceRate": "Taux d'acceptation visites",
+            "visitAcceptanceTooltip": "Pourcentage de visites proposées qui ont été confirmées par les candidats",
+            "topCities": "Top villes"
+        },
+        "planDistribution": {
+            "title": "Répartition des plans",
+            "totalUsers": "{count} utilisateurs au total",
+            "activeBankConnections": "Connexions bancaires actives",
+            "verifiedTenants": "Locataires vérifiés",
+            "processedTransactions": "Transactions traitées",
+            "noData": "Pas encore de données"
+        },
+        "geoDistribution": {
+            "title": "Distribution géographique",
+            "subtitle": "{listings} annonces publiées · {cities} villes",
+            "noData": "Aucune donnée disponible"
+        },
+        "sidebar": {
+            "dashboard": "Dashboard",
+            "listings": "Annonces",
+            "users": "Utilisateurs",
+            "polls": "Sondages",
+            "plans": "Plans & Features",
+            "backToSite": "Retour au site"
+        },
+        "polls": {
+            "title": "Gestion des sondages",
+            "newPoll": "Nouveau sondage",
+            "totalPolls": "Total sondages",
+            "activePolls": "Sondages actifs",
+            "totalResponses": "Total réponses",
+            "searchPlaceholder": "Rechercher par titre...",
+            "colTitle": "Titre",
+            "colCategory": "Catégorie",
+            "colOptions": "Options",
+            "colStatus": "Statut",
+            "colResponses": "Réponses",
+            "colCreatedAt": "Date création",
+            "colActions": "Actions",
+            "closePoll": "Fermer le sondage",
+            "archivePoll": "Archiver le sondage",
+            "deletePoll": "Supprimer le sondage",
+            "noResults": "Aucun sondage trouvé.",
+            "create": "Créer",
+            "cancel": "Annuler",
+            "createTitle": "Créer un sondage",
+            "createSubtitle": "Définissez la question et les 3 options de réponse.",
+            "descriptionLabel": "Description (optionnel)",
+            "responseOptions": "Options de réponse",
+            "option1Label": "Option 1 (ex : Calme)",
+            "option2Label": "Option 2 (ex : Moyen)",
+            "option3Label": "Option 3 (ex : Bruyant)",
+            "confirmClose": "Fermer ce sondage ? Les utilisateurs ne pourront plus y répondre.",
+            "closeSuccess": "Sondage fermé avec succès",
+            "closeError": "Erreur lors de la fermeture du sondage",
+            "archiveSuccess": "Sondage archivé avec succès",
+            "archiveError": "Erreur lors de l'archivage du sondage",
+            "confirmDelete": "Supprimer définitivement ce sondage et toutes ses réponses ?",
+            "deleteSuccess": "Sondage supprimé avec succès",
+            "deleteError": "Erreur lors de la suppression du sondage",
+            "createSuccess": "Sondage créé avec succès",
+            "createError": "Erreur lors de la création du sondage",
+            "status": {
+                "ALL": "Tous",
+                "ACTIVE": "Actif",
+                "CLOSED": "Fermé",
+                "ARCHIVED": "Archivé"
+            },
+            "category": {
+                "NOISE_LEVEL": "Bruit",
+                "SAFETY": "Sécurité",
+                "TRANSPORT": "Transports",
+                "SHOPPING": "Commerces",
+                "SCHOOLS": "Écoles",
+                "PARKING": "Stationnement",
+                "GREEN_SPACES": "Espaces verts",
+                "COMMUNITY_SPIRIT": "Vie de quartier"
+            }
+        },
+        "plans": {
+            "title": "Plans & Features",
+            "subtitle": "Gérez les plans d'abonnement et les fonctionnalités associées.",
+            "refresh": "Actualiser",
+            "loadError": "Erreur lors du chargement",
+            "saveSuccess": "Plan mis à jour",
+            "saveError": "Erreur lors de la sauvegarde",
+            "colPlan": "Plan",
+            "colMonthlyPrice": "Prix mensuel",
+            "colYearlyPrice": "Prix annuel",
+            "colMaxProperties": "Max biens",
+            "colSubscribers": "Abonnés",
+            "colStatus": "Statut",
+            "free": "Gratuit",
+            "unlimited": "Illimité",
+            "active": "Actif",
+            "inactive": "Inactif",
+            "popular": "Populaire",
+            "popularBadge": "POPULAIRE",
+            "planSettings": "Paramètres du plan",
+            "displayName": "Nom affiché",
+            "description": "Description",
+            "monthlyPriceCents": "Prix mensuel (centimes)",
+            "yearlyPriceCents": "Prix annuel (centimes)",
+            "stripePriceMonthly": "Stripe Price ID (mensuel)",
+            "stripePriceYearly": "Stripe Price ID (annuel)",
+            "features": "Fonctionnalités ({count})",
+            "save": "Sauvegarder",
+            "saving": "Sauvegarde...",
+            "activeSubscribers": "abonnés actifs"
+        },
+        "activityFeed": {
+            "title": "Activité récente",
+            "eventCount": "{count} événements",
+            "noActivity": "Aucune activité récente",
+            "justNow": "à l'instant",
+            "minutesAgo": "il y a {count}min",
+            "hoursAgo": "il y a {count}h",
+            "daysAgo": "il y a {count}j",
+            "defaultUser": "Utilisateur",
+            "defaultListing": "annonce",
+            "descSignup": "{name} s'est inscrit{city}",
+            "descApplication": "{name} a candidaté sur {title}",
+            "descVisit": "Visite de {name} pour {title}",
+            "descMessages": "{name} a envoyé {count} messages",
+            "descMessage": "{name} a envoyé un message",
+            "descReport": "Signalement par {name}",
+            "descBank": "{name} a connecté sa banque",
+            "event": {
+                "user_signup": "Inscription",
+                "listing_published": "Annonce publiée",
+                "application_sent": "Candidature",
+                "visit_confirmed": "Visite confirmée",
+                "lease_signed": "Bail signé",
+                "message_sent": "Message",
+                "report_created": "Signalement",
+                "bank_connected": "Banque connectée"
+            }
+        },
+        "subscriptions": {
+            "title": "Abonnements",
+            "subtitle": "Suivi des souscriptions",
+            "active": "Actifs",
+            "mrrTooltip": "Revenu mensuel récurrent estimé",
+            "churnTooltip": "Taux d'annulation sur les 30 derniers jours",
+            "gifted": "Offerts",
+            "expiringIn7d": "Expirent sous 7j",
+            "byPlan": "Par plan",
+            "activeCount": "{count, plural, one {# actif} other {# actifs}}",
+            "expiredCount": "{count, plural, one {# expiré} other {# expirés}}",
+            "cancelledCount": "{count, plural, one {# annulé} other {# annulés}}",
+            "giftedCount": "{count, plural, one {# offert} other {# offerts}}"
+        },
+        "advanced": {
+            "title": "Statistiques avancées",
+            "loadError": "Erreur de chargement",
+            "loadErrorTitle": "Erreur de chargement des statistiques avancées",
+            "retry": "Réessayer"
         }
     },
     "listing": {
@@ -1374,6 +1591,7 @@
         },
         "empty": "Aucune conversation",
         "conversation": {
+            "beginning": "Début de la conversation",
             "sentImage": "A envoyé une image",
             "new": "Nouvelle conversation",
             "unknownUser": "Utilisateur inconnu",
@@ -1423,6 +1641,270 @@
             "attachment": {
                 "defaultName": "Pièce jointe",
                 "defaultType": "Fichier"
+            },
+            "lease": {
+                "sentForSignature": "Bail envoyé pour signature",
+                "sentDescription": "Le bail de location a été envoyé pour signature électronique via Yousign.",
+                "viewLease": "Consulter le bail",
+                "signLease": "Signer le bail"
+            },
+            "applicationRejected": "Candidature déclinée",
+            "unknownLocation": "Localisation inconnue"
+        },
+        "systemMessages": {
+            "leaseSentForSignature": "Bail envoyé pour signature",
+            "visitInvitation": "Invitation à une visite",
+            "visitConfirmed": "Visite confirmée",
+            "applicationRejected": "Candidature déclinée",
+            "inspectionScheduled": "État des lieux planifié",
+            "inspectionConfirmed": "Créneau EDL confirmé",
+            "inspectionReminder": "Rappel état des lieux",
+            "inspectionStarted": "État des lieux démarré",
+            "inspectionCompleted": "Bailleur a signé",
+            "inspectionSigned": "État des lieux signé",
+            "inspectionSignLinkSent": "Lien de signature envoyé",
+            "inspectionPdfReady": "PDF disponible",
+            "inspectionCancelled": "État des lieux annulé",
+            "inspectionRescheduled": "EDL reprogrammé",
+            "amendmentRequested": "Rectification demandée",
+            "amendmentAccepted": "Rectification acceptée",
+            "amendmentRejected": "Rectification refusée",
+            "depositDefault": "Dépôt de garantie"
+        },
+        "edl": {
+            "entry": "État des lieux d'entrée",
+            "exit": "État des lieux de sortie",
+            "scheduled": "planifié",
+            "scheduledDate": "Prévu le {date} à {time}.",
+            "dateToBeConfirmed": "La date sera confirmée.",
+            "startEdl": "Démarrer l'EDL",
+            "confirmPresence": "Confirmer ma présence",
+            "presenceConfirmed": "Présence confirmée",
+            "alreadyConfirmed": "Déjà confirmé",
+            "confirmError": "Erreur lors de la confirmation",
+            "slotConfirmed": "Créneau confirmé",
+            "confirmedDate": "confirmé pour le {date} à {time}.",
+            "confirmed": "confirmé.",
+            "cancelled": "annulé",
+            "cancelledDescription": "L'état des lieux a été annulé par le propriétaire.",
+            "rescheduled": "reprogrammé",
+            "newSlot": "Nouveau créneau : {date} à {time}.",
+            "newDateToBeConfirmed": "La nouvelle date sera confirmée.",
+            "reminderTomorrow": "Rappel : {label} demain",
+            "reminderDate": "Prévu {date} à {time}.",
+            "checkAgenda": "Consultez votre agenda.",
+            "viewEdl": "Voir l'état des lieux",
+            "started": "démarré",
+            "inspectionInProgress": "L'inspection du logement est en cours.",
+            "resumeEdl": "Reprendre l'EDL",
+            "landlordSigned": "{label} — bailleur signé",
+            "awaitingTenantSignature": "En attente de la signature du locataire.",
+            "signed": "signé",
+            "signedDescription": "Signé par les deux parties. Le PDF sera envoyé par email.",
+            "signLinkSent": "Lien de signature envoyé",
+            "tenantInvitedToSign": "Le locataire a été invité à signer l'{label}.",
+            "signEdl": "Signer l'état des lieux",
+            "pdfTitle": "PDF de l'état des lieux",
+            "pdfReady": "Le document est prêt et disponible en téléchargement.",
+            "viewPdf": "Voir le PDF",
+            "amendmentRequest": "Demande de rectification",
+            "amendmentDefaultDesc": "Un défaut a été signalé sur l'état des lieux.",
+            "viewAmendments": "Voir les rectifications",
+            "amendmentAccepted": "Rectification acceptée",
+            "amendmentRejected": "Rectification refusée"
+        },
+        "depositEvents": {
+            "leaseSigned": "Bail signé",
+            "leaseSigned_desc": "Dépôt de {amount}€ dû.",
+            "paymentConfirmed": "Versement confirmé",
+            "paymentConfirmed_desc": "Dépôt de {amount}€ enregistré.",
+            "retentionsProposed": "Retenues proposées",
+            "retentionsProposed_desc": "Le propriétaire propose des retenues.",
+            "tenantAgreed": "Accord trouvé",
+            "tenantAgreed_desc": "Le locataire accepte les retenues.",
+            "tenantPartialAgreed": "Accord partiel",
+            "tenantPartialAgreed_desc": "Le locataire accepte partiellement. Délai de 14 jours.",
+            "tenantDisputed": "Contestation",
+            "tenantDisputed_desc": "14 jours pour trouver un accord.",
+            "deadlineOverdue": "Délai dépassé",
+            "deadlineOverdue_desc": "Le délai légal de restitution est dépassé.",
+            "fullRelease": "Dépôt restitué",
+            "fullRelease_desc": "Dépôt de {amount}€ restitué intégralement.",
+            "resolved": "Dossier clos",
+            "resolved_desc": "Le dépôt de garantie est résolu.",
+            "default": "Dépôt de garantie",
+            "viewTracking": "Voir le suivi",
+            "consultAndReply": "Consulter et répondre",
+            "viewOptions": "Voir les options"
+        },
+        "depositLabels": {
+            "leaseSigned": "Dépôt de garantie dû",
+            "paymentConfirmed": "Versement confirmé",
+            "retentionsProposed": "Retenues proposées",
+            "tenantAgreed": "Accord trouvé",
+            "tenantPartialAgreed": "Accord partiel",
+            "tenantDisputed": "Dépôt contesté",
+            "deadlineOverdue": "Délai dépassé",
+            "fullRelease": "Dépôt restitué",
+            "resolved": "Dépôt — dossier clos",
+            "default": "Dépôt de garantie"
+        },
+        "coridorDocuments": {
+            "quittance_desc": "Disponible en téléchargement.",
+            "bail_desc": "Signé par toutes les parties.",
+            "edl_desc": "Document disponible.",
+            "mise_en_demeure_desc": "Document juridique généré.",
+            "inventaire_desc": "Inventaire du mobilier.",
+            "default_desc": "Document disponible.",
+            "download": "Télécharger"
+        },
+        "applicationStatus": {
+            "depositDisputed": "Dépôt contesté",
+            "depositOverdue": "Dépôt en retard",
+            "edlSigned": "EDL signé",
+            "edlInProgress": "EDL en cours",
+            "edlScheduled": "EDL planifié",
+            "leaseSigned": "Bail signé",
+            "leaseInSignature": "Bail en signature",
+            "selected": "Candidature retenue",
+            "shortlisted": "Présélectionné",
+            "finalist": "Finaliste"
+        },
+        "documents": {
+            "title": "Documents",
+            "download": "Télécharger",
+            "viewInDocuments": "Voir dans Documents",
+            "viewInConversation": "Voir dans la conversation",
+            "filterAll": "Tous",
+            "filterPdf": "PDF",
+            "filterImages": "Images",
+            "filterCoridor": "Coridor",
+            "search": "Rechercher...",
+            "loading": "Chargement...",
+            "empty": "Aucun document"
+        },
+        "conversationClient": {
+            "close": "Fermer",
+            "toasts": {
+                "selectReason": "Veuillez sélectionner un motif",
+                "noApplication": "Aucune candidature trouvée",
+                "applicationDeclined": "Candidature déclinée",
+                "rejectionError": "Erreur lors du rejet",
+                "edlScheduled": "État des lieux planifié",
+                "schedulingError": "Erreur lors de la planification",
+                "exitEdlCreated": "État des lieux de sortie créé",
+                "exitEdlError": "Erreur lors de la création de l'EDL de sortie",
+                "noApplicationForDossier": "Aucune demande de location trouvée pour ce dossier.",
+                "invitationSent": "Invitation envoyée",
+                "sendError": "Erreur lors de l'envoi"
+            },
+            "timeline": {
+                "applicationSent": "Candidature envoyée",
+                "applicationSentDesc": "Le propriétaire a bien reçu votre dossier et étudie votre profil.",
+                "applicationNotRetained": "Candidature non retenue",
+                "applicationNotRetainedDesc": "Le propriétaire a décliné votre candidature.",
+                "rejectionReason": "Motif : {reason}",
+                "visitProposal": "Proposition de visite",
+                "visitProposalDesc": "Votre profil intéresse le propriétaire qui vous propose une visite.",
+                "appointmentConfirmed": "Rendez-vous confirmé",
+                "visitScheduledAt": "Visite programmée le {date} à {time}.",
+                "applicationRetained": "Candidature retenue",
+                "applicationRetainedDesc": "Votre profil a été sélectionné par le propriétaire.",
+                "leaseSentForSignature": "Bail envoyé pour signature",
+                "leaseSentForSignatureDesc": "Le bail de location est prêt à être signé. Vous allez recevoir un email de Yousign.",
+                "viewLease": "Consulter le bail",
+                "leaseSentElectronic": "Le bail a été envoyé pour signature électronique.",
+                "leaseSigned": "Bail signé",
+                "leaseSignedDesc": "Le bail a été signé par toutes les parties.",
+                "viewSignedLease": "Voir le bail signé",
+                "edlCancelled": "État des lieux annulé",
+                "edlCancelledDesc": "L'état des lieux a été annulé par le propriétaire.",
+                "edlSigned": "État des lieux signé",
+                "edlSignedDesc": "L'état des lieux a été signé par les deux parties.",
+                "edlScheduled": "État des lieux planifié",
+                "scheduledAt": "Prévu le {date} à {time}.",
+                "edlInProgress": "État des lieux en cours",
+                "edlInProgressDesc": "L'inspection du logement est en cours de réalisation.",
+                "edlSignaturePending": "État des lieux — signature",
+                "edlSignaturePendingDesc": "En attente de la signature du locataire.",
+                "exitEdlCancelled": "EDL de sortie annulé",
+                "exitEdlCancelledDesc": "L'état des lieux de sortie a été annulé.",
+                "exitEdlSigned": "EDL de sortie signé",
+                "exitEdlSignedDesc": "L'état des lieux de sortie a été signé par les deux parties.",
+                "exitEdlScheduled": "EDL de sortie planifié",
+                "exitEdlInProgress": "EDL de sortie en cours",
+                "exitEdlInProgressDesc": "L'état des lieux de sortie est en cours de réalisation.",
+                "exitEdlSignaturePending": "EDL de sortie — signature"
+            },
+            "dossier": {
+                "title": "Dossier candidat",
+                "declined": "Déclinée",
+                "applicationDeclined": "Candidature déclinée"
+            },
+            "edl": {
+                "inspection": "État des lieux",
+                "scheduleEdl": "Planifier un état des lieux",
+                "scheduleEdlDesc": "Choisir une date et notifier le locataire",
+                "startEdl": "Démarrer l'état des lieux",
+                "startImmediately": "Commencer immédiatement",
+                "resumeEdl": "Reprendre l'état des lieux",
+                "viewEntryPdf": "Voir le PDF de l'EDL d'entrée",
+                "exitInspection": "État des lieux de sortie",
+                "startNow": "Démarrer maintenant",
+                "compareWithEntry": "Comparer avec l'EDL d'entrée",
+                "startExitEdl": "Démarrer l'EDL de sortie",
+                "resumeExitEdl": "Reprendre l'EDL de sortie",
+                "viewExitPdf": "Voir le PDF de l'EDL de sortie",
+                "exitAwaitingSignature": "EDL de sortie — en attente de signature",
+                "awaitingTenantSignature": "En attente de signature locataire",
+                "scheduleTitle": "Planifier l'état des lieux",
+                "chooseDate": "Choisir une date",
+                "changeDate": "Modifier la date",
+                "time": "Heure",
+                "durationTip": "Prévoyez 1h à 1h30 selon la taille du logement",
+                "scheduling": "Planification...",
+                "confirm": "Confirmer"
+            },
+            "lease": {
+                "signingInProgress": "En cours de signature...",
+                "viewLease": "Voir le bail"
+            },
+            "actions": {
+                "generateLease": "Générer le bail de location",
+                "proposeVisit": "Proposer une visite",
+                "declineApplication": "Décliner la candidature"
+            },
+            "decline": {
+                "title": "Décliner la candidature",
+                "confirmRefusal": "Confirmer le refus",
+                "description": "Sélectionnez un motif pour informer le candidat. Coridor protège contre les discriminations en proposant des motifs respectueux et objectifs.",
+                "otherReason": "Autre raison",
+                "specifyReason": "Précisez le motif...",
+                "reasons": {
+                    "alreadyTaken": "Le logement a déjà trouvé preneur",
+                    "doesNotMatch": "Votre dossier ne correspond pas aux critères requis",
+                    "anotherSelected": "Un autre candidat a été retenu"
+                }
+            },
+            "availability": {
+                "title": "Définissez vos disponibilités",
+                "defineSlots": "Définir mes créneaux",
+                "noSlotsTitle": "Vous n'avez pas de créneaux disponibles",
+                "noSlotsSubtitle": "Pour proposer une visite, vous devez d'abord définir vos disponibilités.",
+                "noSlotsDescription": "Cela permet aux candidats de choisir un créneau parmi ceux que vous avez définis, évitant ainsi les allers-retours inutiles.",
+                "noSlotsAlt": "Aucun créneau"
+            },
+            "sidebar": {
+                "visits": "Visites",
+                "recap": "Récapitulatif",
+                "apartment": "Appartement",
+                "perMonth": "/ mois",
+                "landlord": "Propriétaire : {name}",
+                "details": "{rooms} pièces • {bedrooms} chambres • {surface} {unit}"
+            },
+            "calendar": {
+                "visit": "Visite",
+                "visitTitle": "Visite - {info}{surface} à {city}"
             }
         }
     },
@@ -1453,7 +1935,8 @@
             "status": {
                 "label": "STATUT",
                 "occupied": "Occupé",
-                "vacant": "Vacant"
+                "vacant": "Vacant",
+                "pendingSignature": "Bail en signature"
             },
             "rent": {
                 "label": "LOYER",
@@ -1468,6 +1951,369 @@
             "title": "Colocation",
             "rooms": "{count, plural, =0 {chambre} one {chambre} other {chambres}}",
             "empty": "Aucun locataire"
+        },
+        "edit": {
+            "furniture": {
+                "mandatory": {
+                    "bedding": "Literie avec couette",
+                    "curtains": "Volets ou rideaux dans les chambres",
+                    "hob": "Plaques de cuisson",
+                    "oven": "Four ou four à micro-onde",
+                    "fridge": "Réfrigérateur",
+                    "freezer": "Congélateur",
+                    "dishes": "Vaisselle",
+                    "utensils": "Ustensiles de cuisine",
+                    "table": "Table",
+                    "seats": "Sièges",
+                    "shelves": "Étagères de rangement",
+                    "lights": "Luminaires",
+                    "vacuum": "Aspirateur"
+                },
+                "optional": {
+                    "washingMachine": "Lave-linge",
+                    "coffeeMaker": "Cafetière",
+                    "toaster": "Grille-pain",
+                    "dishwasher": "Lave-vaisselle",
+                    "hairDryer": "Sèche-cheveux",
+                    "mirror": "Miroir",
+                    "sheets": "Draps",
+                    "towels": "Serviettes de bain",
+                    "cloths": "Torchons"
+                },
+                "saved": "Équipements sauvegardés",
+                "error": "Une erreur est survenue",
+                "compliant": "Logement conforme",
+                "nonCompliant": "Mise en conformité requise",
+                "compliantDescription": "Votre logement dispose de tous les équipements obligatoires pour être loué en meublé. Le propriétaire est en règle.",
+                "nonCompliantDescription": "Un logement meublé doit obligatoirement inclure tous les équipements de la liste ci-dessous pour être en règle.",
+                "mandatoryTitle": "Équipements obligatoires (Meublé)",
+                "optionalTitle": "Équipements facultatifs",
+                "saving": "Sauvegarde...",
+                "save": "Enregistrer"
+            },
+            "edl": {
+                "title": "États des lieux",
+                "subtitle": "Historique et suivi des états des lieux pour ce logement.",
+                "status": {
+                    "signed": "Signé",
+                    "pendingSignature": "En attente de signature",
+                    "draft": "En cours",
+                    "notScheduled": "Non planifié"
+                },
+                "type": {
+                    "entry": "EDL d'entrée",
+                    "exit": "EDL de sortie"
+                },
+                "rooms": "{completed}/{total} pièces",
+                "resumeEdl": "Reprendre l'EDL",
+                "resendLink": "Renvoyer le lien",
+                "viewPdf": "Voir le PDF",
+                "viewSummary": "Voir le récapitulatif",
+                "notificationSent": "Notification envoyée au locataire",
+                "error": "Erreur",
+                "networkError": "Erreur réseau",
+                "empty": "Aucun état des lieux",
+                "emptyDescription": "L'état des lieux se démarre depuis la conversation avec le locataire."
+            },
+            "deposit": {
+                "title": "Dépôt de garantie",
+                "subtitle": "Suivi du dépôt de garantie pour ce bien",
+                "status": {
+                    "awaitingPayment": "En attente du versement",
+                    "paid": "Versé",
+                    "held": "Détenu",
+                    "exitInspection": "EDL de sortie",
+                    "retentionsProposed": "Retenues proposées",
+                    "partiallyReleased": "Restitution partielle",
+                    "fullyReleased": "Restitué",
+                    "disputed": "Contesté",
+                    "resolved": "Clos"
+                },
+                "empty": "Aucun dépôt de garantie en cours pour ce bien.",
+                "emptyDescription": "Le suivi démarre automatiquement à la signature du bail.",
+                "overdue": "Retard de {months} mois — pénalité {penalty}€",
+                "daysToReturn": "{days, plural, one {# jour} other {# jours}} pour restituer",
+                "viewFullTracking": "Voir le suivi complet"
+            },
+            "save": "Enregistrer",
+            "title": {
+                "label": "Titre",
+                "saved": "Titre mis à jour",
+                "error": "Une erreur est survenue"
+            },
+            "description": {
+                "label": "Description détaillée",
+                "helper": "Décrivez votre logement en détail pour donner envie aux futurs locataires.",
+                "saved": "Description mise à jour !",
+                "error": "Une erreur est survenue"
+            },
+            "category": {
+                "saved": "Votre annonce a été mise à jour",
+                "error": "Une erreur est survenue",
+                "propertyType": "Quel type de bien louez-vous ?",
+                "house": "Une maison",
+                "apartment": "Un appartement",
+                "boat": "Un bateau",
+                "apartmentType": "Type d'appartement",
+                "subTypes": {
+                    "standard": "Standard",
+                    "duplex": "Duplex",
+                    "triplex": "Triplex",
+                    "loft": "Loft",
+                    "penthouse": "Penthouse",
+                    "mansarde": "Mansardé"
+                },
+                "adjectiveTitle": "Comment décririez-vous votre bien ?",
+                "adjectiveHelper": "Cet adjectif apparaîtra après le type de bien sur l'annonce (ex: \"Maison calme\").",
+                "adjectiveLabel": "Choisir un adjectif",
+                "adjectives": {
+                    "lumineux": "Lumineux",
+                    "spacieux": "Spacieux",
+                    "traversant": "Traversant",
+                    "ensoleille": "Ensoleillé",
+                    "haussmannien": "Haussmannien",
+                    "atypique": "Atypique",
+                    "loft": "Loft",
+                    "ancien": "Ancien",
+                    "moderne": "Moderne",
+                    "neuf": "Neuf",
+                    "renove": "Rénové",
+                    "calme": "Calme",
+                    "cosy": "Cosy",
+                    "charme": "De charme",
+                    "familial": "Familial",
+                    "etudiant": "Étudiant",
+                    "standing": "De standing",
+                    "prestige": "De prestige"
+                },
+                "furnishedQuestion": "Votre logement est-il meublé ?",
+                "furnished": "Logement meublé",
+                "unfurnished": "Logement non meublé",
+                "roomSurface": "Surface de la chambre ({unit})",
+                "propertySurface": "Surface du logement ({unit})",
+                "unit": "Unité",
+                "roomCount": "Nombre de pièces",
+                "roomCountHelper": "La cuisine, les salles de bain et les toilettes sont à exclure",
+                "bedroomCount": "Nombre de chambres",
+                "bedroomCountHelper": "Un studio n'a pas de chambre",
+                "privateBathroom": "Salle de bain privée",
+                "privateBathroomHelper": "Y a-t-il une salle de bain exclusive à cette pièce ?",
+                "bathroomCount": "Nombre de salles de bain",
+                "kitchenQuestion": "Votre bien dispose-t-il d'une cuisine séparée ?",
+                "kitchenSeparate": "Cuisine séparée",
+                "kitchenOpen": "Cuisine ouverte",
+                "totalFloors": "Combien y a-t-il d'étages dans l'immeuble ?",
+                "floor": "À quel étage se situe le logement ?",
+                "buildYear": "Année de construction",
+                "buildPeriods": {
+                    "before1946": "Avant 1946",
+                    "1946to1970": "1946 - 1970",
+                    "1971to1990": "1971 - 1990",
+                    "after1990": "Après 1990"
+                },
+                "buildYearHelper": "Si vous ne connaissez pas la période de construction, vous pouvez la trouver <link>ici</link>."
+            },
+            "location": {
+                "saved": "Emplacement enregistré",
+                "error": "Une erreur est survenue"
+            },
+            "legal": {
+                "saved": "Informations légales mises à jour",
+                "error": "Erreur lors de la sauvegarde",
+                "legalRegime": "Régime juridique",
+                "propertyOwnershipType": "Type de propriété",
+                "select": "-- Sélectionner --",
+                "copropriete": "Copropriété",
+                "monopropriete": "Monopropriété",
+                "annexes": "Annexes du logement",
+                "cave": "Cave",
+                "caveReference": "Référence de la cave",
+                "cavePlaceholder": "Ex : Cave n°3, sous-sol 1",
+                "parking": "Place de parking",
+                "parkingReference": "Référence du parking",
+                "parkingPlaceholder": "Ex : Place n°12, niveau -1",
+                "garage": "Garage",
+                "garageReference": "Référence du garage",
+                "garagePlaceholder": "Ex : Box n°5",
+                "zoneTendue": "Zone tendue",
+                "zoneTendueDetected": "Zone tendue détectée automatiquement",
+                "zoneTendueNot": "Ce bien n'est pas situé en zone tendue",
+                "zoneTendueInfo": "En zone tendue, l'encadrement des loyers s'applique. Renseignez les informations ci-dessous pour la génération du bail.",
+                "rentControlZone": "Zone d'encadrement ({territory})",
+                "selectZone": "-- Sélectionnez votre zone --",
+                "selectZoneHint": "Sélectionnez votre zone pour obtenir les loyers de référence.",
+                "officialData": "Données officielles ({territory}) : réf. {reference} EUR/m², majoré {max} EUR/m², minoré {min} EUR/m².",
+                "referenceRent": "Loyer de référence (EUR/m²/mois)",
+                "referenceRentIncreased": "Loyer de référence majoré (EUR/m²/mois)",
+                "rentSupplement": "Complément de loyer (EUR)",
+                "previousRent": "Dernier loyer appliqué (EUR)",
+                "rentSupplementJustificationLabel": "Justification du complément de loyer",
+                "rentSupplementJustificationPlaceholder": "Décrivez les caractéristiques exceptionnelles justifiant le complément de loyer (ex : terrasse, vue, équipements haut de gamme...)",
+                "rentSupplementJustificationHelper": "Obligatoire légalement (art. 140 VI loi ELAN). Le complément doit être justifié par des caractéristiques exceptionnelles du logement.",
+                "previousRentDate": "Date du dernier loyer",
+                "landlordQuality": "Qualité du bailleur",
+                "landlordLegalStatus": "Statut juridique du bailleur",
+                "personnePhysique": "Personne physique",
+                "sci": "SCI (Société Civile Immobilière)",
+                "personneMorale": "Personne morale (autre)",
+                "siren": "Numéro SIREN",
+                "registeredOffice": "Siège social",
+                "registeredOfficePlaceholder": "Adresse du siège social"
+            },
+            "leaseType": {
+                "heading": "Type de bail",
+                "subtitle": "Choisissez le type de location pour ce bien.",
+                "saved": "Type de bail mis à jour",
+                "error": "Erreur lors de la mise à jour",
+                "modeChangeError": "Erreur lors du changement de mode",
+                "colocationActivated": "Mode Colocation activé",
+                "colocationActivatedRedirect": "Mode Colocation activé (Redirection...)",
+                "entirePlaceActivated": "Mode Logement Entier activé",
+                "entirePlaceActivatedRedirect": "Mode Logement Entier activé (Redirection...)",
+                "bare": {
+                    "title": "Location nue",
+                    "desc": "Bail classique de 3 ans. Le locataire apporte ses meubles.",
+                    "tag1": "Bail 3 ans",
+                    "tag2": "Préavis 3 mois"
+                },
+                "furnished": {
+                    "title": "Location meublée",
+                    "desc": "Bail d'1 an (9 mois étudiant). Logement équipé selon le décret.",
+                    "tag1": "Bail 1 an",
+                    "tag2": "Loyer plus élevé"
+                },
+                "colocation": {
+                    "title": "Colocation",
+                    "desc": "Gestion par chambre avec baux individuels ou bail commun.",
+                    "tag1": "Multi-locataires",
+                    "tag2": "Gestion par chambre"
+                },
+                "specialLeases": "Baux spéciaux acceptés",
+                "specialLeasesHelper": "Autorisez les locataires à demander ces types de bail lors de leur candidature.",
+                "studentLease": "Bail étudiant",
+                "studentLeaseDesc": "Durée de 9 mois, non renouvelable. Réservé aux étudiants.",
+                "mobilityLease": "Bail mobilité",
+                "mobilityLeaseDesc": "Durée de 1 à 10 mois. Pas de dépôt de garantie. Pour formation, stage, mission temporaire..."
+            }
+        },
+        "expenses": {
+            "pageTitle": "Dépenses & Charges",
+            "editListing": "Modification d'annonce",
+            "addExpense": "Ajouter une dépense",
+            "expensesLabel": "Dépenses",
+            "upcoming": "À venir",
+            "next12Months": "12 prochains mois",
+            "chargesBreakdown": "Répartition des charges",
+            "recoverable": "Récupérable",
+            "nonRecoverable": "Non récupérable",
+            "recoverableShort": "Récup.",
+            "nonRecoverableShort": "Non récup.",
+            "deductible": "Déductible",
+            "regularized": "Régularisé",
+            "deleteShort": "Suppr.",
+            "frequency": "Fréquence",
+            "recoverableQuestion": "Charge récupérable ?",
+            "legallyNotRecoverable": "Non récupérable légalement pour cette catégorie",
+            "warningNotRecoverable": "Attention, cette charge n'est légalement pas récupérable sur le locataire.",
+            "fiscalDeductibility": "Déductibilité Fiscale",
+            "deductibleTooltip": "Une charge déductible réduit votre base imposable.",
+            "deductibilityFull": "100% déductible de vos revenus fonciers",
+            "deductibilityPartial": "Montant non récupérable = déductible",
+            "deductibilityNone": "Non déductible (charge récupérable)",
+            "deductibilityManual": "Saisissez le montant déductible manuellement",
+            "yearlySmoothed": "Cette dépense sera lissée mensuellement dans vos stats.",
+            "confirmDelete": "Supprimer cette dépense ?",
+            "deleteExpense": "Supprimer cette dépense",
+            "continue": "Continuer",
+            "save": "Enregistrer",
+            "add": "Ajouter",
+            "back": "Retour",
+            "cancel": "Annuler",
+            "change": "Modifier",
+            "yes": "Oui",
+            "no": "Non",
+            "noFilterResults": "Aucun résultat pour ces filtres",
+            "noExpensesThisYear": "Aucune dépense cette année",
+            "resetFilters": "Réinitialiser les filtres",
+            "categories": {
+                "coldWater": "Eau Froide",
+                "hotWater": "Eau Chaude",
+                "electricityCommon": "Électricité (Commun)",
+                "electricityPrivate": "Électricité (Privé)",
+                "heatingCollective": "Chauffage Collectif",
+                "taxProperty": "Taxe Foncière",
+                "meters": "Compteurs",
+                "generalCharges": "Charges communes",
+                "buildingCharges": "Charges bâtiment",
+                "elevator": "Ascenseur",
+                "parking": "Parking",
+                "insurance": "Assurance PNO",
+                "insuranceGli": "Assurance GLI",
+                "maintenance": "Entretien",
+                "caretaker": "Gardien",
+                "other": "Autre"
+            },
+            "frequencies": {
+                "oneTime": "Ponctuelle",
+                "monthly": "Mensuelle",
+                "quarterly": "Trimestrielle",
+                "yearly": "Annuelle"
+            },
+            "frequenciesShort": {
+                "oneTimeShort": "Ponctuel",
+                "monthlyShort": "Mensuel",
+                "quarterlyShort": "Trimestriel",
+                "yearlyShort": "Annuel"
+            },
+            "months": {
+                "all": "Tous",
+                "jan": "Jan",
+                "feb": "Fév",
+                "mar": "Mar",
+                "apr": "Avr",
+                "may": "Mai",
+                "jun": "Juin",
+                "jul": "Juil",
+                "aug": "Août",
+                "sep": "Sep",
+                "oct": "Oct",
+                "nov": "Nov",
+                "dec": "Déc"
+            },
+            "modal": {
+                "categoryTitle": "Type de dépense",
+                "categorySubtitle": "De quoi s'agit-il ?",
+                "detailsTitle": "Détails",
+                "detailsSubtitle": "Complétez les informations",
+                "editTitle": "Modifier la dépense",
+                "editSubtitle": "Modifiez les informations",
+                "proofTitle": "Justificatif",
+                "proofSubtitle": "Ajoutez une photo si vous le souhaitez.",
+                "proofHint": "Prenez en photo votre facture ou ticket de caisse.",
+                "summary": "Récapitulatif",
+                "labelPlaceholder": "Libellé (ex: Facture Suez Janvier)",
+                "totalAmount": "Montant (€)",
+                "recoverableAmount": "Montant récupérable (€)",
+                "deductibleAmount": "Montant déductible (€)",
+                "amount": "Montant",
+                "date": "Date"
+            },
+            "empty": {
+                "title": "Aucune dépense",
+                "subtitle": "Ajoutez vos factures pour suivre la rentabilité et préparer les régularisations.",
+                "addFirst": "Ajouter ma première dépense"
+            },
+            "toasts": {
+                "invalidAmounts": "Veuillez entrer des montants valides",
+                "recoverableExceedsTotal": "Le montant récupérable ne peut pas dépasser le total",
+                "expenseAdded": "Dépense ajoutée",
+                "expenseUpdated": "Dépense modifiée",
+                "yearAlreadyRegularized": "Cette année a déjà été régularisée. Cette dépense ne sera pas incluse dans la régularisation existante.",
+                "saveError": "Erreur lors de l'enregistrement",
+                "expenseDeleted": "Dépense supprimée",
+                "deleteCancelled": "Suppression annulée",
+                "deleteError": "Erreur lors de la suppression"
+            }
         }
     },
     "regularization": {
@@ -1875,6 +2721,462 @@
             "signatureBlockedDetail": "Connectez-vous au Wi-Fi pour accélérer.",
             "photoPending": "{count} photo(s) en attente d'envoi",
             "mutationPending": "{count} modification(s) en attente"
+        }
+    },
+    "toasts": {
+        "common": {
+            "error": "Une erreur est survenue",
+            "saved": "Enregistré"
+        },
+        "collections": {
+            "created": "Collection créée !",
+            "createError": "Erreur lors de la création de la collection",
+            "removed": "Retiré de la collection",
+            "added": "Ajouté à la collection"
+        },
+        "alerts": {
+            "created": "Alerte créée ! Vous recevrez un e-mail.",
+            "createError": "Erreur lors de la création de l'alerte"
+        },
+        "rentModal": {
+            "listingImported": "Annonce importée depuis {source}",
+            "importSourceText": "le texte"
+        },
+        "deposit": {
+            "paymentConfirmed": "Versement confirm\u00e9",
+            "confirmError": "Erreur lors de la confirmation",
+            "releaseConfirmed": "Restitution confirm\u00e9e",
+            "cdcGenerating": "G\u00e9n\u00e9ration du dossier CDC\u2026",
+            "cdcGenerated": "Dossier CDC g\u00e9n\u00e9r\u00e9",
+            "formalNoticeGenerating": "G\u00e9n\u00e9ration de la mise en demeure\u2026",
+            "formalNoticeGenerated": "Mise en demeure g\u00e9n\u00e9r\u00e9e"
+        },
+        "visits": {
+            "confirmed": "Visite confirm\u00e9e !",
+            "confirmError": "Erreur lors de la confirmation"
+        },
+        "favorites": {
+            "wishlistDeleted": "Wishlist supprimée"
+        },
+        "receipts": {
+            "generated": "Quittance générée avec succès",
+            "downloadError": "Erreur lors du téléchargement",
+            "sent": "Quittance envoyée au locataire",
+            "sendError": "Erreur lors de l'envoi"
+        },
+        "rentTracking": {
+            "loadError": "Impossible de charger le suivi des loyers",
+            "manualConfirm": "Paiement confirmé manuellement",
+            "confirmError": "Erreur lors de la confirmation",
+            "reminderSent": "Rappel envoyé au locataire",
+            "reminderError": "Erreur lors de l'envoi du rappel",
+            "monthIgnored": "Mois ignoré",
+            "operationError": "Erreur lors de l'opération"
+        },
+        "notifications": {
+            "allRead": "Tout est lu !"
+        },
+        "polls": {
+            "loginToVote": "Connectez-vous pour voter",
+            "voteError": "Erreur lors du vote"
+        }
+    },
+    "emails": {
+        "application": {
+            "identityRevealed": {
+                "title": "Identité révélée",
+                "message": "L'identité de {candidateName} vous est maintenant visible.",
+                "defaultCandidate": "votre candidat"
+            },
+            "selected": {
+                "title": "Candidature retenue !",
+                "message": "Votre candidature pour \"{title}\" a été retenue. Félicitations !",
+                "pushBody": "Votre candidature pour \"{title}\" a été retenue !",
+                "emailSubject": "Candidature retenue - {title}",
+                "emailHeading": "Candidature retenue",
+                "emailGreeting": "Bonjour {name},",
+                "emailBody": "Nous avons le plaisir de vous informer que votre candidature pour <strong>\"{title}\"</strong> a été retenue !",
+                "emailFollowUp": "Le propriétaire va prendre contact avec vous pour la suite.",
+                "emailCta": "Voir ma candidature",
+                "emailSignature": "-- L'équipe Coridor"
+            },
+            "rejected": {
+                "title": "Candidature non retenue",
+                "message": "Votre candidature pour \"{title}\" n'a pas été retenue. Motif : {reason}",
+                "pushBody": "Votre candidature pour \"{title}\" n'a pas été retenue.",
+                "reason": "Un autre candidat a été retenu",
+                "emailSubject": "Candidature non retenue - {title}",
+                "emailHeading": "Candidature non retenue",
+                "emailGreeting": "Bonjour {name},",
+                "emailBody": "Nous vous informons que votre candidature pour <strong>\"{title}\"</strong> n'a pas été retenue.",
+                "emailReasonLabel": "Motif :",
+                "emailEncouragement": "Ne vous découragez pas, d'autres opportunités vous attendent sur Coridor.",
+                "emailCta": "Continuer ma recherche",
+                "emailSignature": "-- L'équipe Coridor"
+            }
+        },
+        "visit": {
+            "confirmed": {
+                "notifTitle": "Visite confirmée",
+                "notifMessage": "{candidate} a confirmé sa visite du {date} à {time}.",
+                "defaultCandidate": "Un candidat",
+                "pushTitle": "Visite confirmée \u2713",
+                "emailSubject": "Visite confirmée - {date} à {time}",
+                "emailHeading": "Visite confirmée",
+                "emailGreeting": "Bonjour {name},",
+                "emailBody": "<strong>{candidate}</strong> a confirmé sa présence pour la visite prévue le <strong>{date} à {time}</strong>.",
+                "emailCta": "Voir mon calendrier",
+                "emailSignature": "— L'équipe Coridor"
+            },
+            "cancelled": {
+                "notifTitle": "Visite annulée automatiquement",
+                "notifMessage": "Votre visite du {date} à {time} a été annulée car vous ne l'avez pas confirmée dans les 24h.",
+                "pushTitle": "Visite annulée",
+                "pushBody": "Votre visite du {date} à {time} a été annulée (non confirmée sous 24h).",
+                "emailSubject": "Visite annulée - {date}",
+                "emailHeading": "Visite annulée",
+                "emailBody": "Bonjour {name}, votre visite prévue le <strong>{date} à {time}</strong> a été automatiquement annulée car vous ne l'avez pas confirmée dans les 24 heures.",
+                "emailRebook": "Si vous souhaitez toujours visiter ce bien, vous pouvez réserver un nouveau créneau.",
+                "emailSignature": "— L'équipe Coridor",
+                "landlordNotifTitle": "Visite annulée (non confirmée)",
+                "landlordNotifMessage": "La visite de {name} du {date} à {time} a été annulée automatiquement (non confirmée sous 24h).",
+                "landlordPushTitle": "Visite annulée automatiquement",
+                "landlordPushBody": "La visite de {name} du {date} n'a pas été confirmée et a été annulée."
+            },
+            "reminder": {
+                "notifTitle": "Confirmez votre visite",
+                "notifMessage": "Rappel : confirmez votre visite du {date} à {time} avant qu'elle ne soit annulée automatiquement.",
+                "pushTitle": "Confirmez votre visite",
+                "pushBody": "Plus que 12h pour confirmer votre visite du {date} à {time}",
+                "emailSubject": "Rappel : confirmez votre visite du {date}",
+                "emailHeading": "Confirmez votre visite",
+                "emailBody": "Bonjour {name}, vous avez réservé une visite pour le <strong>{date} à {time}</strong>. Il vous reste <strong>12 heures</strong> pour confirmer votre présence, sinon la visite sera automatiquement annulée.",
+                "emailCta": "Confirmer ma visite",
+                "emailSignature": "— L'équipe Coridor"
+            }
+        },
+        "subscription": {
+            "defaultUser": "Cher utilisateur",
+            "gift": {
+                "oneMonth": "1 mois",
+                "nMonths": "{count} mois",
+                "notifTitle": "Vous avez reçu un abonnement {plan} !",
+                "notifMessage": "Un abonnement {plan} de {duration} vous a été offert. {reason}",
+                "reasonLabel": "Raison :",
+                "invoiceDescription": "Abonnement {plan} offert — {duration}",
+                "defaultUser": "Cher utilisateur",
+                "emailSubject": "Un cadeau de l'équipe Coridor",
+                "emailHeading": "{name}, un cadeau pour vous !",
+                "emailBody": "Nous vous avons offert un abonnement {plan} pendant {duration}.",
+                "emailCta": "Découvrir mes nouvelles fonctionnalités",
+                "emailPlanIncludes": "Ce que votre nouveau plan inclut :"
+            },
+            "expiring": {
+                "notifTitle": "Votre abonnement expire bientôt",
+                "notifMessage": "Votre abonnement {plan} expire dans 7 jours. Renouvelez pour ne pas perdre vos fonctionnalités.",
+                "emailSubject": "Votre abonnement expire dans 7 jours",
+                "emailHeading": "{name}, votre abonnement expire bientôt",
+                "emailBody": "Votre abonnement {plan} expire dans 7 jours.",
+                "emailRenew": "Renouvelez maintenant pour continuer à profiter de toutes vos fonctionnalités :",
+                "emailCta": "Renouveler mon abonnement"
+            },
+            "expiringTomorrow": {
+                "notifTitle": "Votre abonnement expire bientôt",
+                "notifMessage": "Votre abonnement {plan} expire demain ! Renouvelez maintenant.",
+                "emailSubject": "Votre abonnement expire demain !",
+                "emailHeading": "{name}, votre abonnement expire demain !",
+                "emailBody": "Votre abonnement {plan} expire demain.",
+                "emailWarning": "Ne perdez pas l'accès à vos fonctionnalités :",
+                "emailCta": "Renouveler maintenant"
+            }
+        },
+        "inspection": {
+            "signLink": {
+                "defaultProperty": "votre logement",
+                "notifTitle": "État des lieux à signer",
+                "notifMessage": "Le bailleur a signé l'état des lieux pour {property}. C'est à votre tour de signer.",
+                "pushTitle": "État des lieux à signer",
+                "pushBody": "Signez l'état des lieux pour {property}",
+                "emailSubject": "État des lieux — Signez votre état des lieux",
+                "emailHeading": "État des lieux à signer",
+                "emailGreeting": "Bonjour {name},",
+                "emailBody": "Le bailleur a signé l'état des lieux pour <strong>{property}</strong>. C'est maintenant à votre tour de le signer.",
+                "emailDeadline": "Vous avez <strong>24 heures</strong> pour signer depuis votre téléphone.",
+                "emailCta": "Signer l'état des lieux",
+                "emailExpiry": "Ce lien expire dans 24 heures. Si vous ne pouvez pas signer maintenant, demandez au bailleur de vous renvoyer un lien."
+            },
+            "pdfEmail": {
+                "subject": "État des lieux — PDF signé",
+                "heading": "État des lieux signé",
+                "greeting": "Bonjour {name},",
+                "body": "Voici le PDF de votre état des lieux signé.",
+                "cta": "Consulter le PDF",
+                "legalNote": "Rappel : le locataire dispose de 10 jours après la remise des clés pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989)."
+            },
+            "pdfReady": {
+                "notifTitle": "PDF de l'état des lieux disponible",
+                "notifMessage": "Le PDF de l'état des lieux est prêt. Vous pouvez le consulter et le télécharger.",
+                "pushTitle": "PDF de l'état des lieux prêt",
+                "pushBody": "Le document PDF de l'état des lieux est maintenant disponible.",
+                "emailSubject": "État des lieux — PDF signé disponible",
+                "emailHeading": "État des lieux signé",
+                "emailGreeting": "Bonjour {name},",
+                "emailBody": "L'état des lieux a été signé par les deux parties. Le PDF est disponible en cliquant sur le bouton ci-dessous.",
+                "emailCta": "Consulter le PDF",
+                "emailLegalNote": "Rappel : le locataire dispose de 10 jours après la remise des clés pour signaler tout défaut non visible (art. 3-2 loi du 6 juillet 1989)."
+            },
+            "reminder": {
+                "typeEntry": "d'entrée",
+                "typeExit": "de sortie",
+                "titleToday": "État des lieux aujourd'hui",
+                "titleTomorrow": "État des lieux demain",
+                "body": "Rappel : état des lieux {type} prévu {date}{address}."
+            }
+        },
+        "deposit": {
+            "resolution": {
+                "notifTitle": "D\u00e9p\u00f4t de garantie \u2014 d\u00e9lai expir\u00e9",
+                "notifMessage": "Le d\u00e9lai de 14 jours est expir\u00e9. Le d\u00e9p\u00f4t est restitu\u00e9 selon l'accord partiel.",
+                "pushTitle": "D\u00e9p\u00f4t de garantie restitu\u00e9",
+                "pushBody": "Le d\u00e9lai de contestation est expir\u00e9. Le d\u00e9p\u00f4t est restitu\u00e9 selon l'accord partiel."
+            },
+            "defaultPropertyTitle": "votre bien",
+            "retentionsProposed": {
+                "emailSubject": "D\u00e9p\u00f4t de garantie \u2014 Retenues propos\u00e9es",
+                "emailHeading": "Le propri\u00e9taire a propos\u00e9 des retenues",
+                "emailBody": "Le propri\u00e9taire a propos\u00e9 des retenues sur votre d\u00e9p\u00f4t de garantie. Consultez le d\u00e9tail et donnez votre r\u00e9ponse depuis votre espace Coridor.",
+                "emailAction": "Consulter et r\u00e9pondre"
+            },
+            "overdue": {
+                "landlordNotifTitle": "D\u00e9lai de restitution d\u00e9pass\u00e9",
+                "landlordNotifMessage": "Le d\u00e9lai l\u00e9gal de restitution du d\u00e9p\u00f4t pour {property} est d\u00e9pass\u00e9. P\u00e9nalit\u00e9 : {penalty}\u20ac.",
+                "landlordPushTitle": "D\u00e9p\u00f4t \u2014 d\u00e9lai d\u00e9pass\u00e9",
+                "landlordPushBody": "P\u00e9nalit\u00e9 de {penalty}\u20ac. Restituez le d\u00e9p\u00f4t.",
+                "landlordEmailSubject": "D\u00e9p\u00f4t de garantie \u2014 D\u00e9lai de restitution d\u00e9pass\u00e9",
+                "landlordEmailHeading": "D\u00e9lai de restitution d\u00e9pass\u00e9",
+                "landlordEmailBody": "Le d\u00e9lai l\u00e9gal de restitution du d\u00e9p\u00f4t de garantie pour {property} est d\u00e9pass\u00e9. Une p\u00e9nalit\u00e9 de {penalty}\u20ac s'applique (10% du loyer par mois de retard, article 22 de la loi du 6 juillet 1989). Restituez le d\u00e9p\u00f4t pour \u00e9viter des p\u00e9nalit\u00e9s suppl\u00e9mentaires.",
+                "landlordEmailAction": "Voir le suivi",
+                "tenantNotifTitle": "D\u00e9p\u00f4t non restitu\u00e9 dans les d\u00e9lais",
+                "tenantNotifMessage": "Le d\u00e9lai de restitution de votre d\u00e9p\u00f4t pour {property} est d\u00e9pass\u00e9. P\u00e9nalit\u00e9 applicable : {penalty}\u20ac.",
+                "tenantPushTitle": "D\u00e9p\u00f4t \u2014 d\u00e9lai d\u00e9pass\u00e9",
+                "tenantPushBody": "Votre d\u00e9p\u00f4t n'a pas \u00e9t\u00e9 restitu\u00e9 dans les d\u00e9lais.",
+                "tenantEmailSubject": "D\u00e9p\u00f4t de garantie \u2014 D\u00e9lai d\u00e9pass\u00e9",
+                "tenantEmailHeading": "Votre d\u00e9p\u00f4t n'a pas \u00e9t\u00e9 restitu\u00e9",
+                "tenantEmailBody": "Le d\u00e9lai l\u00e9gal de restitution de votre d\u00e9p\u00f4t de garantie pour {property} est d\u00e9pass\u00e9. Une p\u00e9nalit\u00e9 de {penalty}\u20ac s'applique en votre faveur. Vous pouvez consulter votre espace pour conna\u00eetre vos options.",
+                "tenantEmailAction": "Voir mes options"
+            },
+            "preDeadline": {
+                "eventDescription": "Rappel : restitution du d\u00e9p\u00f4t dans 7 jours",
+                "landlordNotifTitle": "Restitution du d\u00e9p\u00f4t \u2014 7 jours restants",
+                "landlordNotifMessage": "Le d\u00e9lai l\u00e9gal de restitution du d\u00e9p\u00f4t de garantie expire dans 7 jours. Pensez \u00e0 restituer le d\u00e9p\u00f4t au locataire.",
+                "landlordPushTitle": "D\u00e9p\u00f4t de garantie \u2014 7 jours",
+                "landlordPushBody": "Le d\u00e9lai de restitution expire dans 7 jours.",
+                "landlordEmailSubject": "D\u00e9p\u00f4t de garantie \u2014 7 jours restants",
+                "landlordEmailHeading": "Restitution du d\u00e9p\u00f4t dans 7 jours",
+                "landlordEmailBody": "Le d\u00e9lai l\u00e9gal de restitution du d\u00e9p\u00f4t de garantie expire dans 7 jours. Pensez \u00e0 restituer le d\u00e9p\u00f4t au locataire pour \u00e9viter les p\u00e9nalit\u00e9s pr\u00e9vues par la loi.",
+                "landlordEmailAction": "Voir le suivi",
+                "tenantNotifTitle": "Restitution du d\u00e9p\u00f4t \u2014 7 jours",
+                "tenantNotifMessage": "Le propri\u00e9taire doit restituer votre d\u00e9p\u00f4t de garantie sous 7 jours.",
+                "tenantPushTitle": "D\u00e9p\u00f4t de garantie \u2014 7 jours",
+                "tenantPushBody": "Votre d\u00e9p\u00f4t doit \u00eatre restitu\u00e9 sous 7 jours.",
+                "tenantEmailSubject": "D\u00e9p\u00f4t de garantie \u2014 Restitution dans 7 jours",
+                "tenantEmailHeading": "Votre d\u00e9p\u00f4t doit \u00eatre restitu\u00e9",
+                "tenantEmailBody": "Le propri\u00e9taire doit restituer votre d\u00e9p\u00f4t de garantie sous 7 jours. Vous pouvez suivre l'avancement depuis votre espace.",
+                "tenantEmailAction": "Voir le suivi"
+            },
+            "postDeadline": {
+                "eventDescription": "Second rappel \u2014 J+15 apr\u00e8s expiration du d\u00e9lai l\u00e9gal",
+                "landlordNotifTitle": "D\u00e9p\u00f4t de garantie en retard \u2014 Action requise",
+                "landlordNotifMessage": "Le d\u00e9lai l\u00e9gal de restitution est d\u00e9pass\u00e9 de 15 jours. Une p\u00e9nalit\u00e9 de {penalty}\u20ac s'applique. Restituez le d\u00e9p\u00f4t pour \u00e9viter des p\u00e9nalit\u00e9s suppl\u00e9mentaires.",
+                "landlordPushTitle": "D\u00e9p\u00f4t en retard \u2014 p\u00e9nalit\u00e9 en cours",
+                "landlordPushBody": "P\u00e9nalit\u00e9 de {penalty}\u20ac. Restituez le d\u00e9p\u00f4t.",
+                "landlordEmailSubject": "D\u00e9p\u00f4t de garantie \u2014 Retard de 15 jours",
+                "landlordEmailHeading": "D\u00e9p\u00f4t en retard \u2014 Action urgente requise",
+                "landlordEmailBody": "Le d\u00e9lai l\u00e9gal de restitution du d\u00e9p\u00f4t de garantie est d\u00e9pass\u00e9 de 15 jours. Une p\u00e9nalit\u00e9 de {penalty}\u20ac s'applique. Restituez le d\u00e9p\u00f4t pour limiter les p\u00e9nalit\u00e9s.",
+                "landlordEmailAction": "Restituer le d\u00e9p\u00f4t",
+                "tenantNotifTitle": "D\u00e9p\u00f4t non restitu\u00e9 \u2014 Vous pouvez agir",
+                "tenantNotifMessage": "Votre d\u00e9p\u00f4t n'a pas \u00e9t\u00e9 restitu\u00e9 dans les d\u00e9lais. Vous pouvez g\u00e9n\u00e9rer une mise en demeure depuis votre espace.",
+                "tenantPushTitle": "D\u00e9p\u00f4t non restitu\u00e9",
+                "tenantPushBody": "Vous pouvez g\u00e9n\u00e9rer une mise en demeure.",
+                "tenantEmailSubject": "D\u00e9p\u00f4t de garantie \u2014 Vous pouvez agir",
+                "tenantEmailHeading": "Votre d\u00e9p\u00f4t n'a toujours pas \u00e9t\u00e9 restitu\u00e9",
+                "tenantEmailBody": "Votre d\u00e9p\u00f4t de garantie n'a pas \u00e9t\u00e9 restitu\u00e9 dans les d\u00e9lais l\u00e9gaux. Vous pouvez g\u00e9n\u00e9rer une mise en demeure depuis votre espace Coridor pour faire valoir vos droits.",
+                "tenantEmailAction": "G\u00e9n\u00e9rer une mise en demeure"
+            },
+            "events": {
+                "leaseSigned": "Bail sign\u00e9 \u2014 d\u00e9p\u00f4t de {amount}\u20ac d\u00fb",
+                "paymentDetected": "Versement du d\u00e9p\u00f4t d\u00e9tect\u00e9",
+                "paymentConfirmed": "Versement du d\u00e9p\u00f4t confirm\u00e9 ({amount}\u20ac)",
+                "heldByLandlord": "D\u00e9p\u00f4t d\u00e9tenu par le propri\u00e9taire",
+                "entryInspectionDone": "\u00c9tat des lieux d'entr\u00e9e r\u00e9alis\u00e9",
+                "exitInspectionStarted": "\u00c9tat des lieux de sortie d\u00e9marr\u00e9",
+                "exitInspectionSigned": "\u00c9tat des lieux de sortie sign\u00e9",
+                "retentionsProposed": "Retenues propos\u00e9es par le propri\u00e9taire",
+                "tenantAgreed": "Locataire accepte les retenues",
+                "tenantPartialAgreed": "Accord partiel du locataire",
+                "tenantDisputed": "Locataire conteste les retenues",
+                "partialRelease": "Restitution partielle du d\u00e9p\u00f4t",
+                "fullRelease": "D\u00e9p\u00f4t restitu\u00e9 int\u00e9gralement",
+                "deadlineWarning": "Rappel : restitution dans 7 jours",
+                "deadlineOverdue": "D\u00e9lai l\u00e9gal de restitution d\u00e9pass\u00e9",
+                "penaltyUpdated": "P\u00e9nalit\u00e9 mise \u00e0 jour",
+                "formalNoticeGenerated": "Mise en demeure g\u00e9n\u00e9r\u00e9e",
+                "formalNoticeSentDefault": "Mise en demeure envoy\u00e9e",
+                "formalNoticeSent": "Mise en demeure envoy\u00e9e le {date}",
+                "cdcDossierGenerated": "Dossier CDC g\u00e9n\u00e9r\u00e9",
+                "timelineExported": "Timeline export\u00e9e",
+                "resolved": "D\u00e9p\u00f4t de garantie \u2014 dossier clos",
+                "secondReminder": "Second rappel \u2014 J+15 apr\u00e8s expiration",
+                "deductionExceedsDeposit": "Les retenues d\u00e9passent le montant du d\u00e9p\u00f4t",
+                "default": "\u00c9v\u00e9nement : {event}"
+            }
+        },
+        "common": {
+            "months": {
+                "january": "janvier",
+                "february": "f\u00e9vrier",
+                "march": "mars",
+                "april": "avril",
+                "may": "mai",
+                "june": "juin",
+                "july": "juillet",
+                "august": "ao\u00fbt",
+                "september": "septembre",
+                "october": "octobre",
+                "november": "novembre",
+                "december": "d\u00e9cembre"
+            },
+            "signature": "L'\u00e9quipe Coridor",
+            "footer": {
+                "copyright": "\u00a9 {year} Coridor. Tous droits r\u00e9serv\u00e9s.",
+                "disclaimer": "Vous recevez cet e-mail car vous \u00eates inscrit sur Coridor."
+            }
+        },
+        "reminder": {
+            "adminHeading": "Rappel admin Coridor",
+            "adminUrgentHeading": "Rappel admin urgent \u2014 Coridor",
+            "adminAction": "Acc\u00e9der",
+            "deadline": "Date limite : {date}",
+            "defaultDeadlineMessage": "\u00c9ch\u00e9ance le {date}",
+            "defaultLandlordName": "Cher propri\u00e9taire",
+            "legalEmailSubject": "Rappel l\u00e9gal : {title}",
+            "importantReminder": "{name}, rappel important",
+            "viewReminders": "Voir mes rappels",
+            "imminentDeadline": "{title} \u2014 \u00c9ch\u00e9ance imminente !",
+            "urgentTitle": "{title} \u2014 Rappel urgent",
+            "urgentMessage": "\u00c9ch\u00e9ance dans moins d'un mois ! {description}",
+            "diagnostic": {
+                "dpe": {
+                    "title": "DPE \u2014 Diagnostic de Performance \u00c9nerg\u00e9tique \u00e0 renouveler",
+                    "description": "Le DPE de votre bien arrive \u00e0 expiration. Un nouveau diagnostic doit \u00eatre r\u00e9alis\u00e9 avant de pouvoir relouer."
+                },
+                "electricity": {
+                    "title": "Diagnostic \u00e9lectricit\u00e9 \u00e0 renouveler",
+                    "description": "Le diagnostic \u00e9lectricit\u00e9 expire. Obligatoire pour toute location si installation > 15 ans."
+                },
+                "gas": {
+                    "title": "Diagnostic gaz \u00e0 renouveler",
+                    "description": "Le diagnostic gaz expire. Obligatoire pour toute location avec installation gaz de plus de 15 ans."
+                },
+                "erp": {
+                    "title": "\u00c9tat des Risques et Pollutions (ERP) \u00e0 renouveler",
+                    "description": "L'ERP n'est valide que 6 mois. Il doit \u00eatre \u00e0 jour lors de la signature du bail."
+                },
+                "rentFreeze": {
+                    "title": "Gel des loyers \u2014 DPE {dpe}",
+                    "descriptionG": "Votre bien est class\u00e9 DPE G. Il est interdit de le louer depuis le 1er janvier 2025. Vous devez r\u00e9aliser des travaux de r\u00e9novation \u00e9nerg\u00e9tique.",
+                    "descriptionF": "Votre bien est class\u00e9 DPE F. Il sera interdit \u00e0 la location \u00e0 partir du 1er janvier 2028. Toute augmentation de loyer (y compris IRL) est interdite depuis ao\u00fbt 2022."
+                }
+            },
+            "lease": {
+                "furnished": "meubl\u00e9",
+                "unfurnished": "vide",
+                "endNotice": {
+                    "title": "Pr\u00e9avis de cong\u00e9 bailleur \u2014 {type}",
+                    "descriptionFurnished": "Le bail meubl\u00e9 se termine le {date}. Le pr\u00e9avis de cong\u00e9 est de 3 mois. Vous devez envoyer le cong\u00e9 par LRAR ou acte d'huissier.",
+                    "descriptionUnfurnished": "Le bail vide se termine le {date}. Le pr\u00e9avis de cong\u00e9 est de 6 mois. Le cong\u00e9 doit \u00eatre motiv\u00e9 (vente, reprise, motif l\u00e9gitime)."
+                },
+                "rentRevision": {
+                    "title": "R\u00e9vision annuelle du loyer (IRL)",
+                    "description": "Il est temps de r\u00e9viser le loyer selon l'Indice de R\u00e9f\u00e9rence des Loyers. La r\u00e9vision doit \u00eatre appliqu\u00e9e dans l'ann\u00e9e suivant la date anniversaire, sinon elle est perdue."
+                },
+                "chargesRegularization": {
+                    "title": "R\u00e9gularisation annuelle des charges",
+                    "description": "La r\u00e9gularisation des charges doit \u00eatre effectu\u00e9e chaque ann\u00e9e. Vous devez comparer les provisions vers\u00e9es par le locataire avec les charges r\u00e9elles et proc\u00e9der \u00e0 l'ajustement."
+                },
+                "depositReturn": {
+                    "title": "Restitution du d\u00e9p\u00f4t de garantie",
+                    "description": "Le d\u00e9p\u00f4t de garantie doit \u00eatre restitu\u00e9 dans un d\u00e9lai de 2 mois apr\u00e8s la remise des cl\u00e9s (1 mois si l'\u00e9tat des lieux de sortie est conforme). Pass\u00e9 ce d\u00e9lai, des p\u00e9nalit\u00e9s de 10% du loyer mensuel par mois de retard s'appliquent."
+                },
+                "tenantInsurance": {
+                    "title": "V\u00e9rification de l'attestation d'assurance locataire",
+                    "description": "Le locataire est tenu de fournir une attestation d'assurance habitation chaque ann\u00e9e. En cas de d\u00e9faut, le bailleur peut r\u00e9silier le bail apr\u00e8s mise en demeure rest\u00e9e sans effet pendant 1 mois."
+                }
+            },
+            "tax": {
+                "declaration": {
+                    "title": "D\u00e9claration de revenus fonciers {year}",
+                    "description": "Votre r\u00e9cap fiscal {year} est disponible. Consultez-le pour pr\u00e9parer votre d\u00e9claration de revenus fonciers 2044. Date limite de d\u00e9claration en ligne : environ le 20 mai."
+                }
+            }
+        },
+        "receipt": {
+            "docTypeFull": "quittance",
+            "docTypePartial": "re\u00e7u",
+            "defaultTenantName": "Cher locataire",
+            "notifTitle": "Votre {docType} de loyer est disponible",
+            "notifMessage": "Votre {docType} de loyer pour {month} est disponible au t\u00e9l\u00e9chargement.",
+            "emailSubject": "Votre {docType} de loyer \u2014 {month}",
+            "emailHeading": "{name}, votre {docType} est disponible",
+            "emailAction": "Voir mes quittances",
+            "emailBody": "Votre {docType} de loyer pour {month} a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9e et est disponible dans votre espace Coridor.",
+            "emailAmount": "Montant total : {amount} \u20ac"
+        },
+        "rentCollection": {
+            "defaultTenantName": "Locataire",
+            "late": {
+                "notifTitle": "Loyer non d\u00e9tect\u00e9",
+                "notifMessage": "Loyer de {month} non d\u00e9tect\u00e9 pour {address}. V\u00e9rifiez vos relev\u00e9s."
+            },
+            "email": {
+                "heading": "Suivi loyer - {month} {year}",
+                "greeting": "Bonjour,",
+                "body": "Nous n'avons pas encore d\u00e9tect\u00e9 le paiement du loyer de <strong>{month} {year}</strong> pour votre bien situ\u00e9 au <strong>{address}</strong>.",
+                "expectedAmount": "Montant attendu : <strong>{amount} &euro;</strong>",
+                "manualConfirm": "Si vous avez d\u00e9j\u00e0 re\u00e7u le paiement, vous pouvez le confirmer manuellement depuis votre espace Coridor.",
+                "action": "Voir mes finances",
+                "subject": "Suivi loyer - Rappel {month} {year}"
+            },
+            "overdue": {
+                "notifTitle": "Loyer impay\u00e9",
+                "notifMessage": "Le loyer de {month} est toujours impay\u00e9 pour {address}."
+            },
+            "critical": {
+                "notifTitle": "Alerte critique - Impay\u00e9",
+                "notifMessage": "Le loyer de {month} n'est toujours pas r\u00e9gl\u00e9 pour {address}. Nous vous recommandons de prendre contact avec votre locataire."
+            },
+            "friendlyReminder": {
+                "messageBody": "Bonjour {name}, nous n'avons pas encore enregistr\u00e9 votre loyer de {month} (montant attendu : {amount}\u00a0\u20ac). Si vous avez d\u00e9j\u00e0 effectu\u00e9 le paiement, merci de ne pas tenir compte de ce message. En cas de difficult\u00e9, n'h\u00e9sitez pas \u00e0 en discuter avec votre propri\u00e9taire.",
+                "notifTitle": "Rappel de loyer",
+                "notifMessage": "Un rappel concernant votre loyer de {month} vous a \u00e9t\u00e9 envoy\u00e9."
+            }
+        },
+        "regularization": {
+            "defaultLandlordName": "Votre propri\u00e9taire",
+            "defaultPropertyTitle": "Votre logement",
+            "messageBody": "Bonjour,\n\nVoici le d\u00e9compte de r\u00e9gularisation des charges pour l'ann\u00e9e {year}.\n\nVous pouvez consulter le document ci-joint :",
+            "downloadLink": "T\u00e9l\u00e9charger le Document",
+            "notifTitle": "R\u00e9gularisation des charges {year}",
+            "notifMessage": "{landlord} vous a envoy\u00e9 le d\u00e9compte de r\u00e9gularisation des charges pour {property}.",
+            "pushTitle": "R\u00e9gularisation des charges {year}",
+            "pushBody": "{landlord} vous a envoy\u00e9 le d\u00e9compte de r\u00e9gularisation des charges.",
+            "emailSubject": "R\u00e9gularisation des charges {year} \u2014 {property}",
+            "emailHeading": "R\u00e9gularisation des charges {year}",
+            "emailGreeting": "Bonjour{name},",
+            "emailBody": "{landlord} vous a envoy\u00e9 le d\u00e9compte de r\u00e9gularisation des charges pour l'ann\u00e9e {year} concernant le logement <strong>{property}</strong>.",
+            "emailCta": "Vous pouvez consulter le document et \u00e9changer avec votre propri\u00e9taire directement sur Coridor.",
+            "emailAction": "Voir le d\u00e9compte",
+            "emailFooter": "Coridor \u2014 Location immobili\u00e8re entre particuliers"
         }
     }
 }

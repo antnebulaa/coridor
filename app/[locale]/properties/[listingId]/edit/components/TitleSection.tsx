@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+import { useTranslations } from "next-intl";
 import { SafeListing } from "@/types";
 import SoftInput from "@/components/inputs/SoftInput";
 import EditSectionFooter from "./EditSectionFooter";
@@ -17,6 +18,7 @@ interface TitleSectionProps {
 
 const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -36,20 +38,20 @@ const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
 
         axios.put(`/api/listings/${listing.id}`, data)
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Titre mis à jour"
+                        t={toastData}
+                        message={t('edit.title.saved')}
                         type="success"
                     />
                 ));
                 router.refresh();
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Une erreur est survenue"
+                        t={toastData}
+                        message={t('edit.title.error')}
                         type="error"
                     />
                 ));
@@ -63,7 +65,7 @@ const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
         <div className="flex flex-col gap-8">
             <SoftInput
                 id="title"
-                label="Titre"
+                label={t('edit.title.label')}
                 disabled={isLoading}
                 register={register}
                 errors={errors}
@@ -71,7 +73,7 @@ const TitleSection: React.FC<TitleSectionProps> = ({ listing }) => {
             />
             <EditSectionFooter
                 disabled={isLoading}
-                label="Enregistrer"
+                label={t('edit.save')}
                 onClick={handleSubmit(onSubmit)}
             />
         </div>

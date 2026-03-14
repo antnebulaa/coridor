@@ -1,3 +1,4 @@
+
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -9,7 +10,8 @@ const config: CapacitorConfig = {
   // In dev, set CAPACITOR_SERVER_URL=http://192.168.x.x:3000
   server: {
     url: process.env.CAPACITOR_SERVER_URL || 'https://www.coridor.app',
-    cleartext: !!process.env.CAPACITOR_SERVER_URL, // Allow HTTP in dev only
+    cleartext: !!process.env.CAPACITOR_SERVER_URL,
+allowNavigation: ['coridor.app', '*.coridor.app', 'coridor.fr', '*.coridor.fr'], // Allow HTTP in dev only
   },
 
   plugins: {
@@ -43,6 +45,7 @@ const config: CapacitorConfig = {
     backgroundColor: '#FAF7F2',
     contentInset: 'automatic',
     scheme: 'Coridor',
+    scrollEnabled: false,
   },
 };
 

@@ -6,6 +6,7 @@ import { createNotification } from '@/libs/notifications';
 import { sendEmail } from '@/lib/email';
 import { sendPushNotification } from '@/app/lib/sendPushNotification';
 import { broadcastNewMessage } from '@/lib/supabaseServer';
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 type Params = { params: Promise<{ inspectionId: string }> };
 
@@ -78,22 +79,23 @@ export async function POST(request: Request, props: Params) {
       || `https://${request.headers.get('host')}`;
     const url = `${baseUrl}/inspection/${inspectionId}/sign/tenant?token=${token}`;
 
-    const propertyTitle = inspection.application.listing.title || 'votre logement';
+    const t = getServerTranslation('emails');
+    const propertyTitle = inspection.application.listing.title || t('inspection.signLink.defaultProperty');
 
     // Send in-app notification
     await createNotification({
       userId: tenantId,
       type: 'inspection',
-      title: 'État des lieux à signer',
-      message: `Le bailleur a signé l'état des lieux pour ${propertyTitle}. C'est à votre tour de signer.`,
+      title: t('inspection.signLink.notifTitle'),
+      message: t('inspection.signLink.notifMessage', { property: propertyTitle }),
       link: url,
     });
 
     // Send push notification
     await sendPushNotification({
       userId: tenantId,
-      title: 'État des lieux à signer',
-      body: `Signez l'état des lieux pour ${propertyTitle}`,
+      title: t('inspection.signLink.pushTitle'),
+      body: t('inspection.signLink.pushBody', { property: propertyTitle }),
       type: 'inspection',
       url,
     });
@@ -102,22 +104,21 @@ export async function POST(request: Request, props: Params) {
     if (tenant.email) {
       await sendEmail(
         tenant.email,
-        "État des lieux — Signez votre état des lieux",
+        t('inspection.signLink.emailSubject'),
         `<div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
-          <h2 style="color: #1a1a1a; margin-bottom: 8px;">État des lieux à signer</h2>
+          <h2 style="color: #1a1a1a; margin-bottom: 8px;">${t('inspection.signLink.emailHeading')}</h2>
           <p style="color: #555; line-height: 1.6;">
-            Bonjour${tenant.name ? ` ${tenant.name}` : ''},<br/><br/>
-            Le bailleur a signé l'état des lieux pour <strong>${propertyTitle}</strong>.
-            C'est maintenant à votre tour de le signer.
+            ${t('inspection.signLink.emailGreeting', { name: tenant.name || '' })}<br/><br/>
+            ${t('inspection.signLink.emailBody', { property: propertyTitle })}
           </p>
           <p style="color: #555; line-height: 1.6;">
-            Vous avez <strong>24 heures</strong> pour signer depuis votre téléphone.
+            ${t('inspection.signLink.emailDeadline')}
           </p>
           <a href="${url}" style="display: inline-block; background: #1719FF; color: #fff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 600; margin: 16px 0;">
-            Signer l'état des lieux
+            ${t('inspection.signLink.emailCta')}
           </a>
           <p style="color: #999; font-size: 13px; margin-top: 24px;">
-            Ce lien expire dans 24 heures. Si vous ne pouvez pas signer maintenant, demandez au bailleur de vous renvoyer un lien.
+            ${t('inspection.signLink.emailExpiry')}
           </p>
         </div>`
       );

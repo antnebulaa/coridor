@@ -7,6 +7,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 
+import { useTranslations } from "next-intl";
 import { SafeListing, SafeUser } from "@/types";
 import CustomToast from "@/components/ui/CustomToast";
 import Counter from "@/components/inputs/Counter";
@@ -22,6 +23,7 @@ interface CategorySectionProps {
 
 const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser, isRoom }) => {
     const router = useRouter();
+    const t = useTranslations('properties');
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -91,20 +93,20 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
 
         axios.put(`/api/listings/${listing.id}`, data)
             .then(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Votre annonce a été mise à jour"
+                        t={toastData}
+                        message={t('edit.category.saved')}
                         type="success"
                     />
                 ));
                 router.refresh();
             })
             .catch(() => {
-                toast.custom((t) => (
+                toast.custom((toastData) => (
                     <CustomToast
-                        t={t}
-                        message="Une erreur est survenue"
+                        t={toastData}
+                        message={t('edit.category.error')}
                         type="error"
                     />
                 ));
@@ -121,14 +123,14 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 <div className="flex flex-col gap-2">
                     <SoftSelect
                         id="category"
-                        label="Quel type de bien louez-vous ?"
+                        label={t('edit.category.propertyType')}
                         value={category}
                         onChange={(e) => setCustomValue('category', e.target.value)}
                         disabled={isLoading}
                         options={[
-                            { value: "Maison", label: "Une maison" },
-                            { value: "Appartement", label: "Un appartement" },
-                            { value: "Bateau", label: "Un bateau" }
+                            { value: "Maison", label: t('edit.category.house') },
+                            { value: "Appartement", label: t('edit.category.apartment') },
+                            { value: "Bateau", label: t('edit.category.boat') }
                         ]}
                     />
                 </div>
@@ -138,16 +140,16 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {!isRoom && category === 'Appartement' && (
                 <div className="flex flex-col gap-2">
                     <div className="text-sm font-medium text-neutral-800">
-                        Type d&apos;appartement
+                        {t('edit.category.apartmentType')}
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {[
-                            { value: '', label: 'Standard' },
-                            { value: 'duplex', label: 'Duplex' },
-                            { value: 'triplex', label: 'Triplex' },
-                            { value: 'loft', label: 'Loft' },
-                            { value: 'penthouse', label: 'Penthouse' },
-                            { value: 'mansarde', label: 'Mansardé' },
+                            { value: '', label: t('edit.category.subTypes.standard') },
+                            { value: 'duplex', label: t('edit.category.subTypes.duplex') },
+                            { value: 'triplex', label: t('edit.category.subTypes.triplex') },
+                            { value: 'loft', label: t('edit.category.subTypes.loft') },
+                            { value: 'penthouse', label: t('edit.category.subTypes.penthouse') },
+                            { value: 'mansarde', label: t('edit.category.subTypes.mansarde') },
                         ].map((opt) => (
                             <button
                                 key={opt.value}
@@ -170,40 +172,40 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {!isRoom && (
                 <div className="flex flex-col gap-2">
                     <div className="text-sm font-medium text-neutral-800">
-                        Comment décririez-vous votre bien ?
+                        {t('edit.category.adjectiveTitle')}
                     </div>
                     <div className="text-xs text-neutral-500 mb-2">
-                        Cet adjectif apparaîtra après le type de bien sur l'annonce (ex: "Maison calme").
+                        {t('edit.category.adjectiveHelper')}
                     </div>
                     <SoftSelect
                         id="propertyAdjective"
-                        label="Choisir un adjectif"
+                        label={t('edit.category.adjectiveLabel')}
                         value={propertyAdjective || ""}
                         onChange={(e) => setCustomValue('propertyAdjective', e.target.value)}
                         disabled={isLoading}
                         options={[
                             // Lumière/Espace
-                            { value: "Lumineux", label: "Lumineux" },
-                            { value: "Spacieux", label: "Spacieux" },
-                            { value: "Traversant", label: "Traversant" },
-                            { value: "Ensoleillé", label: "Ensoleillé" },
+                            { value: "Lumineux", label: t('edit.category.adjectives.lumineux') },
+                            { value: "Spacieux", label: t('edit.category.adjectives.spacieux') },
+                            { value: "Traversant", label: t('edit.category.adjectives.traversant') },
+                            { value: "Ensoleillé", label: t('edit.category.adjectives.ensoleille') },
                             // Style/Architecture
-                            { value: "Haussmannien", label: "Haussmannien" },
-                            { value: "Atypique", label: "Atypique" },
-                            { value: "Loft", label: "Loft" },
-                            { value: "Ancien", label: "Ancien" },
-                            { value: "Moderne", label: "Moderne" },
-                            { value: "Neuf", label: "Neuf" },
-                            { value: "Rénové", label: "Rénové" },
+                            { value: "Haussmannien", label: t('edit.category.adjectives.haussmannien') },
+                            { value: "Atypique", label: t('edit.category.adjectives.atypique') },
+                            { value: "Loft", label: t('edit.category.adjectives.loft') },
+                            { value: "Ancien", label: t('edit.category.adjectives.ancien') },
+                            { value: "Moderne", label: t('edit.category.adjectives.moderne') },
+                            { value: "Neuf", label: t('edit.category.adjectives.neuf') },
+                            { value: "Rénové", label: t('edit.category.adjectives.renove') },
                             // Ambiance
-                            { value: "Calme", label: "Calme" },
-                            { value: "Cosy", label: "Cosy" },
-                            { value: "De charme", label: "De charme" },
-                            { value: "Familial", label: "Familial" },
-                            { value: "Étudiant", label: "Étudiant" },
+                            { value: "Calme", label: t('edit.category.adjectives.calme') },
+                            { value: "Cosy", label: t('edit.category.adjectives.cosy') },
+                            { value: "De charme", label: t('edit.category.adjectives.charme') },
+                            { value: "Familial", label: t('edit.category.adjectives.familial') },
+                            { value: "Étudiant", label: t('edit.category.adjectives.etudiant') },
                             // Standing
-                            { value: "De standing", label: "De standing" },
-                            { value: "De prestige", label: "De prestige" },
+                            { value: "De standing", label: t('edit.category.adjectives.standing') },
+                            { value: "De prestige", label: t('edit.category.adjectives.prestige') },
                         ]}
                     />
                 </div>
@@ -213,13 +215,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             <div className="flex flex-col gap-2">
                 <SoftSelect
                     id="isFurnished"
-                    label="Votre logement est-il meublé ?"
+                    label={t('edit.category.furnishedQuestion')}
                     value={isFurnished ? 'true' : 'false'}
                     onChange={(e) => setCustomValue('isFurnished', e.target.value === 'true')}
                     disabled={isLoading}
                     options={[
-                        { value: "true", label: "Logement meublé" },
-                        { value: "false", label: "Logement non meublé" }
+                        { value: "true", label: t('edit.category.furnished') },
+                        { value: "false", label: t('edit.category.unfurnished') }
                     ]}
                 />
             </div>
@@ -229,7 +231,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 <div className="w-full">
                     <SoftInput
                         id="surface"
-                        label={isRoom ? `Surface de la chambre (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})` : `Surface du logement (${surfaceUnit === 'metric' ? 'm²' : 'sq ft'})`}
+                        label={isRoom ? t('edit.category.roomSurface', { unit: surfaceUnit === 'metric' ? 'm²' : 'sq ft' }) : t('edit.category.propertySurface', { unit: surfaceUnit === 'metric' ? 'm²' : 'sq ft' })}
                         type="number"
                         disabled={isLoading}
                         value={surface ?? ''}
@@ -241,7 +243,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 <div className="w-[140px]">
                     <SoftSelect
                         id="surfaceUnit"
-                        label="Unité"
+                        label={t('edit.category.unit')}
                         value={surfaceUnit}
                         onChange={(e) => setCustomValue('surfaceUnit', e.target.value)}
                         disabled={isLoading}
@@ -259,8 +261,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {!isRoomMode && (
                 <>
                     <Counter
-                        title="Nombre de pièces"
-                        subtitle="La cuisine, les salles de bain et les toilettes sont à exclure"
+                        title={t('edit.category.roomCount')}
+                        subtitle={t('edit.category.roomCountHelper')}
                         value={roomCount}
                         onChange={(value) => setCustomValue('roomCount', value)}
                     />
@@ -273,8 +275,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {!isRoomMode && (
                 <>
                     <Counter
-                        title="Nombre de chambres"
-                        subtitle="Un studio n’a pas de chambre"
+                        title={t('edit.category.bedroomCount')}
+                        subtitle={t('edit.category.bedroomCountHelper')}
                         value={guestCount}
                         onChange={(value) => setCustomValue('guestCount', value)}
                         min={0}
@@ -288,9 +290,9 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {isRoomMode ? (
                 <div className="flex flex-row items-center justify-between">
                     <div className="flex flex-col">
-                        <div className="font-medium">Salle de bain privée</div>
+                        <div className="font-medium">{t('edit.category.privateBathroom')}</div>
                         <div className="font-light text-gray-600 text-sm">
-                            Y a-t-il une salle de bain exclusive à cette pièce ?
+                            {t('edit.category.privateBathroomHelper')}
                         </div>
                     </div>
                     <div className="flex flex-row items-center gap-3">
@@ -317,7 +319,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 </div>
             ) : (
                 <Counter
-                    title="Nombre de salles de bain"
+                    title={t('edit.category.bathroomCount')}
                     subtitle=""
                     value={bathroomCount}
                     onChange={(value) => setCustomValue('bathroomCount', value)}
@@ -330,13 +332,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             <div className="flex flex-col gap-2">
                 <SoftSelect
                     id="kitchenType"
-                    label="Votre bien dispose t-il d’une cuisine séparée?"
+                    label={t('edit.category.kitchenQuestion')}
                     value={kitchenType || 'open'}
                     onChange={(e) => setCustomValue('kitchenType', e.target.value)}
                     disabled={isLoading}
                     options={[
-                        { value: "separate", label: "Cuisine séparée" },
-                        { value: "open", label: "Cuisine ouverte" }
+                        { value: "separate", label: t('edit.category.kitchenSeparate') },
+                        { value: "open", label: t('edit.category.kitchenOpen') }
                     ]}
                 />
             </div>
@@ -346,7 +348,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 <>
                     <hr />
                     <Counter
-                        title="Combien y a-t-il d’étages dans l’immeuble ?"
+                        title={t('edit.category.totalFloors')}
                         subtitle=""
                         value={totalFloors || 1}
                         onChange={(value) => setCustomValue('totalFloors', value)}
@@ -358,7 +360,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
 
             {/* Etage du logement */}
             <Counter
-                title="A quel étage se situe le logement ?"
+                title={t('edit.category.floor')}
                 subtitle=""
                 value={floor || 0}
                 onChange={(value) => setCustomValue('floor', value)}
@@ -372,7 +374,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
             {/* Année construction */}
             <SoftSelect
                 id="buildYear"
-                label="Année de construction"
+                label={t('edit.category.buildYear')}
                 value={
                     buildYear
                         ? buildYear <= 1945 ? "1945"
@@ -384,19 +386,19 @@ const CategorySection: React.FC<CategorySectionProps> = ({ listing, currentUser,
                 onChange={(e) => setCustomValue('buildYear', e.target.value)}
                 disabled={isLoading}
                 options={[
-                    { value: "1945", label: "Avant 1946" },
-                    { value: "1960", label: "1946 - 1970" },
-                    { value: "1980", label: "1971 - 1990" },
-                    { value: "2000", label: "Après 1990" }
+                    { value: "1945", label: t('edit.category.buildPeriods.before1946') },
+                    { value: "1960", label: t('edit.category.buildPeriods.1946to1970') },
+                    { value: "1980", label: t('edit.category.buildPeriods.1971to1990') },
+                    { value: "2000", label: t('edit.category.buildPeriods.after1990') }
                 ]}
             />
             <div className="text-xs text-neutral-500 mt-[-24px] mb-4">
-                Si vous ne connaissez pas la période de construction, vous pouvez la trouver <a href="https://gorenove.fr/adresse" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">ici</a>.
+                {t.rich('edit.category.buildYearHelper', { link: (chunks) => <a href="https://gorenove.fr/adresse" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">{chunks}</a> })}
             </div>
 
             <EditSectionFooter
                 disabled={isLoading}
-                label="Enregistrer"
+                label={t('edit.save')}
                 onClick={handleSubmit(onSubmit)}
             />
         </div>

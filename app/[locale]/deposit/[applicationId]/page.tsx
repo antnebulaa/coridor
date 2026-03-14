@@ -7,6 +7,7 @@ import { useSecurityDeposit } from '@/hooks/useSecurityDeposit';
 import { useSession } from 'next-auth/react';
 import DepositTimeline from '@/components/deposit/DepositTimeline';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import {
   ArrowLeft,
   Shield,
@@ -41,6 +42,7 @@ export default function DepositPage() {
   const router = useRouter();
   const session = useSession();
   const currentUserId = (session.data?.user as { id?: string })?.id;
+  const t = useTranslations('toasts');
 
   const {
     deposit,
@@ -95,9 +97,9 @@ export default function DepositPage() {
     setIsConfirming(true);
     try {
       await confirmPayment();
-      toast.success('Versement confirmé');
+      toast.success(t('deposit.paymentConfirmed'));
     } catch {
-      toast.error('Erreur lors de la confirmation');
+      toast.error(t('deposit.confirmError'));
     } finally {
       setIsConfirming(false);
     }
@@ -107,9 +109,9 @@ export default function DepositPage() {
     setIsConfirming(true);
     try {
       await confirmRefund();
-      toast.success('Restitution confirmée');
+      toast.success(t('deposit.releaseConfirmed'));
     } catch {
-      toast.error('Erreur lors de la confirmation');
+      toast.error(t('deposit.confirmError'));
     } finally {
       setIsConfirming(false);
     }
@@ -136,10 +138,10 @@ export default function DepositPage() {
               <div className="text-[28px] font-bold text-gray-900 mt-0.5">
                 {amount}€
               </div>
-              {deposit.application?.listing?.rentalUnit?.property?.title && (
+              {deposit.application?.listing?.title && (
                 <div className="text-[13px] text-gray-500 mt-1">
-                  {deposit.application.listing.rentalUnit.property.title}
-                  {deposit.application.listing.rentalUnit.property.city
+                  {deposit.application.listing.title}
+                  {deposit.application.listing.rentalUnit?.property?.city
                     ? ` — ${deposit.application.listing.rentalUnit.property.city}`
                     : ''}
                 </div>
@@ -342,19 +344,19 @@ export default function DepositPage() {
             {!deposit.cdcDossierUrl ? (
               <button
                 onClick={() => {
-                  toast.loading('Génération du dossier CDC...');
+                  toast.loading(t('deposit.cdcGenerating'));
                   fetch(`/api/deposit/${applicationId}/cdc-dossier`, { method: 'POST' })
                     .then((r) => r.json())
                     .then((d) => {
                       toast.dismiss();
                       if (d.url) {
-                        toast.success('Dossier CDC généré');
+                        toast.success(t('deposit.cdcGenerated'));
                         window.open(d.url, '_blank');
                       } else {
-                        toast.error(d.error || 'Erreur');
+                        toast.error(d.error || t('common.error'));
                       }
                     })
-                    .catch(() => { toast.dismiss(); toast.error('Erreur'); });
+                    .catch(() => { toast.dismiss(); toast.error(t('common.error')); });
                 }}
                 className="w-full py-3 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-2 bg-blue-600 text-white"
               >
@@ -381,19 +383,19 @@ export default function DepositPage() {
           {isOverdue && isTenant && !deposit.formalNoticeUrl && (
             <button
               onClick={() => {
-                toast.loading('Génération de la mise en demeure...');
+                toast.loading(t('deposit.formalNoticeGenerating'));
                 fetch(`/api/deposit/${applicationId}/formal-notice`, { method: 'POST' })
                   .then((r) => r.json())
                   .then((d) => {
                     toast.dismiss();
                     if (d.url) {
-                      toast.success('Mise en demeure générée');
+                      toast.success(t('deposit.formalNoticeGenerated'));
                       window.open(d.url, '_blank');
                     } else {
-                      toast.error(d.error || 'Erreur');
+                      toast.error(d.error || t('common.error'));
                     }
                   })
-                  .catch(() => { toast.dismiss(); toast.error('Erreur'); });
+                  .catch(() => { toast.dismiss(); toast.error(t('common.error')); });
               }}
               className="w-full py-3 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-2 bg-orange-50 text-orange-600 border border-orange-200"
             >

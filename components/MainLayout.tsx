@@ -50,7 +50,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // - Admin/Inspection: No main Navbar at all
 
     let paddingTop = 'pt-0';
-    if (isAdmin || isInspection) {
+    if (isAdmin || isInspection || isCalendar) {
         paddingTop = 'pt-0';
     } else if (isMainPage) {
         // Home: Navbar is fixed + transparent over map

@@ -1,5 +1,6 @@
 import prisma from "@/libs/prismadb";
 import { LegalReminderType, LegalReminderPriority } from "@prisma/client";
+import { getServerTranslation } from '@/lib/serverTranslations';
 
 /**
  * Calcule et synchronise les rappels lies aux baux (RentalApplication).
@@ -72,10 +73,11 @@ export class LeaseReminders {
   ): Promise<void> {
     if (!application.leaseEndDate) return;
 
+    const t = getServerTranslation('emails');
     const leaseEndDate = new Date(application.leaseEndDate);
-    // Rappel 1 mois avant le debut de la periode de preavis
     const noticeMonths = isFurnished ? 3 : 6;
     const reminderMonthsBefore = noticeMonths + 1;
+    const leaseType = isFurnished ? t('reminder.lease.furnished') : t('reminder.lease.unfurnished');
 
     await this.upsertReminder({
       userId,
@@ -83,10 +85,10 @@ export class LeaseReminders {
       rentalApplicationId: application.id,
       type: LegalReminderType.LEASE_END_NOTICE_LANDLORD,
       priority: LegalReminderPriority.CRITICAL,
-      title: `Preavis de conge bailleur — ${isFurnished ? 'meuble' : 'vide'}`,
+      title: t('reminder.lease.endNotice.title', { type: leaseType }),
       description: isFurnished
-        ? `Le bail meuble se termine le ${formatDate(leaseEndDate)}. Le preavis de conge est de 3 mois. Vous devez envoyer le conge par LRAR ou acte d'huissier.`
-        : `Le bail vide se termine le ${formatDate(leaseEndDate)}. Le preavis de conge est de 6 mois. Le conge doit etre motive (vente, reprise, motif legitime).`,
+        ? t('reminder.lease.endNotice.descriptionFurnished', { date: formatDate(leaseEndDate) })
+        : t('reminder.lease.endNotice.descriptionUnfurnished', { date: formatDate(leaseEndDate) }),
       legalReference: isFurnished ? 'Art. 25-8 Loi du 6 juillet 1989' : 'Art. 15 Loi du 6 juillet 1989',
       actionUrl: '/properties',
       dueDate: addMonths(leaseEndDate, -noticeMonths),
@@ -131,14 +133,15 @@ export class LeaseReminders {
     const now = new Date();
     const nextAnniversary = getNextAnniversary(leaseStartDate, now);
 
+    const t = getServerTranslation('emails');
     await this.upsertReminder({
       userId,
       propertyId: property.id,
       rentalApplicationId: application.id,
       type: LegalReminderType.RENT_REVISION_IRL,
       priority: LegalReminderPriority.HIGH,
-      title: 'Revision annuelle du loyer (IRL)',
-      description: `Il est temps de reviser le loyer selon l'Indice de Reference des Loyers. La revision doit etre appliquee dans l'annee suivant la date anniversaire, sinon elle est perdue.`,
+      title: t('reminder.lease.rentRevision.title'),
+      description: t('reminder.lease.rentRevision.description'),
       legalReference: 'Art. 17-1 Loi du 6 juillet 1989',
       actionUrl: '/properties',
       dueDate: nextAnniversary,
@@ -190,14 +193,15 @@ export class LeaseReminders {
     // Second rappel : 1er decembre
     const secondReminderDate = new Date(`${currentYear}-12-01`);
 
+    const tCharges = getServerTranslation('emails');
     await this.upsertReminder({
       userId,
       propertyId,
       rentalApplicationId: application.id,
       type: LegalReminderType.CHARGES_REGULARIZATION,
       priority: LegalReminderPriority.HIGH,
-      title: 'Regularisation annuelle des charges',
-      description: `La regularisation des charges doit etre effectuee chaque annee. Vous devez comparer les provisions versees par le locataire avec les charges reelles et proceder a l'ajustement.`,
+      title: tCharges('reminder.lease.chargesRegularization.title'),
+      description: tCharges('reminder.lease.chargesRegularization.description'),
       legalReference: 'Art. 23 Loi du 6 juillet 1989',
       actionUrl: '/properties',
       dueDate,
@@ -224,14 +228,15 @@ export class LeaseReminders {
     // Par defaut, 2 mois (cas EDL non conforme). 1 mois si conforme, mais on prend le pire cas.
     const deadline = addMonths(keysReturnDate, 2);
 
+    const tDeposit = getServerTranslation('emails');
     await this.upsertReminder({
       userId,
       propertyId,
       rentalApplicationId: application.id,
       type: LegalReminderType.DEPOSIT_RETURN_DEADLINE,
       priority: LegalReminderPriority.CRITICAL,
-      title: 'Restitution du depot de garantie',
-      description: `Le depot de garantie doit etre restitue dans un delai de 2 mois apres la remise des cles (1 mois si l'etat des lieux de sortie est conforme). Passe ce delai, des penalites de 10% du loyer mensuel par mois de retard s'appliquent.`,
+      title: tDeposit('reminder.lease.depositReturn.title'),
+      description: tDeposit('reminder.lease.depositReturn.description'),
       legalReference: 'Art. 22 Loi du 6 juillet 1989',
       actionUrl: '/properties',
       dueDate: deadline,
@@ -276,14 +281,15 @@ export class LeaseReminders {
     const now = new Date();
     const nextAnniversary = getNextAnniversary(leaseStartDate, now);
 
+    const tInsurance = getServerTranslation('emails');
     await this.upsertReminder({
       userId,
       propertyId,
       rentalApplicationId: application.id,
       type: LegalReminderType.TENANT_INSURANCE_CHECK,
       priority: LegalReminderPriority.MEDIUM,
-      title: "Verification de l'attestation d'assurance locataire",
-      description: "Le locataire est tenu de fournir une attestation d'assurance habitation chaque annee. En cas de defaut, le bailleur peut resilier le bail apres mise en demeure restee sans effet pendant 1 mois.",
+      title: tInsurance('reminder.lease.tenantInsurance.title'),
+      description: tInsurance('reminder.lease.tenantInsurance.description'),
       legalReference: 'Art. 7g Loi du 6 juillet 1989',
       actionUrl: '/properties',
       dueDate: nextAnniversary,

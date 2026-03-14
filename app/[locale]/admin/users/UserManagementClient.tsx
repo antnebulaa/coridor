@@ -125,7 +125,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
             const res = await axios.get<ApiResponse>(`/api/admin/users?${params.toString()}`);
             setData(res.data);
         } catch {
-            toast.error('Erreur lors du chargement des utilisateurs');
+            toast.error(t('toastLoadError'));
         } finally {
             setLoading(false);
         }
@@ -245,7 +245,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
         if (!subscription) {
             return (
                 <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-400">
-                    Aucun
+                    {t('subscriptionNone')}
                 </span>
             );
         }
@@ -297,7 +297,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-900">
-                    {loading ? 'Utilisateurs' : t('title', { count: totalUsers })}
+                    {loading ? t('titleLoading') : t('title', { count: totalUsers })}
                 </h2>
             </div>
 
@@ -321,10 +321,10 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                     onChange={(e) => setPlanFilter(e.target.value)}
                     className="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none"
                 >
-                    <option value="">Plan : Tous</option>
-                    <option value="FREE">Free</option>
-                    <option value="PLUS">Plus</option>
-                    <option value="PRO">Pro</option>
+                    <option value="">{t('filterPlanAll')}</option>
+                    <option value="FREE">{t('filterPlanFree')}</option>
+                    <option value="PLUS">{t('filterPlanPlus')}</option>
+                    <option value="PRO">{t('filterPlanPro')}</option>
                 </select>
 
                 {/* Status filter */}
@@ -333,9 +333,9 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none"
                 >
-                    <option value="">Statut : Tous</option>
-                    <option value="active">Actifs</option>
-                    <option value="banned">Bannis</option>
+                    <option value="">{t('filterStatusAll')}</option>
+                    <option value="active">{t('filterStatusActive')}</option>
+                    <option value="banned">{t('filterStatusBanned')}</option>
                 </select>
 
                 {/* Mode filter */}
@@ -344,9 +344,9 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                     onChange={(e) => setModeFilter(e.target.value)}
                     className="text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none"
                 >
-                    <option value="">Mode : Tous</option>
-                    <option value="TENANT">Locataire</option>
-                    <option value="LANDLORD">Propri&eacute;taire</option>
+                    <option value="">{t('filterModeAll')}</option>
+                    <option value="TENANT">{t('filterModeTenant')}</option>
+                    <option value="LANDLORD">{t('filterModeLandlord')}</option>
                 </select>
 
                 {/* Reset filters */}
@@ -356,7 +356,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 underline"
                     >
                         <HiXMark className="w-3.5 h-3.5" />
-                        R&eacute;initialiser
+                        {t('resetFilters')}
                     </button>
                 )}
             </div>
@@ -373,7 +373,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                                     onClick={() => handleSort('name')}
                                 >
                                     <div className="flex items-center gap-1">
-                                        Utilisateur
+                                        {t('colUser')}
                                         <SortIcon field="name" />
                                     </div>
                                 </th>
@@ -384,29 +384,29 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                                     onClick={() => handleSort('plan')}
                                 >
                                     <div className="flex items-center gap-1">
-                                        Plan
+                                        {t('colPlan')}
                                         <SortIcon field="plan" />
                                     </div>
                                 </th>
 
                                 {/* Abonnement */}
                                 <th className="px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Abonnement
+                                    {t('colSubscription')}
                                 </th>
 
                                 {/* Mode – hidden on mobile */}
                                 <th className="hidden md:table-cell px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Mode
+                                    {t('colMode')}
                                 </th>
 
                                 {/* Biens / Annonces – hidden on mobile */}
                                 <th className="hidden md:table-cell px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Biens / Annonces
+                                    {t('colPropertiesListings')}
                                 </th>
 
                                 {/* Candidatures – hidden on mobile */}
                                 <th className="hidden md:table-cell px-6 py-3 text-left font-medium text-slate-500 uppercase tracking-wider">
-                                    Candidatures
+                                    {t('colApplications')}
                                 </th>
 
                                 {/* Inscrit le */}
@@ -415,14 +415,14 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                                     onClick={() => handleSort('createdAt')}
                                 >
                                     <div className="flex items-center gap-1">
-                                        Inscrit le
+                                        {t('colRegisteredOn')}
                                         <SortIcon field="createdAt" />
                                     </div>
                                 </th>
 
                                 {/* Actions */}
                                 <th className="px-6 py-3 text-right font-medium text-slate-500 uppercase tracking-wider">
-                                    Actions
+                                    {t('colActions')}
                                 </th>
                             </tr>
                         </thead>
@@ -477,12 +477,12 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
 
                                         {/* Mode – hidden on mobile */}
                                         <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                            {user.userMode === 'TENANT' ? 'Locataire' : 'Propri\u00e9taire'}
+                                            {user.userMode === 'TENANT' ? t('filterModeTenant') : t('filterModeLandlord')}
                                         </td>
 
                                         {/* Biens / Annonces – hidden on mobile */}
                                         <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                            {user.propertyCount} biens &middot; {user.listingCount} annonces
+                                            {t('propertiesListingsCount', { properties: user.propertyCount, listings: user.listingCount })}
                                         </td>
 
                                         {/* Candidatures – hidden on mobile */}
@@ -504,7 +504,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                                             <div className="flex items-center justify-end gap-1">
                                                 <Link
                                                     href={`/admin/users/${user.id}`}
-                                                    title="Voir"
+                                                    title={t('view')}
                                                     className="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100 transition"
                                                 >
                                                     <HiEye size={18} />
@@ -547,7 +547,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
                 {/* Empty state */}
                 {!loading && data?.users.length === 0 && (
                     <div className="py-16 text-center text-slate-500">
-                        Aucun utilisateur trouv&eacute;
+                        {t('noResults')}
                     </div>
                 )}
             </div>
@@ -556,7 +556,7 @@ const UserManagementClient: React.FC<UserManagementClientProps> = ({ currentUser
             {!loading && data && totalPages > 0 && (
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">
-                        Page {page} sur {totalPages}
+                        {t('pagination', { page, totalPages })}
                     </span>
 
                     <div className="flex items-center gap-1">

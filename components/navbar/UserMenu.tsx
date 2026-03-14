@@ -139,21 +139,22 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 </div>
                 <div
                     onClick={toggleOpen}
+                    data-testid="user-menu-trigger"
                     className="
             relative
             p-4
             md:py-1
             md:px-2
-            border 
-            border-border 
+            border
+            border-border
             hidden
-            md:flex 
-            flex-row 
-            items-center 
-            gap-3 
-            rounded-full 
-            cursor-pointer 
-            hover:shadow-md 
+            md:flex
+            flex-row
+            items-center
+            gap-3
+            rounded-full
+            cursor-pointer
+            hover:shadow-md
             transition
           "
                 >

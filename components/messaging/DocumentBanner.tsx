@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { FileText, Image as ImageIcon, File, Download, ArrowRight } from "lucide-react";
 
 interface DocumentBannerProps {
@@ -36,6 +37,7 @@ const DocumentBanner: React.FC<DocumentBannerProps> = ({
     isOwn,
     onViewInPanel,
 }) => {
+    const t = useTranslations('inbox');
     const Icon = getFileIcon(fileType);
     const sizeStr = formatFileSize(fileSize);
     const ext = fileType.split("/").pop()?.toUpperCase() || "";
@@ -75,7 +77,7 @@ const DocumentBanner: React.FC<DocumentBannerProps> = ({
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-neutral-400 dark:hover:text-neutral-200 dark:hover:bg-neutral-700 transition shrink-0 cursor-pointer"
                 >
                     <Download size={14} />
-                    Télécharger
+                    {t('documents.download')}
                 </button>
             </div>
 
@@ -84,7 +86,7 @@ const DocumentBanner: React.FC<DocumentBannerProps> = ({
                     onClick={() => onViewInPanel(documentId)}
                     className="text-xs flex items-center gap-1 text-gray-400 hover:text-gray-600 dark:text-neutral-500 dark:hover:text-neutral-300 transition"
                 >
-                    Voir dans Documents
+                    {t('documents.viewInDocuments')}
                     <ArrowRight size={12} />
                 </button>
             )}

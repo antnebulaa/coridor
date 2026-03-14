@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { GeoDistributionEntry } from '@/app/actions/getAdminAdvancedStats';
 
 interface GeoDistributionProps {
@@ -8,6 +9,8 @@ interface GeoDistributionProps {
 }
 
 const GeoDistribution: React.FC<GeoDistributionProps> = ({ data }) => {
+    const t = useTranslations('admin.geoDistribution');
+
     const maxCount = useMemo(() => {
         if (!data || data.length === 0) return 1;
         return Math.max(...data.map(d => d.count), 1);
@@ -17,9 +20,9 @@ const GeoDistribution: React.FC<GeoDistributionProps> = ({ data }) => {
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200 h-full">
-            <h3 className="text-lg font-bold text-slate-800 mb-1">Distribution géographique</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">{t('title')}</h3>
             <p className="text-sm text-slate-500 mb-5">
-                {total} annonces publiées · {data.length} villes
+                {t('subtitle', { listings: total, cities: data.length })}
             </p>
 
             <div className="space-y-2 max-h-[360px] overflow-y-auto">
@@ -53,7 +56,7 @@ const GeoDistribution: React.FC<GeoDistributionProps> = ({ data }) => {
                 })}
                 {data.length === 0 && (
                     <div className="text-center text-slate-400 text-sm italic py-4">
-                        Aucune donnée disponible
+                        {t('noData')}
                     </div>
                 )}
             </div>

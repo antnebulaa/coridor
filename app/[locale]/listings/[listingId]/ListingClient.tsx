@@ -40,6 +40,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
     const loginModal = useLoginModal();
     const router = useRouter();
     const t = useTranslations('listing');
+    const tToasts = useTranslations('toasts');
 
     const category = useMemo(() => {
         return categories.find((items) =>
@@ -90,7 +91,7 @@ const ListingClient: React.FC<ListingClientProps> = ({
                 router.push(`/inbox/${data.data.id}`);
             })
             .catch((error) => {
-                toast.error('Something went wrong');
+                toast.error(tToasts('common.error'));
             })
             .finally(() => {
                 setIsLoading(false);
