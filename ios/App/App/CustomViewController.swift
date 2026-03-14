@@ -9,6 +9,5 @@ class CustomViewController: CAPBridgeViewController {
         webView?.scrollView.bounces = false
         webView?.scrollView.alwaysBounceVertical = false
         webView?.scrollView.alwaysBounceHorizontal = false
-        webView?.scrollView.contentInsetAdjustmentBehavior = .never
     }
 }
