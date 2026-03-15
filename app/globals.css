@@ -170,11 +170,7 @@ hr {
 }
 
 /* ──── Capacitor iOS Viewport Fix ──── */
-/* Disable overscroll bounce that reveals the beige background */
-html.cap-ios {
-  overscroll-behavior: none;
-}
-
+html.cap-ios,
 html.cap-ios body {
   overscroll-behavior: none;
 }

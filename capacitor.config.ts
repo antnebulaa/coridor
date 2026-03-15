@@ -45,7 +45,6 @@ allowNavigation: ['coridor.app', '*.coridor.app', 'coridor.fr', '*.coridor.fr'],
     backgroundColor: '#FAF7F2',
     contentInset: 'automatic',
     scheme: 'Coridor',
-    scrollEnabled: false,
   },
 };
 
