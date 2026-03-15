@@ -170,9 +170,24 @@ hr {
 }
 
 /* ──── Capacitor iOS Viewport Fix ──── */
+/* Apply desktop flex layout on mobile to prevent native UIScrollView from scrolling.
+   Body won't overflow → native scroll view has nothing to scroll → fixed elements stay fixed. */
 html.cap-ios,
 html.cap-ios body {
   overscroll-behavior: none;
+}
+
+html.cap-ios #app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+html.cap-ios #app-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ──── Capacitor Keyboard ──── */

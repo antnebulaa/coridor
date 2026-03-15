@@ -43,7 +43,7 @@ allowNavigation: ['coridor.app', '*.coridor.app', 'coridor.fr', '*.coridor.fr'],
 
   ios: {
     backgroundColor: '#FAF7F2',
-    contentInset: 'automatic',
+    contentInset: 'never',
     scheme: 'Coridor',
   },
 };
