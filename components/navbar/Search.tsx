@@ -86,7 +86,7 @@ const Search = () => {
         <div className="flex flex-row items-center gap-2 overflow-x-auto md:overflow-visible w-full md:w-auto pb-2 scrollbar-hide">
             {/* Location Search */}
             <div
-                onClick={() => searchModal.onOpen({ step: commuteParam ? 3 : 0 })}
+                onClick={() => searchModal.onOpen({ step: commuteParam ? 2 : 0 })}
                 className="border border-border w-full md:min-w-fit h-[50px] px-[20px] rounded-full hover:shadow-md transition cursor-pointer bg-background shadow-md md:shadow-none flex items-center"
             >
                 <div className="flex flex-row items-center justify-between gap-3 w-full">
@@ -102,7 +102,7 @@ const Search = () => {
             {/* Advanced Filters */}
             {/* Advanced Filters - Hidden on Mobile */}
             <div
-                onClick={() => searchModal.onOpen({ step: 2, section: 'budget' })}
+                onClick={() => searchModal.onOpen({ step: 1, section: 'budget' })}
                 className={`hidden md:flex items-center justify-center h-[50px] border border-border px-[20px] rounded-full hover:shadow-md transition cursor-pointer text-sm font-medium whitespace-nowrap ${budgetLabel !== 'Budget' ? 'bg-secondary border-foreground' : ''}`}
             >
                 {budgetLabel}

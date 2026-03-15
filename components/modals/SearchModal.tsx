@@ -6,7 +6,7 @@ import { Briefcase, Star, MoreHorizontal, Search, Pencil, Trash, X } from 'lucid
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import Modal from './Modal';
+import { createPortal } from 'react-dom';
 import useSearchModal from '@/hooks/useSearchModal';
 import useCommuteModal from '@/hooks/useCommuteModal';
 import Heading from '../Heading';
@@ -20,11 +20,10 @@ import { Home, GraduationCap, Heart, Coffee, Utensils, ShoppingBag } from 'lucid
 
 enum STEPS {
     LOCATION = 0,
-    CATEGORY = 1,
-    BUDGET = 2,
-    FILTERS = 3,
-    COMMUTE = 4,
-    SAVE_FAVORITE = 5
+    BUDGET = 1,
+    FILTERS = 2,
+    COMMUTE = 3,
+    SAVE_FAVORITE = 4
 }
 
 const SearchModal = () => {
@@ -123,14 +122,25 @@ const SearchModal = () => {
 
     // Responsive check for placeholder
     const [isMobile, setIsMobile] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         setIsMobile(window.innerWidth < 768);
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (searchModal.isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [searchModal.isOpen]);
 
     useEffect(() => {
         if (params) {
@@ -206,14 +216,6 @@ const SearchModal = () => {
             }
         }
     }, [searchModal.isOpen, searchModal.step, searchModal.section]);
-
-    const onBack = useCallback(() => {
-        setStep((value) => {
-            if (value === STEPS.SAVE_FAVORITE) return STEPS.LOCATION;
-            if (value === STEPS.COMMUTE) return STEPS.LOCATION;
-            return value - 1;
-        });
-    }, []);
 
     const onNext = useCallback(() => {
         setStep((value) => value + 1);
@@ -445,10 +447,6 @@ const SearchModal = () => {
         return 'Suivant';
     }, [step, listingCount]);
 
-    const secondaryActionLabel = useMemo(() => {
-        return undefined;
-    }, [step]);
-
     const handleLocationSelect = (value: AddressSelectValue) => {
         if (isAddingFavorite) {
             setTempLocation(value);
@@ -462,7 +460,7 @@ const SearchModal = () => {
             return;
         }
         setLocations([...locations, value]);
-        setStep(STEPS.CATEGORY);
+        setStep(STEPS.BUDGET);
     };
 
     const handleLocationRemove = (valueToRemove: string) => {
@@ -516,56 +514,16 @@ const SearchModal = () => {
 
     let bodyContent: React.ReactElement | undefined = undefined;
 
-    // Unified Accordion View for Search Steps
-    const ease = [0.25, 0.1, 0.25, 1] as const;
-
     if (step <= STEPS.FILTERS) {
-        const sections = [
-            { key: STEPS.LOCATION, label: 'Où ?', stepVal: STEPS.LOCATION },
-            { key: STEPS.CATEGORY, label: 'Quoi ?', stepVal: STEPS.CATEGORY },
-            { key: STEPS.BUDGET, label: 'Budget', stepVal: STEPS.BUDGET },
-            { key: STEPS.FILTERS, label: 'Filtres', stepVal: STEPS.FILTERS },
-        ];
-
-        // Animation Variants (Removed delays to fix staggered loading flash)
-        const containerVariants = {
-            hidden: { opacity: 1 },
-            show: {
-                opacity: 1,
-                transition: {
-                    staggerChildren: 0,
-                    delayChildren: 0
-                }
-            }
-        };
-
-        const itemVariants = {
-            hidden: { opacity: 1, y: 0 },
-            show: {
-                opacity: 1,
-                y: 0,
-                transition: {
-                    duration: 0
-                }
-            }
-        };
-
         bodyContent = (
-            <div className="flex flex-col gap-2 p-0 md:p-4">
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="show"
-                    className="flex flex-col gap-2"
-                >
+            <div className="flex-1 min-h-0 flex flex-col gap-2 px-2.5 md:px-4 pb-2">
                     {/* 1. LOCATION SECTION */}
-                    <motion.div
-                        variants={itemVariants}
-                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.LOCATION ? 'shadow-md ring-opacity-5' : ''}`}
+                    <div
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.LOCATION ? 'shadow-md' : 'shrink-0'}`}
                     >
                         <div
                             onClick={() => setStep(STEPS.LOCATION)}
-                            className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.LOCATION ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                            className={`shrink-0 flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.LOCATION ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
                             <div className={`transition-all duration-300 ${step === STEPS.LOCATION ? "text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Localisation</div>
                             <AnimatePresence mode="wait">
@@ -581,199 +539,131 @@ const SearchModal = () => {
 
                         <AnimatePresence initial={false}>
                             {step === STEPS.LOCATION && (
-                                <motion.div
-                                    key="location-content"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="px-4 pb-4 pt-1">
-                                        <div className="mt-4">
-                                            <div className="mb-2 relative">
-                                                <MapboxAddressSelect
-                                                    key={isAddingFavorite ? 'fav' : 'search'}
-                                                    value={undefined}
-                                                    onChange={handleLocationSelect}
-                                                    placeholder={isAddingFavorite
-                                                        ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail")
-                                                        : (locations.length > 0 ? "Saisir un autre lieu" : "Saisir un lieu")
-                                                    }
-                                                    icon={Search}
-                                                    searchTypes={isAddingFavorite ? "address,poi" : "district,locality,neighborhood,place,address,poi"}
-                                                    limitCountry="fr"
-                                                    autoFocus={true}
-                                                    clearOnSelect
-                                                    renderAsList={true}
-                                                    customInputClass="!text-xl !font-medium !pl-7 !py-2 !pr-0 rounded-none placeholder:text-neutral-400"
-                                                />
+                            <motion.div
+                                key="location-content"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
+                                className="overflow-hidden"
+                            >
+                                <div className="px-4 pb-4 pt-1">
+                                    <div className="mt-4">
+                                        <div className="mb-2 relative">
+                                            <MapboxAddressSelect
+                                                key={isAddingFavorite ? 'fav' : 'search'}
+                                                value={undefined}
+                                                onChange={handleLocationSelect}
+                                                placeholder={isAddingFavorite
+                                                    ? (hasWorkplace ? "Saisir l'adresse du lieu favori" : "Saisir l'adresse de votre travail")
+                                                    : (locations.length > 0 ? "Saisir un autre lieu" : "Saisir un lieu")
+                                                }
+                                                icon={Search}
+                                                searchTypes={isAddingFavorite ? "address,poi" : "district,locality,neighborhood,place,address,poi"}
+                                                limitCountry="fr"
+                                                autoFocus={true}
+                                                clearOnSelect
+                                                renderAsList={true}
+                                                customInputClass="!text-xl !font-medium !pl-7 !py-2 !pr-0 rounded-none placeholder:text-neutral-400"
+                                            />
+                                        </div>
+
+                                        {isAddingFavorite && (
+                                            <div
+                                                onClick={() => setIsAddingFavorite(false)}
+                                                className="text-sm font-semibold underline cursor-pointer hover:text-neutral-500 self-end mb-2"
+                                            >
+                                                Annuler
                                             </div>
+                                        )}
 
-                                            {isAddingFavorite && (
-                                                <div
-                                                    onClick={() => setIsAddingFavorite(false)}
-                                                    className="text-sm font-semibold underline cursor-pointer hover:text-neutral-500 self-end mb-2"
-                                                >
-                                                    Annuler
-                                                </div>
-                                            )}
-
-                                            {/* Selected Locations Chips */}
-                                            {!isAddingFavorite && locations.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                                                    {locations.map((loc) => (
-                                                        <div key={loc.value} className="flex items-center gap-1 pl-3 pr-2 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-sm font-medium">
-                                                            <span>{loc.city || loc.label.split(',')[0]}</span>
-                                                            <button onClick={() => handleLocationRemove(loc.value)} className="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-full">
-                                                                <X size={14} />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {/* Alternative Searches / Favorites */}
-                                            <div className="mt-4 flex flex-col gap-3">
-                                                {!isAddingFavorite && !isLoadingFavorites && (
-                                                    <>
-                                                        <div
-                                                            onClick={() => setStep(STEPS.COMMUTE)}
-                                                            className="flex items-center gap-2 text-base font-semibold cursor-pointer bg-amber-400 rounded-2xl p-3 hover:underline"
-                                                        >
-                                                            <div className="p-1.5 rounded-full">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                            </div>
-                                                            Recherche par temps de trajet
-                                                        </div>
-
-                                                    </>
-                                                )}
-
-                                                {/* Existing Favorites List */}
-                                                {!isAddingFavorite && !isLoadingFavorites && savedLocations.length > 0 && (
-                                                    <div className="flex flex-col gap-2 mt-2">
-                                                        {savedLocations.map((loc) => {
-                                                            const iconList = [
-                                                                { id: 'briefcase', icon: Briefcase },
-                                                                { id: 'home', icon: Home },
-                                                                { id: 'school', icon: GraduationCap },
-                                                                { id: 'favorite', icon: Star },
-                                                                { id: 'partner', icon: Heart }
-                                                            ];
-                                                            const matchedIcon = iconList.find(i => i.id === loc.icon);
-                                                            const Icon = matchedIcon ? matchedIcon.icon : Star;
-
-                                                            return (
-                                                                <div key={loc.id} className="flex items-center justify-between group cursor-pointer" onClick={() => handleFavoriteSelect(loc)}>
-                                                                    <div className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black">
-                                                                        <Icon size={16} />
-                                                                        <span>{loc.name}</span>
-                                                                    </div>
-                                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); handleFavoriteEdit(loc); }}
-                                                                            className="p-1 hover:bg-neutral-100 rounded"
-                                                                        >
-                                                                            <Pencil size={12} />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => { e.stopPropagation(); handleFavoriteDelete(loc); }}
-                                                                            className="p-1 hover:bg-red-50 text-red-500 rounded"
-                                                                        >
-                                                                            <Trash size={12} />
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        })}
+                                        {/* Selected Locations Chips */}
+                                        {!isAddingFavorite && locations.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                                                {locations.map((loc) => (
+                                                    <div key={loc.value} className="flex items-center gap-1 pl-3 pr-2 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-sm font-medium">
+                                                        <span>{loc.city || loc.label.split(',')[0]}</span>
+                                                        <button onClick={() => handleLocationRemove(loc.value)} className="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-full">
+                                                            <X size={14} />
+                                                        </button>
                                                     </div>
-                                                )}
+                                                ))}
                                             </div>
+                                        )}
+
+                                        {/* Alternative Searches / Favorites */}
+                                        <div className="mt-4 flex flex-col gap-3">
+                                            {!isAddingFavorite && (
+                                                <div
+                                                    onClick={() => setStep(STEPS.COMMUTE)}
+                                                    className="flex items-center gap-2 text-base font-semibold cursor-pointer bg-amber-400 rounded-2xl p-3 hover:underline"
+                                                >
+                                                    <div className="p-1.5 rounded-full">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </div>
+                                                    Recherche par temps de trajet
+                                                </div>
+                                            )}
+
+                                            {/* Existing Favorites List */}
+                                            {!isAddingFavorite && !isLoadingFavorites && savedLocations.length > 0 && (
+                                                <div className="flex flex-col gap-2 mt-2">
+                                                    {savedLocations.map((loc) => {
+                                                        const iconList = [
+                                                            { id: 'briefcase', icon: Briefcase },
+                                                            { id: 'home', icon: Home },
+                                                            { id: 'school', icon: GraduationCap },
+                                                            { id: 'favorite', icon: Star },
+                                                            { id: 'partner', icon: Heart }
+                                                        ];
+                                                        const matchedIcon = iconList.find(i => i.id === loc.icon);
+                                                        const Icon = matchedIcon ? matchedIcon.icon : Star;
+
+                                                        return (
+                                                            <div key={loc.id} className="flex items-center justify-between group cursor-pointer" onClick={() => handleFavoriteSelect(loc)}>
+                                                                <div className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black">
+                                                                    <Icon size={16} />
+                                                                    <span>{loc.name}</span>
+                                                                </div>
+                                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleFavoriteEdit(loc); }}
+                                                                        className="p-1 hover:bg-neutral-100 rounded"
+                                                                    >
+                                                                        <Pencil size={12} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleFavoriteDelete(loc); }}
+                                                                        className="p-1 hover:bg-red-50 text-red-500 rounded"
+                                                                    >
+                                                                        <Trash size={12} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                </motion.div>
-                            )}
+                                </div>
+                            </motion.div>
+                        )}
                         </AnimatePresence>
-                    </motion.div>
+                    </div>
 
-                    {/* 2. CATEGORY SECTION */}
-                    <motion.div
-                        variants={itemVariants}
-                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.CATEGORY ? 'shadow-md ring-opacity-5' : ''}`}
-                    >
-                        <div
-                            onClick={() => setStep(STEPS.CATEGORY)}
-                            className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.CATEGORY ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
-                        >
-                            <div className={`transition-all duration-300 ${step === STEPS.CATEGORY ? "mb-4 text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Type</div>
-                            <AnimatePresence mode="wait">
-                                {step !== STEPS.CATEGORY && (
-                                    <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }} className="text-sm font-semibold truncate max-w-[200px]">
-                                        {category ? category : 'Type de logement'}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        <AnimatePresence initial={false}>
-                            {step === STEPS.CATEGORY && (
-                                <motion.div
-                                    key="category-content"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="px-4 pb-4 pt-1 flex flex-col gap-2">
-                                        {categories.map((item) => {
-                                            const Icon = item.icon;
-                                            const isSelected = category.split(',').includes(item.label);
-                                            return (
-                                                <div
-                                                    key={item.label}
-                                                    onClick={() => {
-                                                        let current = category ? category.split(',') : [];
-                                                        if (current.includes(item.label)) {
-                                                            current = current.filter(c => c !== item.label);
-                                                        } else {
-                                                            current = current.length > 0 ? [...current, item.label] : [item.label];
-                                                            setStep(STEPS.BUDGET);
-                                                        }
-                                                        setCategory(current.join(','));
-                                                    }}
-                                                    className={`
-                                                        w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border cursor-pointer transition active:scale-[0.98]
-                                                        ${isSelected
-                                                            ? 'bg-neutral-900 border-neutral-900 text-white dark:bg-white dark:border-white dark:text-neutral-900'
-                                                            : 'bg-white border-neutral-200 text-neutral-900 hover:border-neutral-400 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-100 dark:hover:border-neutral-500'}
-                                                    `}
-                                                >
-                                                    <Icon className="w-6 h-6 shrink-0" />
-                                                    <span className="text-base font-medium">{item.label}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-
-                    {/* 3. BUDGET SECTION */}
-                    <motion.div
-                        variants={itemVariants}
-                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.BUDGET ? 'shadow-md ring-opacity-5' : ''}`}
+                    {/* 2. BUDGET SECTION */}
+                    <div
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.BUDGET ? 'shadow-md' : 'shrink-0'}`}
                     >
                         <div
                             onClick={() => {
                                 setStep(STEPS.BUDGET);
                                 setTimeout(() => minPriceRef.current?.focus(), 150);
                             }}
-                            className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.BUDGET ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                            className={`shrink-0 flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.BUDGET ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
                             <div className={`transition-all duration-300 ${step === STEPS.BUDGET ? "text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Budget</div>
                             <AnimatePresence mode="wait">
@@ -787,66 +677,65 @@ const SearchModal = () => {
 
                         <AnimatePresence initial={false}>
                             {step === STEPS.BUDGET && (
-                                <motion.div
-                                    key="budget-content"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="px-4 pb-4 pt-1">
-                                        <div className="flex flex-col gap-3">
-                                            <div className="font-semibold text-sm">Budget (par mois)</div>
-                                            <div className="flex flex-row gap-4 items-center">
-                                                <SoftInput
-                                                    id="minPrice"
-                                                    label="Min"
-                                                    formatPrice
-                                                    type="number"
-                                                    inputMode="numeric"
-                                                    value={minPrice}
-                                                    onChange={(e) => setMinPrice(e.target.value)}
-                                                    autoFocus={step === STEPS.BUDGET}
-                                                    inputRef={minPriceRef}
-                                                />
-                                                <div className="text-neutral-400">-</div>
-                                                <SoftInput
-                                                    id="maxPrice"
-                                                    label="Max"
-                                                    formatPrice
-                                                    type="number"
-                                                    inputMode="numeric"
-                                                    value={maxPrice}
-                                                    onChange={(e) => setMaxPrice(e.target.value)}
-                                                />
-                                            </div>
-                                            <Link
-                                                href="/account/tenant-profile"
-                                                onClick={() => searchModal.onClose()}
-                                                className="mt-2 text-xs text-neutral-500 bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg flex gap-3 items-start group hover:bg-neutral-200 dark:hover:bg-neutral-700 transition cursor-pointer"
-                                            >
-                                                <div className="shrink-0 pt-0.5 text-base">💡</div>
-                                                <span>
-                                                    <span className="font-semibold block text-neutral-800 dark:text-neutral-200 group-hover:underline">Booster votre recherche ?</span>
-                                                    En complétant votre dossier locataire, accédez à des suggestions plus précises.
-                                                </span>
-                                            </Link>
+                            <motion.div
+                                key="budget-content"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
+                                className="overflow-hidden"
+                            >
+                                <div className="px-4 pb-4 pt-1">
+                                    <div className="flex flex-col gap-3">
+                                        <div className="font-semibold text-sm">Budget (par mois)</div>
+                                        <div className="flex flex-row gap-4 items-center">
+                                            <SoftInput
+                                                id="minPrice"
+                                                label="Min"
+                                                formatPrice
+                                                type="number"
+                                                inputMode="numeric"
+                                                value={minPrice}
+                                                onChange={(e) => setMinPrice(e.target.value)}
+                                                autoFocus={step === STEPS.BUDGET}
+                                                inputRef={minPriceRef}
+                                            />
+                                            <div className="text-neutral-400">-</div>
+                                            <SoftInput
+                                                id="maxPrice"
+                                                label="Max"
+                                                formatPrice
+                                                type="number"
+                                                inputMode="numeric"
+                                                value={maxPrice}
+                                                onChange={(e) => setMaxPrice(e.target.value)}
+                                            />
                                         </div>
+                                        <Link
+                                            href="/account/tenant-profile"
+                                            onClick={() => searchModal.onClose()}
+                                            className="mt-2 text-xs text-neutral-500 bg-neutral-100 dark:bg-neutral-800 p-3 rounded-lg flex gap-3 items-start group hover:bg-neutral-200 dark:hover:bg-neutral-700 transition cursor-pointer"
+                                        >
+                                            <div className="shrink-0 pt-0.5 text-base">💡</div>
+                                            <span>
+                                                <span className="font-semibold block text-neutral-800 dark:text-neutral-200 group-hover:underline">Booster votre recherche ?</span>
+                                                En complétant votre dossier locataire, accédez à des suggestions plus précises.
+                                            </span>
+                                        </Link>
                                     </div>
-                                </motion.div>
-                            )}
+                                </div>
+                            </motion.div>
+                        )}
                         </AnimatePresence>
-                    </motion.div>
+                    </div>
 
-                    {/* 4. FILTERS SECTION (Features) */}
-                    <motion.div
-                        variants={itemVariants}
-                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.FILTERS ? 'shadow-md ring-opacity-5' : ''}`}
+                    {/* 3. FILTERS SECTION */}
+                    <div
+                        className={`flex flex-col bg-neutral-100 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden transition-shadow duration-300 ${step === STEPS.FILTERS ? 'flex-1 min-h-0 shadow-md' : 'shrink-0'}`}
                     >
                         <div
                             onClick={() => setStep(STEPS.FILTERS)}
-                            className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.FILTERS ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
+                            className={`shrink-0 flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition ${step === STEPS.FILTERS ? 'pb-0 hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                         >
                             <div className={`transition-all duration-300 ${step === STEPS.FILTERS ? "text-3xl font-medium text-neutral-900 dark:text-neutral-100" : "text-xl font-medium text-neutral-500"}`}>Filtres</div>
                             <AnimatePresence mode="wait">
@@ -854,13 +743,14 @@ const SearchModal = () => {
                                     <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.2 }} className="text-sm font-semibold truncate max-w-[200px]">
                                         {(() => {
                                             const parts = [];
+                                            if (category) parts.push(category);
                                             if (minSurface || maxSurface) parts.push('Surface');
                                             if (roomCount > 0) parts.push('Pièces');
                                             if (furnished) parts.push(furnished === 'furnished' ? 'Meublé' : 'Non meublé');
                                             if (dpeMin) parts.push(`DPE ${dpeMin}${dpeMax && dpeMax !== dpeMin ? `-${dpeMax}` : ''}`);
                                             if (amenities.length > 0) parts.push(`${amenities.length} caract.`);
                                             if (propertyTypes.length > 0) parts.push(propertyTypes.join(', '));
-                                            return parts.length > 0 ? parts.join(', ') : 'Surface, pièces...';
+                                            return parts.length > 0 ? parts.join(', ') : 'Type, surface, pièces...';
                                         })()}
                                     </motion.div>
                                 )}
@@ -869,17 +759,51 @@ const SearchModal = () => {
 
                         <AnimatePresence initial={false}>
                             {step === STEPS.FILTERS && (
-                                <motion.div
-                                    key="filters-content"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ height: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }, opacity: { duration: 0.2, delay: 0.1 } }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="px-4 pb-4 pt-1 flex flex-col gap-4">
+                            <motion.div
+                                key="filters-content"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="flex-1 min-h-0 overflow-y-auto"
+                            >
+                                <div className="px-4 pb-4 pt-1 flex flex-col gap-4">
 
+                                        {/* Type de logement */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-300">Type de logement</div>
+                                            <div className="flex gap-2">
+                                                {categories.map((item) => {
+                                                    const Icon = item.icon;
+                                                    const isSelected = category.split(',').includes(item.label);
+                                                    return (
+                                                        <button
+                                                            key={item.label}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                let current = category ? category.split(',') : [];
+                                                                if (current.includes(item.label)) {
+                                                                    current = current.filter(c => c !== item.label);
+                                                                } else {
+                                                                    current.push(item.label);
+                                                                }
+                                                                setCategory(current.join(','));
+                                                            }}
+                                                            className={`flex-1 flex items-center justify-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition active:scale-[0.98] text-sm font-medium
+                                                                ${isSelected
+                                                                    ? 'bg-neutral-900 border-neutral-900 text-white dark:bg-white dark:border-white dark:text-neutral-900'
+                                                                    : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-400 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-500'}
+                                                            `}
+                                                        >
+                                                            <Icon className="w-5 h-5 shrink-0" />
+                                                            <span>{item.label}</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
 
+                                        <hr className="border-neutral-100 dark:border-neutral-800" />
 
                                         {/* Surface */}
                                         <div className="flex flex-col gap-3">
@@ -1272,11 +1196,10 @@ const SearchModal = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
-                            )}
+                            </motion.div>
+                        )}
                         </AnimatePresence>
-                    </motion.div>
-                </motion.div>
+                    </div>
             </div>
         );
     }
@@ -1397,17 +1320,88 @@ const SearchModal = () => {
         )
     }
 
-    return (
-        <Modal
-            isOpen={searchModal.isOpen}
-            onClose={searchModal.onClose}
-            onSubmit={onSubmit}
-            title="Rechercher"
-            actionLabel={actionLabel}
-            secondaryActionLabel={secondaryActionLabel}
-            secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
-            body={bodyContent}
-        />
+    if (!mounted) return null;
+
+    return createPortal(
+        <AnimatePresence>
+            {searchModal.isOpen && (
+                <motion.div
+                    key="search-modal"
+                    className="fixed inset-0 z-9999"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                >
+                    {/* Backdrop */}
+                    <motion.div
+                        className="absolute inset-0 bg-neutral-800/50"
+                        variants={{
+                            hidden: { opacity: 0 },
+                            visible: { opacity: 1 }
+                        }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        onClick={searchModal.onClose}
+                    />
+                    {/* Centering wrapper */}
+                    <div className="absolute inset-0 flex items-start md:items-center justify-center pointer-events-none">
+                        <motion.div
+                            className="w-full h-full md:h-auto md:w-4/6 lg:w-3/6 xl:w-2/5 md:my-6 md:max-h-[calc(100dvh-48px)] md:rounded-[25px] md:shadow-[0_0_30px_rgba(0,0,0,0.15)] bg-white/70 dark:bg-neutral-900/70 backdrop-blur-md flex flex-col pt-safe md:pt-0 overflow-hidden pointer-events-auto"
+                            variants={{
+                                hidden: { y: -30, opacity: 0, scale: 0.96 },
+                                visible: { y: 0, opacity: 1, scale: 1 }
+                            }}
+                            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                            style={{ transformOrigin: 'top center' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Close button */}
+                            <div className="flex items-center justify-end p-5 shrink-0">
+                                <button
+                                    onClick={searchModal.onClose}
+                                    className="w-10 h-10 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            {/* Body */}
+                            {step <= STEPS.FILTERS ? (
+                                <>
+                                    {bodyContent}
+                                    {actionLabel && (
+                                        <div className="shrink-0 px-4 pt-3 pb-safe">
+                                            <Button
+                                                onClick={onSubmit}
+                                                className="w-full rounded-full h-[50px] text-[16px]"
+                                            >
+                                                {actionLabel}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+                                    <div className="p-2.5">
+                                        {bodyContent}
+                                    </div>
+                                    {actionLabel && (
+                                        <div className="sticky bottom-0 left-0 right-0 z-10 px-4 pt-3 pb-safe bg-linear-to-t from-white/70 via-white/70 to-transparent dark:from-neutral-900/70 dark:via-neutral-900/70 dark:to-transparent backdrop-blur-xl">
+                                            <Button
+                                                onClick={onSubmit}
+                                                className="w-full rounded-full h-[50px] text-[16px]"
+                                            >
+                                                {actionLabel}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 };
 
