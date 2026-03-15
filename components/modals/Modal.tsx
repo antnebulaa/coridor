@@ -79,11 +79,9 @@ const Modal: React.FC<ModalProps> = ({
             // Reset drag state on open
             setTranslateY(0);
             setIsDragging(false);
-            // Wait for iOS viewport to stabilize after overflow:hidden before starting animation
+            // Wait one frame for layout to stabilize before starting animation
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setShowModal(true);
-                });
+                setShowModal(true);
             });
         } else {
             setShowModal(false);
