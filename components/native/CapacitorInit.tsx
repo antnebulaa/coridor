@@ -15,14 +15,6 @@ export default function CapacitorInit() {
         document.documentElement.classList.add('capacitor-native');
         if (Capacitor.getPlatform() === 'ios') {
           document.documentElement.classList.add('cap-ios');
-
-          // Disable iOS WebView bounce via JS
-          document.body.style.overscrollBehavior = 'none';
-          document.addEventListener('touchmove', (e) => {
-            if (e.target === document.body || e.target === document.documentElement) {
-              e.preventDefault();
-            }
-          }, { passive: false });
         }
 
         // --- StatusBar ---
